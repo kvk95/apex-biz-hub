@@ -7,6 +7,11 @@ import { MainLayout } from "./components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import POSPage from "./pages/POSPage";
+import Companies from "./pages/Companies";
+import Customers from "./pages/Customers";
+import Orders from "./pages/Orders";
+import Employees from "./pages/Employees";
+import GenericPage from "./pages/GenericPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,56 +32,76 @@ const App = () => (
             <Route path="pos-2" element={<POSPage />} />
             <Route path="pos-3" element={<POSPage />} />
             
-            {/* Placeholder routes for all modules */}
-            <Route path="companies" element={<Dashboard />} />
-            <Route path="subscriptions" element={<Dashboard />} />
-            <Route path="packages" element={<Dashboard />} />
-            <Route path="domain" element={<Dashboard />} />
-            <Route path="chat" element={<Dashboard />} />
-            <Route path="call" element={<Dashboard />} />
-            <Route path="calendar" element={<Dashboard />} />
-            <Route path="email" element={<Dashboard />} />
-            <Route path="todo" element={<Dashboard />} />
-            <Route path="notes" element={<Dashboard />} />
-            <Route path="files" element={<Dashboard />} />
+            {/* Super Admin */}
+            <Route path="companies" element={<Companies />} />
+            <Route path="subscriptions" element={<GenericPage title="Subscriptions" description="Manage subscription plans" />} />
+            <Route path="packages" element={<GenericPage title="Packages" description="Manage pricing packages" />} />
+            <Route path="domain" element={<GenericPage title="Domain Settings" description="Configure domain settings" />} />
+            
+            {/* Application */}
+            <Route path="chat" element={<GenericPage title="Chat" description="Real-time messaging" />} />
+            <Route path="call" element={<GenericPage title="Calls" description="Video & audio calls" />} />
+            <Route path="calendar" element={<GenericPage title="Calendar" description="Schedule and events" />} />
+            <Route path="email" element={<GenericPage title="Email" description="Inbox and email management" />} />
+            <Route path="todo" element={<GenericPage title="To-Do" description="Task management" />} />
+            <Route path="notes" element={<GenericPage title="Notes" description="Quick notes and memos" />} />
+            <Route path="files" element={<GenericPage title="File Manager" description="Document storage" />} />
+            
+            {/* Inventory */}
             <Route path="low-stocks" element={<Products />} />
-            <Route path="categories" element={<Dashboard />} />
-            <Route path="brands" element={<Dashboard />} />
-            <Route path="units" element={<Dashboard />} />
-            <Route path="barcode" element={<Dashboard />} />
-            <Route path="qr-code" element={<Dashboard />} />
-            <Route path="stock" element={<Dashboard />} />
-            <Route path="stock-adjustment" element={<Dashboard />} />
-            <Route path="stock-transfer" element={<Dashboard />} />
-            <Route path="orders" element={<Dashboard />} />
-            <Route path="pos-orders" element={<Dashboard />} />
-            <Route path="invoices" element={<Dashboard />} />
-            <Route path="sales-return" element={<Dashboard />} />
-            <Route path="quotations" element={<Dashboard />} />
-            <Route path="coupons" element={<Dashboard />} />
-            <Route path="gift-cards" element={<Dashboard />} />
-            <Route path="discount-plan" element={<Dashboard />} />
-            <Route path="purchases" element={<Dashboard />} />
-            <Route path="purchase-order" element={<Dashboard />} />
-            <Route path="purchase-return" element={<Dashboard />} />
-            <Route path="expenses" element={<Dashboard />} />
-            <Route path="income" element={<Dashboard />} />
-            <Route path="bank-accounts" element={<Dashboard />} />
-            <Route path="balance-sheet" element={<Dashboard />} />
-            <Route path="cash-flow" element={<Dashboard />} />
-            <Route path="customers" element={<Dashboard />} />
-            <Route path="suppliers" element={<Dashboard />} />
-            <Route path="stores" element={<Dashboard />} />
-            <Route path="warehouses" element={<Dashboard />} />
-            <Route path="employees" element={<Dashboard />} />
-            <Route path="departments" element={<Dashboard />} />
-            <Route path="attendance" element={<Dashboard />} />
-            <Route path="leaves" element={<Dashboard />} />
-            <Route path="holidays" element={<Dashboard />} />
-            <Route path="payroll" element={<Dashboard />} />
-            <Route path="reports/*" element={<Dashboard />} />
-            <Route path="cms/*" element={<Dashboard />} />
-            <Route path="settings/*" element={<Dashboard />} />
+            <Route path="categories" element={<GenericPage title="Categories" description="Product categories" />} />
+            <Route path="brands" element={<GenericPage title="Brands" description="Manage brands" />} />
+            <Route path="units" element={<GenericPage title="Units" description="Measurement units" />} />
+            <Route path="barcode" element={<GenericPage title="Barcode" description="Generate barcodes" />} />
+            <Route path="qr-code" element={<GenericPage title="QR Code" description="Generate QR codes" />} />
+            
+            {/* Stock */}
+            <Route path="stock" element={<GenericPage title="Manage Stock" description="Stock levels management" />} />
+            <Route path="stock-adjustment" element={<GenericPage title="Stock Adjustment" description="Adjust inventory" />} />
+            <Route path="stock-transfer" element={<GenericPage title="Stock Transfer" description="Transfer between locations" />} />
+            
+            {/* Sales */}
+            <Route path="orders" element={<Orders />} />
+            <Route path="pos-orders" element={<Orders />} />
+            <Route path="invoices" element={<GenericPage title="Invoices" description="Manage invoices" />} />
+            <Route path="sales-return" element={<GenericPage title="Sales Return" description="Process returns" />} />
+            <Route path="quotations" element={<GenericPage title="Quotations" description="Price quotes" />} />
+            
+            {/* Promo */}
+            <Route path="coupons" element={<GenericPage title="Coupons" description="Discount coupons" />} />
+            <Route path="gift-cards" element={<GenericPage title="Gift Cards" description="Gift card management" />} />
+            <Route path="discount-plan" element={<GenericPage title="Discount Plan" description="Discount strategies" />} />
+            
+            {/* Purchase */}
+            <Route path="purchases" element={<GenericPage title="Purchases" description="Purchase orders" />} />
+            <Route path="purchase-order" element={<GenericPage title="Purchase Order" description="Create purchase orders" />} />
+            <Route path="purchase-return" element={<GenericPage title="Purchase Return" description="Return to suppliers" />} />
+            
+            {/* Finance */}
+            <Route path="expenses" element={<GenericPage title="Expenses" description="Track expenses" />} />
+            <Route path="income" element={<GenericPage title="Income" description="Track income" />} />
+            <Route path="bank-accounts" element={<GenericPage title="Bank Accounts" description="Banking information" />} />
+            <Route path="balance-sheet" element={<GenericPage title="Balance Sheet" description="Financial statement" />} />
+            <Route path="cash-flow" element={<GenericPage title="Cash Flow" description="Cash flow analysis" />} />
+            
+            {/* Peoples */}
+            <Route path="customers" element={<Customers />} />
+            <Route path="suppliers" element={<GenericPage title="Suppliers" description="Supplier management" />} />
+            <Route path="stores" element={<GenericPage title="Stores" description="Store locations" />} />
+            <Route path="warehouses" element={<GenericPage title="Warehouses" description="Warehouse management" />} />
+            
+            {/* HRM */}
+            <Route path="employees" element={<Employees />} />
+            <Route path="departments" element={<GenericPage title="Departments" description="Department structure" />} />
+            <Route path="attendance" element={<GenericPage title="Attendance" description="Track attendance" />} />
+            <Route path="leaves" element={<GenericPage title="Leaves" description="Leave management" />} />
+            <Route path="holidays" element={<GenericPage title="Holidays" description="Holiday calendar" />} />
+            <Route path="payroll" element={<GenericPage title="Payroll" description="Salary processing" />} />
+            
+            {/* Reports & Settings */}
+            <Route path="reports/*" element={<GenericPage title="Reports" description="Business analytics" />} />
+            <Route path="cms/*" element={<GenericPage title="CMS" description="Content management" />} />
+            <Route path="settings/*" element={<GenericPage title="Settings" description="System configuration" />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
