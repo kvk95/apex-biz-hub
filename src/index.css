@@ -1,3 +1,8 @@
+@charset "UTF-8";
+/****** Utils ******/
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +13,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: #F7F7F7;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -48,8 +53,8 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-background: #ffffff;
+    --sidebar-foreground: #212B36;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
@@ -131,5 +136,17 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Nunito", sans-serif;
+    font-size: 14px;
+    color: #646B72;
+    line-height: 1.5;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
+}
+
+.sidebar-top {
+  padding: 0 24px;
+    height: 65px;
+    border-bottom: 1px solid #E6EAED;
 }

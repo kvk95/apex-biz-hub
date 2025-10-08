@@ -253,7 +253,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-sidebar">
         <div className="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
           {state === "expanded" ? (
-            <h1 className="text-xl font-bold text-sidebar-foreground">POS Dashboard</h1>
+            <h1 className="text-xl font-bold text-sidebar-foreground sidebar-top ">NyaBuy POS</h1>
           ) : (
             <LayoutDashboard className="h-6 w-6 text-sidebar-primary" />
           )}
