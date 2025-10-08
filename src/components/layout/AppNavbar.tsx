@@ -12,10 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useState } from "react";
+import { ThemeCustomizer } from "@/components/theme/theme-customizer";
+import { useTheme } from "../theme/theme-provider";
 
 export function AppNavbar() {
   const [isDark, setIsDark] = useState(false);
   const [language, setLanguage] = useState("EN");
+  const { theme } = useTheme();
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -28,8 +31,26 @@ export function AppNavbar() {
     { id: 3, title: "Payment received", time: "3 hours ago", unread: false },
   ];
 
+  const headerStyle = {
+    backgroundColor: `hsl(${theme.headerColor})`,
+    color:
+      parseFloat(theme.headerColor.split(" ")[2]) < 50
+        ? "hsl(0 0% 98%)"
+        : "hsl(240 10% 3.9%)",
+  };
+
+  const inputBgStyle = {
+    backgroundColor:
+      parseFloat(theme.headerColor.split(" ")[2]) < 50
+        ? "hsl(240 3.7% 15.9%)"
+        : "hsl(240 4.8% 95.9%)",
+  };
+
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background px-6">
+    <header
+      className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background px-6"
+      style={headerStyle}
+    >
       <SidebarTrigger className="h-8 w-8" />
 
       <div className="flex flex-1 items-center gap-4">
@@ -39,6 +60,7 @@ export function AppNavbar() {
             type="search"
             placeholder="Search products, orders, customers..."
             className="w-full pl-10 bg-muted/50"
+            style={inputBgStyle}
           />
         </div>
       </div>
@@ -47,6 +69,8 @@ export function AppNavbar() {
         <Button variant="ghost" size="icon" onClick={toggleTheme}>
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
+
+        <ThemeCustomizer />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -82,18 +106,27 @@ export function AppNavbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3">
+              <DropdownMenuItem
+                key={notification.id}
+                className="flex flex-col items-start p-3"
+              >
                 <div className="flex w-full items-start justify-between">
-                  <p className={notification.unread ? "font-medium" : ""}>{notification.title}</p>
+                  <p className={notification.unread ? "font-medium" : ""}>
+                    {notification.title}
+                  </p>
                   {notification.unread && (
                     <span className="h-2 w-2 rounded-full bg-primary"></span>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">{notification.time}</span>
+                <span className="text-xs text-muted-foreground">
+                  {notification.time}
+                </span>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-primary">View All</DropdownMenuItem>
+            <DropdownMenuItem className="justify-center text-primary">
+              View All
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -116,7 +149,9 @@ export function AppNavbar() {
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Help & Support</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Logout</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

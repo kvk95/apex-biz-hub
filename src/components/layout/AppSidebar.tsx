@@ -1,66 +1,67 @@
-import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Building2,
-  Package,
-  ShoppingCart,
-  Users,
-  Wallet,
-  FileText,
-  Settings,
-  ChevronDown,
-  ChevronRight,
-  Store,
-  BarChart3,
-  UserCog,
-  Mail,
-  Calendar,
-  Phone,
-  FolderOpen,
-  MessageSquare,
-  ClipboardList,
-  StickyNote,
-  PackageSearch,
-  AlertCircle,
-  Tags,
-  Box,
-  QrCode,
-  Barcode,
-  ArrowLeftRight,
-  Receipt,
-  RotateCcw,
-  FileSpreadsheet,
-  CreditCard,
-  Gift,
-  Percent,
-  Truck,
-  MapPin,
-  Clock,
-  Briefcase,
-  CalendarDays,
-  DollarSign,
-  TrendingUp,
-  Globe,
-  BookOpen,
-  Shield,
-} from "lucide-react";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubItem,
   SidebarMenuSubButton,
-  useSidebar,
+  SidebarMenuSubItem,
+  useSidebar
 } from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  BarChart3,
+  Barcode,
+  BookOpen,
+  Box,
+  Building2,
+  Calendar,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  ClipboardList,
+  CreditCard,
+  DollarSign,
+  FileSpreadsheet,
+  FileText,
+  FolderOpen,
+  Gift,
+  Globe,
+  LayoutDashboard,
+  Mail,
+  MessageSquare,
+  Package,
+  PackageSearch,
+  Percent,
+  Phone,
+  QrCode,
+  Receipt,
+  RotateCcw,
+  Settings,
+  Shield,
+  ShoppingCart,
+  StickyNote,
+  Store,
+  Tags,
+  TrendingUp,
+  Truck,
+  UserCog,
+  Users,
+  Wallet
+} from "lucide-react";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useTheme } from "../theme/theme-provider";
 
 interface MenuItem {
   title: string;
@@ -108,7 +109,12 @@ const menuItems: MenuItem[] = [
     items: [
       { title: "Products", url: "/products", icon: Package },
       { title: "Create Product", url: "/products/create", icon: Package },
-      { title: "Low Stocks", url: "/low-stocks", icon: AlertCircle, badge: "5" },
+      {
+        title: "Low Stocks",
+        url: "/low-stocks",
+        icon: AlertCircle,
+        badge: "5",
+      },
       { title: "Category", url: "/categories", icon: Tags },
       { title: "Brands", url: "/brands", icon: Tags },
       { title: "Units", url: "/units", icon: Box },
@@ -121,7 +127,11 @@ const menuItems: MenuItem[] = [
     icon: PackageSearch,
     items: [
       { title: "Manage Stock", url: "/stock", icon: PackageSearch },
-      { title: "Stock Adjustment", url: "/stock-adjustment", icon: ArrowLeftRight },
+      {
+        title: "Stock Adjustment",
+        url: "/stock-adjustment",
+        icon: ArrowLeftRight,
+      },
       { title: "Stock Transfer", url: "/stock-transfer", icon: Truck },
     ],
   },
@@ -159,7 +169,11 @@ const menuItems: MenuItem[] = [
     icon: Truck,
     items: [
       { title: "Purchases", url: "/purchases", icon: Truck },
-      { title: "Purchase Order", url: "/purchase-order", icon: FileSpreadsheet },
+      {
+        title: "Purchase Order",
+        url: "/purchase-order",
+        icon: FileSpreadsheet,
+      },
       { title: "Purchase Return", url: "/purchase-return", icon: RotateCcw },
     ],
   },
@@ -231,10 +245,13 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<string[]>(["Dashboard"]);
+  const { theme } = useTheme();
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) =>
-      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
+      prev.includes(title)
+        ? prev.filter((item) => item !== title)
+        : [...prev, title]
     );
   };
 
@@ -245,93 +262,117 @@ export function AppSidebar() {
 
   const hasActiveChild = (items?: MenuItem[]) => {
     if (!items) return false;
-    return items.some((item) => isActive(item.url) || hasActiveChild(item.items));
+    return items.some(
+      (item) => isActive(item.url) || hasActiveChild(item.items)
+    );
+  };
+
+  const sidebarStyle = {
+    backgroundColor: `hsl(${theme.sidebarColor})`,
+    color:
+      parseFloat(theme.sidebarColor.split(" ")[2]) < 50
+        ? "hsl(0 0% 98%)"
+        : "hsl(240 10% 3.9%)",
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border sidebar"
+      style={sidebarStyle}
+    >
       <SidebarContent className="bg-sidebar">
-        <div className="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
+        {/* Fixed Header */}
+        <div
+          className="flex h-16 items-center justify-center border-b border-sidebar-border px-5 sticky top-0 z-10 bg-sidebar w-full sidebar-top"
+          style={{ padding: "17px", color: `#000000` }}
+        >
           {state === "expanded" ? (
-            <h1 className="text-xl font-bold text-sidebar-foreground sidebar-top ">NyaBuy POS</h1>
+            <h1 className="text-xl font-bold text-sidebar-foreground ">
+              NyaBuy POS
+            </h1>
           ) : (
             <LayoutDashboard className="h-6 w-6 text-sidebar-primary" />
           )}
         </div>
 
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) =>
-                item.items ? (
-                  <Collapsible
-                    key={item.title}
-                    open={openMenus.includes(item.title)}
-                    onOpenChange={() => toggleMenu(item.title)}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          className={cn(
-                            "w-full transition-colors",
-                            hasActiveChild(item.items) && "bg-sidebar-accent text-sidebar-accent-foreground"
-                          )}
-                        >
+        {/* Scrollable Menu Section */}
+        <div className="flex-grow overflow-y-auto">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) =>
+                  item.items ? (
+                    <Collapsible
+                      key={item.title}
+                      open={openMenus.includes(item.title)}
+                      onOpenChange={() => toggleMenu(item.title)}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            className={cn(
+                              "w-full transition-colors",
+                              hasActiveChild(item.items) &&
+                                "bg-sidebar-accent text-sidebar-accent-foreground"
+                            )}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                            {item.badge && state === "expanded" && (
+                              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
+                                {item.badge}
+                              </span>
+                            )}
+                            {state === "expanded" &&
+                              (openMenus.includes(item.title) ? (
+                                <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+                              ) : (
+                                <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+                              ))}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActive(subItem.url)}
+                                  className="transition-colors"
+                                >
+                                  <NavLink to={subItem.url || "#"}>
+                                    <subItem.icon className="h-4 w-4" />
+                                    <span>{subItem.title}</span>
+                                    {subItem.badge && (
+                                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
+                                        {subItem.badge}
+                                      </span>
+                                    )}
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                        <NavLink to={item.url || "#"}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
-                          {item.badge && state === "expanded" && (
-                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                              {item.badge}
-                            </span>
-                          )}
-                          {state === "expanded" &&
-                            (openMenus.includes(item.title) ? (
-                              <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-                            ) : (
-                              <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
-                            ))}
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={isActive(subItem.url)}
-                                className="transition-colors"
-                              >
-                                <NavLink to={subItem.url || "#"}>
-                                  <subItem.icon className="h-4 w-4" />
-                                  <span>{subItem.title}</span>
-                                  {subItem.badge && (
-                                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                                      {subItem.badge}
-                                    </span>
-                                  )}
-                                </NavLink>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
+                        </NavLink>
+                      </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </Collapsible>
-                ) : (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                      <NavLink to={item.url || "#"}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                  )
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
