@@ -1,0 +1,328 @@
+[
+  {
+    "title": "Dashboard",
+    "icon": "LayoutDashboard",
+    "items": [
+      { "title": "Admin Dashboard", "url": "/dashboard/admin-1", "icon": "LayoutDashboard" },
+      { "title": "Admin Dashboard 2", "url": "/dashboard/admin-2", "icon": "LayoutDashboard" },
+      { "title": "Sales Dashboard", "url": "/dashboard/sales", "icon": "TrendingUp" }
+    ]
+  },
+  {
+    "title": "Super Admin",
+    "icon": "Shield",
+    "items": [
+      { "title": "Dashboard", "url": "/super-admin/dashboard", "icon": "LayoutDashboard" },
+      { "title": "Companies", "url": "/super-admin/companies", "icon": "Building2" },
+      { "title": "Subscriptions", "url": "/super-admin/subscriptions", "icon": "CreditCard" },
+      { "title": "Packages", "url": "/super-admin/packages", "icon": "Package" },
+      { "title": "Domain", "url": "/super-admin/domain", "icon": "Globe" },
+      { "title": "Purchase Transaction", "url": "/super-admin/purchase-transaction", "icon": "FileSpreadsheet" }
+    ]
+  },
+  {
+    "title": "Inventory",
+    "icon": "Package",
+    "items": [
+      { "title": "Products", "url": "/inventory/products", "icon": "Package" },
+      { "title": "Create Product", "url": "/inventory/products/create", "icon": "Package" },
+      { "title": "Expired Products", "url": "/inventory/expired-products", "icon": "AlertCircle" },
+      { "title": "Low Stocks", "url": "/inventory/low-stocks", "icon": "AlertCircle", "badge": "5" },
+      { "title": "Category", "url": "/inventory/categories", "icon": "Tags" },
+      { "title": "Sub Category", "url": "/inventory/sub-categories", "icon": "Tags" },
+      { "title": "Brands", "url": "/inventory/brands", "icon": "Tags" },
+      { "title": "Units", "url": "/inventory/units", "icon": "Package" },
+      { "title": "Variant Attributes", "url": "/inventory/variant-attributes", "icon": "Settings" },
+      { "title": "Warranties", "url": "/inventory/warranties", "icon": "Shield" },
+      { "title": "Print Barcode", "url": "/inventory/barcode", "icon": "Barcode" },
+      { "title": "Print QR Code", "url": "/inventory/qr-code", "icon": "Barcode" }
+    ]
+  },
+  {
+    "title": "Stock",
+    "icon": "PackageSearch",
+    "items": [
+      { "title": "Manage Stock", "url": "/stock/manage", "icon": "PackageSearch" },
+      { "title": "Stock Adjustment", "url": "/stock/adjustment", "icon": "ArrowLeftRight" },
+      { "title": "Stock Transfer", "url": "/stock/transfer", "icon": "Truck" }
+    ]
+  },
+  {
+    "title": "Sales",
+    "icon": "ShoppingCart",
+    "items": [
+      {
+        "title": "Sales",
+        "icon": "ShoppingCart",
+        "items": [
+           { "title": "Online Orders", "url": "/sales/online-orders", "icon": "ShoppingCart" },
+            { "title": "POS Orders", "url": "/sales/pos-orders", "icon": "Store" }
+        ]
+      },     
+      { "title": "Invoices", "url": "/sales/invoices", "icon": "Receipt" },
+      { "title": "Sales Return", "url": "/sales/return", "icon": "RotateCcw" },
+      { "title": "Quotation", "url": "/sales/quotations", "icon": "FileSpreadsheet" }
+    ]
+  },
+  {
+    "title": "POS",
+    "icon": "Store",
+    "items": [
+      { "title": "POS 1", "url": "/pos/pos-1", "icon": "Store" },
+      { "title": "POS 2", "url": "/pos/pos-2", "icon": "Store" }
+    ]
+  },
+  {
+    "title": "Promo",
+    "icon": "Gift",
+    "items": [
+      { "title": "Coupons", "url": "/promo/coupons", "icon": "Gift" },
+      { "title": "Gift Cards", "url": "/promo/gift-cards", "icon": "CreditCard" },
+      { "title": "Discount Plan", "url": "/promo/discount/plan", "icon": "Percent" },
+      { "title": "Discount", "url": "/promo/discount/single", "icon": "Percent" }
+    ]
+  },
+  {
+    "title": "Purchases",
+    "icon": "Truck",
+    "items": [
+      { "title": "Purchases", "url": "/purchases/list", "icon": "Truck" },
+      { "title": "Purchase Order", "url": "/purchases/order", "icon": "FileSpreadsheet" },
+      { "title": "Purchase Return", "url": "/purchases/return", "icon": "RotateCcw" }
+    ]
+  },
+  {
+    "title": "Finance & Accounts",
+    "icon": "Wallet",
+    "items": [
+      {
+        "title": "Expenses",
+        "icon": "DollarSign",
+        "items": [
+          { "title": "Expenses", "url": "/finance/expenses/list", "icon": "DollarSign" },
+          { "title": "Expense Category", "url": "/finance/expenses/categories", "icon": "Tags" }
+        ]
+      },
+      {
+        "title": "Income",
+        "icon": "DollarSign",
+        "items": [
+          { "title": "Income", "url": "/finance/income/list", "icon": "DollarSign" },
+          { "title": "Income Category", "url": "/finance/income/categories", "icon": "Tags" }
+        ]
+      },
+      { "title": "Bank Accounts", "url": "/finance/bank-accounts", "icon": "CreditCard" },
+      { "title": "Money Transfer", "url": "/finance/money-transfer", "icon": "ArrowLeftRight" },
+      { "title": "Balance Sheet", "url": "/finance/balance-sheet", "icon": "FileText" },
+      { "title": "Trial Balance", "url": "/finance/trial-balance", "icon": "FileText" },
+      { "title": "Cash Flow", "url": "/finance/cash-flow", "icon": "TrendingUp" },
+      { "title": "Account Statement", "url": "/finance/account-statement", "icon": "FileSpreadsheet" }
+    ]
+  },
+  {
+    "title": "Peoples",
+    "icon": "Users",
+    "items": [
+      { "title": "Customers", "url": "/peoples/customers", "icon": "Users" },
+      { "title": "Billers", "url": "/peoples/billers", "icon": "Users" },
+      { "title": "Suppliers", "url": "/peoples/suppliers", "icon": "Truck" },
+      { "title": "Stores", "url": "/peoples/stores", "icon": "Store" },
+      { "title": "Warehouses", "url": "/peoples/warehouses", "icon": "Building2" }
+    ]
+  },
+  {
+    "title": "HRM",
+    "icon": "UserCog",
+    "items": [
+      { "title": "Employees", "url": "/hrm/employees", "icon": "Users" },
+      { "title": "Departments", "url": "/hrm/departments", "icon": "Building2" },
+      { "title": "Designation", "url": "/hrm/designations", "icon": "UserCog" },
+      { "title": "Shifts", "url": "/hrm/shifts", "icon": "Calendar" },
+      {
+        "title": "Attendance",
+        "icon": "CalendarDays",
+        "items": [
+          { "title": "Employee", "url": "/hrm/attendance/employee", "icon": "CalendarDays" },
+          { "title": "Admin", "url": "/hrm/attendance/admin", "icon": "CalendarDays" }
+        ]
+      },
+      {
+        "title": "Leaves",
+        "icon": "Calendar",
+        "items": [
+          { "title": "Admin Leaves", "url": "/hrm/leaves/admin", "icon": "Calendar" },
+          { "title": "Employee Leaves", "url": "/hrm/leaves/employee", "icon": "Calendar" },
+          { "title": "Leave Types", "url": "/hrm/leaves/types", "icon": "Tags" }
+        ]
+      },
+      { "title": "Holidays", "url": "/hrm/holidays", "icon": "CalendarDays" },
+      {
+        "title": "Payroll",
+        "icon": "DollarSign",
+        "items": [
+          { "title": "Employee Salary", "url": "/hrm/payroll/salary", "icon": "DollarSign" },
+          { "title": "Payslip", "url": "/hrm/payroll/payslip", "icon": "FileText" }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Reports",
+    "icon": "BarChart3",
+    "items": [
+      {
+        "title": "Sales Report",
+        "icon": "BarChart3",
+        "items": [
+          { "title": "Sales Report", "url": "/reports/sales/report", "icon": "BarChart3" },
+          { "title": "Best Seller", "url": "/reports/sales/best-seller", "icon": "TrendingUp" }
+        ]
+      },
+      { "title": "Purchase Report", "url": "/reports/purchase", "icon": "BarChart3" },
+      {
+        "title": "Inventory Report",
+        "icon": "BarChart3",
+        "items": [
+          { "title": "Inventory Report", "url": "/reports/inventory/report", "icon": "BarChart3" },
+          { "title": "Stock History", "url": "/reports/inventory/stock-history", "icon": "FileSpreadsheet" },
+          { "title": "Sold Stock", "url": "/reports/inventory/sold-stock", "icon": "Package" }
+        ]
+      },
+      { "title": "Invoice Report", "url": "/reports/invoice", "icon": "Receipt" },
+      {
+        "title": "Supplier Report",
+        "icon": "BarChart3",
+        "items": [
+          { "title": "Supplier Report", "url": "/reports/supplier/report", "icon": "BarChart3" },
+          { "title": "Supplier Due Report", "url": "/reports/supplier/due", "icon": "AlertCircle" }
+        ]
+      },
+      {
+        "title": "Customer Report",
+        "icon": "BarChart3",
+        "items": [
+          { "title": "Customer Report", "url": "/reports/customer/report", "icon": "BarChart3" },
+          { "title": "Customer Due Report", "url": "/reports/customer/due", "icon": "AlertCircle" }
+        ]
+      },
+      {
+        "title": "Product Report",
+        "icon": "BarChart3",
+        "items": [
+          { "title": "Product Report", "url": "/reports/product/report", "icon": "BarChart3" },
+          { "title": "Product Expiry Report", "url": "/reports/product/expiry", "icon": "AlertCircle" },
+          { "title": "Product Quantity Alert", "url": "/reports/product/quantity-alert", "icon": "AlertCircle" }
+        ]
+      },
+      { "title": "Expense Report", "url": "/reports/expense", "icon": "DollarSign" },
+      { "title": "Income Report", "url": "/reports/income", "icon": "DollarSign" },
+      { "title": "Tax Report", "url": "/reports/tax", "icon": "FileText" },
+      { "title": "Profit & Loss", "url": "/reports/profit-loss", "icon": "BarChart3" },
+      { "title": "Annual Report", "url": "/reports/annual", "icon": "FileSpreadsheet" }
+    ]
+  },
+  {
+    "title": "User Management",
+    "icon": "UserCog",
+    "items": [
+      { "title": "Users", "url": "/user-management/users", "icon": "Users" },
+      { "title": "Roles & Permissions", "url": "/user-management/roles-permissions", "icon": "Shield" },
+      { "title": "Delete Account Request", "url": "/user-management/delete-account-request", "icon": "AlertCircle" }
+    ]
+  },
+  {
+    "title": "Settings",
+    "icon": "Settings",
+    "items": [
+      {
+        "title": "General Settings",
+        "icon": "Settings",
+        "url": "/settings/general",
+        "items": [
+          { "title": "Profile", "url": "/settings/general/profile", "icon": "User" },
+          { "title": "Security", "url": "/settings/general/security", "icon": "Lock" },
+          { "title": "Notifications", "url": "/settings/general/notifications", "icon": "Bell" },
+          { "title": "Connected Apps", "url": "/settings/general/connected-apps", "icon": "Plug" }
+        ]
+      },
+      {
+        "title": "Website Settings",
+        "icon": "Globe",
+        "url": "/settings/website",
+        "items": [
+          { "title": "System Settings", "url": "/settings/website/system", "icon": "Settings" },
+          { "title": "Company Settings", "url": "/settings/website/company", "icon": "Building2" },
+          { "title": "Localization", "url": "/settings/website/localization", "icon": "Globe" },
+          { "title": "Prefixes", "url": "/settings/website/prefixes", "icon": "Tag" },
+          { "title": "Preference", "url": "/settings/website/preference", "icon": "Sliders" },
+          { "title": "Appearance", "url": "/settings/website/appearance", "icon": "Palette" },
+          { "title": "Social Authentication", "url": "/settings/website/social-auth", "icon": "LogIn" },
+          { "title": "Language", "url": "/settings/website/language", "icon": "Languages" }
+        ]
+      },
+      {
+        "title": "App Settings",
+        "icon": "Settings",
+        "url": "/settings/app",
+        "items": [
+          { "title": "Invoice Settings", "url": "/settings/app/invoice-settings", "icon": "FileText" },
+          { "title": "Invoice Templates", "url": "/settings/app/invoice-templates", "icon": "FileText" },
+          { "title": "Printer", "url": "/settings/app/printer", "icon": "Printer" },
+          { "title": "POS", "url": "/settings/app/pos", "icon": "Store" },
+          { "title": "Signatures", "url": "/settings/app/signatures", "icon": "PenTool" },
+          { "title": "Custom Fields", "url": "/settings/app/custom-fields", "icon": "FormInput" }
+        ]
+      },
+      {
+        "title": "System Settings",
+        "icon": "Settings",
+        "url": "/settings/system",
+        "items": [
+          {
+            "title": "Email",
+            "icon": "Mail",
+            "items": [
+              { "title": "Email Settings", "url": "/settings/system/email/settings", "icon": "Mail" },
+              { "title": "Email Templates", "url": "/settings/system/email/templates", "icon": "FileText" }
+            ]
+          },
+          {
+            "title": "SMS",
+            "icon": "MessageSquare",
+            "items": [
+              { "title": "SMS Settings", "url": "/settings/system/sms/settings", "icon": "MessageSquare" },
+              { "title": "SMS Templates", "url": "/settings/system/sms/templates", "icon": "FileText" }
+            ]
+          },
+          { "title": "OTP", "url": "/settings/system/otp", "icon": "Key" },
+          { "title": "GDPR Cookies", "url": "/settings/system/gdpr-cookies", "icon": "Cookie" }
+        ]
+      },
+      {
+        "title": "Financial Settings",
+        "icon": "Wallet",
+        "url": "/settings/financial",
+        "items": [
+          { "title": "Payment Gateway", "url": "/settings/financial/payment-gateway", "icon": "CreditCard" },
+          { "title": "Bank Accounts", "url": "/settings/financial/bank-accounts", "icon": "CreditCard" },
+          { "title": "Tax Rates", "url": "/settings/financial/tax-rates", "icon": "Percent" },
+          { "title": "Currencies", "url": "/settings/financial/currencies", "icon": "DollarSign" }
+        ]
+      },
+      {
+        "title": "Other Settings",
+        "icon": "Settings",
+        "url": "/settings/other",
+        "items": [
+          { "title": "Storage", "url": "/settings/other/storage", "icon": "Database" },
+          { "title": "Ban IP Address", "url": "/settings/other/ban-ip", "icon": "Ban" }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logout",
+    "url": "/logout",
+    "icon": "LogOut"
+  }
+]

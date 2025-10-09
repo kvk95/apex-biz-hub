@@ -164,6 +164,7 @@ All colors MUST be HSL.
 
 .sidebar {
   font-size: 14px;
+  --sidebar-background: hsl(var(--sidebar-background));
 }
 
 .header {
