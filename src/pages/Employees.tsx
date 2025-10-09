@@ -20,58 +20,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
+import { useApiService } from "@/hooks/useApiService";
 
-const employees = [
-  {
-    id: 1,
-    name: "James Wilson",
-    email: "james.w@company.com",
-    phone: "+1 234 567 8900",
-    department: "Sales",
-    position: "Sales Manager",
-    status: "Active",
-    joinDate: "2023-06-15",
-  },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    email: "maria.g@company.com",
-    phone: "+1 234 567 8901",
-    department: "Inventory",
-    position: "Inventory Specialist",
-    status: "Active",
-    joinDate: "2023-08-20",
-  },
-  {
-    id: 3,
-    name: "David Chen",
-    email: "david.c@company.com",
-    phone: "+1 234 567 8902",
-    department: "Finance",
-    position: "Accountant",
-    status: "Active",
-    joinDate: "2023-09-10",
-  },
-  {
-    id: 4,
-    name: "Lisa Anderson",
-    email: "lisa.a@company.com",
-    phone: "+1 234 567 8903",
-    department: "HR",
-    position: "HR Manager",
-    status: "On Leave",
-    joinDate: "2023-05-05",
-  },
-];
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  status: string;
+  avatar: string;
+}
 
 export default function Employees() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: employees, loading, error } = useApiService<Employee[]>('employees');
 
-  const filteredEmployees = employees.filter((employee) =>
+  const filteredEmployees = employees?.filter((employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    employee.role.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -115,9 +92,7 @@ export default function Employees() {
               <TableRow>
                 <TableHead>Employee Name</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Join Date</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -126,17 +101,22 @@ export default function Employees() {
               {filteredEmployees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium">{employee.name}</p>
-                      <p className="text-sm text-muted-foreground">{employee.email}</p>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={employee.avatar}
+                        alt={employee.name}
+                        className="h-10 w-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-medium">{employee.name}</p>
+                        <p className="text-sm text-muted-foreground">{employee.email}</p>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{employee.phone}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{employee.department}</Badge>
+                    <Badge variant="outline">{employee.role}</Badge>
                   </TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.joinDate}</TableCell>
                   <TableCell>
                     <Badge variant={employee.status === "Active" ? "default" : "secondary"}>
                       {employee.status}

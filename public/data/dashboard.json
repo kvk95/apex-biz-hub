@@ -1,0 +1,147 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": {
+    "stats": [
+      {
+        "id": "total-rooms",
+        "title": "Total Rooms",
+        "value": "156",
+        "change": 12,
+        "icon": "hotel",
+        "gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      },
+      {
+        "id": "available-rooms",
+        "title": "Available Rooms",
+        "value": "89",
+        "change": -5,
+        "icon": "door-open",
+        "gradient": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+      },
+      {
+        "id": "occupied-rooms",
+        "title": "Occupied Rooms",
+        "value": "67",
+        "change": 8,
+        "icon": "users",
+        "gradient": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+      },
+      {
+        "id": "total-bookings",
+        "title": "Total Bookings",
+        "value": "234",
+        "change": 15,
+        "icon": "calendar-check",
+        "gradient": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+      }
+    ],
+    "salesData": [
+      { "month": "Jan", "sales": 45000, "purchases": 30000, "profit": 15000 },
+      { "month": "Feb", "sales": 52000, "purchases": 35000, "profit": 17000 },
+      { "month": "Mar", "sales": 48000, "purchases": 32000, "profit": 16000 },
+      { "month": "Apr", "sales": 61000, "purchases": 40000, "profit": 21000 },
+      { "month": "May", "sales": 55000, "purchases": 36000, "profit": 19000 },
+      { "month": "Jun", "sales": 67000, "purchases": 43000, "profit": 24000 }
+    ],
+    "categoryData": [
+      { "name": "Deluxe", "sales": 45000 },
+      { "name": "Suite", "sales": 38000 },
+      { "name": "Standard", "sales": 29000 },
+      { "name": "Premium", "sales": 52000 }
+    ],
+    "recentOrders": [
+      {
+        "id": "ORD001",
+        "customer": "John Smith",
+        "product": "Deluxe Room",
+        "amount": 4500,
+        "status": "Completed",
+        "date": "2024-06-15"
+      },
+      {
+        "id": "ORD002",
+        "customer": "Sarah Johnson",
+        "product": "Suite Room",
+        "amount": 8900,
+        "status": "Pending",
+        "date": "2024-06-14"
+      },
+      {
+        "id": "ORD003",
+        "customer": "Michael Brown",
+        "product": "Premium Room",
+        "amount": 6800,
+        "status": "Completed",
+        "date": "2024-06-13"
+      }
+    ],
+    "lowStockProducts": [
+      { "name": "Towels", "stock": 15, "threshold": 50 },
+      { "name": "Toiletries", "stock": 8, "threshold": 30 },
+      { "name": "Bed Linens", "stock": 12, "threshold": 40 }
+    ],
+    "topCustomers": [
+      { "name": "Michael Brown", "orders": 45, "spent": 24680 },
+      { "name": "John Smith", "orders": 23, "spent": 15420 },
+      { "name": "Sarah Johnson", "orders": 12, "spent": 8950 }
+    ],
+    "roomAvailability": [
+      { "type": "Deluxe", "available": 25, "total": 40 },
+      { "type": "Suite", "available": 15, "total": 30 },
+      { "type": "Standard", "available": 35, "total": 50 },
+      { "type": "Premium", "available": 14, "total": 36 }
+    ],
+    "reservationData": [
+      { "date": "Mon", "reservations": 45 },
+      { "date": "Tue", "reservations": 52 },
+      { "date": "Wed", "reservations": 48 },
+      { "date": "Thu", "reservations": 61 },
+      { "date": "Fri", "reservations": 75 },
+      { "date": "Sat", "reservations": 82 },
+      { "date": "Sun", "reservations": 68 }
+    ],
+    "visitorsData": [
+      { "month": "Jan", "visitors": 450 },
+      { "month": "Feb", "visitors": 520 },
+      { "month": "Mar", "visitors": 480 },
+      { "month": "Apr", "visitors": 610 },
+      { "month": "May", "visitors": 550 },
+      { "month": "Jun", "visitors": 670 }
+    ],
+    "guestList": [
+      {
+        "id": 1,
+        "name": "Alice Johnson",
+        "email": "alice@example.com",
+        "room": "101",
+        "checkIn": "2024-06-15",
+        "status": "Checked In"
+      },
+      {
+        "id": 2,
+        "name": "Bob Williams",
+        "email": "bob@example.com",
+        "room": "205",
+        "checkIn": "2024-06-16",
+        "status": "Checked In"
+      },
+      {
+        "id": 3,
+        "name": "Carol Davis",
+        "email": "carol@example.com",
+        "room": "308",
+        "checkIn": "2024-06-14",
+        "status": "Checked Out"
+      }
+    ],
+    "bookingSource": [
+      { "name": "Direct", "value": 35 },
+      { "name": "Booking.com", "value": 28 },
+      { "name": "Airbnb", "value": 22 },
+      { "name": "Expedia", "value": 15 }
+    ]
+  }
+}

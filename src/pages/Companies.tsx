@@ -20,57 +20,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
+import { useApiService } from "@/hooks/useApiService";
 
-const companies = [
-  {
-    id: 1,
-    name: "TechCorp Solutions",
-    email: "admin@techcorp.com",
-    phone: "+1 234 567 8900",
-    plan: "Enterprise",
-    status: "Active",
-    employees: 150,
-    subscriptionDate: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "RetailMax Inc",
-    email: "contact@retailmax.com",
-    phone: "+1 234 567 8901",
-    plan: "Professional",
-    status: "Active",
-    employees: 75,
-    subscriptionDate: "2024-02-20",
-  },
-  {
-    id: 3,
-    name: "FoodChain Ltd",
-    email: "info@foodchain.com",
-    phone: "+1 234 567 8902",
-    plan: "Basic",
-    status: "Active",
-    employees: 30,
-    subscriptionDate: "2024-03-10",
-  },
-  {
-    id: 4,
-    name: "QuickMart Express",
-    email: "support@quickmart.com",
-    phone: "+1 234 567 8903",
-    plan: "Professional",
-    status: "Suspended",
-    employees: 45,
-    subscriptionDate: "2023-11-05",
-  },
-];
+interface Company {
+  id: number;
+  name: string;
+  owner: string;
+  email: string;
+  phone: string;
+  status: string;
+  revenue: number;
+  plan: string;
+  employees: number;
+  subscriptionDate: string;
+}
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: companies, loading, error } = useApiService<Company[]>('companies');
 
-  const filteredCompanies = companies.filter((company) =>
+  const filteredCompanies = companies?.filter((company) =>
     company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

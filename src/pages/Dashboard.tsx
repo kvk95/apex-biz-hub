@@ -33,47 +33,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useApiService } from "@/hooks/useApiService";
 
-const salesData = [
-  { month: "Jan", sales: 45000, purchases: 32000, profit: 13000 },
-  { month: "Feb", sales: 52000, purchases: 35000, profit: 17000 },
-  { month: "Mar", sales: 48000, purchases: 33000, profit: 15000 },
-  { month: "Apr", sales: 61000, purchases: 40000, profit: 21000 },
-  { month: "May", sales: 55000, purchases: 38000, profit: 17000 },
-  { month: "Jun", sales: 67000, purchases: 42000, profit: 25000 },
-];
-
-const categoryData = [
-  { name: "Electronics", sales: 28000 },
-  { name: "Clothing", sales: 22000 },
-  { name: "Food", sales: 18000 },
-  { name: "Books", sales: 15000 },
-  { name: "Sports", sales: 12000 },
-];
-
-const recentOrders = [
-  { id: "#ORD-2024-001", customer: "John Doe", product: "iPhone 15 Pro", amount: "$1,299", status: "Completed", date: "2024-01-15" },
-  { id: "#ORD-2024-002", customer: "Jane Smith", product: "MacBook Pro", amount: "$2,499", status: "Processing", date: "2024-01-15" },
-  { id: "#ORD-2024-003", customer: "Mike Johnson", product: "AirPods Pro", amount: "$249", status: "Completed", date: "2024-01-14" },
-  { id: "#ORD-2024-004", customer: "Sarah Williams", product: "iPad Air", amount: "$599", status: "Pending", date: "2024-01-14" },
-  { id: "#ORD-2024-005", customer: "Tom Brown", product: "Apple Watch", amount: "$399", status: "Completed", date: "2024-01-13" },
-];
-
-const lowStockProducts = [
-  { name: "iPhone 15 Pro", sku: "IPH-15-PRO", stock: 5, minStock: 20 },
-  { name: "Samsung Galaxy S24", sku: "SAM-S24", stock: 8, minStock: 15 },
-  { name: "Sony WH-1000XM5", sku: "SONY-WH5", stock: 3, minStock: 10 },
-  { name: "Dell XPS 15", sku: "DELL-XPS15", stock: 4, minStock: 10 },
-];
-
-const topCustomers = [
-  { name: "John Doe", email: "john@example.com", orders: 24, total: "$12,450" },
-  { name: "Jane Smith", email: "jane@example.com", orders: 18, total: "$9,870" },
-  { name: "Mike Johnson", email: "mike@example.com", orders: 15, total: "$8,320" },
-  { name: "Sarah Williams", email: "sarah@example.com", orders: 12, total: "$6,540" },
-];
+interface DashboardData {
+  stats: Array<{
+    id: string;
+    title: string;
+    value: string;
+    change: number;
+    icon: string;
+    gradient: string;
+  }>;
+  salesData: Array<{ month: string; sales: number; purchases: number; profit: number }>;
+  categoryData: Array<{ name: string; sales: number }>;
+  recentOrders: Array<any>;
+  lowStockProducts: Array<any>;
+  topCustomers: Array<any>;
+  roomAvailability: Array<any>;
+  reservationData: Array<any>;
+  visitorsData: Array<any>;
+  guestList: Array<any>;
+  bookingSource: Array<any>;
+}
 
 export default function Dashboard() {
+  const { data: dashboardData, loading, error } = useApiService<DashboardData>('dashboard');
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
+
+  if (!dashboardData) {
+    return <div className="flex items-center justify-center h-screen">No data available</div>;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -126,7 +122,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={salesData}>
+              <AreaChart data={dashboardData.salesData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -162,7 +158,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData}>
+              <BarChart data={dashboardData.categoryData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
@@ -198,7 +194,7 @@ export default function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order) => (
+                {dashboardData.recentOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{order.customer}</TableCell>
@@ -235,7 +231,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {lowStockProducts.map((product) => (
+                {dashboardData.lowStockProducts.map((product) => (
                   <div key={product.sku} className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
@@ -262,7 +258,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topCustomers.map((customer, index) => (
+                {dashboardData.topCustomers.map((customer, index) => (
                   <div key={customer.email} className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                       {index + 1}

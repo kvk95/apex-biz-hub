@@ -20,53 +20,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
+import { useApiService } from "@/hooks/useApiService";
 
-const customers = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john.smith@email.com",
-    phone: "+1 234 567 8900",
-    totalPurchases: 15420,
-    orders: 23,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "+1 234 567 8901",
-    totalPurchases: 8950,
-    orders: 12,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "m.brown@email.com",
-    phone: "+1 234 567 8902",
-    totalPurchases: 24680,
-    orders: 45,
-    status: "VIP",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    email: "emily.d@email.com",
-    phone: "+1 234 567 8903",
-    totalPurchases: 3200,
-    orders: 5,
-    status: "Active",
-  },
-];
+interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  totalPurchases: number;
+  orders: number;
+  status: string;
+}
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: customers, loading, error } = useApiService<Customer[]>('customers');
 
-  const filteredCustomers = customers.filter((customer) =>
+  const filteredCustomers = customers?.filter((customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

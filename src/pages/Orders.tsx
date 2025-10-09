@@ -20,53 +20,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download, Printer } from "lucide-react";
+import { useApiService } from "@/hooks/useApiService";
 
-const orders = [
-  {
-    id: "ORD-001",
-    customer: "John Smith",
-    date: "2024-01-15",
-    items: 5,
-    total: 1250,
-    status: "Completed",
-    paymentStatus: "Paid",
-  },
-  {
-    id: "ORD-002",
-    customer: "Sarah Johnson",
-    date: "2024-01-16",
-    items: 3,
-    total: 850,
-    status: "Processing",
-    paymentStatus: "Paid",
-  },
-  {
-    id: "ORD-003",
-    customer: "Michael Brown",
-    date: "2024-01-16",
-    items: 8,
-    total: 2450,
-    status: "Pending",
-    paymentStatus: "Pending",
-  },
-  {
-    id: "ORD-004",
-    customer: "Emily Davis",
-    date: "2024-01-17",
-    items: 2,
-    total: 550,
-    status: "Completed",
-    paymentStatus: "Paid",
-  },
-];
+interface Order {
+  id: string;
+  customer: string;
+  email: string;
+  product: string;
+  quantity: number;
+  amount: number;
+  status: string;
+  date: string;
+  items: number;
+  total: number;
+  paymentStatus: string;
+}
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: orders, loading, error } = useApiService<Order[]>('orders');
 
-  const filteredOrders = orders.filter((order) =>
+  const filteredOrders = orders?.filter((order) =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
 
   const getStatusVariant = (status: string) => {
     switch (status) {

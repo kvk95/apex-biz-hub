@@ -20,77 +20,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
+import { useApiService } from "@/hooks/useApiService";
 
-const products = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro",
-    sku: "IPH-15-PRO-128",
-    category: "Electronics",
-    price: 1299,
-    stock: 45,
-    status: "In Stock",
-    image: "📱",
-  },
-  {
-    id: 2,
-    name: "MacBook Pro 16\"",
-    sku: "MBP-16-M3-512",
-    category: "Electronics",
-    price: 2499,
-    stock: 23,
-    status: "In Stock",
-    image: "💻",
-  },
-  {
-    id: 3,
-    name: "AirPods Pro",
-    sku: "APP-GEN2",
-    category: "Electronics",
-    price: 249,
-    stock: 156,
-    status: "In Stock",
-    image: "🎧",
-  },
-  {
-    id: 4,
-    name: "Samsung Galaxy S24",
-    sku: "SAM-S24-256",
-    category: "Electronics",
-    price: 899,
-    stock: 8,
-    status: "Low Stock",
-    image: "📱",
-  },
-  {
-    id: 5,
-    name: "Sony WH-1000XM5",
-    sku: "SONY-WH5",
-    category: "Electronics",
-    price: 399,
-    stock: 3,
-    status: "Low Stock",
-    image: "🎧",
-  },
-  {
-    id: 6,
-    name: "Dell XPS 15",
-    sku: "DELL-XPS15",
-    category: "Electronics",
-    price: 1799,
-    stock: 0,
-    status: "Out of Stock",
-    image: "💻",
-  },
-];
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  brand: string;
+  unit: string;
+  stock: number;
+  price: number;
+  status: string;
+}
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: products, loading, error } = useApiService<Product[]>('products');
 
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = products?.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -147,7 +106,7 @@ export default function Products() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-2xl">
-                        {product.image}
+                        📦
                       </div>
                       <div>
                         <p className="font-medium">{product.name}</p>

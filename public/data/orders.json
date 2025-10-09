@@ -1,0 +1,60 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": "ORD001",
+      "customer": "John Smith",
+      "email": "john@email.com",
+      "product": "Deluxe Room",
+      "quantity": 1,
+      "amount": 4500,
+      "status": "Completed",
+      "date": "2024-06-15",
+      "items": 2,
+      "total": 4500,
+      "paymentStatus": "Paid"
+    },
+    {
+      "id": "ORD002",
+      "customer": "Sarah Johnson",
+      "email": "sarah@email.com",
+      "product": "Suite Room",
+      "quantity": 2,
+      "amount": 8900,
+      "status": "Pending",
+      "date": "2024-06-14",
+      "items": 3,
+      "total": 8900,
+      "paymentStatus": "Pending"
+    },
+    {
+      "id": "ORD003",
+      "customer": "Michael Brown",
+      "email": "michael@email.com",
+      "product": "Premium Room",
+      "quantity": 1,
+      "amount": 6800,
+      "status": "Completed",
+      "date": "2024-06-13",
+      "items": 1,
+      "total": 6800,
+      "paymentStatus": "Paid"
+    },
+    {
+      "id": "ORD004",
+      "customer": "Emily Davis",
+      "email": "emily@email.com",
+      "product": "Standard Room",
+      "quantity": 3,
+      "amount": 3200,
+      "status": "Cancelled",
+      "date": "2024-06-12",
+      "items": 4,
+      "total": 3200,
+      "paymentStatus": "Refunded"
+    }
+  ]
+}
