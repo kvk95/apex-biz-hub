@@ -13,6 +13,7 @@ type ThemeConfig = {
   headerColor: string;
   sidebarColor: string;
   primaryColor: string;
+  mode: string;
 };
 
 type ThemeContextType = {

@@ -168,7 +168,7 @@ function MenuItemComponent({
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             className={cn(
-              "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
+              "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)] ",
               hasActiveChild(item.items) && [
                 "border-l-4",
                 `border-[hsl(${theme.primary || "220 98% 61%"})]`,
@@ -335,7 +335,7 @@ const sidebarStyle = {
             <LayoutDashboard className="h-6 w-6 text-sidebar-primary" />
           )}
         </div>
-        <div className="flex-grow overflow-y-auto">
+        <div className="flex-grow overflow-y-auto custom-scroll1">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>

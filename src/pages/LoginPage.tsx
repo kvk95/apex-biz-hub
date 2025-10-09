@@ -18,11 +18,16 @@ async function fakeLogin({ email, password }) {
   });
 }
 
+// Array of login images
+const loginImages = ["login1.jpg", "login2.jpg", "login3.jpg"];
+// Select a random image
+const loginImageUrl = `/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
+
+
 function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate();
 
-  // Public folder image path
-  const loginImageUrl = "/images/login.jpg";
+  // Public folder image path 
   const loginImageAlt = "Login Illustration";
 
   const [email, setEmail] = useState("admin@example.com");

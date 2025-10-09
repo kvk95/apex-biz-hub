@@ -246,3 +246,27 @@ ol, ul {
 ul {
   list-style: none;
 }
+
+
+    .custom-scroll1 { 
+    }
+
+    /* Target scrollbar for this specific div in WebKit browsers */
+    .custom-scroll1::-webkit-scrollbar {
+      width: 5px; /* Width of the scrollbar */
+
+    }
+
+    .custom-scroll1::-webkit-scrollbar-track {
+      background: 0 0 100%; /* Track color */
+      border-radius: 10px; /* Rounded track */
+    }
+
+    .custom-scroll1::-webkit-scrollbar-thumb {
+      background: #ccc; /* Thumb color */
+      border-radius: 10px; /* Rounded thumb */
+    }
+
+    .custom-scroll1::-webkit-scrollbar-thumb:hover {
+      background: #555; /* Thumb color on hover */
+    }

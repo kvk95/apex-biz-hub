@@ -5,14 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
-import Dashboard from "./pages/dashboard/Dashboard";
+import Admin1Dashboard from "./pages/dashboard/Admin1Dashboard";
 import GenericPage from "./pages/GenericPage";
 import Employees from "./pages/hrm/Employees";
 import Products from "./pages/inventory/Products";
 import LoginPage from "./pages/LoginPage";
 import Customers from "./pages/peoples/Customers";
 import POSPage from "./pages/pos/POSPage";
-import Orders from "./pages/sales/Orders";
+import OnlineOrders from "./pages/sales/OnlineOrders";
 import Companies from "./pages/super-admin/Companies";
 import Users from "./pages/user-management/Users";
 import RolesPermissions from "./pages/user-management/RolesPermissions";
@@ -40,10 +40,10 @@ const App = () => {
             {isLoggedIn ? (
               <Route path="/" element={<MainLayout />}>
                 {/* Dashboard */}
-                <Route index element={<Dashboard />} />
-                <Route path="dashboard/admin-1" element={<Dashboard />} />
-                <Route path="dashboard/admin-2" element={<Dashboard />} />
-                <Route path="dashboard/sales" element={<Dashboard />} />
+                <Route index element={<Admin1Dashboard />} />
+                <Route path="dashboard/admin-1" element={<Admin1Dashboard />} />
+                <Route path="dashboard/admin-2" element={<Admin1Dashboard />} />
+                <Route path="dashboard/sales" element={<Admin1Dashboard />} />
 
                 {/* Super Admin */}
                 <Route path="super-admin/dashboard" element={<GenericPage title="Super Admin Dashboard" description="Overview for super admins" />} />
@@ -73,8 +73,8 @@ const App = () => {
                 <Route path="stock/transfer" element={<GenericPage title="Stock Transfer" description="Transfer between locations" />} />
 
                 {/* Sales */}
-                <Route path="sales/online-orders" element={<Orders />} />
-                <Route path="sales/pos-orders" element={<Orders />} />
+                <Route path="sales/online-orders" element={<OnlineOrders />} />
+                <Route path="sales/pos-orders" element={<OnlineOrders />} />
                 <Route path="sales/invoices" element={<GenericPage title="Invoices" description="Manage invoices" />} />
                 <Route path="sales/return" element={<GenericPage title="Sales Return" description="Process returns" />} />
                 <Route path="sales/quotations" element={<GenericPage title="Quotations" description="Price quotes" />} />

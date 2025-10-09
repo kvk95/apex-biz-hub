@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings, Sun, Moon } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,12 +18,16 @@ const colors = {
     { name: "Light Gray", value: "0 0% 96.1%" },
     { name: "Dark", value: "240 10% 3.9%" },
     { name: "Indigo", value: "265 47% 44%" },
+    { name: "Slate", value: "210 40% 96%" },
+    { name: "Zinc", value: "240 5.9% 10%" },
   ],
   sidebar: [
     { name: "White", value: "0 0% 100%" },
     { name: "Light Gray", value: "0 0% 96.1%" },
     { name: "Dark", value: "240 10% 3.9%" },
     { name: "Indigo", value: "265 47% 44%" },
+    { name: "Slate", value: "210 40% 96%" },
+    { name: "Gray", value: "0 0% 50%" },
   ],
   primary: [
     { name: "Indigo", value: "265 47% 44%" },
@@ -31,8 +35,16 @@ const colors = {
     { name: "Blue", value: "221.2 83.2% 53.3%" },
     { name: "Green", value: "142.1 76.2% 36.3%" },
     { name: "Orange", value: "24.6 95% 53.1%" },
+    { name: "Red", value: "0 84% 60%" },
+    { name: "Pink", value: "330 100% 71%" },
+    { name: "Teal", value: "170 100% 40%" },
   ],
 };
+
+const modes = [
+  { name: "Light", value: "light" },
+  { name: "Dark", value: "dark" },
+];
 
 function ColorSwatch({
   color,
@@ -47,9 +59,7 @@ function ColorSwatch({
     <button
       type="button"
       onClick={onClick}
-      className={`w-8 h-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-        isActive ? "ring-2 ring-ring ring-offset-2" : ""
-      }`}
+      className={`w-8 h-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border border-muted ${isActive ? "ring-2 ring-ring ring-offset-2" : ""}`}
       style={{ backgroundColor: `hsl(${color})` }}
       aria-label={`Set color to hsl(${color})`}
     />
@@ -58,6 +68,11 @@ function ColorSwatch({
 
 export function ThemeCustomizer() {
   const { theme, setTheme } = useTheme();
+
+  const toggleMode = () => {
+    const newMode = theme.mode === "dark" ? "light" : "dark";
+    setTheme({ mode: newMode });
+  };
 
   return (
     <Sheet>
@@ -71,8 +86,8 @@ export function ThemeCustomizer() {
         <SheetHeader>
           <SheetTitle>Customize Theme</SheetTitle>
         </SheetHeader>
-        <div className="py-4 space-y-6 ">
-          <div className="space-y-3">
+        <div className="py-4 space-y-6">
+          <div className="space-y-3 border border-muted rounded-md p-4">
             <Label>Header Color</Label>
             <div className="flex flex-wrap gap-2">
               {colors.header.map((c) => (
@@ -85,7 +100,7 @@ export function ThemeCustomizer() {
               ))}
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 border border-muted rounded-md p-4">
             <Label>Sidebar Color</Label>
             <div className="flex flex-wrap gap-2">
               {colors.sidebar.map((c) => (
@@ -98,7 +113,7 @@ export function ThemeCustomizer() {
               ))}
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 border border-muted rounded-md p-4">
             <Label>Theme Color</Label>
             <div className="flex flex-wrap gap-2">
               {colors.primary.map((c) => (
@@ -109,6 +124,15 @@ export function ThemeCustomizer() {
                   onClick={() => setTheme({ primaryColor: c.value })}
                 />
               ))}
+            </div>
+          </div>
+          <div className="space-y-3 border border-muted rounded-md p-4">
+            <Label>Theme Mode</Label>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={toggleMode}>
+                {theme.mode === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </Button>
+              <span className="text-sm">{theme.mode === "dark" ? "Dark" : "Light"} Mode</span>
             </div>
           </div>
         </div>

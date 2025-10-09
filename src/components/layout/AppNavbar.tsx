@@ -16,14 +16,8 @@ import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
 
 export function AppNavbar() {
-  const [isDark, setIsDark] = useState(false);
   const [language, setLanguage] = useState("EN");
   const { theme } = useTheme();
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle("dark");
-  };
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -66,10 +60,6 @@ export function AppNavbar() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
-
         <ThemeCustomizer />
 
         <DropdownMenu>
