@@ -1,39 +1,16 @@
-import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ShoppingCart,
   DollarSign,
-  Package,
   TrendingUp,
-  Users,
-  RotateCcw,
   AlertCircle,
 } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useApiService } from "@/hooks/useApiService";
+import { KPICard } from "@/components/KPI/KPICard";
+import { Chart } from "@/components/Chart/Chart";
+import { DataTable, Column, RowAction } from "@/components/DataTable/DataTable";
 
 interface DashboardData {
   stats: Array<{
@@ -58,6 +35,56 @@ interface DashboardData {
 
 export default function Dashboard() {
   const { data: dashboardData, loading, error } = useApiService<DashboardData>('dashboard');
+
+  const lowStockColumns: Column[] = [
+    { key: "name", label: "Product", sortable: true },
+    { key: "sku", label: "SKU", sortable: true },
+    { key: "stock", label: "Stock", sortable: true },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <Badge variant="destructive">{value} left</Badge>
+      ),
+    },
+  ];
+
+  const recentOrderColumns: Column[] = [
+    { key: "id", label: "Order ID", sortable: true },
+    { key: "customer", label: "Customer", sortable: true },
+    { key: "product", label: "Product" },
+    { key: "amount", label: "Amount", sortable: true },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <Badge
+          variant={
+            value === "Completed"
+              ? "default"
+              : value === "Processing"
+              ? "secondary"
+              : "outline"
+          }
+        >
+          {value}
+        </Badge>
+      ),
+    },
+    { key: "date", label: "Date" },
+  ];
+
+  const rowActions: RowAction[] = [
+    {
+      label: "View Details",
+      onClick: (row) => console.log("View", row),
+    },
+    {
+      label: "Edit",
+      onClick: (row) => console.log("Edit", row),
+    },
+  ];
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
@@ -85,33 +112,33 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
+        <KPICard
           title="Total Orders"
           value="1,234"
-          change={12.5}
-          icon={<ShoppingCart className="h-6 w-6 text-primary" />}
-          iconBg="bg-primary-light"
+          trend={12.5}
+          icon={<ShoppingCart className="h-6 w-6" />}
+          iconBg="bg-primary/10"
         />
-        <StatsCard
+        <KPICard
           title="Total Sales"
           value="$67,432"
-          change={8.2}
-          icon={<DollarSign className="h-6 w-6 text-success" />}
-          iconBg="bg-success-light"
+          trend={8.2}
+          icon={<DollarSign className="h-6 w-6" />}
+          iconBg="bg-success/10"
         />
-        <StatsCard
+        <KPICard
           title="Total Profit"
           value="$25,890"
-          change={15.3}
-          icon={<TrendingUp className="h-6 w-6 text-accent" />}
-          iconBg="bg-accent-light"
+          trend={15.3}
+          icon={<TrendingUp className="h-6 w-6" />}
+          iconBg="bg-accent/10"
         />
-        <StatsCard
+        <KPICard
           title="Low Stock Items"
           value="24"
-          change={-5.7}
-          icon={<AlertCircle className="h-6 w-6 text-warning" />}
-          iconBg="bg-warning-light"
+          trend={-5.7}
+          icon={<AlertCircle className="h-6 w-6" />}
+          iconBg="bg-warning/10"
         />
       </div>
 
@@ -121,34 +148,13 @@ export default function Dashboard() {
             <CardTitle>Sales Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={dashboardData.salesData}>
-                <defs>
-                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="sales"
-                  stroke="hsl(var(--primary))"
-                  fillOpacity={1}
-                  fill="url(#colorSales)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Chart
+              type="area"
+              data={dashboardData.salesData}
+              dataKey="sales"
+              xAxisKey="month"
+              height={300}
+            />
           </CardContent>
         </Card>
 
@@ -157,21 +163,13 @@ export default function Dashboard() {
             <CardTitle>Category Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dashboardData.categoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <Chart
+              type="bar"
+              data={dashboardData.categoryData}
+              dataKey="sales"
+              xAxisKey="name"
+              height={300}
+            />
           </CardContent>
         </Card>
       </div>
@@ -182,42 +180,11 @@ export default function Dashboard() {
             <CardTitle>Recent Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dashboardData.recentOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell>{order.product}</TableCell>
-                    <TableCell>{order.amount}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          order.status === "Completed"
-                            ? "default"
-                            : order.status === "Processing"
-                            ? "secondary"
-                            : "outline"
-                        }
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{order.date}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={recentOrderColumns}
+              data={dashboardData.recentOrders}
+              rowActions={rowActions}
+            />
           </CardContent>
         </Card>
 

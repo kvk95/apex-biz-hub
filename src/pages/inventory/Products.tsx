@@ -1,26 +1,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
+import { Plus, Filter, Download, Edit, Trash2, Eye } from "lucide-react";
 import { useApiService } from "@/hooks/useApiService";
+import { DataTable, Column, RowAction } from "@/components/DataTable/DataTable";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Product {
   id: number;
@@ -42,6 +27,69 @@ export default function Products() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  const columns: Column[] = [
+    {
+      key: "name",
+      label: "Product",
+      sortable: true,
+      render: (value, row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-2xl">
+            📦
+          </div>
+          <div>
+            <p className="font-medium">{value}</p>
+          </div>
+        </div>
+      ),
+    },
+    { key: "sku", label: "SKU", sortable: true },
+    { key: "category", label: "Category", sortable: true },
+    {
+      key: "price",
+      label: "Price",
+      sortable: true,
+      render: (value) => `$${value.toLocaleString()}`,
+    },
+    { key: "stock", label: "Stock", sortable: true },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <Badge
+          variant={
+            value === "In Stock"
+              ? "default"
+              : value === "Low Stock"
+              ? "secondary"
+              : "destructive"
+          }
+        >
+          {value}
+        </Badge>
+      ),
+    },
+  ];
+
+  const rowActions: RowAction[] = [
+    {
+      label: "View Details",
+      icon: <Eye className="mr-2 h-4 w-4" />,
+      onClick: (row) => console.log("View", row),
+    },
+    {
+      label: "Edit",
+      icon: <Edit className="mr-2 h-4 w-4" />,
+      onClick: (row) => console.log("Edit", row),
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 className="mr-2 h-4 w-4" />,
+      onClick: (row) => console.log("Delete", row),
+      variant: "destructive",
+    },
+  ];
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -69,15 +117,11 @@ export default function Products() {
           <div className="flex items-center justify-between">
             <CardTitle>All Products ({filteredProducts.length})</CardTitle>
             <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-[300px] pl-10"
-                />
-              </div>
+              <SearchInput
+                placeholder="Search products..."
+                onSearch={setSearchTerm}
+                className="w-[300px]"
+              />
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
               </Button>
@@ -88,77 +132,12 @@ export default function Products() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-2xl">
-                        📦
-                      </div>
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell className="font-semibold">${product.price.toLocaleString()}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        product.status === "In Stock"
-                          ? "default"
-                          : product.status === "Low Stock"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {product.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columns}
+            data={filteredProducts}
+            rowActions={rowActions}
+            loading={loading}
+          />
         </CardContent>
       </Card>
     </div>
