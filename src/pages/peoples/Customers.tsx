@@ -1,150 +1,650 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Download } from "lucide-react";
-import { useApiService } from "@/hooks/useApiService";
+import React, { useState, useEffect } from "react";
 
-interface Customer {
+type Customer = {
   id: number;
   name: string;
   email: string;
   phone: string;
-  totalPurchases: number;
-  orders: number;
-  status: string;
-}
+  address: string;
+  city: string;
+  country: string;
+  zip: string;
+  status: "Active" | "Inactive";
+};
 
-export default function Customers() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const { data: customers, loading, error } = useApiService<Customer[]>('customers');
+const customersData: Customer[] = [
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+1 234 567 890",
+    address: "123 Main St",
+    city: "New York",
+    country: "USA",
+    zip: "10001",
+    status: "Active",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    email: "jane@example.com",
+    phone: "+44 20 7946 0958",
+    address: "456 High St",
+    city: "London",
+    country: "UK",
+    zip: "SW1A 1AA",
+    status: "Inactive",
+  },
+  {
+    id: 3,
+    name: "Carlos Ruiz",
+    email: "carlos@example.com",
+    phone: "+34 91 123 4567",
+    address: "789 Calle Mayor",
+    city: "Madrid",
+    country: "Spain",
+    zip: "28013",
+    status: "Active",
+  },
+  {
+    id: 4,
+    name: "Anna Müller",
+    email: "anna@example.com",
+    phone: "+49 30 123456",
+    address: "12 Berliner Str",
+    city: "Berlin",
+    country: "Germany",
+    zip: "10115",
+    status: "Active",
+  },
+  {
+    id: 5,
+    name: "Liu Wei",
+    email: "liu@example.com",
+    phone: "+86 10 1234 5678",
+    address: "34 Beijing Rd",
+    city: "Beijing",
+    country: "China",
+    zip: "100000",
+    status: "Inactive",
+  },
+  {
+    id: 6,
+    name: "Fatima Al Farsi",
+    email: "fatima@example.com",
+    phone: "+971 4 123 4567",
+    address: "56 Dubai Marina",
+    city: "Dubai",
+    country: "UAE",
+    zip: "00000",
+    status: "Active",
+  },
+  {
+    id: 7,
+    name: "Mohamed Salah",
+    email: "mohamed@example.com",
+    phone: "+20 2 12345678",
+    address: "78 Nile St",
+    city: "Cairo",
+    country: "Egypt",
+    zip: "11511",
+    status: "Inactive",
+  },
+  {
+    id: 8,
+    name: "Sofia Rossi",
+    email: "sofia@example.com",
+    phone: "+39 06 1234567",
+    address: "90 Via Roma",
+    city: "Rome",
+    country: "Italy",
+    zip: "00184",
+    status: "Active",
+  },
+  {
+    id: 9,
+    name: "Lucas Martin",
+    email: "lucas@example.com",
+    phone: "+33 1 23456789",
+    address: "12 Rue de Paris",
+    city: "Paris",
+    country: "France",
+    zip: "75001",
+    status: "Active",
+  },
+  {
+    id: 10,
+    name: "Emma Johnson",
+    email: "emma@example.com",
+    phone: "+1 415 123 4567",
+    address: "101 Market St",
+    city: "San Francisco",
+    country: "USA",
+    zip: "94105",
+    status: "Inactive",
+  },
+  {
+    id: 11,
+    name: "Oliver Brown",
+    email: "oliver@example.com",
+    phone: "+44 161 123 4567",
+    address: "22 King St",
+    city: "Manchester",
+    country: "UK",
+    zip: "M2 4WU",
+    status: "Active",
+  },
+  {
+    id: 12,
+    name: "Isabella Garcia",
+    email: "isabella@example.com",
+    phone: "+52 55 1234 5678",
+    address: "33 Reforma Ave",
+    city: "Mexico City",
+    country: "Mexico",
+    zip: "06600",
+    status: "Active",
+  },
+];
 
-  const filteredCustomers = customers?.filter((customer) =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+const pageSize = 5;
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+const Customers = () => {  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Form state for adding/editing customer
+  const [form, setForm] = useState<Omit<Customer, "id">>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "",
+    zip: "",
+    status: "Active",
+  });
+
+  // Editing mode state
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Data state (simulate dynamic data)
+  const [customers, setCustomers] = useState<Customer[]>(customersData);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(customers.length / pageSize);
+  const paginatedCustomers = customers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Handlers
+  function handleInputChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   }
 
-  if (error) {
-    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+  function handleSave() {
+    if (
+      !form.name.trim() ||
+      !form.email.trim() ||
+      !form.phone.trim() ||
+      !form.address.trim() ||
+      !form.city.trim() ||
+      !form.country.trim() ||
+      !form.zip.trim()
+    ) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    if (editingId !== null) {
+      // Edit existing
+      setCustomers((prev) =>
+        prev.map((c) => (c.id === editingId ? { id: editingId, ...form } : c))
+      );
+      setEditingId(null);
+    } else {
+      // Add new
+      const newId =
+        customers.length > 0 ? Math.max(...customers.map((c) => c.id)) + 1 : 1;
+      setCustomers((prev) => [...prev, { id: newId, ...form }]);
+    }
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      country: "",
+      zip: "",
+      status: "Active",
+    });
+  }
+
+  function handleEdit(id: number) {
+    const cust = customers.find((c) => c.id === id);
+    if (!cust) return;
+    setForm({
+      name: cust.name,
+      email: cust.email,
+      phone: cust.phone,
+      address: cust.address,
+      city: cust.city,
+      country: cust.country,
+      zip: cust.zip,
+      status: cust.status,
+    });
+    setEditingId(id);
+  }
+
+  function handleDelete(id: number) {
+    if (window.confirm("Are you sure you want to delete this customer?")) {
+      setCustomers((prev) => prev.filter((c) => c.id !== id));
+      // If deleting last item on page, go back a page if possible
+      if (
+        (currentPage - 1) * pageSize >= customers.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  }
+
+  function handleRefresh() {
+    // Reset to initial data
+    setCustomers(customersData);
+    setCurrentPage(1);
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      country: "",
+      zip: "",
+      status: "Active",
+    });
+    setEditingId(null);
+  }
+
+  function handleReport() {
+    // For demo, just alert JSON of customers
+    alert("Customer Report:\n\n" + JSON.stringify(customers, null, 2));
+  }
+
+  function goToPage(page: number) {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer database</p>
-        </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Customer
-        </Button>
-      </div>
+    <>
+      <title>DreamsPOS - Customers</title>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Customers ({filteredCustomers.length})</CardTitle>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search customers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-[300px] pl-10"
+      <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Page Title */}
+          <h1 className="text-3xl font-semibold mb-6">Customers</h1>
+
+          {/* Form Section */}
+          <section className="bg-white rounded shadow p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Add / Edit Customer</h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSave();
+              }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              noValidate
+            >
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter customer name"
+                  required
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Download className="h-4 w-4" />
-              </Button>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter email"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter phone number"
+                  required
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Address
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter address"
+                  required
+                />
+              </div>
+
+              {/* City */}
+              <div>
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  City
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={form.city}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter city"
+                  required
+                />
+              </div>
+
+              {/* Country */}
+              <div>
+                <label
+                  htmlFor="country"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Country
+                </label>
+                <input
+                  type="text"
+                  id="country"
+                  name="country"
+                  value={form.country}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter country"
+                  required
+                />
+              </div>
+
+              {/* Zip Code */}
+              <div>
+                <label
+                  htmlFor="zip"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Zip Code
+                </label>
+                <input
+                  type="text"
+                  id="zip"
+                  name="zip"
+                  value={form.zip}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter zip code"
+                  required
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={form.status}
+                  onChange={handleInputChange}
+                  className="block w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
+              {/* Buttons */}
+              <div className="md:col-span-3 flex space-x-4 pt-4">
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded shadow"
+                >
+                  {editingId !== null ? "Update" : "Save"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({
+                      name: "",
+                      email: "",
+                      phone: "",
+                      address: "",
+                      city: "",
+                      country: "",
+                      zip: "",
+                      status: "Active",
+                    });
+                    setEditingId(null);
+                  }}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded shadow"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded shadow"
+                >
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReport}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow"
+                >
+                  Report
+                </button>
+              </div>
+            </form>
+          </section>
+
+          {/* Customers Table Section */}
+          <section className="bg-white rounded shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Customer List</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 font-medium text-gray-700">#</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Phone
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Address
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700">City</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Country
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700">Zip</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 font-medium text-gray-700 text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginatedCustomers.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="px-4 py-6 text-center text-gray-500"
+                      >
+                        No customers found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedCustomers.map((customer, idx) => (
+                      <tr
+                        key={customer.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-3">{(currentPage - 1) * pageSize + idx + 1}</td>
+                        <td className="px-4 py-3">{customer.name}</td>
+                        <td className="px-4 py-3">{customer.email}</td>
+                        <td className="px-4 py-3">{customer.phone}</td>
+                        <td className="px-4 py-3">{customer.address}</td>
+                        <td className="px-4 py-3">{customer.city}</td>
+                        <td className="px-4 py-3">{customer.country}</td>
+                        <td className="px-4 py-3">{customer.zip}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                              customer.status === "Active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {customer.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center space-x-2">
+                          <button
+                            onClick={() => handleEdit(customer.id)}
+                            className="text-indigo-600 hover:text-indigo-900 font-semibold"
+                            aria-label={`Edit customer ${customer.name}`}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(customer.id)}
+                            className="text-red-600 hover:text-red-900 font-semibold"
+                            aria-label={`Delete customer ${customer.name}`}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Total Purchases</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{customer.name}</p>
-                      <p className="text-sm text-muted-foreground">{customer.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">{customer.phone}</TableCell>
-                  <TableCell className="font-semibold">${customer.totalPurchases.toLocaleString()}</TableCell>
-                  <TableCell>{customer.orders}</TableCell>
-                  <TableCell>
-                    <Badge variant={customer.status === "VIP" ? "default" : "secondary"}>
-                      {customer.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* Pagination Controls */}
+            <nav
+              className="mt-6 flex justify-between items-center"
+              aria-label="Pagination"
+            >
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Previous
+              </button>
+
+              <div className="space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      aria-current={page === currentPage ? "page" : undefined}
+                      className={`px-3 py-1 rounded border ${
+                        page === currentPage
+                          ? "bg-indigo-600 border-indigo-600 text-white"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Next
+              </button>
+            </nav>
+          </section>
+        </div>
+      </div>
+    </>
   );
 }
+
+
+export default Customers;

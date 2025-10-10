@@ -17,6 +17,42 @@ import Companies from "./pages/super-admin/Companies";
 import Users from "./pages/user-management/Users";
 import RolesPermissions from "./pages/user-management/RolesPermissions";
 import DeleteAccountRequest from "./pages/user-management/DeleteAccountRequest";
+import AnnualReport from "./pages/reports/AnnualReport";
+import BestSeller from "./pages/reports/BestSeller";
+import CustomerDueReport from "./pages/reports/CustomerDueReport";
+import CustomerReport from "./pages/reports/CustomerReport";
+import ExpenseReport from "./pages/reports/ExpenseReport";
+import IncomeReport from "./pages/reports/IncomeReport";
+import InventoryReport from "./pages/reports/InventoryReport";
+import InvoiceReport from "./pages/reports/InvoiceReport";
+import ProductExpiryReport from "./pages/reports/ProductExpiryReport";
+import ProductQuantityAlert from "./pages/reports/ProductQuantityAlert";
+import ProductReport from "./pages/reports/ProductReport";
+import ProfitLoss from "./pages/reports/ProfitLoss";
+import PurchaseReport from "./pages/reports/PurchaseReport";
+import SalesReport from "./pages/reports/SalesReport";
+import SoldStock from "./pages/reports/SoldStock";
+import StockHistory from "./pages/reports/StockHistory";
+import SupplierDueReport from "./pages/reports/SupplierDueReport";
+import SupplierReport from "./pages/reports/SupplierReport";
+import Billers from "./pages/peoples/Billers"; 
+import Stores from "./pages/peoples/Stores";
+import Suppliers from "./pages/peoples/Suppliers";
+import Warehouses from "./pages/peoples/Warehouses"; 
+import TaxReport from "./pages/reports/TaxReport";
+import AdminAttendance from "./pages/hrm/AdminAttendance";
+import AdminLeaves from "./pages/hrm/AdminLeaves";
+import Departments from "./pages/hrm/Departments";
+import Designation from "./pages/hrm/Designation";
+import EmployeeAttendance from "./pages/hrm/EmployeeAttendance";
+import EmployeeLeaves from "./pages/hrm/EmployeeLeaves"; 
+import EmployeeSalary from "./pages/hrm/EmployeeSalary";
+import Holidays from "./pages/hrm/Holidays";
+import LeaveTypes from "./pages/hrm/LeaveTypes";
+import Payslip from "./pages/hrm/Payslip";
+import Shifts from "./pages/hrm/Shifts";
+
+
 
 const queryClient = new QueryClient();
 
@@ -106,50 +142,50 @@ const App = () => {
 
                 {/* Peoples */}
                 <Route path="peoples/customers" element={<Customers />} />
-                <Route path="peoples/billers" element={<GenericPage title="Billers" description="Manage billers" />} />
-                <Route path="peoples/suppliers" element={<GenericPage title="Suppliers" description="Supplier management" />} />
-                <Route path="peoples/stores" element={<GenericPage title="Stores" description="Store locations" />} />
-                <Route path="peoples/warehouses" element={<GenericPage title="Warehouses" description="Warehouse management" />} />
+                <Route path="peoples/billers" element={<Billers />} />
+                <Route path="peoples/suppliers" element={<Suppliers/>} />
+                <Route path="peoples/stores" element={<Stores />} />
+                <Route path="peoples/warehouses" element={<Warehouses />} />
 
                 {/* HRM */}
                 <Route path="hrm/employees" element={<Employees />} />
-                <Route path="hrm/departments" element={<GenericPage title="Departments" description="Department structure" />} />
-                <Route path="hrm/designations" element={<GenericPage title="Designation" description="Employee roles" />} />
-                <Route path="hrm/shifts" element={<GenericPage title="Shifts" description="Work schedules" />} />
-                <Route path="hrm/attendance/employee" element={<GenericPage title="Employee Attendance" description="Track employee attendance" />} />
-                <Route path="hrm/attendance/admin" element={<GenericPage title="Admin Attendance" description="Manage attendance" />} />
-                <Route path="hrm/leaves/admin" element={<GenericPage title="Admin Leaves" description="Manage admin leaves" />} />
-                <Route path="hrm/leaves/employee" element={<GenericPage title="Employee Leaves" description="Employee leave requests" />} />
-                <Route path="hrm/leaves/types" element={<GenericPage title="Leave Types" description="Define leave categories" />} />
-                <Route path="hrm/holidays" element={<GenericPage title="Holidays" description="Holiday calendar" />} />
-                <Route path="hrm/payroll/salary" element={<GenericPage title="Employee Salary" description="Manage salaries" />} />
-                <Route path="hrm/payroll/payslip" element={<GenericPage title="Payslip" description="Generate payslips" />} />
+                <Route path="hrm/departments" element={<Departments/>} />
+                <Route path="hrm/designations" element={<Designation />} />
+                <Route path="hrm/shifts" element={<Shifts />} />
+                <Route path="hrm/attendance/employee" element={<EmployeeAttendance />} />
+                <Route path="hrm/attendance/admin" element={<AdminAttendance />} />
+                <Route path="hrm/leaves/admin" element={<AdminLeaves />} />
+                <Route path="hrm/leaves/employee" element={<EmployeeLeaves />} />
+                <Route path="hrm/leaves/types" element={<LeaveTypes/>} />
+                <Route path="hrm/holidays" element={<Holidays />} />
+                <Route path="hrm/payroll/salary" element={<EmployeeSalary />} />
+                <Route path="hrm/payroll/payslip" element={<Payslip />} />
 
                 {/* Reports */}
-                <Route path="reports/sales/report" element={<GenericPage title="Sales Report" description="Sales analytics" />} />
-                <Route path="reports/sales/best-seller" element={<GenericPage title="Best Seller" description="Top-selling products" />} />
-                <Route path="reports/purchase" element={<GenericPage title="Purchase Report" description="Purchase analytics" />} />
-                <Route path="reports/inventory/report" element={<GenericPage title="Inventory Report" description="Stock overview" />} />
-                <Route path="reports/inventory/stock-history" element={<GenericPage title="Stock History" description="Stock movement" />} />
-                <Route path="reports/inventory/sold-stock" element={<GenericPage title="Sold Stock" description="Sold inventory" />} />
-                <Route path="reports/invoice" element={<GenericPage title="Invoice Report" description="Invoice analytics" />} />
-                <Route path="reports/supplier/report" element={<GenericPage title="Supplier Report" description="Supplier performance" />} />
-                <Route path="reports/supplier/due" element={<GenericPage title="Supplier Due Report" description="Supplier dues" />} />
-                <Route path="reports/customer/report" element={<GenericPage title="Customer Report" description="Customer analytics" />} />
-                <Route path="reports/customer/due" element={<GenericPage title="Customer Due Report" description="Customer dues" />} />
-                <Route path="reports/product/report" element={<GenericPage title="Product Report" description="Product performance" />} />
-                <Route path="reports/product/expiry" element={<GenericPage title="Product Expiry Report" description="Expired products" />} />
-                <Route path="reports/product/quantity-alert" element={<GenericPage title="Product Quantity Alert" description="Low stock alerts" />} />
-                <Route path="reports/expense" element={<GenericPage title="Expense Report" description="Expense analytics" />} />
-                <Route path="reports/income" element={<GenericPage title="Income Report" description="Income analytics" />} />
-                <Route path="reports/tax" element={<GenericPage title="Tax Report" description="Tax calculations" />} />
-                <Route path="reports/profit-loss" element={<GenericPage title="Profit & Loss" description="Financial performance" />} />
-                <Route path="reports/annual" element={<GenericPage title="Annual Report" description="Yearly summary" />} />
+                <Route path="reports/sales/report" element={<SalesReport/>} />
+                <Route path="reports/sales/best-seller" element={<BestSeller />} />
+                <Route path="reports/purchase" element={<PurchaseReport/>} />
+                <Route path="reports/inventory/report" element={<InventoryReport />} />
+                <Route path="reports/inventory/stock-history" element={<StockHistory />} />
+                <Route path="reports/inventory/sold-stock" element={<SoldStock />} />
+                <Route path="reports/invoice" element={<InvoiceReport/>} />
+                <Route path="reports/supplier/report" element={<SupplierReport />} />
+                <Route path="reports/supplier/due" element={<SupplierDueReport/>} />
+                <Route path="reports/customer/report" element={<CustomerReport/>} />
+                <Route path="reports/customer/due" element={<CustomerDueReport />} />
+                <Route path="reports/product/report" element={<ProductReport />} />
+                <Route path="reports/product/expiry" element={<ProductExpiryReport />} />
+                <Route path="reports/product/quantity-alert" element={<ProductQuantityAlert />} />
+                <Route path="reports/expense" element={<ExpenseReport />} />
+                <Route path="reports/income" element={<IncomeReport />} />
+                <Route path="reports/tax" element={<TaxReport />} />
+                <Route path="reports/profit-loss" element={<ProfitLoss />} />
+                <Route path="reports/annual" element={<AnnualReport />} />
 
                 {/* User Management */}
                 <Route path="user-management/users" element={<Users />} />
                 <Route path="user-management/roles-permissions" element={<RolesPermissions/>} />
-                <Route path="user-management/delete-account-request" element={<GenericPage title="Delete Account Request" description="Manage account deletion" />} />
+                <Route path="user-management/delete-account-request" element={<DeleteAccountRequest/>} />
 
                 {/* Settings */} 
                 <Route path="settings/general" element={<GenericPage title="General Settings" description="System configuration" />} />

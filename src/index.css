@@ -52,8 +52,8 @@ All colors MUST be HSL.
     --ring: 221 83% 53%;
 
     --radius: 0.5rem;
-    
-       /* Custom theme vars */
+
+    /* Custom theme vars */
     --header-background: 0 0% 100%;
     --header-foreground: 240 10% 3.9%;
 
@@ -82,7 +82,7 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1);
 
- 
+
 
   }
 
@@ -233,7 +233,7 @@ strong {
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   color: #212B36;
   font-family: "Nunito", sans-serif;
-  font-weight: 700; 
+  font-weight: 700;
   margin-bottom: 0;
 }
 
@@ -248,25 +248,53 @@ ul {
 }
 
 
-    .custom-scroll1 { 
-    }
+.custom-scroll1 {}
 
-    /* Target scrollbar for this specific div in WebKit browsers */
-    .custom-scroll1::-webkit-scrollbar {
-      width: 5px; /* Width of the scrollbar */
+/* Target scrollbar for this specific div in WebKit browsers */
+.custom-scroll1::-webkit-scrollbar {
+  width: 5px;
+  /* Width of the scrollbar */
 
-    }
+}
 
-    .custom-scroll1::-webkit-scrollbar-track {
-      background: 0 0 100%; /* Track color */
-      border-radius: 10px; /* Rounded track */
-    }
+.custom-scroll1::-webkit-scrollbar-track {
+  background: 0 0 100%;
+  /* Track color */
+  border-radius: 10px;
+  /* Rounded track */
+}
 
-    .custom-scroll1::-webkit-scrollbar-thumb {
-      background: #ccc; /* Thumb color */
-      border-radius: 10px; /* Rounded thumb */
-    }
+.custom-scroll1::-webkit-scrollbar-thumb {
+  background: #ccc;
+  /* Thumb color */
+  border-radius: 10px;
+  /* Rounded thumb */
+}
 
-    .custom-scroll1::-webkit-scrollbar-thumb:hover {
-      background: #555; /* Thumb color on hover */
-    }
+.custom-scroll1::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* Thumb color on hover */
+}
+
+.glass-holder {
+  background: url('images/login2.jpg') center/cover no-repeat;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* Glassmorphism card */
+.glass-card {
+  width: 400px;
+  padding: 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Safari support */
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  color: white;
+  text-align: center;
+}

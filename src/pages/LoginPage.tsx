@@ -21,7 +21,8 @@ async function fakeLogin({ email, password }) {
 // Array of login images
 const loginImages = ["login1.jpg", "login2.jpg", "login3.jpg"];
 // Select a random image
-const loginImageUrl = `/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
+const loginImageUrl1 = `/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
+const loginImageUrl = `/images/ph1.png`;
 
 
 function LoginPage({ onLoginSuccess }) {
@@ -52,23 +53,17 @@ function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-muted lg:block relative">
-        <img
-          src={loginImageUrl}
-          alt={loginImageAlt}
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          loading="eager"
-        />
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-3 glass-holder">
+      <div className="hidden bg-muted lg:block relative"> 
       </div>
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
+      <div className="flex items-center justify-center py-12 " style={{paddingTop:"3px"}}>
+        <div className="mx-auto grid w-[350px] gap-6 glass-card">
           <div className="grid gap-2 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               {/* Replace Icons.logo with your own logo or text here if needed */}
               <h1 className="text-3xl font-bold font-headline">NyaBuy</h1>
             </div>
-            <p className="text-balance text-muted-foreground">
+            <p className="text-balance ">
               Enter your email below to login to your account
             </p>
           </div>
@@ -118,6 +113,8 @@ function LoginPage({ onLoginSuccess }) {
             )}
           </form>
         </div>
+      </div>
+      <div className="hidden bg-muted lg:block relative"> 
       </div>
     </div>
   );
