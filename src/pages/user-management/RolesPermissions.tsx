@@ -27,18 +27,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // Sample data—what permissions align with your menu sections?
 const sampleRoles = [
-  { id: 1, name: "Admin", permissions: { dashboard: true, sales: true, inventory: true /* etc. */ } },
+  { id: 1, name: "Admin", permissions: { dashboard: true, sales: true, inventory: true } },
   { id: 2, name: "Manager", permissions: { dashboard: true, sales: true, inventory: false } },
-  // Add more...
 ];
 
 const modules = ["Dashboard", "Sales", "Inventory", "Finance", "HRM", "Reports", "Settings"];
 
 export default function RolesPermissionsPage() {
   const [roles, setRoles] = useState(sampleRoles);
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editRole, setEditRole] = useState({ name: "", permissions: {} });
+  const [editRole, setEditRole] = useState<any>({ name: "", permissions: {} });
 
   const handleEditRole = (role) => {
     setSelectedRole(role);

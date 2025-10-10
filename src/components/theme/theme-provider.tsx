@@ -25,6 +25,7 @@ const defaultTheme: ThemeConfig = {
   headerColor: "0 0% 100%", // white
   sidebarColor: "0 0% 100%", // white
   primaryColor: "32 98% 61%", // light orange
+  mode: "light",
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

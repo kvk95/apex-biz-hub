@@ -19,9 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Check, X } from "lucide-react";
+import { Calendar as CalendarIcon, Check, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/datepicker"; // Assume shadcn date picker
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Sample data—how would you query pending requests from a backend?
 const sampleRequests = [
@@ -33,8 +36,10 @@ const sampleRequests = [
 export default function DeleteAccountPage() {
   const [requests, setRequests] = useState(sampleRequests);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [action, setAction] = useState(""); // "approve" or "reject"
+  const [fromDate, setFromDate] = useState<Date>();
+  const [toDate, setToDate] = useState<Date>();
 
   const handleAction = (requestId: number, act: string) => {
     setSelectedRequest(requests.find(r => r.id === requestId));
@@ -59,11 +64,31 @@ export default function DeleteAccountPage() {
       <div className="flex space-x-4">
         <div>
           <Label>From Date</Label>
-          <DatePicker /> {/* Custom component */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-[240px] justify-start text-left font-normal", !fromDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={fromDate} onSelect={setFromDate} initialFocus />
+            </PopoverContent>
+          </Popover>
         </div>
         <div>
           <Label>To Date</Label>
-          <DatePicker />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-[240px] justify-start text-left font-normal", !toDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={toDate} onSelect={setToDate} initialFocus />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       <Table>
