@@ -1,202 +1,500 @@
-To recreate the page in the working repo to match the design, layout, fields, and functionality of the reference page, you need to follow these steps. However, since the reference page URL is not accessible, I will provide a general structure based on typical department management pages. This example will include sections for department management, such as adding, editing, and listing departments, along with pagination.
+import React, { useState, useMemo } from "react";
 
-### Step 1: Set Page Title
-Ensure the page title matches the reference page. For demonstration purposes, let's assume the title is "Departments Management".
+const departmentsData = [
+  {
+    id: 1,
+    departmentName: "Sales",
+    description: "Handles all sales activities",
+    status: "Active",
+  },
+  {
+    id: 2,
+    departmentName: "Marketing",
+    description: "Responsible for marketing campaigns",
+    status: "Active",
+  },
+  {
+    id: 3,
+    departmentName: "Finance",
+    description: "Manages company finances",
+    status: "Inactive",
+  },
+  {
+    id: 4,
+    departmentName: "Human Resources",
+    description: "Manages employee relations",
+    status: "Active",
+  },
+  {
+    id: 5,
+    departmentName: "IT Support",
+    description: "Handles technical support",
+    status: "Active",
+  },
+  {
+    id: 6,
+    departmentName: "Research & Development",
+    description: "Innovates new products",
+    status: "Inactive",
+  },
+  {
+    id: 7,
+    departmentName: "Customer Service",
+    description: "Customer support and service",
+    status: "Active",
+  },
+  {
+    id: 8,
+    departmentName: "Logistics",
+    description: "Manages shipping and delivery",
+    status: "Active",
+  },
+  {
+    id: 9,
+    departmentName: "Quality Assurance",
+    description: "Ensures product quality",
+    status: "Inactive",
+  },
+  {
+    id: 10,
+    departmentName: "Administration",
+    description: "General administrative tasks",
+    status: "Active",
+  },
+  {
+    id: 11,
+    departmentName: "Legal",
+    description: "Handles legal matters",
+    status: "Active",
+  },
+  {
+    id: 12,
+    departmentName: "Procurement",
+    description: "Purchases company supplies",
+    status: "Inactive",
+  },
+];
 
-### Step 2: Replicate Sections
-Replicate all sections from the reference page. Typically, these might include:
-- **Header**: With navigation or branding.
-- **Department List**: A table or grid displaying department information.
-- **Add/Edit Department Form**: A form to add or edit department details.
-- **Pagination**: If the list is paginated.
-- **Footer**: Optional, depending on the reference page.
+const pageSizeOptions = [5, 10, 20];
 
-### Step 3: Replicate Fields and Inputs
-Ensure all fields and inputs match the reference page. This includes text inputs, dropdowns, and buttons.
-
-### Step 4: Implement Theme with Tailwind CSS
-Use Tailwind CSS to match the color scheme, font sizes, and button styles from the reference page.
-
-### Step 5: Replicate Functionality
-Ensure all interactive features are replicated, including forms, buttons, data handling, and table interactions.
-
-### Step 6: Align Layout
-Use Tailwind CSS utility classes to ensure the layout and spacing match the reference page.
-
-### Step 7: Provide Data as JSON
-Provide data for dynamic fields or lists as JSON.
-
-### Step 8: Final React Component
-The final output should be a React component using Tailwind CSS for styling.
-
-Here is a sample React component that demonstrates these steps:
-
-```jsx
-import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // For fetching data
-
-function Departments() {
-  const [departments, setDepartments] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [departmentsPerPage] = useState(10);
-  const [newDepartment, setNewDepartment] = useState({ name: '', description: '' });
-
-  useEffect(() => {
-    fetchDepartments();
+const Departments: React.FC = () => {
+  React.useEffect(() => {
+    document.title = "Departments - Dreams POS";
   }, []);
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await axios.get('https://your-api-url.com/departments');
-      setDepartments(response.data);
-    } catch (error) {
-      console.error(error);
+  // State for form inputs
+  const [departmentName, setDepartmentName] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("Active");
+
+  // State for table data and pagination
+  const [data, setData] = useState(departmentsData);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // State for editing
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(data.length / pageSize);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return data.slice(startIndex, startIndex + pageSize);
+  }, [data, currentPage, pageSize]);
+
+  // Handlers
+  const resetForm = () => {
+    setDepartmentName("");
+    setDescription("");
+    setStatus("Active");
+    setEditId(null);
+  };
+
+  const handleSave = () => {
+    if (!departmentName.trim()) {
+      alert("Department Name is required.");
+      return;
+    }
+    if (editId !== null) {
+      // Edit existing
+      setData((prev) =>
+        prev.map((d) =>
+          d.id === editId
+            ? { ...d, departmentName, description, status }
+            : d
+        )
+      );
+    } else {
+      // Add new
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [
+        ...prev,
+        { id: newId, departmentName, description, status },
+      ]);
+    }
+    resetForm();
+  };
+
+  const handleEdit = (id: number) => {
+    const dept = data.find((d) => d.id === id);
+    if (dept) {
+      setDepartmentName(dept.departmentName);
+      setDescription(dept.description);
+      setStatus(dept.status);
+      setEditId(id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const handleAddDepartment = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('https://your-api-url.com/departments', newDepartment);
-      fetchDepartments();
-      setNewDepartment({ name: '', description: '' });
-    } catch (error) {
-      console.error(error);
+  const handleDelete = (id: number) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this department?"
+      )
+    ) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      if ((currentPage - 1) * pageSize >= data.length - 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
 
-  const handleEditDepartment = async (id, updatedDepartment) => {
-    try {
-      await axios.put(`https://your-api-url.com/departments/${id}`, updatedDepartment);
-      fetchDepartments();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleRefresh = () => {
+    setData(departmentsData);
+    resetForm();
+    setCurrentPage(1);
+    setPageSize(5);
   };
 
-  const handleDeleteDepartment = async (id) => {
-    try {
-      await axios.delete(`https://your-api-url.com/departments/${id}`);
-      fetchDepartments();
-    } catch (error) {
-      console.error(error);
-    }
+  // Pagination controls
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
-
-  const indexOfLastDepartment = currentPage * departmentsPerPage;
-  const indexOfFirstDepartment = indexOfLastDepartment - departmentsPerPage;
-  const currentDepartments = departments.slice(indexOfFirstDepartment, indexOfLastDepartment);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold mb-4">Departments Management</h1>
+    <div className="min-h-screen bg-gray-100 text-gray-800 font-sans">
+      <div className="container mx-auto px-4 py-6">
+        {/* Title */}
+        <h1 className="text-3xl font-semibold mb-6 text-gray-900">
+          Departments
+        </h1>
 
-      {/* Add Department Form */}
-      <form onSubmit={handleAddDepartment} className="mb-4">
-        <div className="flex flex-wrap -mx-3 mb-2">
-          <div className="w-full md:w-1/2 px-3 mb-6 md:mb-0">
-            <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="grid-first-name">
-              Department Name
-            </label>
-            <input
-              className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              id="grid-first-name"
-              type="text"
-              value={newDepartment.name}
-              onChange={(e) => setNewDepartment({ ...newDepartment, name: e.target.value })}
-            />
-          </div>
-          <div className="w-full md:w-1/2 px-3 mb-6 md:mb-0">
-            <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="grid-last-name">
-              Description
-            </label>
-            <input
-              className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              id="grid-last-name"
-              type="text"
-              value={newDepartment.description}
-              onChange={(e) => setNewDepartment({ ...newDepartment, description: e.target.value })}
-            />
-          </div>
-        </div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          type="submit"
-        >
-          Add Department
-        </button>
-      </form>
-
-      {/* Departments List */}
-      <table className="w-full table-auto">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2">Department Name</th>
-            <th className="px-4 py-2">Description</th>
-            <th className="px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentDepartments.map((department) => (
-            <tr key={department.id}>
-              <td className="border px-4 py-2">{department.name}</td>
-              <td className="border px-4 py-2">{department.description}</td>
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2"
-                  onClick={() => handleEditDepartment(department.id, { name: 'Updated Name', description: 'Updated Description' })}
-                >
-                  Edit
-                </button>
-                <button
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={() => handleDeleteDepartment(department.id)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-4">
-        {[...Array(Math.ceil(departments.length / departmentsPerPage)).keys()].map((pageNumber) => (
-          <button
-            key={pageNumber + 1}
-            className={`py-2 px-4 mx-1 ${currentPage === pageNumber + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-            onClick={() => paginate(pageNumber + 1)}
+        {/* Form Section */}
+        <section className="bg-white rounded shadow p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+            Add / Edit Department
+          </h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-6"
           >
-            {pageNumber + 1}
-          </button>
-        ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <label
+                htmlFor="departmentName"
+                className="block text-gray-700 font-medium"
+              >
+                Department Name <span className="text-red-600">*</span>
+              </label>
+              <input
+                id="departmentName"
+                type="text"
+                value={departmentName}
+                onChange={(e) => setDepartmentName(e.target.value)}
+                className="col-span-2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter department name"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <label
+                htmlFor="description"
+                className="block text-gray-700 font-medium"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="col-span-2 border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter description"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <label
+                htmlFor="status"
+                className="block text-gray-700 font-medium"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="col-span-2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div className="flex space-x-4 justify-start">
+              <button
+                type="submit"
+                className="inline-flex items-center px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                title="Save Department"
+              >
+                <i className="fas fa-save mr-2" aria-hidden="true"></i> Save
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="inline-flex items-center px-5 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                title="Clear Form"
+              >
+                <i className="fas fa-undo mr-2" aria-hidden="true"></i> Clear
+              </button>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="inline-flex items-center px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                title="Refresh Data"
+              >
+                <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* Table Section */}
+        <section className="bg-white rounded shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Department List
+            </h2>
+            <button
+              type="button"
+              onClick={() => alert("Report generated")}
+              className="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              title="Generate Report"
+            >
+              <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 divide-y divide-gray-300">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
+                    #
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
+                    Department Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-gray-500"
+                    >
+                      No departments found.
+                    </td>
+                  </tr>
+                )}
+                {paginatedData.map((dept, idx) => (
+                  <tr key={dept.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 border-r border-gray-300 text-sm text-gray-700">
+                      {(currentPage - 1) * pageSize + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-300 text-sm text-gray-900 font-medium">
+                      {dept.departmentName}
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-300 text-sm text-gray-700">
+                      {dept.description}
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-300 text-sm">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          dept.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {dept.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(dept.id)}
+                        className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        title="Edit Department"
+                      >
+                        <i className="fas fa-edit" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(dept.id)}
+                        className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        title="Delete Department"
+                      >
+                        <i className="fas fa-trash-alt" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex flex-col md:flex-row items-center justify-between mt-6 space-y-3 md:space-y-0">
+            <div className="flex items-center space-x-2 text-sm text-gray-700">
+              <span>Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Select page size"
+              >
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <span>entries</span>
+            </div>
+
+            <nav
+              className="inline-flex -space-x-px rounded-md shadow-sm"
+              aria-label="Pagination"
+            >
+              <button
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+                className={`inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                }`}
+                aria-label="First Page"
+                title="First Page"
+              >
+                <i className="fas fa-angle-double-left" aria-hidden="true"></i>
+              </button>
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                }`}
+                aria-label="Previous Page"
+                title="Previous Page"
+              >
+                <i className="fas fa-angle-left" aria-hidden="true"></i>
+              </button>
+
+              {/* Show up to 5 page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(
+                  (page) =>
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 2 && page <= currentPage + 2)
+                )
+                .map((page, i, arr) => {
+                  // Add ellipsis if gap between pages
+                  if (
+                    i > 0 &&
+                    page - arr[i - 1] > 1
+                  ) {
+                    return (
+                      <React.Fragment key={`frag-${page}`}>
+                        <span className="inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-gray-700 cursor-default select-none">
+                          ...
+                        </span>
+                        <button
+                          onClick={() => goToPage(page)}
+                          aria-current={page === currentPage ? "page" : undefined}
+                          className={`inline-flex items-center px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            page === currentPage
+                              ? "bg-indigo-600 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                          key={page}
+                          title={`Page ${page}`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    );
+                  }
+                  return (
+                    <button
+                      onClick={() => goToPage(page)}
+                      aria-current={page === currentPage ? "page" : undefined}
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                        page === currentPage
+                          ? "bg-indigo-600 text-white"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                      key={page}
+                      title={`Page ${page}`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""
+                }`}
+                aria-label="Next Page"
+                title="Next Page"
+              >
+                <i className="fas fa-angle-right" aria-hidden="true"></i>
+              </button>
+              <button
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={`inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""
+                }`}
+                aria-label="Last Page"
+                title="Last Page"
+              >
+                <i className="fas fa-angle-double-right" aria-hidden="true"></i>
+              </button>
+            </nav>
+          </div>
+        </section>
       </div>
     </div>
   );
-}
+};
 
 export default Departments;
-```
-
-This code provides a basic structure for managing departments, including adding, editing, and deleting departments, along with pagination. You will need to adjust the styles and functionality to match the reference page exactly. Ensure that you replace placeholder data and API URLs with actual data and API endpoints. 
-
-**Data Example (JSON):**
-```json
-[
-  {
-    "id": 1,
-    "name": "Sales",
-    "description": "Sales Department"
-  },
-  {
-    "id": 2,
-    "name": "Marketing",
-    "description": "Marketing Department"
-  }
-]
-```
-
-This JSON data should be fetched from your API and used to populate the departments list. Adjust the API calls and data handling logic as needed to match your backend setup.

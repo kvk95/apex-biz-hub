@@ -6,6 +6,13 @@ import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import Admin1Dashboard from "./pages/dashboard/Admin1Dashboard";
+import SalesDashboard from "./pages/dashboard/SalesDashboard";
+import SuperadminDashboard from "./pages/super-admin/SuperadminDashboard";
+import Companies from "./pages/super-admin/Companies";
+import Domain from "./pages/super-admin/Domain";
+import Packages from "./pages/super-admin/Packages";
+import PurchaseTransaction from "./pages/super-admin/PurchaseTransaction";
+import Subscriptions from "./pages/super-admin/Subscriptions";
 import GenericPage from "./pages/GenericPage";
 import Employees from "./pages/hrm/Employees";
 import Products from "./pages/inventory/Products";
@@ -13,7 +20,6 @@ import LoginPage from "./pages/LoginPage";
 import Customers from "./pages/peoples/Customers";
 import POSPage from "./pages/pos/POSPage";
 import OnlineOrders from "./pages/sales/OnlineOrders";
-import Companies from "./pages/super-admin/Companies";
 import Users from "./pages/user-management/Users";
 import RolesPermissions from "./pages/user-management/RolesPermissions";
 import DeleteAccountRequest from "./pages/user-management/DeleteAccountRequest";
@@ -79,15 +85,15 @@ const App = () => {
                 <Route index element={<Admin1Dashboard />} />
                 <Route path="dashboard/admin-1" element={<Admin1Dashboard />} />
                 <Route path="dashboard/admin-2" element={<Admin1Dashboard />} />
-                <Route path="dashboard/sales" element={<Admin1Dashboard />} />
+                <Route path="dashboard/sales" element={<SalesDashboard />} />
 
                 {/* Super Admin */}
-                <Route path="super-admin/dashboard" element={<GenericPage title="Super Admin Dashboard" description="Overview for super admins" />} />
+                <Route path="super-admin/dashboard" element={<SuperadminDashboard />} />
                 <Route path="super-admin/companies" element={<Companies />} />
-                <Route path="super-admin/subscriptions" element={<GenericPage title="Subscriptions" description="Manage subscription plans" />} />
-                <Route path="super-admin/packages" element={<GenericPage title="Packages" description="Manage pricing packages" />} />
-                <Route path="super-admin/domain" element={<GenericPage title="Domain Settings" description="Configure domain settings" />} />
-                <Route path="super-admin/purchase-transaction" element={<GenericPage title="Purchase Transaction" description="View purchase transactions" />} />
+                <Route path="super-admin/subscriptions" element={<Subscriptions />} />
+                <Route path="super-admin/packages" element={<Packages />} />
+                <Route path="super-admin/domain" element={<Domain />} />
+                <Route path="super-admin/purchase-transaction" element={<PurchaseTransaction />} />
 
                 {/* Inventory */}
                 <Route path="inventory/products" element={<Products />} />
