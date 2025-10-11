@@ -1,95 +1,25 @@
-import React, { useState } from "react";
-
-const loginData = {
-  users: [
-    {
-      id: 1,
-      username: "admin",
-      password: "admin123",
-      role: "Administrator",
-      lastLogin: "2025-10-10 08:30 AM",
-    },
-    {
-      id: 2,
-      username: "user1",
-      password: "userpass1",
-      role: "User",
-      lastLogin: "2025-10-09 05:45 PM",
-    },
-    {
-      id: 3,
-      username: "user2",
-      password: "userpass2",
-      role: "User",
-      lastLogin: "2025-10-08 11:20 AM",
-    },
-    {
-      id: 4,
-      username: "guest",
-      password: "guest123",
-      role: "Guest",
-      lastLogin: "2025-10-07 09:00 AM",
-    },
-    {
-      id: 5,
-      username: "manager",
-      password: "manager123",
-      role: "Manager",
-      lastLogin: "2025-10-06 02:15 PM",
-    },
-    {
-      id: 6,
-      username: "staff",
-      password: "staff123",
-      role: "Staff",
-      lastLogin: "2025-10-05 04:40 PM",
-    },
-    {
-      id: 7,
-      username: "support",
-      password: "support123",
-      role: "Support",
-      lastLogin: "2025-10-04 10:05 AM",
-    },
-    {
-      id: 8,
-      username: "tester",
-      password: "tester123",
-      role: "Tester",
-      lastLogin: "2025-10-03 01:30 PM",
-    },
-    {
-      id: 9,
-      username: "developer",
-      password: "dev123",
-      role: "Developer",
-      lastLogin: "2025-10-02 03:50 PM",
-    },
-    {
-      id: 10,
-      username: "designer",
-      password: "design123",
-      role: "Designer",
-      lastLogin: "2025-10-01 08:10 AM",
-    },
-    {
-      id: 11,
-      username: "analyst",
-      password: "analyst123",
-      role: "Analyst",
-      lastLogin: "2025-09-30 06:25 PM",
-    },
-  ],
-};
+import React, { useState, useEffect } from "react";
+import { useApiService } from "@/hooks/useApiService";
+import { Link } from "react-router-dom";
 
 const ITEMS_PER_PAGE = 5;
+
+interface User {
+  id: number;
+  username: string;
+  password: string;
+  role: string;
+  lastLogin: string;
+}
 
 export default function LoginBasic() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [users, setUsers] = useState(loginData.users);
+  
+  const { data, loading, error } = useApiService<User[]>("/loginUsers.json");
+  const users = data || [];
 
   // Pagination calculations
   const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
@@ -112,7 +42,6 @@ export default function LoginBasic() {
   };
 
   const handleRefresh = () => {
-    setUsers(loginData.users);
     setCurrentPage(1);
     setLoginMessage("");
     setUsername("");
@@ -192,12 +121,12 @@ export default function LoginBasic() {
               </div>
 
               <div className="text-sm">
-                <a
-                  href="#!"
+                <Link
+                  to="/auth/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Forgot your password?
-                </a>
+                </Link>
               </div>
             </div>
 

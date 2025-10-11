@@ -1,0 +1,32 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "phone": "555-1234",
+      "email": "john@example.com",
+      "accountNo": "ACC001",
+      "balance": 5000
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "phone": "555-5678",
+      "email": "jane@example.com",
+      "accountNo": "ACC002",
+      "balance": 3000
+    },
+    {
+      "id": 3,
+      "name": "Walk-in Customer",
+      "phone": "555-0000",
+      "email": "walkin@example.com",
+      "accountNo": "ACC003",
+      "balance": 0
+    }
+  ]
+}

@@ -140,7 +140,7 @@ export default function Profile() {
   }, [currentPage]);
 
   // Handlers
-  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setAccountForm((prev) => ({ ...prev, [name]: value }));
   };

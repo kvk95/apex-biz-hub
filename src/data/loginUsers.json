@@ -1,0 +1,29 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "Administrator",
+      "lastLogin": "2025-10-10 08:30 AM"
+    },
+    {
+      "id": 2,
+      "username": "user1",
+      "password": "userpass1",
+      "role": "User",
+      "lastLogin": "2025-10-09 05:45 PM"
+    },
+    {
+      "id": 3,
+      "username": "manager",
+      "password": "manager123",
+      "role": "Manager",
+      "lastLogin": "2025-10-06 02:15 PM"
+    }
+  ]
+}

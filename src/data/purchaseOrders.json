@@ -1,0 +1,29 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "poNumber": "PO-001",
+      "supplier": "ABC Suppliers",
+      "date": "2025-01-15",
+      "status": "Pending",
+      "items": [
+        { "product": "Product A", "qty": 10, "price": 50 },
+        { "product": "Product B", "qty": 5, "price": 100 }
+      ]
+    },
+    {
+      "id": 2,
+      "poNumber": "PO-002",
+      "supplier": "XYZ Corp",
+      "date": "2025-01-16",
+      "status": "Approved",
+      "items": [
+        { "product": "Product C", "qty": 20, "price": 30 }
+      ]
+    }
+  ]
+}

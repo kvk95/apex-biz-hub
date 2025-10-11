@@ -178,11 +178,11 @@ export default function PosOrders() {
       })
       .sort((a, b) => {
         if (!sortField) return 0;
-        let aVal = a[sortField];
-        let bVal = b[sortField];
+        let aVal: any = a[sortField];
+        let bVal: any = b[sortField];
         if (sortField === "date") {
-          aVal = new Date(aVal);
-          bVal = new Date(bVal);
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
         }
         if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
         if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;

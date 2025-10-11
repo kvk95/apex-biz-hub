@@ -43,7 +43,7 @@ import SupplierReport from "./pages/reports/SupplierReport";
 import Billers from "./pages/peoples/Billers"; 
 import Stores from "./pages/peoples/Stores";
 import Suppliers from "./pages/peoples/Suppliers";
-import Warehouses from "./pages/peoples/Warehouses"; 
+import Warehouses from "./pages/peoples/WareHouses"; 
 import TaxReport from "./pages/reports/TaxReport";
 import AdminAttendance from "./pages/hrm/AdminAttendance";
 import AdminLeaves from "./pages/hrm/AdminLeaves";

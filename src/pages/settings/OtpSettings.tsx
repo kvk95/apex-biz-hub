@@ -1,81 +1,17 @@
 import React, { useState, useEffect } from "react";
-
-const otpSettingsData = [
-  {
-    id: 1,
-    otpType: "Numeric",
-    otpLength: 6,
-    otpValidity: 5,
-    otpResendTime: 1,
-    otpMessage: "Your OTP is {{otp}}. Please do not share it with anyone.",
-    status: "Active",
-  },
-  {
-    id: 2,
-    otpType: "Alphanumeric",
-    otpLength: 8,
-    otpValidity: 10,
-    otpResendTime: 2,
-    otpMessage: "Use {{otp}} as your verification code.",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    otpType: "Numeric",
-    otpLength: 4,
-    otpValidity: 3,
-    otpResendTime: 1,
-    otpMessage: "Your OTP code is {{otp}}.",
-    status: "Active",
-  },
-  {
-    id: 4,
-    otpType: "Alphanumeric",
-    otpLength: 5,
-    otpValidity: 7,
-    otpResendTime: 2,
-    otpMessage: "Enter {{otp}} to verify your identity.",
-    status: "Active",
-  },
-  {
-    id: 5,
-    otpType: "Numeric",
-    otpLength: 6,
-    otpValidity: 5,
-    otpResendTime: 1,
-    otpMessage: "Your OTP is {{otp}}. Please do not share it with anyone.",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    otpType: "Alphanumeric",
-    otpLength: 8,
-    otpValidity: 10,
-    otpResendTime: 2,
-    otpMessage: "Use {{otp}} as your verification code.",
-    status: "Active",
-  },
-  {
-    id: 7,
-    otpType: "Numeric",
-    otpLength: 4,
-    otpValidity: 3,
-    otpResendTime: 1,
-    otpMessage: "Your OTP code is {{otp}}.",
-    status: "Inactive",
-  },
-  {
-    id: 8,
-    otpType: "Alphanumeric",
-    otpLength: 5,
-    otpValidity: 7,
-    otpResendTime: 2,
-    otpMessage: "Enter {{otp}} to verify your identity.",
-    status: "Active",
-  },
-];
+import { useApiService } from "@/hooks/useApiService";
 
 const pageSize = 5;
+
+interface OtpSetting {
+  id: number;
+  otpType: string;
+  otpLength: number;
+  otpValidity: number;
+  otpResendTime: number;
+  otpMessage: string;
+  status: string;
+}
 
 export default function OtpSettings() {
   const [otpType, setOtpType] = useState("Numeric");
@@ -86,9 +22,16 @@ export default function OtpSettings() {
     "Your OTP is {{otp}}. Please do not share it with anyone."
   );
   const [status, setStatus] = useState("Active");
-
-  const [data, setData] = useState(otpSettingsData);
+  
+  const { data: apiData, loading } = useApiService<OtpSetting[]>("/otpSettings.json");
+  const [data, setData] = useState<OtpSetting[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  useEffect(() => {
+    if (apiData) {
+      setData(apiData);
+    }
+  }, [apiData]);
 
   // Pagination calculations
   const totalPages = Math.ceil(data.length / pageSize);
@@ -140,7 +83,7 @@ export default function OtpSettings() {
     setStatus("Active");
   };
 
-  const handleEdit = (item: typeof otpSettingsData[0]) => {
+  const handleEdit = (item: OtpSetting) => {
     setOtpType(item.otpType);
     setOtpLength(item.otpLength);
     setOtpValidity(item.otpValidity);
@@ -266,7 +209,7 @@ export default function OtpSettings() {
                   placeholder="Enter OTP message template"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Use <code className="font-mono bg-gray-100 px-1 rounded">{{"{{otp}}"}}</code> as placeholder for OTP code.
+                  Use <code className="font-mono bg-gray-100 px-1 rounded">{"{{otp}}"}</code> as placeholder for OTP code.
                 </p>
               </div>
 

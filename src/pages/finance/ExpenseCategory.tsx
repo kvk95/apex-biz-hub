@@ -1,6 +1,13 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 
-const initialExpenseCategories = [
+type ExpenseCategory = {
+  id: number;
+  name: string;
+  description: string;
+  status: "Active" | "Inactive";
+};
+
+const initialExpenseCategories: ExpenseCategory[] = [
   {
     id: 1,
     name: "Electricity Bill",
@@ -61,14 +68,7 @@ const initialExpenseCategories = [
     description: "Other miscellaneous expenses",
     status: "Inactive",
   },
-];
-
-type ExpenseCategory = {
-  id: number;
-  name: string;
-  description: string;
-  status: "Active" | "Inactive";
-};
+] as const;
 
 export default function ExpenseCategory() {
   // Page title as per reference page
