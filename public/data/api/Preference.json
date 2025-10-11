@@ -1,0 +1,92 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "role": "Admin",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "name": "Alice Johnson",
+      "email": "alice.johnson@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "name": "Bob Brown",
+      "email": "bob.brown@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "name": "Charlie Davis",
+      "email": "charlie.davis@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "name": "Diana Evans",
+      "email": "diana.evans@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "name": "Ethan Foster",
+      "email": "ethan.foster@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "name": "Fiona Green",
+      "email": "fiona.green@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "name": "George Harris",
+      "email": "george.harris@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "name": "Hannah Irving",
+      "email": "hannah.irving@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "name": "Ian Jackson",
+      "email": "ian.jackson@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 12,
+      "name": "Julia King",
+      "email": "julia.king@example.com",
+      "role": "User",
+      "status": "Active"
+    }
+  ]
+}

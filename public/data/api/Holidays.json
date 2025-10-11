@@ -1,0 +1,92 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "holidayName": "New Year",
+      "holidayDate": "01-01-2023",
+      "day": "Sunday",
+      "description": "New Year's Day"
+    },
+    {
+      "id": 2,
+      "holidayName": "Republic Day",
+      "holidayDate": "26-01-2023",
+      "day": "Thursday",
+      "description": "Republic Day Celebration"
+    },
+    {
+      "id": 3,
+      "holidayName": "Good Friday",
+      "holidayDate": "07-04-2023",
+      "day": "Friday",
+      "description": "Good Friday"
+    },
+    {
+      "id": 4,
+      "holidayName": "Labor Day",
+      "holidayDate": "01-05-2023",
+      "day": "Monday",
+      "description": "International Workers' Day"
+    },
+    {
+      "id": 5,
+      "holidayName": "Independence Day",
+      "holidayDate": "15-08-2023",
+      "day": "Tuesday",
+      "description": "Independence Day"
+    },
+    {
+      "id": 6,
+      "holidayName": "Gandhi Jayanti",
+      "holidayDate": "02-10-2023",
+      "day": "Monday",
+      "description": "Gandhi Jayanti"
+    },
+    {
+      "id": 7,
+      "holidayName": "Christmas",
+      "holidayDate": "25-12-2023",
+      "day": "Monday",
+      "description": "Christmas Day"
+    },
+    {
+      "id": 8,
+      "holidayName": "Eid-ul-Fitr",
+      "holidayDate": "21-04-2023",
+      "day": "Friday",
+      "description": "Eid Festival"
+    },
+    {
+      "id": 9,
+      "holidayName": "Diwali",
+      "holidayDate": "12-11-2023",
+      "day": "Sunday",
+      "description": "Festival of Lights"
+    },
+    {
+      "id": 10,
+      "holidayName": "Holi",
+      "holidayDate": "08-03-2023",
+      "day": "Wednesday",
+      "description": "Festival of Colors"
+    },
+    {
+      "id": 11,
+      "holidayName": "Christmas Eve",
+      "holidayDate": "24-12-2023",
+      "day": "Sunday",
+      "description": "Christmas Eve"
+    },
+    {
+      "id": 12,
+      "holidayName": "Boxing Day",
+      "holidayDate": "26-12-2023",
+      "day": "Tuesday",
+      "description": "Boxing Day"
+    }
+  ]
+}

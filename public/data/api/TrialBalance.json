@@ -1,0 +1,83 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "accountName": "Cash",
+      "debit": 5000,
+      "credit": 0
+    },
+    {
+      "accountName": "Accounts Receivable",
+      "debit": 7000,
+      "credit": 0
+    },
+    {
+      "accountName": "Inventory",
+      "debit": 12000,
+      "credit": 0
+    },
+    {
+      "accountName": "Prepaid Expenses",
+      "debit": 1500,
+      "credit": 0
+    },
+    {
+      "accountName": "Accounts Payable",
+      "debit": 0,
+      "credit": 4000
+    },
+    {
+      "accountName": "Notes Payable",
+      "debit": 0,
+      "credit": 3000
+    },
+    {
+      "accountName": "Owner's Equity",
+      "debit": 0,
+      "credit": 15000
+    },
+    {
+      "accountName": "Sales Revenue",
+      "debit": 0,
+      "credit": 25000
+    },
+    {
+      "accountName": "Service Revenue",
+      "debit": 0,
+      "credit": 8000
+    },
+    {
+      "accountName": "Salaries Expense",
+      "debit": 6000,
+      "credit": 0
+    },
+    {
+      "accountName": "Rent Expense",
+      "debit": 2000,
+      "credit": 0
+    },
+    {
+      "accountName": "Utilities Expense",
+      "debit": 800,
+      "credit": 0
+    },
+    {
+      "accountName": "Depreciation Expense",
+      "debit": 1200,
+      "credit": 0
+    },
+    {
+      "accountName": "Interest Expense",
+      "debit": 400,
+      "credit": 0
+    },
+    {
+      "accountName": "Miscellaneous Expense",
+      "debit": 300,
+      "credit": 0
+    }
+  ]
+}

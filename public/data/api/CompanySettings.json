@@ -1,0 +1,118 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "companyName": "Dreams Technologies",
+      "email": "info@dreamspos.com",
+      "phone": "+1 234 567 890",
+      "address": "1234 Elm Street, Springfield",
+      "city": "Springfield",
+      "country": "USA",
+      "zipCode": "62704",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "companyName": "Tech Innovations",
+      "email": "contact@techinnovations.com",
+      "phone": "+1 987 654 321",
+      "address": "5678 Oak Avenue, Metropolis",
+      "city": "Metropolis",
+      "country": "USA",
+      "zipCode": "10001",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "companyName": "Future Solutions",
+      "email": "support@futuresolutions.com",
+      "phone": "+44 20 7946 0958",
+      "address": "221B Baker Street, London",
+      "city": "London",
+      "country": "UK",
+      "zipCode": "NW1 6XE",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "companyName": "Global Tech",
+      "email": "hello@globaltech.com",
+      "phone": "+91 22 1234 5678",
+      "address": "12 MG Road, Mumbai",
+      "city": "Mumbai",
+      "country": "India",
+      "zipCode": "400001",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "companyName": "Innovatech",
+      "email": "info@innovatech.com",
+      "phone": "+61 2 9876 5432",
+      "address": "45 King Street, Sydney",
+      "city": "Sydney",
+      "country": "Australia",
+      "zipCode": "2000",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "companyName": "NextGen Solutions",
+      "email": "contact@nextgensolutions.com",
+      "phone": "+49 30 123456",
+      "address": "Unter den Linden 5, Berlin",
+      "city": "Berlin",
+      "country": "Germany",
+      "zipCode": "10117",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "companyName": "Alpha Corp",
+      "email": "alpha@alphacorp.com",
+      "phone": "+81 3 1234 5678",
+      "address": "1 Chome-1-2 Oshiage, Tokyo",
+      "city": "Tokyo",
+      "country": "Japan",
+      "zipCode": "131-0045",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "companyName": "Beta Enterprises",
+      "email": "beta@betaenterprises.com",
+      "phone": "+33 1 2345 6789",
+      "address": "10 Rue de Rivoli, Paris",
+      "city": "Paris",
+      "country": "France",
+      "zipCode": "75001",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "companyName": "Omega Systems",
+      "email": "contact@omegasystems.com",
+      "phone": "+55 11 91234 5678",
+      "address": "Av. Paulista, 1000, São Paulo",
+      "city": "São Paulo",
+      "country": "Brazil",
+      "zipCode": "01310-100",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "companyName": "Delta Dynamics",
+      "email": "info@deltadynamics.com",
+      "phone": "+27 11 123 4567",
+      "address": "1 Nelson Mandela Square, Johannesburg",
+      "city": "Johannesburg",
+      "country": "South Africa",
+      "zipCode": "2196",
+      "status": "Active"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "phone": "123-456-7890",
+      "email": "john@example.com",
+      "accountNo": "123456789",
+      "balance": 5000
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "phone": "987-654-3210",
+      "email": "jane@example.com",
+      "accountNo": "987654321",
+      "balance": 7500
+    },
+    {
+      "id": 3,
+      "name": "Michael Johnson",
+      "phone": "555-123-4567",
+      "email": "michael@example.com",
+      "accountNo": "555666777",
+      "balance": 12000
+    },
+    {
+      "id": 4,
+      "name": "Emily Davis",
+      "phone": "444-555-6666",
+      "email": "emily@example.com",
+      "accountNo": "444555666",
+      "balance": 3000
+    },
+    {
+      "id": 5,
+      "name": "William Brown",
+      "phone": "222-333-4444",
+      "email": "william@example.com",
+      "accountNo": "222333444",
+      "balance": 9800
+    },
+    {
+      "id": 6,
+      "name": "Olivia Wilson",
+      "phone": "111-222-3333",
+      "email": "olivia@example.com",
+      "accountNo": "111222333",
+      "balance": 6700
+    },
+    {
+      "id": 7,
+      "name": "James Taylor",
+      "phone": "999-888-7777",
+      "email": "james@example.com",
+      "accountNo": "999888777",
+      "balance": 4500
+    },
+    {
+      "id": 8,
+      "name": "Sophia Martinez",
+      "phone": "666-777-8888",
+      "email": "sophia@example.com",
+      "accountNo": "666777888",
+      "balance": 8200
+    },
+    {
+      "id": 9,
+      "name": "Benjamin Anderson",
+      "phone": "333-444-5555",
+      "email": "benjamin@example.com",
+      "accountNo": "333444555",
+      "balance": 15000
+    },
+    {
+      "id": 10,
+      "name": "Isabella Thomas",
+      "phone": "777-888-9999",
+      "email": "isabella@example.com",
+      "accountNo": "777888999",
+      "balance": 4000
+    },
+    {
+      "id": 1,
+      "name": "Bank of America"
+    },
+    {
+      "id": 2,
+      "name": "Chase Bank"
+    },
+    {
+      "id": 3,
+      "name": "Wells Fargo"
+    },
+    {
+      "id": 4,
+      "name": "Citibank"
+    },
+    {
+      "id": 5,
+      "name": "HSBC"
+    },
+    {
+      "code": "USD",
+      "name": "US Dollar"
+    },
+    {
+      "code": "EUR",
+      "name": "Euro"
+    },
+    {
+      "code": "GBP",
+      "name": "British Pound"
+    },
+    {
+      "code": "INR",
+      "name": "Indian Rupee"
+    },
+    {
+      "code": "JPY",
+      "name": "Japanese Yen"
+    }
+  ]
+}

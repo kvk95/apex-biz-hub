@@ -1,0 +1,88 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "smsGateway": "Twilio",
+      "username": "twilio_user",
+      "password": "********",
+      "senderId": "TWILIO123",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "smsGateway": "Nexmo",
+      "username": "nexmo_user",
+      "password": "********",
+      "senderId": "NEXMO456",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "smsGateway": "Plivo",
+      "username": "plivo_user",
+      "password": "********",
+      "senderId": "PLIVO789",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "smsGateway": "Clickatell",
+      "username": "click_user",
+      "password": "********",
+      "senderId": "CLICK101",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "smsGateway": "MSG91",
+      "username": "msg91_user",
+      "password": "********",
+      "senderId": "MSG91111",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "smsGateway": "Textlocal",
+      "username": "textlocal_user",
+      "password": "********",
+      "senderId": "TEXT222",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "smsGateway": "Infobip",
+      "username": "infobip_user",
+      "password": "********",
+      "senderId": "INFO333",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "smsGateway": "Routee",
+      "username": "routee_user",
+      "password": "********",
+      "senderId": "ROUTE444",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "smsGateway": "Telesign",
+      "username": "telesign_user",
+      "password": "********",
+      "senderId": "TELE555",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "smsGateway": "Sinch",
+      "username": "sinch_user",
+      "password": "********",
+      "senderId": "SINCH666",
+      "status": "Active"
+    }
+  ]
+}

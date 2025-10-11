@@ -1,97 +1,6 @@
-import React, { useState, useMemo } from "react";
-
-const discountPlansData = [
-  {
-    id: 1,
-    discountPlanName: "Holiday Special",
-    discountType: "Percentage",
-    discountValue: 15,
-    startDate: "2023-12-01",
-    endDate: "2023-12-31",
-    status: "Active",
-  },
-  {
-    id: 2,
-    discountPlanName: "New Year Offer",
-    discountType: "Flat",
-    discountValue: 50,
-    startDate: "2024-01-01",
-    endDate: "2024-01-10",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    discountPlanName: "Weekend Deal",
-    discountType: "Percentage",
-    discountValue: 10,
-    startDate: "2023-11-01",
-    endDate: "2023-11-30",
-    status: "Active",
-  },
-  {
-    id: 4,
-    discountPlanName: "Clearance Sale",
-    discountType: "Flat",
-    discountValue: 100,
-    startDate: "2023-10-15",
-    endDate: "2023-10-31",
-    status: "Inactive",
-  },
-  {
-    id: 5,
-    discountPlanName: "Summer Offer",
-    discountType: "Percentage",
-    discountValue: 20,
-    startDate: "2023-06-01",
-    endDate: "2023-06-30",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    discountPlanName: "Festive Discount",
-    discountType: "Flat",
-    discountValue: 75,
-    startDate: "2023-12-20",
-    endDate: "2024-01-05",
-    status: "Active",
-  },
-  {
-    id: 7,
-    discountPlanName: "Black Friday",
-    discountType: "Percentage",
-    discountValue: 25,
-    startDate: "2023-11-24",
-    endDate: "2023-11-24",
-    status: "Active",
-  },
-  {
-    id: 8,
-    discountPlanName: "Cyber Monday",
-    discountType: "Flat",
-    discountValue: 60,
-    startDate: "2023-11-27",
-    endDate: "2023-11-27",
-    status: "Active",
-  },
-  {
-    id: 9,
-    discountPlanName: "Spring Sale",
-    discountType: "Percentage",
-    discountValue: 18,
-    startDate: "2023-03-01",
-    endDate: "2023-03-31",
-    status: "Inactive",
-  },
-  {
-    id: 10,
-    discountPlanName: "VIP Customer",
-    discountType: "Flat",
-    discountValue: 120,
-    startDate: "2023-01-01",
-    endDate: "2023-12-31",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useMemo, useState } from "react";
+ 
 
 const discountTypes = ["Percentage", "Flat"];
 const statuses = ["Active", "Inactive"];
@@ -112,7 +21,11 @@ export default function DiscountPlan() {
   });
 
   // Data state (simulate data in repo)
-  const [plans, setPlans] = useState(discountPlansData);
+  const [plans, setPlans] = useState([]);
+
+  const [data, setData] = useState<>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -123,6 +36,25 @@ export default function DiscountPlan() {
     const start = (currentPage - 1) * itemsPerPage;
     return plans.slice(start, start + itemsPerPage);
   }, [plans, currentPage]);
+
+  
+    useEffect(() => {
+      document.title = "DiscountPlan - Dreams POS";
+      loadData();
+    }, []);
+  
+    const loadData = async () => {
+      setLoading(true);
+      const response = await apiService.get<[]>("DiscountPlan");
+      if (response.status.code === "S") {
+        setData(response.result);
+        setPlans(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+      setLoading(false);
+    };
 
   // Handlers
   const handleInputChange = (

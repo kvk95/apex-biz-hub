@@ -1,0 +1,92 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "role": "Admin",
+      "canEdit": true,
+      "canDelete": true,
+      "canViewReports": true
+    },
+    {
+      "id": 2,
+      "role": "Manager",
+      "canEdit": true,
+      "canDelete": false,
+      "canViewReports": true
+    },
+    {
+      "id": 3,
+      "role": "Cashier",
+      "canEdit": false,
+      "canDelete": false,
+      "canViewReports": false
+    },
+    {
+      "id": 4,
+      "role": "Guest",
+      "canEdit": false,
+      "canDelete": false,
+      "canViewReports": false
+    },
+    {
+      "id": 5,
+      "role": "Support",
+      "canEdit": true,
+      "canDelete": false,
+      "canViewReports": true
+    },
+    {
+      "id": 6,
+      "role": "Accountant",
+      "canEdit": true,
+      "canDelete": false,
+      "canViewReports": true
+    },
+    {
+      "id": 7,
+      "role": "Warehouse",
+      "canEdit": false,
+      "canDelete": false,
+      "canViewReports": false
+    },
+    {
+      "id": 8,
+      "role": "Sales",
+      "canEdit": true,
+      "canDelete": false,
+      "canViewReports": true
+    },
+    {
+      "id": 9,
+      "role": "HR",
+      "canEdit": false,
+      "canDelete": false,
+      "canViewReports": false
+    },
+    {
+      "id": 10,
+      "role": "Marketing",
+      "canEdit": true,
+      "canDelete": false,
+      "canViewReports": true
+    },
+    {
+      "id": 11,
+      "role": "IT",
+      "canEdit": true,
+      "canDelete": true,
+      "canViewReports": true
+    },
+    {
+      "id": 12,
+      "role": "Developer",
+      "canEdit": true,
+      "canDelete": true,
+      "canViewReports": true
+    }
+  ]
+}

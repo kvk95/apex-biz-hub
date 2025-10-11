@@ -1,0 +1,104 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "date": "2023-01-01",
+      "invoiceNo": "INV-001",
+      "customer": "John Doe",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Cash",
+      "totalAmount": 150.0
+    },
+    {
+      "date": "2023-01-02",
+      "invoiceNo": "INV-002",
+      "customer": "Alice Smith",
+      "paymentStatus": "Unpaid",
+      "paymentMethod": "Credit Card",
+      "totalAmount": 230.5
+    },
+    {
+      "date": "2023-01-03",
+      "invoiceNo": "INV-003",
+      "customer": "Robert Johnson",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Bank Transfer",
+      "totalAmount": 320.75
+    },
+    {
+      "date": "2023-01-04",
+      "invoiceNo": "INV-004",
+      "customer": "Emma Wilson",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Cash",
+      "totalAmount": 120.0
+    },
+    {
+      "date": "2023-01-05",
+      "invoiceNo": "INV-005",
+      "customer": "Michael Brown",
+      "paymentStatus": "Unpaid",
+      "paymentMethod": "Credit Card",
+      "totalAmount": 450.0
+    },
+    {
+      "date": "2023-01-06",
+      "invoiceNo": "INV-006",
+      "customer": "Sophia Lee",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Bank Transfer",
+      "totalAmount": 275.0
+    },
+    {
+      "date": "2023-01-07",
+      "invoiceNo": "INV-007",
+      "customer": "David Kim",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Cash",
+      "totalAmount": 180.0
+    },
+    {
+      "date": "2023-01-08",
+      "invoiceNo": "INV-008",
+      "customer": "Linda Martinez",
+      "paymentStatus": "Unpaid",
+      "paymentMethod": "Credit Card",
+      "totalAmount": 390.0
+    },
+    {
+      "date": "2023-01-09",
+      "invoiceNo": "INV-009",
+      "customer": "James Wilson",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Bank Transfer",
+      "totalAmount": 210.0
+    },
+    {
+      "date": "2023-01-10",
+      "invoiceNo": "INV-010",
+      "customer": "Patricia Taylor",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Cash",
+      "totalAmount": 160.0
+    },
+    {
+      "date": "2023-01-11",
+      "invoiceNo": "INV-011",
+      "customer": "Mark Anderson",
+      "paymentStatus": "Unpaid",
+      "paymentMethod": "Credit Card",
+      "totalAmount": 280.0
+    },
+    {
+      "date": "2023-01-12",
+      "invoiceNo": "INV-012",
+      "customer": "Nancy Thomas",
+      "paymentStatus": "Paid",
+      "paymentMethod": "Bank Transfer",
+      "totalAmount": 350.0
+    }
+  ]
+}

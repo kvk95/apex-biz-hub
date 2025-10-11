@@ -1,0 +1,68 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "Electricity Bill",
+      "description": "Monthly electricity expenses",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "Water Bill",
+      "description": "Monthly water expenses",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "name": "Internet Bill",
+      "description": "Monthly internet expenses",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "name": "Office Supplies",
+      "description": "Stationery and other office supplies",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "name": "Travel Expenses",
+      "description": "Travel and transportation costs",
+      "status": "Active"
+    },
+    {
+      "id": 6,
+      "name": "Maintenance",
+      "description": "Equipment and facility maintenance",
+      "status": "Inactive"
+    },
+    {
+      "id": 7,
+      "name": "Marketing",
+      "description": "Advertising and marketing expenses",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "name": "Salaries",
+      "description": "Employee salaries and wages",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "name": "Rent",
+      "description": "Office rent payments",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "name": "Miscellaneous",
+      "description": "Other miscellaneous expenses",
+      "status": "Inactive"
+    }
+  ]
+}

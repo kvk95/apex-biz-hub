@@ -1,0 +1,113 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "phone": "123-456-7890",
+      "email": "john@example.com",
+      "address": "123 Main St, Cityville"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "phone": "987-654-3210",
+      "email": "jane@example.com",
+      "address": "456 Elm St, Townsville"
+    },
+    {
+      "id": 3,
+      "name": "Michael Johnson",
+      "phone": "555-123-4567",
+      "email": "michael@example.com",
+      "address": "789 Oak St, Villagetown"
+    },
+    {
+      "id": 4,
+      "name": "Emily Davis",
+      "phone": "444-555-6666",
+      "email": "emily@example.com",
+      "address": "321 Pine St, Hamlet"
+    },
+    {
+      "id": 5,
+      "name": "William Brown",
+      "phone": "222-333-4444",
+      "email": "william@example.com",
+      "address": "654 Maple St, Borough"
+    },
+    {
+      "id": 6,
+      "name": "Olivia Wilson",
+      "phone": "111-222-3333",
+      "email": "olivia@example.com",
+      "address": "987 Birch St, Metropolis"
+    },
+    {
+      "id": 7,
+      "name": "James Taylor",
+      "phone": "777-888-9999",
+      "email": "james@example.com",
+      "address": "159 Cedar St, Capital City"
+    },
+    {
+      "id": 8,
+      "name": "Sophia Martinez",
+      "phone": "888-999-0000",
+      "email": "sophia@example.com",
+      "address": "753 Spruce St, Downtown"
+    },
+    {
+      "id": 9,
+      "name": "Benjamin Anderson",
+      "phone": "666-777-8888",
+      "email": "benjamin@example.com",
+      "address": "852 Walnut St, Uptown"
+    },
+    {
+      "id": 10,
+      "name": "Isabella Thomas",
+      "phone": "333-444-5555",
+      "email": "isabella@example.com",
+      "address": "951 Chestnut St, Suburbia"
+    },
+    {
+      "id": 1,
+      "name": "Product A",
+      "code": "PA-001",
+      "price": 25.0,
+      "unit": "pcs"
+    },
+    {
+      "id": 2,
+      "name": "Product B",
+      "code": "PB-002",
+      "price": 40.0,
+      "unit": "pcs"
+    },
+    {
+      "id": 3,
+      "name": "Product C",
+      "code": "PC-003",
+      "price": 15.5,
+      "unit": "pcs"
+    },
+    {
+      "id": 4,
+      "name": "Product D",
+      "code": "PD-004",
+      "price": 60.0,
+      "unit": "pcs"
+    },
+    {
+      "id": 5,
+      "name": "Product E",
+      "code": "PE-005",
+      "price": 100.0,
+      "unit": "pcs"
+    }
+  ]
+}

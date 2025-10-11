@@ -1,0 +1,113 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "brandName": "Apple",
+      "brandCode": "APL",
+      "brandDescription": "Leading tech company",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 2,
+      "brandName": "Samsung",
+      "brandCode": "SMS",
+      "brandDescription": "Global electronics giant",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 3,
+      "brandName": "Sony",
+      "brandCode": "SNY",
+      "brandDescription": "Entertainment and electronics",
+      "brandStatus": "Inactive"
+    },
+    {
+      "id": 4,
+      "brandName": "LG",
+      "brandCode": "LG",
+      "brandDescription": "Home appliances and electronics",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 5,
+      "brandName": "Microsoft",
+      "brandCode": "MSF",
+      "brandDescription": "Software and hardware",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 6,
+      "brandName": "Dell",
+      "brandCode": "DLL",
+      "brandDescription": "Computers and accessories",
+      "brandStatus": "Inactive"
+    },
+    {
+      "id": 7,
+      "brandName": "HP",
+      "brandCode": "HP",
+      "brandDescription": "Computers and printers",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 8,
+      "brandName": "Lenovo",
+      "brandCode": "LNV",
+      "brandDescription": "PC and mobile devices",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 9,
+      "brandName": "Asus",
+      "brandCode": "ASU",
+      "brandDescription": "Computer hardware and electronics",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 10,
+      "brandName": "Acer",
+      "brandCode": "ACR",
+      "brandDescription": "Computers and displays",
+      "brandStatus": "Inactive"
+    },
+    {
+      "id": 11,
+      "brandName": "Canon",
+      "brandCode": "CNN",
+      "brandDescription": "Imaging and optical products",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 12,
+      "brandName": "Nikon",
+      "brandCode": "NKN",
+      "brandDescription": "Cameras and imaging products",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 13,
+      "brandName": "Panasonic",
+      "brandCode": "PNC",
+      "brandDescription": "Electronics and appliances",
+      "brandStatus": "Inactive"
+    },
+    {
+      "id": 14,
+      "brandName": "Philips",
+      "brandCode": "PLP",
+      "brandDescription": "Health and consumer lifestyle",
+      "brandStatus": "Active"
+    },
+    {
+      "id": 15,
+      "brandName": "Bose",
+      "brandCode": "BSE",
+      "brandDescription": "Audio equipment",
+      "brandStatus": "Active"
+    }
+  ]
+}

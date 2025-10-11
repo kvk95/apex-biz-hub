@@ -1,0 +1,104 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "languageName": "English",
+      "languageCode": "en",
+      "languageFlag": "us",
+      "languageOrder": 1,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 2,
+      "languageName": "Arabic",
+      "languageCode": "ar",
+      "languageFlag": "sa",
+      "languageOrder": 2,
+      "languageStatus": "Inactive"
+    },
+    {
+      "id": 3,
+      "languageName": "French",
+      "languageCode": "fr",
+      "languageFlag": "fr",
+      "languageOrder": 3,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 4,
+      "languageName": "German",
+      "languageCode": "de",
+      "languageFlag": "de",
+      "languageOrder": 4,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 5,
+      "languageName": "Spanish",
+      "languageCode": "es",
+      "languageFlag": "es",
+      "languageOrder": 5,
+      "languageStatus": "Inactive"
+    },
+    {
+      "id": 6,
+      "languageName": "Italian",
+      "languageCode": "it",
+      "languageFlag": "it",
+      "languageOrder": 6,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 7,
+      "languageName": "Portuguese",
+      "languageCode": "pt",
+      "languageFlag": "pt",
+      "languageOrder": 7,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 8,
+      "languageName": "Russian",
+      "languageCode": "ru",
+      "languageFlag": "ru",
+      "languageOrder": 8,
+      "languageStatus": "Inactive"
+    },
+    {
+      "id": 9,
+      "languageName": "Chinese",
+      "languageCode": "zh",
+      "languageFlag": "cn",
+      "languageOrder": 9,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 10,
+      "languageName": "Japanese",
+      "languageCode": "ja",
+      "languageFlag": "jp",
+      "languageOrder": 10,
+      "languageStatus": "Inactive"
+    },
+    {
+      "id": 11,
+      "languageName": "Korean",
+      "languageCode": "ko",
+      "languageFlag": "kr",
+      "languageOrder": 11,
+      "languageStatus": "Active"
+    },
+    {
+      "id": 12,
+      "languageName": "Hindi",
+      "languageCode": "hi",
+      "languageFlag": "in",
+      "languageOrder": 12,
+      "languageStatus": "Active"
+    }
+  ]
+}

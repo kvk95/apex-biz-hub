@@ -1,0 +1,98 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "category": "Beverages",
+      "subCategory": "Soft Drinks",
+      "description": "Carbonated soft drinks",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "category": "Beverages",
+      "subCategory": "Juices",
+      "description": "Fresh fruit juices",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "category": "Snacks",
+      "subCategory": "Chips",
+      "description": "Potato chips and snacks",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "category": "Snacks",
+      "subCategory": "Nuts",
+      "description": "Roasted nuts",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "category": "Dairy",
+      "subCategory": "Milk",
+      "description": "Fresh milk products",
+      "status": "Active"
+    },
+    {
+      "id": 6,
+      "category": "Dairy",
+      "subCategory": "Cheese",
+      "description": "Various cheese types",
+      "status": "Inactive"
+    },
+    {
+      "id": 7,
+      "category": "Bakery",
+      "subCategory": "Bread",
+      "description": "Fresh baked bread",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "category": "Bakery",
+      "subCategory": "Cakes",
+      "description": "Assorted cakes",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "category": "Frozen",
+      "subCategory": "Ice Cream",
+      "description": "Frozen desserts",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "category": "Frozen",
+      "subCategory": "Frozen Meals",
+      "description": "Ready to eat frozen meals",
+      "status": "Inactive"
+    },
+    {
+      "id": 11,
+      "category": "Produce",
+      "subCategory": "Fruits",
+      "description": "Fresh fruits",
+      "status": "Active"
+    },
+    {
+      "id": 12,
+      "category": "Produce",
+      "subCategory": "Vegetables",
+      "description": "Fresh vegetables",
+      "status": "Active"
+    },
+    "Beverages",
+    "Snacks",
+    "Dairy",
+    "Bakery",
+    "Frozen",
+    "Produce"
+  ]
+}

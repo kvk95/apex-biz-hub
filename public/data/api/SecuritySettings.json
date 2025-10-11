@@ -1,0 +1,100 @@
+{
+    "status": {
+        "code": "S",
+        "description": ""
+    },
+    "result": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "role": "Admin",
+            "status": "Active",
+            "lastLogin": "2025-10-10 08:45"
+        },
+        {
+            "id": 2,
+            "name": "Jane Smith",
+            "email": "jane.smith@example.com",
+            "role": "User",
+            "status": "Inactive",
+            "lastLogin": "2025-10-09 14:22"
+        },
+        {
+            "id": 3,
+            "name": "Michael Brown",
+            "email": "michael.brown@example.com",
+            "role": "User",
+            "status": "Active",
+            "lastLogin": "2025-10-11 01:15"
+        },
+        {
+            "id": 4,
+            "name": "Emily Johnson",
+            "email": "emily.johnson@example.com",
+            "role": "Moderator",
+            "status": "Active",
+            "lastLogin": "2025-10-10 21:30"
+        },
+        {
+            "id": 5,
+            "name": "William Lee",
+            "email": "william.lee@example.com",
+            "role": "User",
+            "status": "Inactive",
+            "lastLogin": "2025-10-08 19:05"
+        },
+        {
+            "id": 6,
+            "name": "Olivia Davis",
+            "email": "olivia.davis@example.com",
+            "role": "Admin",
+            "status": "Active",
+            "lastLogin": "2025-10-11 03:40"
+        },
+        {
+            "id": 7,
+            "name": "James Wilson",
+            "email": "james.wilson@example.com",
+            "role": "User",
+            "status": "Active",
+            "lastLogin": "2025-10-10 11:55"
+        },
+        {
+            "id": 8,
+            "name": "Sophia Martinez",
+            "email": "sophia.martinez@example.com",
+            "role": "User",
+            "status": "Inactive",
+            "lastLogin": "2025-10-09 16:10"
+        },
+        {
+            "id": 9,
+            "name": "Benjamin Garcia",
+            "email": "benjamin.garcia@example.com",
+            "role": "Moderator",
+            "status": "Active",
+            "lastLogin": "2025-10-11 00:05"
+        },
+        {
+            "id": 10,
+            "name": "Mia Rodriguez",
+            "email": "mia.rodriguez@example.com",
+            "role": "User",
+            "status": "Active",
+            "lastLogin": "2025-10-10 22:20"
+        },
+        {
+            "id": 1,
+            "device": "Chrome on Windows 10",
+            "location": "New York, USA",
+            "lastActive": "2025-10-11 03:00"
+        },
+        {
+            "id": 2,
+            "device": "Firefox on macOS",
+            "location": "San Francisco, USA",
+            "lastActive": "2025-10-10 22:15"
+        }
+    ]
+}

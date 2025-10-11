@@ -1,0 +1,72 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "mobile": "1234567890",
+      "email": "john@example.com",
+      "address": "123 Main St, City",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "zip": "10001"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "mobile": "0987654321",
+      "email": "jane@example.com",
+      "address": "456 Park Ave, City",
+      "city": "Los Angeles",
+      "state": "CA",
+      "country": "USA",
+      "zip": "90001"
+    },
+    {
+      "id": 1,
+      "productCode": "P001",
+      "productName": "Product One",
+      "unit": "pcs",
+      "quantity": 2,
+      "price": 50,
+      "discount": 5,
+      "tax": 10,
+      "total": 95
+    },
+    {
+      "id": 2,
+      "productCode": "P002",
+      "productName": "Product Two",
+      "unit": "pcs",
+      "quantity": 1,
+      "price": 100,
+      "discount": 0,
+      "tax": 18,
+      "total": 118
+    },
+    {
+      "id": 1,
+      "invoiceNo": "INV001",
+      "date": "2025-10-01",
+      "customer": "John Doe",
+      "totalAmount": 213,
+      "paidAmount": 200,
+      "dueAmount": 13,
+      "status": "Partial"
+    },
+    {
+      "id": 2,
+      "invoiceNo": "INV002",
+      "date": "2025-10-05",
+      "customer": "Jane Smith",
+      "totalAmount": 118,
+      "paidAmount": 118,
+      "dueAmount": 0,
+      "status": "Paid"
+    }
+  ]
+}

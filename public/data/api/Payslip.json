@@ -1,0 +1,72 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    { "id": 1, "description": "Basic Salary", "amount": 5000 },
+    { "id": 2, "description": "House Rent Allowance", "amount": 2000 },
+    { "id": 3, "description": "Medical Allowance", "amount": 500 },
+    { "id": 4, "description": "Conveyance", "amount": 300 },
+    { "id": 5, "description": "Special Allowance", "amount": 400 },
+    { "id": 1, "description": "Professional Tax", "amount": 200 },
+    { "id": 2, "description": "Provident Fund", "amount": 600 },
+    { "id": 3, "description": "Tax Deducted at Source", "amount": 800 },
+    {
+      "id": 1,
+      "date": "2025-09-01",
+      "description": "Salary credited",
+      "amount": 7000,
+      "type": "Credit"
+    },
+    {
+      "id": 2,
+      "date": "2025-09-10",
+      "description": "Tax Deduction",
+      "amount": 800,
+      "type": "Debit"
+    },
+    {
+      "id": 3,
+      "date": "2025-09-15",
+      "description": "Provident Fund",
+      "amount": 600,
+      "type": "Debit"
+    },
+    {
+      "id": 4,
+      "date": "2025-09-20",
+      "description": "Bonus credited",
+      "amount": 500,
+      "type": "Credit"
+    },
+    {
+      "id": 5,
+      "date": "2025-09-25",
+      "description": "Professional Tax",
+      "amount": 200,
+      "type": "Debit"
+    },
+    {
+      "id": 6,
+      "date": "2025-09-28",
+      "description": "Medical Allowance",
+      "amount": 500,
+      "type": "Credit"
+    },
+    {
+      "id": 7,
+      "date": "2025-09-29",
+      "description": "Conveyance",
+      "amount": 300,
+      "type": "Credit"
+    },
+    {
+      "id": 8,
+      "date": "2025-09-30",
+      "description": "Special Allowance",
+      "amount": 400,
+      "type": "Credit"
+    }
+  ]
+}

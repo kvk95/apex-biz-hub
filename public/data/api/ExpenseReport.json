@@ -1,0 +1,104 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "date": "2023-08-01",
+      "expenseHead": "Office Rent",
+      "paymentType": "Cheque",
+      "amount": 1200,
+      "description": "Monthly office rent payment"
+    },
+    {
+      "id": 2,
+      "date": "2023-08-03",
+      "expenseHead": "Electricity Bill",
+      "paymentType": "Online",
+      "amount": 300,
+      "description": "Electricity bill for July"
+    },
+    {
+      "id": 3,
+      "date": "2023-08-05",
+      "expenseHead": "Internet Bill",
+      "paymentType": "Card",
+      "amount": 150,
+      "description": "Monthly internet subscription"
+    },
+    {
+      "id": 4,
+      "date": "2023-08-10",
+      "expenseHead": "Travel Expenses",
+      "paymentType": "Cash",
+      "amount": 75,
+      "description": "Taxi fare for client meeting"
+    },
+    {
+      "id": 5,
+      "date": "2023-08-12",
+      "expenseHead": "Stationery",
+      "paymentType": "Cash",
+      "amount": 45,
+      "description": "Office stationery purchase"
+    },
+    {
+      "id": 6,
+      "date": "2023-08-15",
+      "expenseHead": "Miscellaneous",
+      "paymentType": "Cheque",
+      "amount": 100,
+      "description": "Miscellaneous office expenses"
+    },
+    {
+      "id": 7,
+      "date": "2023-08-18",
+      "expenseHead": "Office Rent",
+      "paymentType": "Cheque",
+      "amount": 1200,
+      "description": "Monthly office rent payment"
+    },
+    {
+      "id": 8,
+      "date": "2023-08-20",
+      "expenseHead": "Electricity Bill",
+      "paymentType": "Online",
+      "amount": 310,
+      "description": "Electricity bill for August"
+    },
+    {
+      "id": 9,
+      "date": "2023-08-22",
+      "expenseHead": "Internet Bill",
+      "paymentType": "Card",
+      "amount": 160,
+      "description": "Monthly internet subscription"
+    },
+    {
+      "id": 10,
+      "date": "2023-08-25",
+      "expenseHead": "Travel Expenses",
+      "paymentType": "Cash",
+      "amount": 90,
+      "description": "Taxi fare for office supplies"
+    },
+    {
+      "id": 11,
+      "date": "2023-08-28",
+      "expenseHead": "Stationery",
+      "paymentType": "Cash",
+      "amount": 60,
+      "description": "Office stationery purchase"
+    },
+    {
+      "id": 12,
+      "date": "2023-08-30",
+      "expenseHead": "Miscellaneous",
+      "paymentType": "Cheque",
+      "amount": 120,
+      "description": "Miscellaneous office expenses"
+    }
+  ]
+}

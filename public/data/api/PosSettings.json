@@ -1,0 +1,78 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "posName": "Dreams POS",
+      "posEmail": "dreamspos@example.com",
+      "posPhone": "123-456-7890",
+      "posAddress": "123 Dreams Street, Dream City"
+    },
+    {
+      "id": 2,
+      "posName": "Retail POS",
+      "posEmail": "retailpos@example.com",
+      "posPhone": "987-654-3210",
+      "posAddress": "456 Retail Road, Market Town"
+    },
+    {
+      "id": 3,
+      "posName": "Shop POS",
+      "posEmail": "shoppos@example.com",
+      "posPhone": "555-555-5555",
+      "posAddress": "789 Shop Lane, Commerce City"
+    },
+    {
+      "id": 4,
+      "posName": "Store POS",
+      "posEmail": "storepos@example.com",
+      "posPhone": "111-222-3333",
+      "posAddress": "321 Store Blvd, Sales City"
+    },
+    {
+      "id": 5,
+      "posName": "Market POS",
+      "posEmail": "marketpos@example.com",
+      "posPhone": "444-333-2222",
+      "posAddress": "654 Market Street, Trade Town"
+    },
+    {
+      "id": 6,
+      "posName": "Cafe POS",
+      "posEmail": "cafepos@example.com",
+      "posPhone": "999-888-7777",
+      "posAddress": "987 Cafe Avenue, Food City"
+    },
+    {
+      "id": 7,
+      "posName": "Boutique POS",
+      "posEmail": "boutiquepos@example.com",
+      "posPhone": "222-333-4444",
+      "posAddress": "159 Boutique Road, Fashion City"
+    },
+    {
+      "id": 8,
+      "posName": "Mall POS",
+      "posEmail": "mallpos@example.com",
+      "posPhone": "666-777-8888",
+      "posAddress": "753 Mall Street, Shopping City"
+    },
+    {
+      "id": 9,
+      "posName": "Outlet POS",
+      "posEmail": "outletpos@example.com",
+      "posPhone": "888-999-0000",
+      "posAddress": "852 Outlet Blvd, Discount Town"
+    },
+    {
+      "id": 10,
+      "posName": "Warehouse POS",
+      "posEmail": "warehousepos@example.com",
+      "posPhone": "333-444-5555",
+      "posAddress": "951 Warehouse Lane, Storage City"
+    }
+  ]
+}

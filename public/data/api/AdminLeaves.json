@@ -1,0 +1,128 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "employeeName": "John Doe",
+      "leaveType": "Casual Leave",
+      "fromDate": "2023-08-01",
+      "toDate": "2023-08-03",
+      "noOfDays": 3,
+      "reason": "Family function",
+      "status": "Approved"
+    },
+    {
+      "id": 2,
+      "employeeName": "Jane Smith",
+      "leaveType": "Sick Leave",
+      "fromDate": "2023-08-05",
+      "toDate": "2023-08-07",
+      "noOfDays": 3,
+      "reason": "Fever and cold",
+      "status": "Pending"
+    },
+    {
+      "id": 3,
+      "employeeName": "Michael Johnson",
+      "leaveType": "Earned Leave",
+      "fromDate": "2023-08-10",
+      "toDate": "2023-08-12",
+      "noOfDays": 3,
+      "reason": "Vacation",
+      "status": "Rejected"
+    },
+    {
+      "id": 4,
+      "employeeName": "Emily Davis",
+      "leaveType": "Casual Leave",
+      "fromDate": "2023-08-15",
+      "toDate": "2023-08-16",
+      "noOfDays": 2,
+      "reason": "Personal work",
+      "status": "Approved"
+    },
+    {
+      "id": 5,
+      "employeeName": "William Brown",
+      "leaveType": "Sick Leave",
+      "fromDate": "2023-08-18",
+      "toDate": "2023-08-20",
+      "noOfDays": 3,
+      "reason": "Medical treatment",
+      "status": "Pending"
+    },
+    {
+      "id": 6,
+      "employeeName": "Olivia Wilson",
+      "leaveType": "Earned Leave",
+      "fromDate": "2023-08-22",
+      "toDate": "2023-08-25",
+      "noOfDays": 4,
+      "reason": "Holiday trip",
+      "status": "Approved"
+    },
+    {
+      "id": 7,
+      "employeeName": "James Taylor",
+      "leaveType": "Casual Leave",
+      "fromDate": "2023-08-27",
+      "toDate": "2023-08-28",
+      "noOfDays": 2,
+      "reason": "Urgent work",
+      "status": "Rejected"
+    },
+    {
+      "id": 8,
+      "employeeName": "Sophia Martinez",
+      "leaveType": "Sick Leave",
+      "fromDate": "2023-08-29",
+      "toDate": "2023-08-30",
+      "noOfDays": 2,
+      "reason": "Flu",
+      "status": "Approved"
+    },
+    {
+      "id": 9,
+      "employeeName": "David Anderson",
+      "leaveType": "Earned Leave",
+      "fromDate": "2023-09-01",
+      "toDate": "2023-09-03",
+      "noOfDays": 3,
+      "reason": "Family trip",
+      "status": "Pending"
+    },
+    {
+      "id": 10,
+      "employeeName": "Isabella Thomas",
+      "leaveType": "Casual Leave",
+      "fromDate": "2023-09-05",
+      "toDate": "2023-09-06",
+      "noOfDays": 2,
+      "reason": "Personal reasons",
+      "status": "Approved"
+    },
+    {
+      "id": 11,
+      "employeeName": "Daniel Jackson",
+      "leaveType": "Sick Leave",
+      "fromDate": "2023-09-08",
+      "toDate": "2023-09-09",
+      "noOfDays": 2,
+      "reason": "Cold & cough",
+      "status": "Rejected"
+    },
+    {
+      "id": 12,
+      "employeeName": "Mia White",
+      "leaveType": "Earned Leave",
+      "fromDate": "2023-09-11",
+      "toDate": "2023-09-13",
+      "noOfDays": 3,
+      "reason": "Holiday",
+      "status": "Approved"
+    }
+  ]
+}

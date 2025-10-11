@@ -1,0 +1,86 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "Admin",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "name": "Bob Johnson",
+      "email": "bob@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "name": "Alice Williams",
+      "email": "alice@example.com",
+      "role": "Admin",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "name": "Michael Brown",
+      "email": "michael@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 6,
+      "name": "Emily Davis",
+      "email": "emily@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "id": 7,
+      "name": "David Wilson",
+      "email": "david@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "name": "Sarah Miller",
+      "email": "sarah@example.com",
+      "role": "Admin",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "name": "Chris Moore",
+      "email": "chris@example.com",
+      "role": "User",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "name": "Jessica Taylor",
+      "email": "jessica@example.com",
+      "role": "User",
+      "status": "Inactive"
+    },
+    {
+      "label": "Left ($100)",
+      "value": "left"
+    },
+    {
+      "label": "Right (100$)",
+      "value": "right"
+    }
+  ]
+}

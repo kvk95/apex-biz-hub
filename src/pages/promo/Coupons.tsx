@@ -1,139 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const couponsData = [
-  {
-    id: 1,
-    couponCode: "ABCD1234",
-    couponType: "Percentage",
-    discountAmount: "10",
-    maxDiscountAmount: "100",
-    minPurchaseAmount: "500",
-    startDate: "2023-01-01",
-    endDate: "2023-12-31",
-    status: "Active",
-  },
-  {
-    id: 2,
-    couponCode: "XYZ9876",
-    couponType: "Flat",
-    discountAmount: "50",
-    maxDiscountAmount: "50",
-    minPurchaseAmount: "1000",
-    startDate: "2023-02-15",
-    endDate: "2023-11-30",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    couponCode: "SAVE20",
-    couponType: "Percentage",
-    discountAmount: "20",
-    maxDiscountAmount: "200",
-    minPurchaseAmount: "1500",
-    startDate: "2023-03-01",
-    endDate: "2023-10-31",
-    status: "Active",
-  },
-  {
-    id: 4,
-    couponCode: "FLAT100",
-    couponType: "Flat",
-    discountAmount: "100",
-    maxDiscountAmount: "100",
-    minPurchaseAmount: "2000",
-    startDate: "2023-04-01",
-    endDate: "2023-09-30",
-    status: "Active",
-  },
-  {
-    id: 5,
-    couponCode: "DISC15",
-    couponType: "Percentage",
-    discountAmount: "15",
-    maxDiscountAmount: "150",
-    minPurchaseAmount: "750",
-    startDate: "2023-05-01",
-    endDate: "2023-12-15",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    couponCode: "OFF50",
-    couponType: "Flat",
-    discountAmount: "50",
-    maxDiscountAmount: "50",
-    minPurchaseAmount: "1200",
-    startDate: "2023-06-01",
-    endDate: "2023-11-01",
-    status: "Active",
-  },
-  {
-    id: 7,
-    couponCode: "PROMO5",
-    couponType: "Percentage",
-    discountAmount: "5",
-    maxDiscountAmount: "50",
-    minPurchaseAmount: "300",
-    startDate: "2023-07-01",
-    endDate: "2023-12-31",
-    status: "Active",
-  },
-  {
-    id: 8,
-    couponCode: "SAVE100",
-    couponType: "Flat",
-    discountAmount: "100",
-    maxDiscountAmount: "100",
-    minPurchaseAmount: "2500",
-    startDate: "2023-08-01",
-    endDate: "2023-10-31",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    couponCode: "NEWYEAR25",
-    couponType: "Percentage",
-    discountAmount: "25",
-    maxDiscountAmount: "250",
-    minPurchaseAmount: "1000",
-    startDate: "2023-12-25",
-    endDate: "2024-01-05",
-    status: "Active",
-  },
-  {
-    id: 10,
-    couponCode: "HOLIDAY50",
-    couponType: "Flat",
-    discountAmount: "50",
-    maxDiscountAmount: "50",
-    minPurchaseAmount: "800",
-    startDate: "2023-12-01",
-    endDate: "2023-12-31",
-    status: "Active",
-  },
-  {
-    id: 11,
-    couponCode: "SUMMER10",
-    couponType: "Percentage",
-    discountAmount: "10",
-    maxDiscountAmount: "100",
-    minPurchaseAmount: "600",
-    startDate: "2023-06-01",
-    endDate: "2023-08-31",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    couponCode: "WINTER20",
-    couponType: "Percentage",
-    discountAmount: "20",
-    maxDiscountAmount: "200",
-    minPurchaseAmount: "1200",
-    startDate: "2023-12-01",
-    endDate: "2024-02-28",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useMemo, useState } from "react";
 
 const couponTypes = ["Percentage", "Flat"];
 const couponStatuses = ["Active", "Inactive"];
@@ -150,7 +16,12 @@ export default function Coupons() {
     status: "Active",
   });
 
-  const [coupons, setCoupons] = useState(couponsData);
+  const [coupons, setCoupons] = useState([]);
+
+  const [data, setData] = useState<>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [editId, setEditId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -169,6 +40,23 @@ export default function Coupons() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  useEffect(() => {
+    document.title = "Coupons - Dreams POS";
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Coupons");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
   // Handlers
   const handleInputChange = (
@@ -497,15 +385,27 @@ export default function Coupons() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="border border-gray-300 px-4 py-2">#</th>
-                <th className="border border-gray-300 px-4 py-2">Coupon Code</th>
-                <th className="border border-gray-300 px-4 py-2">Coupon Type</th>
-                <th className="border border-gray-300 px-4 py-2">Discount Amount</th>
-                <th className="border border-gray-300 px-4 py-2">Max Discount Amount</th>
-                <th className="border border-gray-300 px-4 py-2">Min Purchase Amount</th>
+                <th className="border border-gray-300 px-4 py-2">
+                  Coupon Code
+                </th>
+                <th className="border border-gray-300 px-4 py-2">
+                  Coupon Type
+                </th>
+                <th className="border border-gray-300 px-4 py-2">
+                  Discount Amount
+                </th>
+                <th className="border border-gray-300 px-4 py-2">
+                  Max Discount Amount
+                </th>
+                <th className="border border-gray-300 px-4 py-2">
+                  Min Purchase Amount
+                </th>
                 <th className="border border-gray-300 px-4 py-2">Start Date</th>
                 <th className="border border-gray-300 px-4 py-2">End Date</th>
                 <th className="border border-gray-300 px-4 py-2">Status</th>
-                <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
+                <th className="border border-gray-300 px-4 py-2 text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -522,11 +422,11 @@ export default function Coupons() {
                 currentCoupons.map((coupon, idx) => (
                   <tr
                     key={coupon.id}
-                    className={
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="border border-gray-300 px-4 py-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
                     <td className="border border-gray-300 px-4 py-2 font-semibold">
                       {coupon.couponCode}
                     </td>

@@ -1,0 +1,125 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "date": "2023-01-15",
+      "invoiceNo": "INV-1001",
+      "description": "Product Sale",
+      "paymentType": "Cash",
+      "debit": 0,
+      "credit": 150.0,
+      "balance": 150.0
+    },
+    {
+      "date": "2023-02-02",
+      "invoiceNo": "INV-1002",
+      "description": "Product Sale",
+      "paymentType": "Card",
+      "debit": 0,
+      "credit": 200.0,
+      "balance": 350.0
+    },
+    {
+      "date": "2023-02-15",
+      "invoiceNo": "PAY-2001",
+      "description": "Payment Received",
+      "paymentType": "Cash",
+      "debit": 150.0,
+      "credit": 0,
+      "balance": 200.0
+    },
+    {
+      "date": "2023-03-01",
+      "invoiceNo": "INV-1003",
+      "description": "Product Sale",
+      "paymentType": "Cheque",
+      "debit": 0,
+      "credit": 300.0,
+      "balance": 500.0
+    },
+    {
+      "date": "2023-03-10",
+      "invoiceNo": "PAY-2002",
+      "description": "Payment Received",
+      "paymentType": "Card",
+      "debit": 200.0,
+      "credit": 0,
+      "balance": 300.0
+    },
+    {
+      "date": "2023-04-05",
+      "invoiceNo": "INV-1004",
+      "description": "Product Sale",
+      "paymentType": "Bank Transfer",
+      "debit": 0,
+      "credit": 400.0,
+      "balance": 700.0
+    },
+    {
+      "date": "2023-04-20",
+      "invoiceNo": "PAY-2003",
+      "description": "Payment Received",
+      "paymentType": "Cheque",
+      "debit": 300.0,
+      "credit": 0,
+      "balance": 400.0
+    },
+    {
+      "date": "2023-05-01",
+      "invoiceNo": "INV-1005",
+      "description": "Product Sale",
+      "paymentType": "Cash",
+      "debit": 0,
+      "credit": 250.0,
+      "balance": 650.0
+    },
+    {
+      "date": "2023-05-15",
+      "invoiceNo": "PAY-2004",
+      "description": "Payment Received",
+      "paymentType": "Bank Transfer",
+      "debit": 400.0,
+      "credit": 0,
+      "balance": 250.0
+    },
+    {
+      "date": "2023-06-01",
+      "invoiceNo": "INV-1006",
+      "description": "Product Sale",
+      "paymentType": "Card",
+      "debit": 0,
+      "credit": 350.0,
+      "balance": 600.0
+    },
+    {
+      "date": "2023-06-10",
+      "invoiceNo": "PAY-2005",
+      "description": "Payment Received",
+      "paymentType": "Cash",
+      "debit": 250.0,
+      "credit": 0,
+      "balance": 350.0
+    },
+    {
+      "date": "2023-06-20",
+      "invoiceNo": "INV-1007",
+      "description": "Product Sale",
+      "paymentType": "Cheque",
+      "debit": 0,
+      "credit": 300.0,
+      "balance": 650.0
+    },
+    {
+      "date": "2023-07-01",
+      "invoiceNo": "PAY-2006",
+      "description": "Payment Received",
+      "paymentType": "Card",
+      "debit": 350.0,
+      "credit": 0,
+      "balance": 300.0
+    }
+  ]
+}

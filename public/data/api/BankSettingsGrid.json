@@ -1,0 +1,98 @@
+{
+  "status": {
+    "code": "S",
+    "description": "Data extracted successfully."
+  },
+  "result": [
+    {
+      "id": 1,
+      "bankName": "Bank of America",
+      "branchName": "New York Branch",
+      "accountNumber": "1234567890",
+      "accountHolder": "John Doe",
+      "ifscCode": "BOFAUS3N",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "bankName": "Chase Bank",
+      "branchName": "San Francisco Branch",
+      "accountNumber": "0987654321",
+      "accountHolder": "Jane Smith",
+      "ifscCode": "CHASUS33",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "bankName": "Wells Fargo",
+      "branchName": "Los Angeles Branch",
+      "accountNumber": "1122334455",
+      "accountHolder": "Alice Johnson",
+      "ifscCode": "WFBIUS6S",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "bankName": "Citibank",
+      "branchName": "Chicago Branch",
+      "accountNumber": "5566778899",
+      "accountHolder": "Bob Brown",
+      "ifscCode": "CITIUS33",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "bankName": "HSBC",
+      "branchName": "Houston Branch",
+      "accountNumber": "6677889900",
+      "accountHolder": "Carol White",
+      "ifscCode": "HSBCUS44",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "bankName": "PNC Bank",
+      "branchName": "Philadelphia Branch",
+      "accountNumber": "4455667788",
+      "accountHolder": "David Green",
+      "ifscCode": "PNCCUS33",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "bankName": "TD Bank",
+      "branchName": "Miami Branch",
+      "accountNumber": "3344556677",
+      "accountHolder": "Eva Black",
+      "ifscCode": "TDUS33",
+      "status": "Inactive"
+    },
+    {
+      "id": 8,
+      "bankName": "Capital One",
+      "branchName": "Seattle Branch",
+      "accountNumber": "2233445566",
+      "accountHolder": "Frank Blue",
+      "ifscCode": "CAP1US33",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "bankName": "US Bank",
+      "branchName": "Denver Branch",
+      "accountNumber": "7788990011",
+      "accountHolder": "Grace Yellow",
+      "ifscCode": "USBKUS44",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "bankName": "Santander",
+      "branchName": "Boston Branch",
+      "accountNumber": "8899001122",
+      "accountHolder": "Hank Orange",
+      "ifscCode": "SANBUS33",
+      "status": "Inactive"
+    }
+  ]
+}

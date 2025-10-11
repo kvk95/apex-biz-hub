@@ -1,0 +1,98 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "email": "admin@example.com",
+      "smtpHost": "smtp.example.com",
+      "smtpPort": 587,
+      "smtpUser": "admin",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "email": "support@example.com",
+      "smtpHost": "smtp.support.com",
+      "smtpPort": 465,
+      "smtpUser": "support",
+      "smtpPass": "********",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "email": "sales@example.com",
+      "smtpHost": "smtp.sales.com",
+      "smtpPort": 25,
+      "smtpUser": "sales",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "email": "info@example.com",
+      "smtpHost": "smtp.info.com",
+      "smtpPort": 2525,
+      "smtpUser": "info",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "email": "marketing@example.com",
+      "smtpHost": "smtp.marketing.com",
+      "smtpPort": 587,
+      "smtpUser": "marketing",
+      "smtpPass": "********",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "email": "hr@example.com",
+      "smtpHost": "smtp.hr.com",
+      "smtpPort": 465,
+      "smtpUser": "hr",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "email": "ceo@example.com",
+      "smtpHost": "smtp.ceo.com",
+      "smtpPort": 25,
+      "smtpUser": "ceo",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "email": "cto@example.com",
+      "smtpHost": "smtp.cto.com",
+      "smtpPort": 2525,
+      "smtpUser": "cto",
+      "smtpPass": "********",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "email": "finance@example.com",
+      "smtpHost": "smtp.finance.com",
+      "smtpPort": 587,
+      "smtpUser": "finance",
+      "smtpPass": "********",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "email": "legal@example.com",
+      "smtpHost": "smtp.legal.com",
+      "smtpPort": 465,
+      "smtpUser": "legal",
+      "smtpPass": "********",
+      "status": "Inactive"
+    }
+  ]
+}

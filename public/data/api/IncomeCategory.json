@@ -1,0 +1,56 @@
+{
+    "status": {
+        "code": "S",
+        "description": ""
+    },
+    "result": [
+        {
+            "id": 1,
+            "incomeCategory": "Salary",
+            "description": "Monthly salary income",
+            "status": "Active"
+        },
+        {
+            "id": 2,
+            "incomeCategory": "Business",
+            "description": "Income from business",
+            "status": "Active"
+        },
+        {
+            "id": 3,
+            "incomeCategory": "Interest",
+            "description": "Interest income from bank",
+            "status": "Inactive"
+        },
+        {
+            "id": 4,
+            "incomeCategory": "Rental",
+            "description": "Rental income",
+            "status": "Active"
+        },
+        {
+            "id": 5,
+            "incomeCategory": "Dividends",
+            "description": "Dividend income",
+            "status": "Inactive"
+        },
+        {
+            "id": 6,
+            "incomeCategory": "Freelance",
+            "description": "Freelance projects",
+            "status": "Active"
+        },
+        {
+            "id": 7,
+            "incomeCategory": "Gifts",
+            "description": "Gift income",
+            "status": "Inactive"
+        },
+        {
+            "id": 8,
+            "incomeCategory": "Other",
+            "description": "Other income sources",
+            "status": "Active"
+        }
+    ]
+}

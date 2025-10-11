@@ -1,0 +1,80 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "roleName": "Administrator",
+      "description": "Full access to all system features and settings.",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "roleName": "Manager",
+      "description": "Manage teams and projects with limited settings access.",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "roleName": "Editor",
+      "description": "Can edit content but has no access to system settings.",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "roleName": "Viewer",
+      "description": "Can view content but cannot make changes.",
+      "status": "Inactive"
+    },
+    {
+      "id": 5,
+      "roleName": "Guest",
+      "description": "Limited access for guest users with minimal permissions.",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "roleName": "Support",
+      "description": "Access to support tickets and customer queries.",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "roleName": "HR",
+      "description": "Manage employee records and payroll.",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "roleName": "Finance",
+      "description": "Access to financial reports and billing.",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "roleName": "Developer",
+      "description": "Access to development tools and logs.",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "roleName": "Marketing",
+      "description": "Manage campaigns and marketing content.",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "roleName": "Sales",
+      "description": "Access to sales data and client management.",
+      "status": "Active"
+    },
+    {
+      "id": 12,
+      "roleName": "Intern",
+      "description": "Temporary access with limited permissions.",
+      "status": "Inactive"
+    }
+  ]
+}

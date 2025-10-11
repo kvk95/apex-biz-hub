@@ -1,0 +1,23 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    { "id": 1, "unitName": "Kilogram", "shortName": "Kg", "description": "Weight measurement" },
+    { "id": 2, "unitName": "Gram", "shortName": "Gm", "description": "Weight measurement" },
+    { "id": 3, "unitName": "Liter", "shortName": "Ltr", "description": "Volume measurement" },
+    { "id": 4, "unitName": "Meter", "shortName": "Mtr", "description": "Length measurement" },
+    { "id": 5, "unitName": "Piece", "shortName": "Pcs", "description": "Count measurement" },
+    { "id": 6, "unitName": "Box", "shortName": "Box", "description": "Packaging unit" },
+    { "id": 7, "unitName": "Packet", "shortName": "Pkt", "description": "Packaging unit" },
+    { "id": 8, "unitName": "Dozen", "shortName": "Doz", "description": "Count measurement" },
+    { "id": 9, "unitName": "Inch", "shortName": "In", "description": "Length measurement" },
+    { "id": 10, "unitName": "Feet", "shortName": "Ft", "description": "Length measurement" },
+    { "id": 11, "unitName": "Yard", "shortName": "Yd", "description": "Length measurement" },
+    { "id": 12, "unitName": "Milliliter", "shortName": "Ml", "description": "Volume measurement" },
+    { "id": 13, "unitName": "Centimeter", "shortName": "Cm", "description": "Length measurement" },
+    { "id": 14, "unitName": "Ounce", "shortName": "Oz", "description": "Weight measurement" },
+    { "id": 15, "unitName": "Pound", "shortName": "Lb", "description": "Weight measurement" }
+  ]
+}

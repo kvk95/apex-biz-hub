@@ -1,0 +1,113 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    { "id": 1, "name": "Supplier 1" },
+    { "id": 2, "name": "Supplier 2" },
+    { "id": 3, "name": "Supplier 3" },
+    { "id": 1, "name": "Warehouse 1" },
+    { "id": 2, "name": "Warehouse 2" },
+    {
+      "id": 1,
+      "date": "2023-10-01",
+      "referenceNo": "PR-001",
+      "supplier": "Supplier 1",
+      "warehouse": "Warehouse 1",
+      "productQty": 5,
+      "grandTotal": 150.0,
+      "status": "Completed"
+    },
+    {
+      "id": 2,
+      "date": "2023-10-05",
+      "referenceNo": "PR-002",
+      "supplier": "Supplier 2",
+      "warehouse": "Warehouse 2",
+      "productQty": 3,
+      "grandTotal": 90.0,
+      "status": "Pending"
+    },
+    {
+      "id": 3,
+      "date": "2023-10-10",
+      "referenceNo": "PR-003",
+      "supplier": "Supplier 3",
+      "warehouse": "Warehouse 1",
+      "productQty": 7,
+      "grandTotal": 210.0,
+      "status": "Completed"
+    },
+    {
+      "id": 4,
+      "date": "2023-10-12",
+      "referenceNo": "PR-004",
+      "supplier": "Supplier 1",
+      "warehouse": "Warehouse 2",
+      "productQty": 2,
+      "grandTotal": 60.0,
+      "status": "Pending"
+    },
+    {
+      "id": 5,
+      "date": "2023-10-15",
+      "referenceNo": "PR-005",
+      "supplier": "Supplier 2",
+      "warehouse": "Warehouse 1",
+      "productQty": 4,
+      "grandTotal": 120.0,
+      "status": "Completed"
+    },
+    {
+      "id": 6,
+      "date": "2023-10-18",
+      "referenceNo": "PR-006",
+      "supplier": "Supplier 3",
+      "warehouse": "Warehouse 2",
+      "productQty": 6,
+      "grandTotal": 180.0,
+      "status": "Completed"
+    },
+    {
+      "id": 7,
+      "date": "2023-10-20",
+      "referenceNo": "PR-007",
+      "supplier": "Supplier 1",
+      "warehouse": "Warehouse 1",
+      "productQty": 1,
+      "grandTotal": 30.0,
+      "status": "Pending"
+    },
+    {
+      "id": 8,
+      "date": "2023-10-22",
+      "referenceNo": "PR-008",
+      "supplier": "Supplier 2",
+      "warehouse": "Warehouse 2",
+      "productQty": 8,
+      "grandTotal": 240.0,
+      "status": "Completed"
+    },
+    {
+      "id": 9,
+      "date": "2023-10-25",
+      "referenceNo": "PR-009",
+      "supplier": "Supplier 3",
+      "warehouse": "Warehouse 1",
+      "productQty": 5,
+      "grandTotal": 150.0,
+      "status": "Pending"
+    },
+    {
+      "id": 10,
+      "date": "2023-10-28",
+      "referenceNo": "PR-010",
+      "supplier": "Supplier 1",
+      "warehouse": "Warehouse 2",
+      "productQty": 3,
+      "grandTotal": 90.0,
+      "status": "Completed"
+    }
+  ]
+}

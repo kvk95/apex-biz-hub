@@ -1,0 +1,88 @@
+{
+  "status": {
+    "code": "S",
+    "description": "JSON data extracted successfully"
+  },
+  "result": [
+    {
+      "id": 1,
+      "packageName": "Basic",
+      "price": "₹ 1000",
+      "duration": "1 Month",
+      "description": "Basic package for starters",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "packageName": "Standard",
+      "price": "₹ 2500",
+      "duration": "3 Months",
+      "description": "Standard package for regular users",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "packageName": "Premium",
+      "price": "₹ 4000",
+      "duration": "6 Months",
+      "description": "Premium package with extra features",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "packageName": "Enterprise",
+      "price": "₹ 10000",
+      "duration": "12 Months",
+      "description": "Enterprise package for businesses",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "packageName": "Custom",
+      "price": "₹ 0",
+      "duration": "Custom Duration",
+      "description": "Custom package tailored for you",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "packageName": "Trial",
+      "price": "₹ 0",
+      "duration": "7 Days",
+      "description": "Trial package for evaluation",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "packageName": "Gold",
+      "price": "₹ 7000",
+      "duration": "9 Months",
+      "description": "Gold package with premium support",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "packageName": "Silver",
+      "price": "₹ 3500",
+      "duration": "4 Months",
+      "description": "Silver package with standard support",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "packageName": "Bronze",
+      "price": "₹ 1500",
+      "duration": "2 Months",
+      "description": "Bronze package for budget users",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "packageName": "VIP",
+      "price": "₹ 15000",
+      "duration": "24 Months",
+      "description": "VIP package with all features",
+      "status": "Active"
+    }
+  ]
+}

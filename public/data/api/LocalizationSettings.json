@@ -1,0 +1,203 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "language": "English",
+      "code": "en",
+      "currency": "USD",
+      "timezone": "America/New_York",
+      "dateFormat": "MM/DD/YYYY",
+      "timeFormat": "12-hour"
+    },
+    {
+      "id": 2,
+      "language": "French",
+      "code": "fr",
+      "currency": "EUR",
+      "timezone": "Europe/Paris",
+      "dateFormat": "DD/MM/YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 3,
+      "language": "Spanish",
+      "code": "es",
+      "currency": "EUR",
+      "timezone": "Europe/Madrid",
+      "dateFormat": "DD/MM/YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 4,
+      "language": "German",
+      "code": "de",
+      "currency": "EUR",
+      "timezone": "Europe/Berlin",
+      "dateFormat": "DD.MM.YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 5,
+      "language": "Japanese",
+      "code": "ja",
+      "currency": "JPY",
+      "timezone": "Asia/Tokyo",
+      "dateFormat": "YYYY/MM/DD",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 6,
+      "language": "Chinese",
+      "code": "zh",
+      "currency": "CNY",
+      "timezone": "Asia/Shanghai",
+      "dateFormat": "YYYY/MM/DD",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 7,
+      "language": "Russian",
+      "code": "ru",
+      "currency": "RUB",
+      "timezone": "Europe/Moscow",
+      "dateFormat": "DD.MM.YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 8,
+      "language": "Arabic",
+      "code": "ar",
+      "currency": "AED",
+      "timezone": "Asia/Dubai",
+      "dateFormat": "DD/MM/YYYY",
+      "timeFormat": "12-hour"
+    },
+    {
+      "id": 9,
+      "language": "Portuguese",
+      "code": "pt",
+      "currency": "EUR",
+      "timezone": "Europe/Lisbon",
+      "dateFormat": "DD/MM/YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 10,
+      "language": "Hindi",
+      "code": "hi",
+      "currency": "INR",
+      "timezone": "Asia/Kolkata",
+      "dateFormat": "DD-MM-YYYY",
+      "timeFormat": "12-hour"
+    },
+    {
+      "id": 11,
+      "language": "Italian",
+      "code": "it",
+      "currency": "EUR",
+      "timezone": "Europe/Rome",
+      "dateFormat": "DD/MM/YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 12,
+      "language": "Korean",
+      "code": "ko",
+      "currency": "KRW",
+      "timezone": "Asia/Seoul",
+      "dateFormat": "YYYY-MM-DD",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 13,
+      "language": "Dutch",
+      "code": "nl",
+      "currency": "EUR",
+      "timezone": "Europe/Amsterdam",
+      "dateFormat": "DD-MM-YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 14,
+      "language": "Swedish",
+      "code": "sv",
+      "currency": "SEK",
+      "timezone": "Europe/Stockholm",
+      "dateFormat": "YYYY-MM-DD",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 15,
+      "language": "Turkish",
+      "code": "tr",
+      "currency": "TRY",
+      "timezone": "Europe/Istanbul",
+      "dateFormat": "DD.MM.YYYY",
+      "timeFormat": "24-hour"
+    },
+    {
+      "id": 1,
+      "name": "US Dollar",
+      "code": "USD",
+      "symbol": "$"
+    },
+    {
+      "id": 2,
+      "name": "Euro",
+      "code": "EUR",
+      "symbol": "€"
+    },
+    {
+      "id": 3,
+      "name": "Japanese Yen",
+      "code": "JPY",
+      "symbol": "¥"
+    },
+    {
+      "id": 4,
+      "name": "British Pound",
+      "code": "GBP",
+      "symbol": "£"
+    },
+    {
+      "id": 5,
+      "name": "Australian Dollar",
+      "code": "AUD",
+      "symbol": "A$"
+    },
+    {
+      "id": 6,
+      "name": "Canadian Dollar",
+      "code": "CAD",
+      "symbol": "C$"
+    },
+    {
+      "id": 7,
+      "name": "Swiss Franc",
+      "code": "CHF",
+      "symbol": "CHF"
+    },
+    {
+      "id": 8,
+      "name": "Chinese Yuan",
+      "code": "CNY",
+      "symbol": "¥"
+    },
+    {
+      "id": 9,
+      "name": "Swedish Krona",
+      "code": "SEK",
+      "symbol": "kr"
+    },
+    {
+      "id": 10,
+      "name": "New Zealand Dollar",
+      "code": "NZD",
+      "symbol": "NZ$"
+    }
+  ]
+}

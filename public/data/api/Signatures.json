@@ -1,0 +1,104 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "customerName": "John Doe",
+      "customerId": "CUST001",
+      "signatureDate": "2025-10-01",
+      "signatureStatus": "Active",
+      "remarks": "Verified signature"
+    },
+    {
+      "id": 2,
+      "customerName": "Jane Smith",
+      "customerId": "CUST002",
+      "signatureDate": "2025-09-28",
+      "signatureStatus": "Inactive",
+      "remarks": "Signature expired"
+    },
+    {
+      "id": 3,
+      "customerName": "Michael Johnson",
+      "customerId": "CUST003",
+      "signatureDate": "2025-09-30",
+      "signatureStatus": "Active",
+      "remarks": "New signature added"
+    },
+    {
+      "id": 4,
+      "customerName": "Emily Davis",
+      "customerId": "CUST004",
+      "signatureDate": "2025-10-03",
+      "signatureStatus": "Active",
+      "remarks": "Verified signature"
+    },
+    {
+      "id": 5,
+      "customerName": "William Brown",
+      "customerId": "CUST005",
+      "signatureDate": "2025-09-25",
+      "signatureStatus": "Inactive",
+      "remarks": "Signature revoked"
+    },
+    {
+      "id": 6,
+      "customerName": "Olivia Wilson",
+      "customerId": "CUST006",
+      "signatureDate": "2025-10-02",
+      "signatureStatus": "Active",
+      "remarks": "Signature renewed"
+    },
+    {
+      "id": 7,
+      "customerName": "James Taylor",
+      "customerId": "CUST007",
+      "signatureDate": "2025-09-27",
+      "signatureStatus": "Active",
+      "remarks": "Verified signature"
+    },
+    {
+      "id": 8,
+      "customerName": "Sophia Martinez",
+      "customerId": "CUST008",
+      "signatureDate": "2025-10-04",
+      "signatureStatus": "Active",
+      "remarks": "New signature added"
+    },
+    {
+      "id": 9,
+      "customerName": "Benjamin Anderson",
+      "customerId": "CUST009",
+      "signatureDate": "2025-09-29",
+      "signatureStatus": "Inactive",
+      "remarks": "Signature expired"
+    },
+    {
+      "id": 10,
+      "customerName": "Isabella Thomas",
+      "customerId": "CUST010",
+      "signatureDate": "2025-10-05",
+      "signatureStatus": "Active",
+      "remarks": "Verified signature"
+    },
+    {
+      "id": 11,
+      "customerName": "Liam Jackson",
+      "customerId": "CUST011",
+      "signatureDate": "2025-09-26",
+      "signatureStatus": "Active",
+      "remarks": "Signature renewed"
+    },
+    {
+      "id": 12,
+      "customerName": "Mia White",
+      "customerId": "CUST012",
+      "signatureDate": "2025-10-06",
+      "signatureStatus": "Active",
+      "remarks": "New signature added"
+    }
+  ]
+}

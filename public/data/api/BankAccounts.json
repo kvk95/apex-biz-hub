@@ -1,0 +1,118 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "bankName": "Axis Bank",
+      "branchName": "New York",
+      "accountNumber": "1234567890",
+      "accountHolder": "John Doe",
+      "accountType": "Savings",
+      "openingBalance": 5000,
+      "currentBalance": 7000,
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "bankName": "HDFC Bank",
+      "branchName": "Los Angeles",
+      "accountNumber": "9876543210",
+      "accountHolder": "Jane Smith",
+      "accountType": "Current",
+      "openingBalance": 10000,
+      "currentBalance": 12000,
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "bankName": "ICICI Bank",
+      "branchName": "Chicago",
+      "accountNumber": "1122334455",
+      "accountHolder": "Robert Johnson",
+      "accountType": "Savings",
+      "openingBalance": 8000,
+      "currentBalance": 8500,
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "bankName": "State Bank of India",
+      "branchName": "Houston",
+      "accountNumber": "6677889900",
+      "accountHolder": "Emily Davis",
+      "accountType": "Current",
+      "openingBalance": 15000,
+      "currentBalance": 16000,
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "bankName": "Punjab National Bank",
+      "branchName": "Phoenix",
+      "accountNumber": "5544332211",
+      "accountHolder": "Michael Brown",
+      "accountType": "Savings",
+      "openingBalance": 4000,
+      "currentBalance": 4500,
+      "status": "Active"
+    },
+    {
+      "id": 6,
+      "bankName": "Kotak Mahindra Bank",
+      "branchName": "Philadelphia",
+      "accountNumber": "9988776655",
+      "accountHolder": "Linda Wilson",
+      "accountType": "Current",
+      "openingBalance": 20000,
+      "currentBalance": 21000,
+      "status": "Inactive"
+    },
+    {
+      "id": 7,
+      "bankName": "Yes Bank",
+      "branchName": "San Antonio",
+      "accountNumber": "4433221100",
+      "accountHolder": "William Martinez",
+      "accountType": "Savings",
+      "openingBalance": 7000,
+      "currentBalance": 7200,
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "bankName": "Bank of Baroda",
+      "branchName": "San Diego",
+      "accountNumber": "7766554433",
+      "accountHolder": "Patricia Anderson",
+      "accountType": "Current",
+      "openingBalance": 9000,
+      "currentBalance": 9300,
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "bankName": "IDFC First Bank",
+      "branchName": "Dallas",
+      "accountNumber": "3322110099",
+      "accountHolder": "Jennifer Thomas",
+      "accountType": "Savings",
+      "openingBalance": 6000,
+      "currentBalance": 6500,
+      "status": "Inactive"
+    },
+    {
+      "id": 10,
+      "bankName": "IndusInd Bank",
+      "branchName": "San Jose",
+      "accountNumber": "2211003344",
+      "accountHolder": "Charles Jackson",
+      "accountType": "Current",
+      "openingBalance": 11000,
+      "currentBalance": 11500,
+      "status": "Active"
+    }
+  ]
+}

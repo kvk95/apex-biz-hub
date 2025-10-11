@@ -1,0 +1,116 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+{
+   "id":1,
+   "discountName":"Seasonal Discount",
+   "discountType":"Percentage",
+   "discountValue":10,
+   "startDate":"2023-01-01",
+   "endDate":"2023-01-31",
+   "status":"Active"
+},
+{
+   "id":2,
+   "discountName":"Clearance Sale",
+   "discountType":"Fixed",
+   "discountValue":50,
+   "startDate":"2023-02-01",
+   "endDate":"2023-02-15",
+   "status":"Inactive"
+},
+{
+   "id":3,
+   "discountName":"Black Friday",
+   "discountType":"Percentage",
+   "discountValue":25,
+   "startDate":"2023-11-24",
+   "endDate":"2023-11-24",
+   "status":"Active"
+},
+{
+   "id":4,
+   "discountName":"New Year Offer",
+   "discountType":"Fixed",
+   "discountValue":100,
+   "startDate":"2023-12-31",
+   "endDate":"2024-01-05",
+   "status":"Inactive"
+},
+{
+   "id":5,
+   "discountName":"Summer Special",
+   "discountType":"Percentage",
+   "discountValue":15,
+   "startDate":"2023-06-01",
+   "endDate":"2023-06-30",
+   "status":"Active"
+},
+{
+   "id":6,
+   "discountName":"Holiday Discount",
+   "discountType":"Fixed",
+   "discountValue":30,
+   "startDate":"2023-12-20",
+   "endDate":"2023-12-27",
+   "status":"Active"
+},
+{
+   "id":7,
+   "discountName":"Flash Sale",
+   "discountType":"Percentage",
+   "discountValue":5,
+   "startDate":"2023-03-15",
+   "endDate":"2023-03-16",
+   "status":"Inactive"
+},
+{
+   "id":8,
+   "discountName":"VIP Customer",
+   "discountType":"Fixed",
+   "discountValue":75,
+   "startDate":"2023-04-01",
+   "endDate":"2023-04-30",
+   "status":"Active"
+},
+{
+   "id":9,
+   "discountName":"Weekend Offer",
+   "discountType":"Percentage",
+   "discountValue":20,
+   "startDate":"2023-05-06",
+   "endDate":"2023-05-07",
+   "status":"Inactive"
+},
+{
+   "id":10,
+   "discountName":"Referral Discount",
+   "discountType":"Fixed",
+   "discountValue":40,
+   "startDate":"2023-07-01",
+   "endDate":"2023-07-31",
+   "status":"Active"
+},
+{
+   "id":11,
+   "discountName":"Student Discount",
+   "discountType":"Percentage",
+   "discountValue":12,
+   "startDate":"2023-08-01",
+   "endDate":"2023-08-31",
+   "status":"Active"
+},
+{
+   "id":12,
+   "discountName":"Employee Discount",
+   "discountType":"Fixed",
+   "discountValue":60,
+   "startDate":"2023-09-01",
+   "endDate":"2023-09-30",
+   "status":"Inactive"
+}
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "storeName": "Dreams Store 1",
+      "storeCode": "DS001",
+      "storeType": "Retail",
+      "storeLocation": "New York",
+      "contactPerson": "John Doe",
+      "contactNumber": "123-456-7890",
+      "email": "store1@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "storeName": "Dreams Store 2",
+      "storeCode": "DS002",
+      "storeType": "Wholesale",
+      "storeLocation": "Los Angeles",
+      "contactPerson": "Jane Smith",
+      "contactNumber": "234-567-8901",
+      "email": "store2@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "storeName": "Dreams Store 3",
+      "storeCode": "DS003",
+      "storeType": "Retail",
+      "storeLocation": "Chicago",
+      "contactPerson": "Michael Johnson",
+      "contactNumber": "345-678-9012",
+      "email": "store3@dreamspos.com",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "storeName": "Dreams Store 4",
+      "storeCode": "DS004",
+      "storeType": "Retail",
+      "storeLocation": "Houston",
+      "contactPerson": "Emily Davis",
+      "contactNumber": "456-789-0123",
+      "email": "store4@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "storeName": "Dreams Store 5",
+      "storeCode": "DS005",
+      "storeType": "Wholesale",
+      "storeLocation": "Phoenix",
+      "contactPerson": "William Brown",
+      "contactNumber": "567-890-1234",
+      "email": "store5@dreamspos.com",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "storeName": "Dreams Store 6",
+      "storeCode": "DS006",
+      "storeType": "Retail",
+      "storeLocation": "Philadelphia",
+      "contactPerson": "Olivia Wilson",
+      "contactNumber": "678-901-2345",
+      "email": "store6@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "storeName": "Dreams Store 7",
+      "storeCode": "DS007",
+      "storeType": "Wholesale",
+      "storeLocation": "San Antonio",
+      "contactPerson": "James Taylor",
+      "contactNumber": "789-012-3456",
+      "email": "store7@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "storeName": "Dreams Store 8",
+      "storeCode": "DS008",
+      "storeType": "Retail",
+      "storeLocation": "San Diego",
+      "contactPerson": "Sophia Martinez",
+      "contactNumber": "890-123-4567",
+      "email": "store8@dreamspos.com",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "storeName": "Dreams Store 9",
+      "storeCode": "DS009",
+      "storeType": "Retail",
+      "storeLocation": "Dallas",
+      "contactPerson": "Benjamin Anderson",
+      "contactNumber": "901-234-5678",
+      "email": "store9@dreamspos.com",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "storeName": "Dreams Store 10",
+      "storeCode": "DS010",
+      "storeType": "Wholesale",
+      "storeLocation": "San Jose",
+      "contactPerson": "Mia Thomas",
+      "contactNumber": "012-345-6789",
+      "email": "store10@dreamspos.com",
+      "status": "Active"
+    }
+  ]
+}

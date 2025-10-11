@@ -1,0 +1,80 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "prefixName": "Mr.",
+      "prefixCode": "MR",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "prefixName": "Mrs.",
+      "prefixCode": "MRS",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "prefixName": "Miss",
+      "prefixCode": "MISS",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "prefixName": "Dr.",
+      "prefixCode": "DR",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "prefixName": "Prof.",
+      "prefixCode": "PROF",
+      "status": "Active"
+    },
+    {
+      "id": 6,
+      "prefixName": "Mx.",
+      "prefixCode": "MX",
+      "status": "Inactive"
+    },
+    {
+      "id": 7,
+      "prefixName": "Sir",
+      "prefixCode": "SIR",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "prefixName": "Madam",
+      "prefixCode": "MADAM",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "prefixName": "Rev.",
+      "prefixCode": "REV",
+      "status": "Inactive"
+    },
+    {
+      "id": 10,
+      "prefixName": "Lady",
+      "prefixCode": "LADY",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "prefixName": "Lord",
+      "prefixCode": "LORD",
+      "status": "Active"
+    },
+    {
+      "id": 12,
+      "prefixName": "Hon.",
+      "prefixCode": "HON",
+      "status": "Inactive"
+    }
+  ]
+}

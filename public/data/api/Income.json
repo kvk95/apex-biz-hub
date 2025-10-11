@@ -1,0 +1,140 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "date": "2023-01-01",
+      "invoiceId": "INV-001",
+      "customer": "John Doe",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 1500.0,
+      "paymentMethod": "Cash",
+      "description": "Product sale"
+    },
+    {
+      "id": 2,
+      "date": "2023-01-03",
+      "invoiceId": "INV-002",
+      "customer": "Jane Smith",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 2500.5,
+      "paymentMethod": "Card",
+      "description": "Consulting service"
+    },
+    {
+      "id": 3,
+      "date": "2023-01-05",
+      "invoiceId": "INV-003",
+      "customer": "Acme Corp",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 3200.75,
+      "paymentMethod": "Cash",
+      "description": "Bulk order"
+    },
+    {
+      "id": 4,
+      "date": "2023-01-10",
+      "invoiceId": "INV-004",
+      "customer": "Beta LLC",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 1800.0,
+      "paymentMethod": "Card",
+      "description": "Maintenance service"
+    },
+    {
+      "id": 5,
+      "date": "2023-01-12",
+      "invoiceId": "INV-005",
+      "customer": "Gamma Inc",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 2100.0,
+      "paymentMethod": "Cash",
+      "description": "Product sale"
+    },
+    {
+      "id": 6,
+      "date": "2023-01-15",
+      "invoiceId": "INV-006",
+      "customer": "Delta Ltd",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 2750.0,
+      "paymentMethod": "Card",
+      "description": "Consulting service"
+    },
+    {
+      "id": 7,
+      "date": "2023-01-18",
+      "invoiceId": "INV-007",
+      "customer": "Epsilon Co",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 1900.0,
+      "paymentMethod": "Cash",
+      "description": "Product sale"
+    },
+    {
+      "id": 8,
+      "date": "2023-01-20",
+      "invoiceId": "INV-008",
+      "customer": "Zeta Enterprises",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 2300.0,
+      "paymentMethod": "Card",
+      "description": "Training service"
+    },
+    {
+      "id": 9,
+      "date": "2023-01-22",
+      "invoiceId": "INV-009",
+      "customer": "Eta Group",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 1600.0,
+      "paymentMethod": "Cash",
+      "description": "Product sale"
+    },
+    {
+      "id": 10,
+      "date": "2023-01-25",
+      "invoiceId": "INV-010",
+      "customer": "Theta Partners",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 2800.0,
+      "paymentMethod": "Card",
+      "description": "Consulting service"
+    },
+    {
+      "id": 11,
+      "date": "2023-01-27",
+      "invoiceId": "INV-011",
+      "customer": "Iota Solutions",
+      "category": "Sales",
+      "account": "Cash",
+      "amount": 1950.0,
+      "paymentMethod": "Cash",
+      "description": "Product sale"
+    },
+    {
+      "id": 12,
+      "date": "2023-01-30",
+      "invoiceId": "INV-012",
+      "customer": "Kappa Services",
+      "category": "Service",
+      "account": "Bank",
+      "amount": 2600.0,
+      "paymentMethod": "Card",
+      "description": "Support service"
+    }
+  ]
+}

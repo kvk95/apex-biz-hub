@@ -1,0 +1,20 @@
+{
+    "status": {
+        "code": "S",
+        "description": ""
+    },
+    "result": [
+        { "id": 1, "leaveType": "Casual Leave", "days": 12, "status": "Active" },
+        { "id": 2, "leaveType": "Sick Leave", "days": 10, "status": "Active" },
+        { "id": 3, "leaveType": "Maternity Leave", "days": 90, "status": "Inactive" },
+        { "id": 4, "leaveType": "Paternity Leave", "days": 15, "status": "Active" },
+        { "id": 5, "leaveType": "Annual Leave", "days": 30, "status": "Active" },
+        { "id": 6, "leaveType": "Unpaid Leave", "days": 0, "status": "Inactive" },
+        { "id": 7, "leaveType": "Compensatory Off", "days": 5, "status": "Active" },
+        { "id": 8, "leaveType": "Bereavement Leave", "days": 7, "status": "Active" },
+        { "id": 9, "leaveType": "Study Leave", "days": 20, "status": "Inactive" },
+        { "id": 10, "leaveType": "Sabbatical Leave", "days": 180, "status": "Inactive" },
+        { "id": 11, "leaveType": "Leave Without Pay", "days": 0, "status": "Active" },
+        { "id": 12, "leaveType": "Special Leave", "days": 10, "status": "Active" }
+    ]
+}

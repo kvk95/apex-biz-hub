@@ -1,115 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const giftCardsData = [
-  {
-    id: 1,
-    cardNumber: "1234 5678 9012 3456",
-    cardHolder: "John Doe",
-    issueDate: "2023-01-15",
-    expiryDate: "2025-01-15",
-    balance: 150.0,
-    status: "Active",
-  },
-  {
-    id: 2,
-    cardNumber: "2345 6789 0123 4567",
-    cardHolder: "Jane Smith",
-    issueDate: "2023-02-10",
-    expiryDate: "2025-02-10",
-    balance: 75.5,
-    status: "Active",
-  },
-  {
-    id: 3,
-    cardNumber: "3456 7890 1234 5678",
-    cardHolder: "Alice Johnson",
-    issueDate: "2022-12-05",
-    expiryDate: "2024-12-05",
-    balance: 0,
-    status: "Expired",
-  },
-  {
-    id: 4,
-    cardNumber: "4567 8901 2345 6789",
-    cardHolder: "Bob Williams",
-    issueDate: "2023-03-20",
-    expiryDate: "2025-03-20",
-    balance: 200,
-    status: "Active",
-  },
-  {
-    id: 5,
-    cardNumber: "5678 9012 3456 7890",
-    cardHolder: "Carol Davis",
-    issueDate: "2023-04-01",
-    expiryDate: "2025-04-01",
-    balance: 50,
-    status: "Active",
-  },
-  {
-    id: 6,
-    cardNumber: "6789 0123 4567 8901",
-    cardHolder: "David Brown",
-    issueDate: "2023-05-15",
-    expiryDate: "2025-05-15",
-    balance: 120,
-    status: "Active",
-  },
-  {
-    id: 7,
-    cardNumber: "7890 1234 5678 9012",
-    cardHolder: "Eva Green",
-    issueDate: "2023-06-10",
-    expiryDate: "2025-06-10",
-    balance: 95,
-    status: "Active",
-  },
-  {
-    id: 8,
-    cardNumber: "8901 2345 6789 0123",
-    cardHolder: "Frank Moore",
-    issueDate: "2023-07-05",
-    expiryDate: "2025-07-05",
-    balance: 0,
-    status: "Expired",
-  },
-  {
-    id: 9,
-    cardNumber: "9012 3456 7890 1234",
-    cardHolder: "Grace Lee",
-    issueDate: "2023-08-20",
-    expiryDate: "2025-08-20",
-    balance: 180,
-    status: "Active",
-  },
-  {
-    id: 10,
-    cardNumber: "0123 4567 8901 2345",
-    cardHolder: "Henry King",
-    issueDate: "2023-09-01",
-    expiryDate: "2025-09-01",
-    balance: 60,
-    status: "Active",
-  },
-  {
-    id: 11,
-    cardNumber: "1122 3344 5566 7788",
-    cardHolder: "Ivy Scott",
-    issueDate: "2023-10-10",
-    expiryDate: "2025-10-10",
-    balance: 130,
-    status: "Active",
-  },
-  {
-    id: 12,
-    cardNumber: "2233 4455 6677 8899",
-    cardHolder: "Jack White",
-    issueDate: "2023-11-15",
-    expiryDate: "2025-11-15",
-    balance: 0,
-    status: "Expired",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useMemo, useState } from "react";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -134,8 +24,29 @@ export default function GiftCards() {
   // Filter state (search by card number or holder)
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Data state (simulate data update)
-  const [data, setData] = useState(giftCardsData);
+  // Data state (simulate data update)  
+
+  const [data, setData] = useState<>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  
+    useEffect(() => {
+      document.title = "GiftCards - Dreams POS";
+      loadData();
+    }, []);
+  
+    const loadData = async () => {
+      setLoading(true);
+      const response = await apiService.get<[]>("GiftCards");
+      if (response.status.code === "S") {
+        setData(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+      setLoading(false);
+    };
 
   // Filtered and paginated data
   const filteredData = useMemo(() => {
@@ -525,10 +436,18 @@ export default function GiftCards() {
             )}
             {paginatedData.map((card) => (
               <tr key={card.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">{card.cardNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{card.cardHolder}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{card.issueDate}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{card.expiryDate}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {card.cardNumber}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {card.cardHolder}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {card.issueDate}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {card.expiryDate}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   ${card.balance.toFixed(2)}
                 </td>

@@ -1,48 +1,38 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { DataTable } from "@/components/DataTable/DataTable";
-import { Column, RowAction } from "@/components/DataTable/DataTable";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
-
-interface Discount {
-  id: number;
-  discountName: string;
-  discountType: string;
-  discountAmount: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
+import React, { useEffect, useState } from "react";
 
 const discountTypes = ["Percentage", "Fixed"];
-const statuses = ["Active", "Inactive"];
+const statusOptions = ["Active", "Inactive"];
 
 export default function Discount() {
-  const [data, setData] = useState<Discount[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Form state
   const [form, setForm] = useState({
     discountName: "",
-    discountType: "Percentage",
-    discountAmount: "",
+    discountType: discountTypes[0],
+    discountValue: "",
     startDate: "",
     endDate: "",
-    status: "Active",
+    status: statusOptions[0],
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+
+  // Data state
+  const [data, setData] = useState<>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Editing state
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   useEffect(() => {
     document.title = "Discount - Dreams POS";
@@ -51,7 +41,7 @@ export default function Discount() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<Discount[]>("discounts");
+    const response = await apiService.get<[]>("Discount");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -61,35 +51,66 @@ export default function Discount() {
     setLoading(false);
   };
 
-  const handleInputChange = (name: string, value: string) => {
+  // Handlers
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
-    if (!form.discountName.trim() || !form.discountAmount.trim() || !form.startDate || !form.endDate) {
-      toast.error("Please fill all required fields.");
+    // Validate required fields (discountName, discountValue, dates)
+    if (
+      !form.discountName.trim() ||
+      !form.discountValue ||
+      !form.startDate ||
+      !form.endDate
+    ) {
+      alert("Please fill all required fields.");
       return;
     }
-
-    if (editingId !== null) {
+    if (editId !== null) {
+      // Edit existing
       setData((prev) =>
-        prev.map((item) => (item.id === editingId ? { ...item, ...form } : item))
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                discountName: form.discountName.trim(),
+                discountType: form.discountType,
+                discountValue: Number(form.discountValue),
+                startDate: form.startDate,
+                endDate: form.endDate,
+                status: form.status,
+              }
+            : item
+        )
       );
-      toast.success("Discount updated successfully");
-      setEditingId(null);
+      setEditId(null);
     } else {
+      // Add new
       const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { id: newId, ...form }]);
-      toast.success("Discount created successfully");
+      setData((prev) => [
+        ...prev,
+        {
+          id: newId,
+          discountName: form.discountName.trim(),
+          discountType: form.discountType,
+          discountValue: Number(form.discountValue),
+          startDate: form.startDate,
+          endDate: form.endDate,
+          status: form.status,
+        },
+      ]);
     }
-
     setForm({
       discountName: "",
-      discountType: "Percentage",
-      discountAmount: "",
+      discountType: discountTypes[0],
+      discountValue: "",
       startDate: "",
       endDate: "",
-      status: "Active",
+      status: statusOptions[0],
     });
   };
 
@@ -99,235 +120,359 @@ export default function Discount() {
       setForm({
         discountName: item.discountName,
         discountType: item.discountType,
-        discountAmount: item.discountAmount,
+        discountValue: item.discountValue.toString(),
         startDate: item.startDate,
         endDate: item.endDate,
         status: item.status,
       });
-      setEditingId(id);
+      setEditId(id);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleDelete = (id: number) => {
-    setData((prev) => prev.filter((d) => d.id !== id));
-    toast.success("Discount deleted successfully");
-    if (editingId === id) {
-      setEditingId(null);
-      setForm({
-        discountName: "",
-        discountType: "Percentage",
-        discountAmount: "",
-        startDate: "",
-        endDate: "",
-        status: "Active",
-      });
+    if (window.confirm("Are you sure you want to delete this discount?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
 
   const handleRefresh = () => {
+    setData(discountData);
     setForm({
       discountName: "",
-      discountType: "Percentage",
-      discountAmount: "",
+      discountType: discountTypes[0],
+      discountValue: "",
       startDate: "",
       endDate: "",
-      status: "Active",
+      status: statusOptions[0],
     });
-    setEditingId(null);
+    setEditId(null);
+    setCurrentPage(1);
   };
 
-  const columns: Column[] = [
-    { key: "id", label: "#", sortable: false },
-    { key: "discountName", label: "Discount Name", sortable: true },
-    { key: "discountType", label: "Discount Type", sortable: true },
-    {
-      key: "discountAmount",
-      label: "Discount Amount",
-      sortable: true,
-      render: (row: Discount) =>
-        row.discountType === "Percentage" ? `${row.discountAmount}%` : `$${row.discountAmount}`,
-    },
-    { key: "startDate", label: "Start Date", sortable: true },
-    { key: "endDate", label: "End Date", sortable: true },
-    {
-      key: "status",
-      label: "Status",
-      sortable: true,
-      render: (row: Discount) => (
-        <span
-          className={`inline-block rounded px-2 py-1 text-xs font-semibold ${
-            row.status === "Active"
-              ? "bg-success-light text-success"
-              : "bg-destructive/10 text-destructive"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-  ];
+  const handleReport = () => {
+    // For demo, just alert JSON data
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+  };
 
-  const rowActions: RowAction[] = [
-    {
-      label: "Edit",
-      onClick: (row: Discount) => handleEdit(row.id),
-      icon: "fa fa-pencil",
-    },
-    {
-      label: "Delete",
-      onClick: (row: Discount) => {
-        if (window.confirm("Are you sure you want to delete this discount?")) {
-          handleDelete(row.id);
-        }
-      },
-      icon: "fa fa-trash",
-      variant: "destructive",
-    },
-  ];
+  // Pagination controls
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
-          <i className="fa fa-exclamation-triangle mr-2" />
-          Error loading discounts: {error}
-        </div>
-      </div>
-    );
-  }
+  // Title as per reference page
+  useEffect(() => {
+    document.title = "Discount - Dreams POS";
+  }, []);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <h1 className="text-2xl font-semibold mb-6 text-foreground">Discount Management</h1>
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Discount</h1>
 
-      <Card className="mb-8">
-        <CardContent className="pt-6">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="space-y-6"
+      {/* Form Section */}
+      <section className="bg-white rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Discount Name */}
+          <div>
+            <label
+              htmlFor="discountName"
+              className="block text-sm font-medium mb-1"
+            >
+              Discount Name
+            </label>
+            <input
+              type="text"
+              id="discountName"
+              name="discountName"
+              value={form.discountName}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter discount name"
+            />
+          </div>
+
+          {/* Discount Type */}
+          <div>
+            <label
+              htmlFor="discountType"
+              className="block text-sm font-medium mb-1"
+            >
+              Discount Type
+            </label>
+            <select
+              id="discountType"
+              name="discountType"
+              value={form.discountType}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {discountTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Discount Value */}
+          <div>
+            <label
+              htmlFor="discountValue"
+              className="block text-sm font-medium mb-1"
+            >
+              Discount Value
+            </label>
+            <input
+              type="number"
+              id="discountValue"
+              name="discountValue"
+              value={form.discountValue}
+              onChange={handleInputChange}
+              min={0}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter discount value"
+            />
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium mb-1"
+            >
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={form.status}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            type="button"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <Label htmlFor="discountName">Discount Name</Label>
-                <Input
-                  id="discountName"
-                  value={form.discountName}
-                  onChange={(e) => handleInputChange("discountName", e.target.value)}
-                  placeholder="Enter Discount Name"
-                  required
-                />
-              </div>
+            <i className="fa fa-save" aria-hidden="true"></i> Save
+          </button>
 
-              <div>
-                <Label htmlFor="discountType">Discount Type</Label>
-                <Select
-                  value={form.discountType}
-                  onValueChange={(value) => handleInputChange("discountType", value)}
+          <button
+            onClick={handleRefresh}
+            className="inline-flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+            type="button"
+          >
+            <i className="fa fa-refresh" aria-hidden="true"></i> Refresh
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+            type="button"
+          >
+            <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
+          </button>
+        </div>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-white rounded shadow p-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-300">
+            <thead className="bg-indigo-600 text-white">
+              <tr>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  #
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  Discount Name
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  Discount Type
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  Discount Value
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  Start Date
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  End Date
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                  Status
+                </th>
+                <th className="border border-indigo-700 px-4 py-2 text-center text-sm font-semibold">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="text-center px-4 py-6 text-gray-500 italic"
+                  >
+                    No discounts found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {discountTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {item.discountName}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {item.discountType}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {item.discountType === "Percentage"
+                      ? `${item.discountValue}%`
+                      : `$${item.discountValue}`}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {item.startDate}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    {item.endDate}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center text-sm space-x-2">
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="text-indigo-600 hover:text-indigo-800"
+                      aria-label={`Edit discount ${item.discountName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 hover:text-red-800"
+                      aria-label={`Delete discount ${item.discountName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-              <div>
-                <Label htmlFor="discountAmount">Discount Amount</Label>
-                <Input
-                  id="discountAmount"
-                  type="number"
-                  value={form.discountAmount}
-                  onChange={(e) => handleInputChange("discountAmount", e.target.value)}
-                  placeholder="Enter Discount Amount"
-                  min="0"
-                  step="any"
-                  required
-                />
-              </div>
-            </div>
+        {/* Pagination Controls */}
+        <nav
+          className="flex justify-between items-center mt-6"
+          aria-label="Pagination"
+        >
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+            type="button"
+            aria-label="Previous page"
+          >
+            <i className="fa fa-chevron-left mr-1" aria-hidden="true"></i> Prev
+          </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => handleInputChange("startDate", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => handleInputChange("endDate", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={form.status}
-                  onValueChange={(value) => handleInputChange("status", value)}
+          <ul className="inline-flex -space-x-px">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <li key={page}>
+                <button
+                  onClick={() => goToPage(page)}
+                  aria-current={page === currentPage ? "page" : undefined}
+                  className={`px-3 py-1.5 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    page === currentPage
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                  type="button"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                  {page}
+                </button>
+              </li>
+            ))}
+          </ul>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit">
-                <i className="fa fa-save mr-2" />
-                {editingId ? "Update" : "Save"}
-              </Button>
-              <Button type="button" variant="outline" onClick={handleRefresh}>
-                <i className="fa fa-refresh mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <DataTable
-            columns={columns}
-            data={data}
-            loading={loading}
-            page={currentPage}
-            pageSize={pageSize}
-            total={data.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            rowActions={rowActions}
-          />
-        </CardContent>
-      </Card>
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+            type="button"
+            aria-label="Next page"
+          >
+            Next <i className="fa fa-chevron-right ml-1" aria-hidden="true"></i>
+          </button>
+        </nav>
+      </section>
     </div>
   );
 }

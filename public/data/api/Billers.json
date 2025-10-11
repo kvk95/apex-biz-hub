@@ -1,0 +1,128 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "123-456-7890",
+      "address": "123 Main St",
+      "city": "New York",
+      "country": "USA",
+      "postalCode": "10001",
+      "gstNo": "GST123456",
+      "createdAt": "2023-01-01"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "phone": "987-654-3210",
+      "address": "456 Elm St",
+      "city": "Los Angeles",
+      "country": "USA",
+      "postalCode": "90001",
+      "gstNo": "GST654321",
+      "createdAt": "2023-02-15"
+    },
+    {
+      "id": 3,
+      "name": "Acme Corp",
+      "email": "contact@acmecorp.com",
+      "phone": "555-555-5555",
+      "address": "789 Oak St",
+      "city": "Chicago",
+      "country": "USA",
+      "postalCode": "60601",
+      "gstNo": "GST789123",
+      "createdAt": "2023-03-10"
+    },
+    {
+      "id": 4,
+      "name": "Beta LLC",
+      "email": "info@betallc.com",
+      "phone": "444-444-4444",
+      "address": "321 Pine St",
+      "city": "Houston",
+      "country": "USA",
+      "postalCode": "77001",
+      "gstNo": "GST321987",
+      "createdAt": "2023-04-05"
+    },
+    {
+      "id": 5,
+      "name": "Gamma Inc",
+      "email": "sales@gammainc.com",
+      "phone": "333-333-3333",
+      "address": "654 Cedar St",
+      "city": "Phoenix",
+      "country": "USA",
+      "postalCode": "85001",
+      "gstNo": "GST456789",
+      "createdAt": "2023-05-20"
+    },
+    {
+      "id": 6,
+      "name": "Delta Traders",
+      "email": "contact@deltatraders.com",
+      "phone": "222-222-2222",
+      "address": "987 Spruce St",
+      "city": "Philadelphia",
+      "country": "USA",
+      "postalCode": "19019",
+      "gstNo": "GST987654",
+      "createdAt": "2023-06-18"
+    },
+    {
+      "id": 7,
+      "name": "Epsilon Services",
+      "email": "support@epsilonservices.com",
+      "phone": "111-111-1111",
+      "address": "159 Maple St",
+      "city": "San Antonio",
+      "country": "USA",
+      "postalCode": "78201",
+      "gstNo": "GST654987",
+      "createdAt": "2023-07-22"
+    },
+    {
+      "id": 8,
+      "name": "Zeta Solutions",
+      "email": "info@zetasolutions.com",
+      "phone": "666-666-6666",
+      "address": "753 Birch St",
+      "city": "San Diego",
+      "country": "USA",
+      "postalCode": "92101",
+      "gstNo": "GST321654",
+      "createdAt": "2023-08-30"
+    },
+    {
+      "id": 9,
+      "name": "Eta Enterprises",
+      "email": "contact@etaenterprises.com",
+      "phone": "777-777-7777",
+      "address": "852 Walnut St",
+      "city": "Dallas",
+      "country": "USA",
+      "postalCode": "75201",
+      "gstNo": "GST789456",
+      "createdAt": "2023-09-12"
+    },
+    {
+      "id": 10,
+      "name": "Theta Group",
+      "email": "sales@thetagroup.com",
+      "phone": "888-888-8888",
+      "address": "951 Chestnut St",
+      "city": "San Jose",
+      "country": "USA",
+      "postalCode": "95101",
+      "gstNo": "GST456123",
+      "createdAt": "2023-10-01"
+    }
+  ]
+}

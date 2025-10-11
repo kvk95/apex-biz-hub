@@ -1,0 +1,173 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "productName": "Apple",
+      "productCode": "PRD001",
+      "category": "Fruits",
+      "supplier": "Supplier A",
+      "expiredDate": "2023-09-10",
+      "quantity": 120,
+      "unit": "Kg",
+      "cost": 1.2,
+      "price": 2.5
+    },
+    {
+      "productName": "Banana",
+      "productCode": "PRD002",
+      "category": "Fruits",
+      "supplier": "Supplier B",
+      "expiredDate": "2023-09-05",
+      "quantity": 200,
+      "unit": "Kg",
+      "cost": 0.8,
+      "price": 1.5
+    },
+    {
+      "productName": "Milk",
+      "productCode": "PRD003",
+      "category": "Dairy",
+      "supplier": "Supplier C",
+      "expiredDate": "2023-09-01",
+      "quantity": 50,
+      "unit": "Ltr",
+      "cost": 0.5,
+      "price": 1.0
+    },
+    {
+      "productName": "Cheese",
+      "productCode": "PRD004",
+      "category": "Dairy",
+      "supplier": "Supplier C",
+      "expiredDate": "2023-08-25",
+      "quantity": 30,
+      "unit": "Kg",
+      "cost": 3.0,
+      "price": 5.0
+    },
+    {
+      "productName": "Bread",
+      "productCode": "PRD005",
+      "category": "Bakery",
+      "supplier": "Supplier D",
+      "expiredDate": "2023-09-12",
+      "quantity": 100,
+      "unit": "Pcs",
+      "cost": 0.3,
+      "price": 0.8
+    },
+    {
+      "productName": "Yogurt",
+      "productCode": "PRD006",
+      "category": "Dairy",
+      "supplier": "Supplier C",
+      "expiredDate": "2023-09-03",
+      "quantity": 80,
+      "unit": "Pcs",
+      "cost": 0.6,
+      "price": 1.2
+    },
+    {
+      "productName": "Orange",
+      "productCode": "PRD007",
+      "category": "Fruits",
+      "supplier": "Supplier A",
+      "expiredDate": "2023-09-07",
+      "quantity": 150,
+      "unit": "Kg",
+      "cost": 1.1,
+      "price": 2.0
+    },
+    {
+      "productName": "Butter",
+      "productCode": "PRD008",
+      "category": "Dairy",
+      "supplier": "Supplier C",
+      "expiredDate": "2023-08-30",
+      "quantity": 40,
+      "unit": "Kg",
+      "cost": 2.5,
+      "price": 4.0
+    },
+    {
+      "productName": "Tomato",
+      "productCode": "PRD009",
+      "category": "Vegetables",
+      "supplier": "Supplier E",
+      "expiredDate": "2023-09-06",
+      "quantity": 180,
+      "unit": "Kg",
+      "cost": 0.9,
+      "price": 1.8
+    },
+    {
+      "productName": "Potato",
+      "productCode": "PRD010",
+      "category": "Vegetables",
+      "supplier": "Supplier E",
+      "expiredDate": "2023-09-08",
+      "quantity": 220,
+      "unit": "Kg",
+      "cost": 0.7,
+      "price": 1.4
+    },
+    {
+      "productName": "Cucumber",
+      "productCode": "PRD011",
+      "category": "Vegetables",
+      "supplier": "Supplier E",
+      "expiredDate": "2023-09-04",
+      "quantity": 90,
+      "unit": "Kg",
+      "cost": 0.6,
+      "price": 1.3
+    },
+    {
+      "productName": "Lettuce",
+      "productCode": "PRD012",
+      "category": "Vegetables",
+      "supplier": "Supplier E",
+      "expiredDate": "2023-09-02",
+      "quantity": 70,
+      "unit": "Kg",
+      "cost": 0.5,
+      "price": 1.0
+    },
+    {
+      "productName": "Strawberry",
+      "productCode": "PRD013",
+      "category": "Fruits",
+      "supplier": "Supplier A",
+      "expiredDate": "2023-09-09",
+      "quantity": 60,
+      "unit": "Kg",
+      "cost": 2.0,
+      "price": 3.5
+    },
+    {
+      "productName": "Blueberry",
+      "productCode": "PRD014",
+      "category": "Fruits",
+      "supplier": "Supplier A",
+      "expiredDate": "2023-09-11",
+      "quantity": 55,
+      "unit": "Kg",
+      "cost": 2.2,
+      "price": 3.8
+    },
+    {
+      "productName": "Eggs",
+      "productCode": "PRD015",
+      "category": "Dairy",
+      "supplier": "Supplier C",
+      "expiredDate": "2023-09-13",
+      "quantity": 300,
+      "unit": "Pcs",
+      "cost": 0.1,
+      "price": 0.2
+    }
+  ]
+}

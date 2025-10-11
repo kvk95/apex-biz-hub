@@ -1,0 +1,118 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "supplierName": "Dreams Technologies",
+      "contactPerson": "John Doe",
+      "phone": "123-456-7890",
+      "email": "contact@dreamspos.com",
+      "address": "123 Dream St.",
+      "city": "Dream City",
+      "country": "Dreamland",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "supplierName": "Alpha Supplies",
+      "contactPerson": "Alice Smith",
+      "phone": "987-654-3210",
+      "email": "alice@alphasupplies.com",
+      "address": "456 Alpha Ave.",
+      "city": "Alphaville",
+      "country": "Alphaland",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "supplierName": "Beta Traders",
+      "contactPerson": "Bob Johnson",
+      "phone": "555-123-4567",
+      "email": "bob@betatraders.com",
+      "address": "789 Beta Blvd.",
+      "city": "Betatown",
+      "country": "Betaland",
+      "status": "Inactive"
+    },
+    {
+      "id": 4,
+      "supplierName": "Gamma Corp",
+      "contactPerson": "Carol White",
+      "phone": "444-555-6666",
+      "email": "carol@gammacorp.com",
+      "address": "321 Gamma Rd.",
+      "city": "Gammaville",
+      "country": "Gammaland",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "supplierName": "Delta Enterprises",
+      "contactPerson": "David Black",
+      "phone": "222-333-4444",
+      "email": "david@deltaenterprises.com",
+      "address": "654 Delta Ln.",
+      "city": "Deltatown",
+      "country": "Deltaland",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "supplierName": "Epsilon Goods",
+      "contactPerson": "Eve Green",
+      "phone": "111-222-3333",
+      "email": "eve@epsilongoods.com",
+      "address": "987 Epsilon St.",
+      "city": "Epsilonia",
+      "country": "Epsilonland",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "supplierName": "Zeta Wholesale",
+      "contactPerson": "Frank Blue",
+      "phone": "777-888-9999",
+      "email": "frank@zetawholesale.com",
+      "address": "159 Zeta Ave.",
+      "city": "Zetaville",
+      "country": "Zetaland",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "supplierName": "Eta Distributors",
+      "contactPerson": "Grace Brown",
+      "phone": "333-444-5555",
+      "email": "grace@etadistributors.com",
+      "address": "753 Eta Blvd.",
+      "city": "Etatown",
+      "country": "Etaland",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "supplierName": "Theta Imports",
+      "contactPerson": "Hank Gray",
+      "phone": "666-777-8888",
+      "email": "hank@thetaimports.com",
+      "address": "852 Theta Rd.",
+      "city": "Thetaville",
+      "country": "Thetaland",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "supplierName": "Iota Supplies",
+      "contactPerson": "Ivy Violet",
+      "phone": "999-000-1111",
+      "email": "ivy@iotasupplies.com",
+      "address": "951 Iota Ln.",
+      "city": "Iotatown",
+      "country": "Iotaland",
+      "status": "Active"
+    }
+  ]
+}

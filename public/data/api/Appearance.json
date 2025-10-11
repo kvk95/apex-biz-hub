@@ -1,0 +1,116 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "name": "Dreams POS",
+      "theme": "Light",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "Dreams POS Dark",
+      "theme": "Dark",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "name": "Dreams POS Blue",
+      "theme": "Blue",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "name": "Dreams POS Green",
+      "theme": "Green",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "name": "Dreams POS Red",
+      "theme": "Red",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "name": "Dreams POS Yellow",
+      "theme": "Yellow",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "name": "Dreams POS Purple",
+      "theme": "Purple",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "name": "Dreams POS Orange",
+      "theme": "Orange",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "name": "Dreams POS Cyan",
+      "theme": "Cyan",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "name": "Dreams POS Magenta",
+      "theme": "Magenta",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "name": "Dreams POS Lime",
+      "theme": "Lime",
+      "sidebar": "Expanded",
+      "header": "Fixed",
+      "footer": "Static",
+      "status": "Inactive"
+    },
+    {
+      "id": 12,
+      "name": "Dreams POS Teal",
+      "theme": "Teal",
+      "sidebar": "Collapsed",
+      "header": "Static",
+      "footer": "Fixed",
+      "status": "Active"
+    }
+  ]
+}

@@ -12,5 +12,5 @@ export const API_CONFIG = {
   },
   
   // Local data paths
-  localDataPath: '/data'
+  localDataPath: '/data/api'
 };

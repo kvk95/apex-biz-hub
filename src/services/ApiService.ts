@@ -8,7 +8,19 @@ export interface ApiResponse<T> {
   result: T;
 }
 
+ 
+
 class ApiService {
+
+  // Method to handle authorization header
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('accessToken'); // Assuming token is stored in localStorage
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
   private async fetchFromLocal<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${API_CONFIG.localDataPath}/${endpoint}.json`);
@@ -23,7 +35,20 @@ class ApiService {
         };
       }
       
+     
       const data = await response.json();
+      // Check for status after data retrieval
+      // if (data.status?.code !== 'S') {
+      //   return {
+      //     status: {
+      //       code: 'F',
+      //       description: `Failed to fetch data: ${data.status?.description}`,
+      //     },
+      //     result: [] as T,
+      //   };
+      // }
+      
+
       return data;
     } catch (error) {
       console.error(`Error fetching local data from ${endpoint}:`, error);
@@ -39,10 +64,10 @@ class ApiService {
 
   private async fetchFromRemote<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
+       const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
         method: 'GET',
-        headers: API_CONFIG.remoteApi.headers,
-        signal: AbortSignal.timeout(API_CONFIG.remoteApi.timeout)
+        headers: this.getAuthHeaders(),
+        signal: AbortSignal.timeout(API_CONFIG.remoteApi.timeout),
       });
 
       if (!response.ok) {
@@ -92,7 +117,7 @@ class ApiService {
       try {
         const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
           method: 'POST',
-          headers: API_CONFIG.remoteApi.headers,
+          headers: this.getAuthHeaders(),
           body: JSON.stringify(data),
           signal: AbortSignal.timeout(API_CONFIG.remoteApi.timeout)
         });
@@ -136,7 +161,7 @@ class ApiService {
       try {
         const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
           method: 'PUT',
-          headers: API_CONFIG.remoteApi.headers,
+          headers: this.getAuthHeaders(),
           body: JSON.stringify(data),
           signal: AbortSignal.timeout(API_CONFIG.remoteApi.timeout)
         });
@@ -180,7 +205,7 @@ class ApiService {
       try {
         const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
           method: 'DELETE',
-          headers: API_CONFIG.remoteApi.headers,
+         headers: this.getAuthHeaders(),
           signal: AbortSignal.timeout(API_CONFIG.remoteApi.timeout)
         });
 

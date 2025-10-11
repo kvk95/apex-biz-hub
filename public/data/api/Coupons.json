@@ -1,0 +1,140 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "couponCode": "ABCD1234",
+      "couponType": "Percentage",
+      "discountAmount": "10",
+      "maxDiscountAmount": "100",
+      "minPurchaseAmount": "500",
+      "startDate": "2023-01-01",
+      "endDate": "2023-12-31",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "couponCode": "XYZ9876",
+      "couponType": "Flat",
+      "discountAmount": "50",
+      "maxDiscountAmount": "50",
+      "minPurchaseAmount": "1000",
+      "startDate": "2023-02-15",
+      "endDate": "2023-11-30",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "couponCode": "SAVE20",
+      "couponType": "Percentage",
+      "discountAmount": "20",
+      "maxDiscountAmount": "200",
+      "minPurchaseAmount": "1500",
+      "startDate": "2023-03-01",
+      "endDate": "2023-10-31",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "couponCode": "FLAT100",
+      "couponType": "Flat",
+      "discountAmount": "100",
+      "maxDiscountAmount": "100",
+      "minPurchaseAmount": "2000",
+      "startDate": "2023-04-01",
+      "endDate": "2023-09-30",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "couponCode": "DISC15",
+      "couponType": "Percentage",
+      "discountAmount": "15",
+      "maxDiscountAmount": "150",
+      "minPurchaseAmount": "750",
+      "startDate": "2023-05-01",
+      "endDate": "2023-12-15",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "couponCode": "OFF50",
+      "couponType": "Flat",
+      "discountAmount": "50",
+      "maxDiscountAmount": "50",
+      "minPurchaseAmount": "1200",
+      "startDate": "2023-06-01",
+      "endDate": "2023-11-01",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "couponCode": "PROMO5",
+      "couponType": "Percentage",
+      "discountAmount": "5",
+      "maxDiscountAmount": "50",
+      "minPurchaseAmount": "300",
+      "startDate": "2023-07-01",
+      "endDate": "2023-12-31",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "couponCode": "SAVE100",
+      "couponType": "Flat",
+      "discountAmount": "100",
+      "maxDiscountAmount": "100",
+      "minPurchaseAmount": "2500",
+      "startDate": "2023-08-01",
+      "endDate": "2023-10-31",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "couponCode": "NEWYEAR25",
+      "couponType": "Percentage",
+      "discountAmount": "25",
+      "maxDiscountAmount": "250",
+      "minPurchaseAmount": "1000",
+      "startDate": "2023-12-25",
+      "endDate": "2024-01-05",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "couponCode": "HOLIDAY50",
+      "couponType": "Flat",
+      "discountAmount": "50",
+      "maxDiscountAmount": "50",
+      "minPurchaseAmount": "800",
+      "startDate": "2023-12-01",
+      "endDate": "2023-12-31",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "couponCode": "SUMMER10",
+      "couponType": "Percentage",
+      "discountAmount": "10",
+      "maxDiscountAmount": "100",
+      "minPurchaseAmount": "600",
+      "startDate": "2023-06-01",
+      "endDate": "2023-08-31",
+      "status": "Inactive"
+    },
+    {
+      "id": 12,
+      "couponCode": "WINTER20",
+      "couponType": "Percentage",
+      "discountAmount": "20",
+      "maxDiscountAmount": "200",
+      "minPurchaseAmount": "1200",
+      "startDate": "2023-12-01",
+      "endDate": "2024-02-28",
+      "status": "Active"
+    }
+  ]
+}

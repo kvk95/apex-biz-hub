@@ -1,0 +1,88 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "storageName": "Main Storage",
+      "storageCode": "MS001",
+      "storageType": "Warehouse",
+      "status": "Active",
+      "description": "Primary warehouse storage"
+    },
+    {
+      "id": 2,
+      "storageName": "Backup Storage",
+      "storageCode": "BS002",
+      "storageType": "Store",
+      "status": "Inactive",
+      "description": "Secondary backup storage"
+    },
+    {
+      "id": 3,
+      "storageName": "Cold Storage",
+      "storageCode": "CS003",
+      "storageType": "Cold Room",
+      "status": "Active",
+      "description": "Storage for perishable goods"
+    },
+    {
+      "id": 4,
+      "storageName": "Outlet Storage",
+      "storageCode": "OS004",
+      "storageType": "Store",
+      "status": "Active",
+      "description": "Storage for outlet branch"
+    },
+    {
+      "id": 5,
+      "storageName": "Overflow Storage",
+      "storageCode": "OF005",
+      "storageType": "Warehouse",
+      "status": "Inactive",
+      "description": "Overflow stock storage"
+    },
+    {
+      "id": 6,
+      "storageName": "Hazardous Storage",
+      "storageCode": "HZ006",
+      "storageType": "Warehouse",
+      "status": "Active",
+      "description": "Storage for hazardous materials"
+    },
+    {
+      "id": 7,
+      "storageName": "Small Parts Storage",
+      "storageCode": "SP007",
+      "storageType": "Store",
+      "status": "Active",
+      "description": "Storage for small parts and components"
+    },
+    {
+      "id": 8,
+      "storageName": "Returns Storage",
+      "storageCode": "RT008",
+      "storageType": "Warehouse",
+      "status": "Inactive",
+      "description": "Storage for returned items"
+    },
+    {
+      "id": 9,
+      "storageName": "Packaging Storage",
+      "storageCode": "PK009",
+      "storageType": "Store",
+      "status": "Active",
+      "description": "Storage for packaging materials"
+    },
+    {
+      "id": 10,
+      "storageName": "Seasonal Storage",
+      "storageCode": "SS010",
+      "storageType": "Warehouse",
+      "status": "Active",
+      "description": "Storage for seasonal stock"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "currencyName": "US Dollar",
+      "currencyCode": "USD",
+      "currencySymbol": "$",
+      "currencyRate": "1.00",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 2,
+      "currencyName": "Euro",
+      "currencyCode": "EUR",
+      "currencySymbol": "€",
+      "currencyRate": "0.85",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 3,
+      "currencyName": "British Pound",
+      "currencyCode": "GBP",
+      "currencySymbol": "£",
+      "currencyRate": "0.75",
+      "currencyStatus": "Inactive"
+    },
+    {
+      "id": 4,
+      "currencyName": "Japanese Yen",
+      "currencyCode": "JPY",
+      "currencySymbol": "¥",
+      "currencyRate": "110.00",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 5,
+      "currencyName": "Canadian Dollar",
+      "currencyCode": "CAD",
+      "currencySymbol": "C$",
+      "currencyRate": "1.25",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 6,
+      "currencyName": "Australian Dollar",
+      "currencyCode": "AUD",
+      "currencySymbol": "A$",
+      "currencyRate": "1.30",
+      "currencyStatus": "Inactive"
+    },
+    {
+      "id": 7,
+      "currencyName": "Swiss Franc",
+      "currencyCode": "CHF",
+      "currencySymbol": "Fr",
+      "currencyRate": "0.92",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 8,
+      "currencyName": "Chinese Yuan",
+      "currencyCode": "CNY",
+      "currencySymbol": "¥",
+      "currencyRate": "6.45",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 9,
+      "currencyName": "Indian Rupee",
+      "currencyCode": "INR",
+      "currencySymbol": "₹",
+      "currencyRate": "74.00",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 10,
+      "currencyName": "South Korean Won",
+      "currencyCode": "KRW",
+      "currencySymbol": "₩",
+      "currencyRate": "1150.00",
+      "currencyStatus": "Inactive"
+    },
+    {
+      "id": 11,
+      "currencyName": "Brazilian Real",
+      "currencyCode": "BRL",
+      "currencySymbol": "R$",
+      "currencyRate": "5.20",
+      "currencyStatus": "Active"
+    },
+    {
+      "id": 12,
+      "currencyName": "Mexican Peso",
+      "currencyCode": "MXN",
+      "currencySymbol": "$",
+      "currencyRate": "20.00",
+      "currencyStatus": "Active"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": [
+    {
+      "id": 1,
+      "discountPlanName": "Holiday Special",
+      "discountType": "Percentage",
+      "discountValue": 15,
+      "startDate": "2023-12-01",
+      "endDate": "2023-12-31",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "discountPlanName": "New Year Offer",
+      "discountType": "Flat",
+      "discountValue": 50,
+      "startDate": "2024-01-01",
+      "endDate": "2024-01-10",
+      "status": "Inactive"
+    },
+    {
+      "id": 3,
+      "discountPlanName": "Weekend Deal",
+      "discountType": "Percentage",
+      "discountValue": 10,
+      "startDate": "2023-11-01",
+      "endDate": "2023-11-30",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "discountPlanName": "Clearance Sale",
+      "discountType": "Flat",
+      "discountValue": 100,
+      "startDate": "2023-10-15",
+      "endDate": "2023-10-31",
+      "status": "Inactive"
+    },
+    {
+      "id": 5,
+      "discountPlanName": "Summer Offer",
+      "discountType": "Percentage",
+      "discountValue": 20,
+      "startDate": "2023-06-01",
+      "endDate": "2023-06-30",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "discountPlanName": "Festive Discount",
+      "discountType": "Flat",
+      "discountValue": 75,
+      "startDate": "2023-12-20",
+      "endDate": "2024-01-05",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "discountPlanName": "Black Friday",
+      "discountType": "Percentage",
+      "discountValue": 25,
+      "startDate": "2023-11-24",
+      "endDate": "2023-11-24",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "discountPlanName": "Cyber Monday",
+      "discountType": "Flat",
+      "discountValue": 60,
+      "startDate": "2023-11-27",
+      "endDate": "2023-11-27",
+      "status": "Active"
+    },
+    {
+      "id": 9,
+      "discountPlanName": "Spring Sale",
+      "discountType": "Percentage",
+      "discountValue": 18,
+      "startDate": "2023-03-01",
+      "endDate": "2023-03-31",
+      "status": "Inactive"
+    },
+    {
+      "id": 10,
+      "discountPlanName": "VIP Customer",
+      "discountType": "Flat",
+      "discountValue": 120,
+      "startDate": "2023-01-01",
+      "endDate": "2023-12-31",
+      "status": "Active"
+    }
+  ]
+}
