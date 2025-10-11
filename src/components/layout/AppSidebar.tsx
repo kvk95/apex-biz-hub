@@ -157,47 +157,48 @@ function MenuItemComponent({
 }: MenuItemComponentProps) {
   const Icon = item.icon;
 
-  return item.items ? (
-    <Collapsible
-      key={item.title}
-      open={openMenus.includes(item.title)}
-      onOpenChange={() => toggleMenu(item.title)}
-      className="group/collapsible"
-    >
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            className={cn(
-              "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)] ",
-              hasActiveChild(item.items) && [
-                "border-l-4",
-                `border-[hsl(${theme.primary || "220 98% 61%"})]`,
-                "bg-[hsl(var(--primary)/0.05)]",
-                "text-[hsl(var(--primary))]",
-              ],
-              `pl-${4 + level * 2}`
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            <span>{item.title}</span>
-            {item.badge && state === "expanded" && (
-              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                {item.badge}
-              </span>
-            )}
-            {state === "expanded" &&
-              (openMenus.includes(item.title) ? (
-                <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-              ) : (
-                <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
-              ))}
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
+  if (item.items) {
+    return (
+      <Collapsible
+        key={item.title}
+        open={openMenus.includes(item.title)}
+        onOpenChange={() => toggleMenu(item.title)}
+        className="group/collapsible"
+      >
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              className={cn(
+                "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
+                hasActiveChild(item.items) && [
+                  "border-l-4",
+                  `border-[hsl(${theme.primary || "220 98% 61%"})]`,
+                  "bg-[hsl(var(--primary)/0.05)]",
+                  "text-[hsl(var(--primary))]",
+                ],
+                `pl-${4 + level * 2}`
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{item.title}</span>
+              {item.badge && state === "expanded" && (
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
+                  {item.badge}
+                </span>
+              )}
+              {state === "expanded" &&
+                (openMenus.includes(item.title) ? (
+                  <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+                ) : (
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+                ))}
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {item.items.map((subItem) => (
                 <MenuItemComponent
+                  key={subItem.title}
                   item={subItem}
                   openMenus={openMenus}
                   toggleMenu={toggleMenu}
@@ -207,13 +208,15 @@ function MenuItemComponent({
                   state={state}
                   level={level + 1}
                 />
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
-  ) : (
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    );
+  }
+
+  return (
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
