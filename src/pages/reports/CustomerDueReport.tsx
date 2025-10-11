@@ -1,107 +1,497 @@
- 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from "react";
 
-// Sample JSON data for dynamic fields
-const sampleData = [
-  { id: 1, customerName: 'John Doe', dueAmount: 100.00, dueDate: '2023-01-01' },
-  { id: 2, customerName: 'Jane Doe', dueAmount: 200.00, dueDate: '2023-02-01' },
-  // Add more data here...
+const customersData = [
+  {
+    id: 1,
+    name: "John Doe",
+    phone: "123-456-7890",
+    email: "john@example.com",
+    address: "123 Main St, Cityville",
+    dueAmount: 150.0,
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    phone: "987-654-3210",
+    email: "jane@example.com",
+    address: "456 Oak Ave, Townsville",
+    dueAmount: 200.5,
+  },
+  {
+    id: 3,
+    name: "Robert Johnson",
+    phone: "555-123-4567",
+    email: "robert@example.com",
+    address: "789 Pine Rd, Villagetown",
+    dueAmount: 320.75,
+  },
+  {
+    id: 4,
+    name: "Emily Davis",
+    phone: "444-555-6666",
+    email: "emily@example.com",
+    address: "321 Elm St, Hamlet",
+    dueAmount: 80.0,
+  },
+  {
+    id: 5,
+    name: "Michael Brown",
+    phone: "222-333-4444",
+    email: "michael@example.com",
+    address: "654 Maple Blvd, Metropolis",
+    dueAmount: 450.25,
+  },
+  {
+    id: 6,
+    name: "Linda Wilson",
+    phone: "111-222-3333",
+    email: "linda@example.com",
+    address: "987 Cedar Ln, Capital City",
+    dueAmount: 120.0,
+  },
+  {
+    id: 7,
+    name: "David Martinez",
+    phone: "777-888-9999",
+    email: "david@example.com",
+    address: "159 Spruce Dr, Smalltown",
+    dueAmount: 60.5,
+  },
+  {
+    id: 8,
+    name: "Susan Lee",
+    phone: "333-444-5555",
+    email: "susan@example.com",
+    address: "753 Birch Ct, Bigcity",
+    dueAmount: 210.0,
+  },
+  {
+    id: 9,
+    name: "James Taylor",
+    phone: "666-777-8888",
+    email: "james@example.com",
+    address: "852 Walnut St, Oldtown",
+    dueAmount: 175.75,
+  },
+  {
+    id: 10,
+    name: "Patricia Anderson",
+    phone: "999-000-1111",
+    email: "patricia@example.com",
+    address: "951 Chestnut Ave, Newcity",
+    dueAmount: 95.0,
+  },
+  {
+    id: 11,
+    name: "Mark Thomas",
+    phone: "101-202-3030",
+    email: "mark@example.com",
+    address: "357 Aspen Rd, Rivertown",
+    dueAmount: 300.0,
+  },
+  {
+    id: 12,
+    name: "Barbara Jackson",
+    phone: "404-505-6060",
+    email: "barbara@example.com",
+    address: "258 Fir St, Lakeside",
+    dueAmount: 130.5,
+  },
 ];
 
-const CustomerDueReport = () => {
+const pageSize = 5;
+
+export default function CustomerDueReport() {
+  const [searchName, setSearchName] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchAddress, setSearchAddress] = useState("");
+  const [searchDueFrom, setSearchDueFrom] = useState("");
+  const [searchDueTo, setSearchDueTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [data, setData] = useState(sampleData);
 
-  useEffect(() => {
-    // Fetch data from API if needed
-    // setData(fetchedData);
-  }, []);
+  // Filter customers based on search fields
+  const filteredCustomers = useMemo(() => {
+    return customersData.filter((c) => {
+      const matchName = c.name.toLowerCase().includes(searchName.toLowerCase());
+      const matchPhone = c.phone.toLowerCase().includes(searchPhone.toLowerCase());
+      const matchEmail = c.email.toLowerCase().includes(searchEmail.toLowerCase());
+      const matchAddress = c.address.toLowerCase().includes(searchAddress.toLowerCase());
+      const dueFromNum = parseFloat(searchDueFrom);
+      const dueToNum = parseFloat(searchDueTo);
+      const matchDueFrom = isNaN(dueFromNum) ? true : c.dueAmount >= dueFromNum;
+      const matchDueTo = isNaN(dueToNum) ? true : c.dueAmount <= dueToNum;
+      return matchName && matchPhone && matchEmail && matchAddress && matchDueFrom && matchDueTo;
+    });
+  }, [searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
+
+  // Handlers
+  const handleReset = () => {
+    setSearchName("");
+    setSearchPhone("");
+    setSearchEmail("");
+    setSearchAddress("");
+    setSearchDueFrom("");
+    setSearchDueTo("");
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+  const handleRefresh = () => {
+    // In real app, would fetch fresh data; here just reset filters and page
+    handleReset();
+    setCurrentPage(1);
+  };
 
-  const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(data.length / itemsPerPage); i++) {
-    pageNumbers.push(i);
-  }
+  const handleReport = () => {
+    // Placeholder for report generation logic
+    alert("Report generated (placeholder)");
+  };
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Customer Due Report</h1>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+      <title>Customer Due Report</title>
 
-      {/* Section 1: Filters */}
-      <div className="flex justify-between mb-4">
-        <div className="flex items-center">
-          <label className="mr-2">Customer Name:</label>
-          <input type="text" className="w-full max-w-xs rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-        </div>
-        <div className="flex items-center">
-          <label className="mr-2">Due Date:</label>
-          <input type="date" className="w-full max-w-xs rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
-        </div>
-        <button className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Refresh</button>
-      </div>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6 border-b border-gray-300 pb-2">
+          Customer Due Report
+        </h1>
 
-      {/* Section 2: Table */}
-      <table className="w-full text-left border-collapse border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 border border-gray-300">Customer Name</th>
-            <th className="px-4 py-2 border border-gray-300">Due Amount</th>
-            <th className="px-4 py-2 border border-gray-300">Due Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((item) => (
-            <tr key={item.id}>
-              <td className="px-4 py-2 border border-gray-300">{item.customerName}</td>
-              <td className="px-4 py-2 border border-gray-300">{item.dueAmount}</td>
-              <td className="px-4 py-2 border border-gray-300">{item.dueDate}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Section 3: Pagination */}
-      <div className="flex justify-between mt-4">
-        <div className="flex items-center">
-          <button
-            className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+        {/* Filter Section */}
+        <section className="bg-white rounded shadow p-6 mb-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setCurrentPage(1);
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6"
+            aria-label="Filter Customer Due Report"
           >
-            Previous
-          </button>
-        </div>
-        <div className="flex items-center">
-          {pageNumbers.map((pageNumber) => (
-            <button
-              key={pageNumber}
-              className={`py-2 px-4 rounded ${currentPage === pageNumber ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'}`}
-              onClick={() => handlePageChange(pageNumber)}
-            >
-              {pageNumber}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center">
-          <button
-            className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === pageNumbers.length}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1">
+                Customer Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                Phone
+              </label>
+              <input
+                id="phone"
+                type="text"
+                value={searchPhone}
+                onChange={(e) => setSearchPhone(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter phone"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={searchEmail}
+                onChange={(e) => setSearchEmail(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter email"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium mb-1">
+                Address
+              </label>
+              <input
+                id="address"
+                type="text"
+                value={searchAddress}
+                onChange={(e) => setSearchAddress(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter address"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="dueFrom" className="block text-sm font-medium mb-1">
+                Due Amount From
+              </label>
+              <input
+                id="dueFrom"
+                type="number"
+                min="0"
+                step="0.01"
+                value={searchDueFrom}
+                onChange={(e) => setSearchDueFrom(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Min due"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="dueTo" className="block text-sm font-medium mb-1">
+                Due Amount To
+              </label>
+              <input
+                id="dueTo"
+                type="number"
+                min="0"
+                step="0.01"
+                value={searchDueTo}
+                onChange={(e) => setSearchDueTo(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Max due"
+              />
+            </div>
+
+            {/* Buttons row spanning full width */}
+            <div className="md:col-span-3 lg:col-span-6 flex space-x-3 mt-2">
+              <button
+                type="submit"
+                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Search"
+              >
+                <i className="fas fa-search mr-2" aria-hidden="true"></i> Search
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+                aria-label="Reset"
+              >
+                <i className="fas fa-undo mr-2" aria-hidden="true"></i> Reset
+              </button>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+                aria-label="Refresh"
+              >
+                <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+              </button>
+              <button
+                type="button"
+                onClick={handleReport}
+                className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500 ml-auto"
+                aria-label="Generate Report"
+              >
+                <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* Table Section */}
+        <section className="bg-white rounded shadow p-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto border-collapse border border-gray-300">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                    #
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                    Customer Name
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                    Phone
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                    Email
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                    Address
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-right text-sm font-semibold text-gray-700">
+                    Due Amount
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedCustomers.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="border border-gray-300 px-4 py-4 text-center text-gray-500"
+                    >
+                      No customers found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedCustomers.map((customer, idx) => (
+                    <tr
+                      key={customer.id}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
+                        {customer.name}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
+                        {customer.phone}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
+                        {customer.email}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
+                        {customer.address}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-right text-red-600 font-semibold">
+                        ${customer.dueAmount.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <nav
+            className="flex items-center justify-between mt-4"
+            aria-label="Pagination"
           >
-            Next
-          </button>
-        </div>
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                  currentPage === 1
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+                aria-label="Previous page"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                  currentPage === totalPages || totalPages === 0
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+                aria-label="Next page"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing{" "}
+                  <span className="font-medium">
+                    {(currentPage - 1) * pageSize + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {Math.min(currentPage * pageSize, filteredCustomers.length)}
+                  </span>{" "}
+                  of <span className="font-medium">{filteredCustomers.length}</span>{" "}
+                  results
+                </p>
+              </div>
+              <div>
+                <nav
+                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px ml-6"
+                  aria-label="Pagination"
+                >
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                    }`}
+                    aria-label="First page"
+                  >
+                    <i className="fas fa-angle-double-left" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                    }`}
+                    aria-label="Previous page"
+                  >
+                    <i className="fas fa-angle-left" aria-hidden="true"></i>
+                  </button>
+
+                  {/* Page numbers */}
+                  {[...Array(totalPages)].map((_, i) => {
+                    const pageNum = i + 1;
+                    const isCurrent = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        aria-current={isCurrent ? "page" : undefined}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                          isCurrent
+                            ? "z-10 bg-blue-600 text-white border-blue-600 cursor-default"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                      currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
+                    aria-label="Next page"
+                  >
+                    <i className="fas fa-angle-right" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                      currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
+                    aria-label="Last page"
+                  >
+                    <i className="fas fa-angle-double-right" aria-hidden="true"></i>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </nav>
+        </section>
       </div>
     </div>
   );
-};
-
-export default CustomerDueReport; 
+}

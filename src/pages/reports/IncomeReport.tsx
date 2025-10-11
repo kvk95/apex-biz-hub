@@ -1,166 +1,431 @@
+import React, { useState, useMemo } from "react";
 
-import React, { useState } from 'react';
-
-// Sample data - REPLACE WITH ACTUAL DATA FROM REFERENCE PAGE
-const incomeData = [
-  { id: 1, date: '2025-10-01', customer: 'John Doe', invoice: 'INV-001', amount: 1200, status: 'Paid' },
-  { id: 2, date: '2025-10-02', customer: 'Jane Smith', invoice: 'INV-002', amount: 850, status: 'Pending' },
-  { id: 3, date: '2025-10-03', customer: 'Alice Johnson', invoice: 'INV-003', amount: 1500, status: 'Paid' },
-  // Add more rows as needed
+const incomeReportData = [
+  {
+    date: "2023-01-01",
+    invoiceNo: "INV-001",
+    customer: "John Doe",
+    paymentStatus: "Paid",
+    paymentMethod: "Cash",
+    totalAmount: 150.0,
+  },
+  {
+    date: "2023-01-02",
+    invoiceNo: "INV-002",
+    customer: "Alice Smith",
+    paymentStatus: "Unpaid",
+    paymentMethod: "Credit Card",
+    totalAmount: 230.5,
+  },
+  {
+    date: "2023-01-03",
+    invoiceNo: "INV-003",
+    customer: "Robert Johnson",
+    paymentStatus: "Paid",
+    paymentMethod: "Bank Transfer",
+    totalAmount: 320.75,
+  },
+  {
+    date: "2023-01-04",
+    invoiceNo: "INV-004",
+    customer: "Emma Wilson",
+    paymentStatus: "Paid",
+    paymentMethod: "Cash",
+    totalAmount: 120.0,
+  },
+  {
+    date: "2023-01-05",
+    invoiceNo: "INV-005",
+    customer: "Michael Brown",
+    paymentStatus: "Unpaid",
+    paymentMethod: "Credit Card",
+    totalAmount: 450.0,
+  },
+  {
+    date: "2023-01-06",
+    invoiceNo: "INV-006",
+    customer: "Sophia Lee",
+    paymentStatus: "Paid",
+    paymentMethod: "Bank Transfer",
+    totalAmount: 275.0,
+  },
+  {
+    date: "2023-01-07",
+    invoiceNo: "INV-007",
+    customer: "David Kim",
+    paymentStatus: "Paid",
+    paymentMethod: "Cash",
+    totalAmount: 180.0,
+  },
+  {
+    date: "2023-01-08",
+    invoiceNo: "INV-008",
+    customer: "Linda Martinez",
+    paymentStatus: "Unpaid",
+    paymentMethod: "Credit Card",
+    totalAmount: 390.0,
+  },
+  {
+    date: "2023-01-09",
+    invoiceNo: "INV-009",
+    customer: "James Wilson",
+    paymentStatus: "Paid",
+    paymentMethod: "Bank Transfer",
+    totalAmount: 210.0,
+  },
+  {
+    date: "2023-01-10",
+    invoiceNo: "INV-010",
+    customer: "Patricia Taylor",
+    paymentStatus: "Paid",
+    paymentMethod: "Cash",
+    totalAmount: 160.0,
+  },
+  {
+    date: "2023-01-11",
+    invoiceNo: "INV-011",
+    customer: "Mark Anderson",
+    paymentStatus: "Unpaid",
+    paymentMethod: "Credit Card",
+    totalAmount: 280.0,
+  },
+  {
+    date: "2023-01-12",
+    invoiceNo: "INV-012",
+    customer: "Nancy Thomas",
+    paymentStatus: "Paid",
+    paymentMethod: "Bank Transfer",
+    totalAmount: 350.0,
+  },
 ];
 
-const IncomeReport = () => {
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(incomeData.length / rowsPerPage);
-  const paginatedData = incomeData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+const paymentStatusOptions = ["All", "Paid", "Unpaid"];
+const paymentMethodOptions = ["All", "Cash", "Credit Card", "Bank Transfer"];
 
-  // Calculate summary stats
-  const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
-  const totalPaid = incomeData.filter(item => item.status === 'Paid').reduce((sum, item) => sum + item.amount, 0);
-  const totalPending = incomeData.filter(item => item.status === 'Pending').reduce((sum, item) => sum + item.amount, 0);
+const IncomeReport: React.FC = () => {
+  // Page title as in reference
+  React.useEffect(() => {
+    document.title = "Income Report - Dreams POS";
+  }, []);
+
+  // Filters state
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [paymentStatus, setPaymentStatus] = useState<string>("All");
+  const [paymentMethod, setPaymentMethod] = useState<string>("All");
+  const [searchInvoice, setSearchInvoice] = useState<string>("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 5;
+
+  // Filtered data based on filters
+  const filteredData = useMemo(() => {
+    return incomeReportData.filter((item) => {
+      // Filter by date range
+      if (startDate && item.date < startDate) return false;
+      if (endDate && item.date > endDate) return false;
+
+      // Filter by payment status
+      if (paymentStatus !== "All" && item.paymentStatus !== paymentStatus)
+        return false;
+
+      // Filter by payment method
+      if (paymentMethod !== "All" && item.paymentMethod !== paymentMethod)
+        return false;
+
+      // Filter by invoice no search (case insensitive)
+      if (
+        searchInvoice.trim() !== "" &&
+        !item.invoiceNo.toLowerCase().includes(searchInvoice.toLowerCase())
+      )
+        return false;
+
+      return true;
+    });
+  }, [startDate, endDate, paymentStatus, paymentMethod, searchInvoice]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Handlers
+  const handleResetFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setPaymentStatus("All");
+    setPaymentMethod("All");
+    setSearchInvoice("");
+    setCurrentPage(1);
+  };
+
+  const handleRefresh = () => {
+    // For demo, just reset filters and page
+    handleResetFilters();
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* Page Title */}
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Income Report</h1>
+    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto bg-white shadow rounded-lg p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6 text-gray-900">
+          Income Report
+        </h1>
 
-      {/* Filters Section */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-            <div className="flex gap-2">
+        {/* Filters Section */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCurrentPage(1);
+          }}
+          className="mb-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            {/* Date From */}
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Date From
+              </label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               />
-              <span className="self-center text-gray-500">to</span>
+            </div>
+
+            {/* Date To */}
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Date To
+              </label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+
+            {/* Payment Status */}
+            <div>
+              <label
+                htmlFor="paymentStatus"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Payment Status
+              </label>
+              <select
+                id="paymentStatus"
+                value={paymentStatus}
+                onChange={(e) => setPaymentStatus(e.target.value)}
+                className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              >
+                {paymentStatusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <label
+                htmlFor="paymentMethod"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Payment Method
+              </label>
+              <select
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              >
+                {paymentMethodOptions.map((method) => (
+                  <option key={method} value={method}>
+                    {method}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Invoice No Search */}
+            <div>
+              <label
+                htmlFor="searchInvoice"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Invoice No
+              </label>
+              <input
+                type="text"
+                id="searchInvoice"
+                placeholder="Search Invoice No"
+                value={searchInvoice}
+                onChange={(e) => setSearchInvoice(e.target.value)}
+                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               />
             </div>
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">All Customers</option>
-              <option value="1">John Doe</option>
-              <option value="2">Jane Smith</option>
-              <option value="3">Alice Johnson</option>
-            </select>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">All Status</option>
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              Search
+
+          {/* Buttons */}
+          <div className="mt-4 flex space-x-3">
+            <button
+              type="submit"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1"
+            >
+              <i className="fa fa-search mr-2" aria-hidden="true"></i> Search
+            </button>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
+            >
+              <i className="fa fa-undo mr-2" aria-hidden="true"></i> Reset
+            </button>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-1"
+            >
+              <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
             </button>
           </div>
-        </div>
-      </div>
+        </form>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Income</h3>
-          <p className="text-2xl font-bold text-gray-800">${totalIncome.toLocaleString()}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Paid</h3>
-          <p className="text-2xl font-bold text-green-600">${totalPaid.toLocaleString()}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Pending</h3>
-          <p className="text-2xl font-bold text-yellow-600">${totalPending.toLocaleString()}</p>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-2 mb-4">
-        <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-          Export
-        </button>
-        <button className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
-          Print
-        </button>
-        <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
-          Refresh
-        </button>
-      </div>
-
-      {/* Data Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        {/* Table Section */}
+        <div className="overflow-x-auto border border-gray-300 rounded">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                  Invoice No
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                  Customer
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                  Payment Status
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                  Payment Method
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                  Total Amount
+                </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedData.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.customer}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.invoice}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.amount.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <button className="text-blue-600 hover:text-blue-800">View</button>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-4 py-6 text-center text-gray-500 italic"
+                  >
+                    No records found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedData.map((item, idx) => (
+                  <tr
+                    key={item.invoiceNo}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
+                    <td className="px-4 py-3 whitespace-nowrap font-mono text-blue-600">
+                      {item.invoiceNo}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">{item.customer}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          item.paymentStatus === "Paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">{item.paymentMethod}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right font-semibold">
+                      ${item.totalAmount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">{(page - 1) * rowsPerPage + 1}</span> to{' '}
-          <span className="font-medium">{Math.min(page * rowsPerPage, incomeData.length)}</span> of{' '}
-          <span className="font-medium">{incomeData.length}</span> results
-        </div>
-        <div className="flex gap-2">
+        {/* Pagination */}
+        <nav
+          className="mt-6 flex justify-end items-center space-x-2"
+          aria-label="Pagination"
+        >
           <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1 border border-gray-300 rounded-md bg-white disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
+              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            aria-label="Previous Page"
           >
-            Previous
+            <i className="fa fa-chevron-left" aria-hidden="true"></i>
           </button>
-          <span className="px-3 py-1 bg-blue-600 text-white rounded-md">{page}</span>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              aria-current={page === currentPage ? "page" : undefined}
+              className={`inline-flex items-center px-3 py-1 rounded border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
+                page === currentPage
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+
           <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-md bg-white disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
+              currentPage === totalPages || totalPages === 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
+            aria-label="Next Page"
           >
-            Next
+            <i className="fa fa-chevron-right" aria-hidden="true"></i>
           </button>
-        </div>
+        </nav>
       </div>
     </div>
   );
 };
 
-export default IncomeReport; 
+export default IncomeReport;
