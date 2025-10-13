@@ -1,8 +1,4 @@
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,127 +8,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import {
-  AlertCircle,
-  ArrowLeftRight,
-  BarChart3,
-  Barcode,
-  Building2,
-  Calendar,
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  CreditCard,
-  DollarSign,
-  FileSpreadsheet,
-  FileText,
-  Gift,
-  Globe,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  PackageSearch,
-  Percent,
-  Receipt,
-  RotateCcw,
-  Settings,
-  Shield,
-  ShoppingCart,
-  Store,
-  Tags,
-  TrendingUp,
-  Truck,
-  UserCog,
-  Users,
-  Wallet,
-  QrCode,
-  User,
-  Lock,
-  Bell,
-  Plug,
-  Tag,
-  Sliders,
-  Palette,
-  LogIn,
-  Languages,
-  Printer,
-  PenTool,
-  FormInput,
-  Mail,
-  MessageSquare,
-  Key,
-  Cookie,
-  Database,
-  Ban,
-} from "lucide-react";
-import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTheme } from "../theme/theme-provider";
 
 interface MenuItem {
   title: string;
   url?: string;
-  icon: any;
+  icon: string; // Direct FontAwesome icon class name
   badge?: string;
   items?: MenuItem[];
 }
-
-const iconMap: { [key: string]: any } = {
-  LayoutDashboard,
-  TrendingUp,
-  Shield,
-  Building2,
-  CreditCard,
-  Package,
-  Globe,
-  FileSpreadsheet,
-  AlertCircle,
-  Tags,
-  Settings,
-  Barcode,
-  PackageSearch,
-  ArrowLeftRight,
-  Truck,
-  ShoppingCart,
-  Store,
-  Receipt,
-  RotateCcw,
-  Gift,
-  Percent,
-  DollarSign,
-  FileText,
-  Wallet,
-  Users,
-  UserCog,
-  Calendar,
-  CalendarDays,
-  BarChart3,
-  LogOut,
-  QrCode,
-  User,
-  Lock,
-  Bell,
-  Plug,
-  Tag,
-  Sliders,
-  Palette,
-  LogIn,
-  Languages,
-  Printer,
-  PenTool,
-  FormInput,
-  Mail,
-  MessageSquare,
-  Key,
-  Cookie,
-  Database,
-  Ban,
-};
 
 interface MenuItemComponentProps {
   item: MenuItem;
@@ -140,161 +28,124 @@ interface MenuItemComponentProps {
   toggleMenu: (title: string) => void;
   isActive: (url?: string) => boolean;
   hasActiveChild: (items?: MenuItem[]) => boolean;
-  theme: { primary?: string; sidebarColor: string };
-  state: "expanded" | "collapsed";
   level?: number;
 }
 
+// Main Menu Item component
 function MenuItemComponent({
   item,
   openMenus,
   toggleMenu,
   isActive,
   hasActiveChild,
-  theme,
-  state,
   level = 0,
 }: MenuItemComponentProps) {
-  const Icon = item.icon;
+  const isOpen = openMenus.includes(item.title);
+  const isSelected = isActive(item.url);
+  const IconClass = item.icon; // Use the icon directly from JSON
 
-  if (item.items) {
+  if (item.items && item.items.length > 0) {
     return (
-      <Collapsible
-        key={item.title}
-        open={openMenus.includes(item.title)}
-        onOpenChange={() => toggleMenu(item.title)}
-        className="group/collapsible"
-      >
+      <div>
         <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              className={cn(
-                "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
-                hasActiveChild(item.items) && [
-                  "border-l-4",
-                  `border-[hsl(${theme.primary || "220 98% 61%"})]`,
-                  "bg-[hsl(var(--primary)/0.05)]",
-                  "text-[hsl(var(--primary))]",
-                ],
-                `pl-${4 + level * 2}`
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.title}</span>
-              {item.badge && state === "expanded" && (
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                  {item.badge}
-                </span>
-              )}
-              {state === "expanded" &&
-                (openMenus.includes(item.title) ? (
-                  <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-                ) : (
-                  <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
-                ))}
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.items.map((subItem) => (
-                <MenuItemComponent
-                  key={subItem.title}
-                  item={subItem}
-                  openMenus={openMenus}
-                  toggleMenu={toggleMenu}
-                  isActive={isActive}
-                  hasActiveChild={hasActiveChild}
-                  theme={theme}
-                  state={state}
-                  level={level + 1}
-                />
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
+          <SidebarMenuButton
+            className={cn(
+              "w-full transition-colors hover:bg-gray-100",
+              isOpen ? "bg-gray-100" : "",
+              `pl-${2 + level * 2}`
+            )}
+            onClick={() => toggleMenu(item.title)}
+          >
+            <i className={`${IconClass} mr-2`} aria-hidden="true"></i>
+            <span>{item.title}</span>
+            <i
+              className={`fa ${isOpen ? "fa-chevron-down" : "fa-chevron-right"} ml-auto`}
+              aria-hidden="true"
+            ></i>
+          </SidebarMenuButton>
         </SidebarMenuItem>
-      </Collapsible>
+        {isOpen && (
+          <SidebarMenuSub>
+            {item.items.map((sub) => (
+              <MenuItemComponent
+                key={sub.title}
+                item={sub}
+                openMenus={openMenus}
+                toggleMenu={toggleMenu}
+                isActive={isActive}
+                hasActiveChild={hasActiveChild}
+                level={level + 1}
+              />
+            ))}
+          </SidebarMenuSub>
+        )}
+      </div>
+    );
+  } else {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          className={cn(
+            "w-full transition-colors hover:bg-gray-100",
+            isActive(item.url) ? "bg-blue-500 text-white" : "",
+            `pl-${2 + level * 2}`
+          )}
+        >
+          <NavLink to={item.url || "#"}>
+            <i className={`${IconClass} mr-2`} aria-hidden="true"></i>
+            <span>{item.title}</span>
+            {item.badge && (
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                {item.badge}
+              </span>
+            )}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     );
   }
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        isActive={isActive(item.url)}
-        className={cn(
-          "transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
-          isActive(item.url) && ["bg-[hsl(var(--primary))]", "text-white"],
-          `pl-${4 + level * 2}`
-        )}
-      >
-        <NavLink to={item.url || "#"}>
-          <Icon className={cn("h-4 w-4", isActive(item.url) && "text-white")} />
-          <span>{item.title}</span>
-          {item.badge && (
-            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-              {item.badge}
-            </span>
-          )}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
 }
 
+// Main Sidebar component
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = useState<string[]>(["Dashboard"]);
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+
   const { theme } = useTheme();
 
   useEffect(() => {
     fetch("/data/menuItems.json")
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => {
-        const mapIcons = (items: any[]): MenuItem[] => {
-          return items.map((item) => ({
-            ...item,
-            icon: iconMap[item.icon],
-            items: item.items ? mapIcons(item.items) : undefined,
-          }));
-        };
-        const items = mapIcons(data);
-        setMenuItems(items);
-
-        const findActiveParents = (
-          items: MenuItem[],
-          parents: string[] = []
-        ): string[] => {
+        setMenuItems(data);
+        const findActivePath = (items: MenuItem[], path: string[] = []): string[] => {
           for (const item of items) {
             if (item.url && location.pathname === item.url) {
-              return parents;
+              return [...path, item.title];
             }
-            if (item.items) {
-              const subParents = findActiveParents(item.items, [
-                ...parents,
-                item.title,
-              ]);
-              if (subParents.length > 0) {
-                return subParents;
-              }
+            if (item.items && item.items.length > 0) {
+              const subPath = findActivePath(item.items, [...path, item.title]);
+              if (subPath.length > 0) return subPath;
             }
           }
           return [];
         };
-
-        const activeParents = findActiveParents(items);
-        setOpenMenus(["Dashboard", ...activeParents]);
-      })
-      .catch((error) => console.error("Error loading menuItems:", error));
+        const activePath = findActivePath(data);
+        setOpenMenus(activePath);
+      });
   }, [location.pathname]);
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => {
       if (prev.includes(title)) {
-        return prev.filter((item) => item !== title);
+        return prev.filter((t) => t !== title);
+      } else {
+        return [...prev, title]; // Open clicked menu
       }
-      return [...prev, title];
     });
   };
 
@@ -306,58 +157,43 @@ export function AppSidebar() {
   const hasActiveChild = (items?: MenuItem[]) => {
     if (!items) return false;
     return items.some(
-      (item) => isActive(item.url) || hasActiveChild(item.items)
+      (i) => isActive(i.url) || hasActiveChild(i.items)
     );
   };
 
-const sidebarStyle = {
-  backgroundColor: `hsl(${theme.sidebarColor})`,
-  color:
-    parseFloat(theme.sidebarColor.split(" ")[2]) < 50
+  const sidebarStyle = {
+    backgroundColor: `hsl(${theme.sidebarColor})`,
+    color: parseFloat(theme.sidebarColor.split(" ")[2]) < 50
       ? "hsl(0 0% 98%)"
       : "hsl(240 10% 3.9%)",
-  "--sidebar-background": theme.sidebarColor, // Add to CSS variables
-};
+  };
 
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border sidebar"
+      className="border-r border-gray-200"
       style={sidebarStyle}
     >
-      <SidebarContent className="bg-sidebar">
-        <div
-          className="flex h-16 items-center justify-center border-b border-sidebar-border px-5 sticky top-0 z-10 bg-sidebar w-full sidebar-top"
-          style={{ padding: "17px", color: `#000000` }}
-        >
-          {state === "expanded" ? (
-            <h1 className="text-xl font-bold text-sidebar-foreground">
-              NyaBuy POS
-            </h1>
-          ) : (
-            <LayoutDashboard className="h-6 w-6 text-sidebar-primary" />
-          )}
+      <SidebarContent className="bg-white">
+        <div className="h-16 flex items-center justify-center sticky top-0 bg-white border-b border-gray-200 z-10 px-4">
+          <h1 className="font-bold text-xl text-gray-800">NyaBuy POS</h1>
         </div>
-        <div className="flex-grow overflow-y-auto custom-scroll1">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <MenuItemComponent
-                    key={item.title}
-                    item={item}
-                    openMenus={openMenus}
-                    toggleMenu={toggleMenu}
-                    isActive={isActive}
-                    hasActiveChild={hasActiveChild}
-                    theme={theme}
-                    state={state}
-                    level={0}
-                  />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+        <div className="overflow-y-auto flex-1">
+          <SidebarMenu>
+            {menuItems.map((item) => (
+              <MenuItemComponent
+                key={item.title}
+                item={item}
+                openMenus={openMenus}
+                toggleMenu={toggleMenu}
+                isActive={isActive}
+                hasActiveChild={hasActiveChild}
+                theme={theme}
+                state={"expanded"}
+                level={0}
+              />
+            ))}
+          </SidebarMenu>
         </div>
       </SidebarContent>
     </Sidebar>
