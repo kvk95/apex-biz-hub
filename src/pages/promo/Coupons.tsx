@@ -18,7 +18,7 @@ export default function Coupons() {
 
   const [coupons, setCoupons] = useState([]);
 
-  const [data, setData] = useState<>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

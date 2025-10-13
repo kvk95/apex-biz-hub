@@ -23,7 +23,7 @@ export default function DiscountPlan() {
   // Data state (simulate data in repo)
   const [plans, setPlans] = useState([]);
 
-  const [data, setData] = useState<>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

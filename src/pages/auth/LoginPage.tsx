@@ -18,9 +18,10 @@ async function fakeLogin({ email, password }) {
   });
 }
 
-// Select a random image
+
+// Array of login images
+const loginImages = ["ph1.png"];
 const loginImageUrl1 = `/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
-const loginImageUrl = `/images/ph1.png`;
 
 
 function LoginPage({ onLoginSuccess }) {

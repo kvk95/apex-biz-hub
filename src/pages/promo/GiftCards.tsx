@@ -26,7 +26,7 @@ export default function GiftCards() {
 
   // Data state (simulate data update)  
 
-  const [data, setData] = useState<>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

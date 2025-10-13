@@ -20,7 +20,7 @@ export default function Discount() {
   });
 
   // Data state
-  const [data, setData] = useState<>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,7 +144,7 @@ export default function Discount() {
   };
 
   const handleRefresh = () => {
-    setData(discountData);
+    loadData();
     setForm({
       discountName: "",
       discountType: discountTypes[0],
