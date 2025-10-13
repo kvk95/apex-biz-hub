@@ -11,28 +11,6 @@
       "role": "Admin",
       "status": "Active",
       "joinDate": "2023-01-15"
-    },
-    {
-      "id": "name",
-      "label": "Name",
-      "type": "text"
-    },
-    {
-      "id": "email",
-      "label": "Email",
-      "type": "email"
-    },
-    {
-      "id": "role",
-      "label": "Role",
-      "type": "select",
-      "options": ["Admin", "Manager", "Staff"]
-    },
-    {
-      "id": "status",
-      "label": "Status",
-      "type": "select",
-      "options": ["Active", "Inactive"]
     }
   ]
 }
