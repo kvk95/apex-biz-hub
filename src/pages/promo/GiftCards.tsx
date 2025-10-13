@@ -1,12 +1,11 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
-
-const pageSizeOptions = [5, 10, 20, 50];
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function GiftCards() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
@@ -64,12 +63,10 @@ export default function GiftCards() {
     );
   }, [data, searchTerm]);
 
-  const totalPages = Math.ceil(filteredData.length / pageSize);
-
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   // Handlers for Add Section form inputs
   const handleInputChange = (
@@ -152,14 +149,14 @@ export default function GiftCards() {
         d.map((card) =>
           card.id === editId
             ? {
-              ...card,
-              cardNumber: editForm.cardNumber,
-              cardHolder: editForm.cardHolder,
-              issueDate: editForm.issueDate,
-              expiryDate: editForm.expiryDate,
-              balance: Number(editForm.balance),
-              status: editForm.status,
-            }
+                ...card,
+                cardNumber: editForm.cardNumber,
+                cardHolder: editForm.cardHolder,
+                issueDate: editForm.issueDate,
+                expiryDate: editForm.expiryDate,
+                balance: Number(editForm.balance),
+                status: editForm.status,
+              }
             : card
         )
       );
@@ -177,7 +174,7 @@ export default function GiftCards() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this gift card?")) {
       setData((d) => d.filter((card) => card.id !== id));
-      if ((currentPage - 1) * pageSize >= data.length - 1 && currentPage > 1) {
+      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -210,10 +207,7 @@ export default function GiftCards() {
       {/* Controls: Search, Report, Clear */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div className="flex items-center space-x-2 w-full md:w-1/3">
-          <label
-            htmlFor="search"
-            className="block text-sm font-medium mb-1"
-          >
+          <label htmlFor="search" className="block text-sm font-medium mb-1">
             Search:
           </label>
           <input
@@ -376,7 +370,7 @@ export default function GiftCards() {
               type="submit"
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-save" aria-hidden="true"></i> Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
           </div>
         </form>
@@ -444,10 +438,11 @@ export default function GiftCards() {
                   </td>
                   <td className="px-4 py-3 text-sm text-center">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${card.status === "Active"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        card.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
                     >
                       {card.status}
                     </span>
@@ -477,120 +472,13 @@ export default function GiftCards() {
         </div>
 
         {/* Pagination */}
-        <div className="flex flex-col md:flex-row items-center justify-between mt-4 space-y-3 md:space-y-0">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>
-              Showing {(currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-              {filteredData.length} entries
-            </span>
-            <select
-              aria-label="Select page size"
-              className="border border-input rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-            >
-              {pageSizeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt} per page
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <nav
-            className="inline-flex -space-x-px rounded-md shadow-sm"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-              aria-label="First Page"
-              type="button"
-            >
-              <i className="fa fa-angle-double-left" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-              aria-label="Previous Page"
-              type="button"
-            >
-              <i className="fa fa-angle-left fa-light" aria-hidden="true"></i>
-            </button>
-
-            {/* Page numbers */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-              if (
-                totalPages > 5 &&
-                page !== 1 &&
-                page !== totalPages &&
-                (page < currentPage - 1 || page > currentPage + 1)
-              ) {
-                if (
-                  (page === 2 && currentPage > 4) ||
-                  (page === totalPages - 1 && currentPage < totalPages - 3)
-                ) {
-                  return (
-                    <span
-                      key={"ellipsis-" + page}
-                      className="relative inline-flex items-center px-3 py-2 border border-border bg-background text-sm font-medium text-muted-foreground"
-                    >
-                      &hellip;
-                    </span>
-                  );
-                }
-                return null;
-              }
-              return (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${page === currentPage
-                    ? "z-10 bg-primary border-primary text-primary-foreground"
-                    : "bg-background border-border text-muted-foreground hover:bg-muted/50"
-                    }`}
-                  type="button"
-                >
-                  {page}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === totalPages || totalPages === 0
-                ? "cursor-not-allowed opacity-50"
-                : ""
-                }`}
-              aria-label="Next Page"
-              type="button"
-            >
-              <i className="fa fa-angle-right fa-light" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === totalPages || totalPages === 0
-                ? "cursor-not-allowed opacity-50"
-                : ""
-                }`}
-              aria-label="Last Page"
-              type="button"
-            >
-              <i className="fa fa-angle-double-right  fa-light" aria-hidden="true"></i>
-            </button>
-          </nav>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
 
       {/* Edit Modal */}

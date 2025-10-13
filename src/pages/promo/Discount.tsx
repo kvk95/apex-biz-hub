@@ -458,7 +458,6 @@ export default function Discount() {
           totalItems={data.length}
           onPageChange={setCurrentPage}
           onPageSizeChange={setItemsPerPage}
-          pageSizes={[5, 10, 20, 50]}
         />
       </section>
 

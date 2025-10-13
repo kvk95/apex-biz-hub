@@ -53,7 +53,7 @@ export default function Coupons() {
     currentPage * itemsPerPage
   );
 
-  useEffect(() => { 
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -235,7 +235,7 @@ export default function Coupons() {
           </div>
 
           {/* Coupon Type */}
-          <div >
+          <div>
             <label
               htmlFor="couponType"
               className="block text-sm font-medium mb-1"
@@ -387,7 +387,7 @@ export default function Coupons() {
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-save" aria-hidden="true"></i> Save
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
           </button>
 
           <button
@@ -395,7 +395,7 @@ export default function Coupons() {
             className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-refresh" aria-hidden="true"></i> Clear
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
 
           <button
@@ -403,7 +403,7 @@ export default function Coupons() {
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
         </div>
       </section>
@@ -527,7 +527,7 @@ export default function Coupons() {
                         aria-label={`Delete coupon ${coupon.couponCode}`}
                         type="button"
                       >
-                        <i className="fa fa-trash  fa-light" aria-hidden="true"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -544,7 +544,6 @@ export default function Coupons() {
           totalItems={filteredCoupons.length}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          pageSizes={[5, 10, 20, 50]}
         />
       </section>
 
