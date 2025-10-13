@@ -39,7 +39,7 @@ function LoginPage({ onLoginSuccess }) {
 
    useEffect(() => {
     // Dynamically change the background image on page load
-    const images = ['/assets/images/login2.jpg', '/assets/images/loginbg1.jpg', '/assets/images/loginbg3.jpg', '/assets/images/loginbg3.jpg'];
+    const images = ['/assets/images/loginbg1.jpg', '/assets/images/loginbg2.jpg', '/assets/images/loginbg3.jpg'];
     const randomImage = images[Math.floor(Math.random() * images.length)];
     setBackgroundImage(randomImage);
   }, []);
