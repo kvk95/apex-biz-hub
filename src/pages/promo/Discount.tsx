@@ -1,5 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const discountTypes = ["Percentage", "Fixed"];
 const statusOptions = ["Active", "Inactive"];
@@ -7,7 +8,7 @@ const statusOptions = ["Active", "Inactive"];
 export default function Discount() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state
   const [form, setForm] = useState({
@@ -162,24 +163,13 @@ export default function Discount() {
     alert("Report Data:\n" + JSON.stringify(data, null, 2));
   };
 
-  // Pagination controls
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
-  // Title as per reference page
-  useEffect(() => {
-    document.title = "Discount - Dreams POS";
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 p-6">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
       <h1 className="text-2xl font-semibold mb-6">Discount</h1>
 
       {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Discount Name */}
           <div>
@@ -195,7 +185,7 @@ export default function Discount() {
               name="discountName"
               value={form.discountName}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter discount name"
             />
           </div>
@@ -213,7 +203,7 @@ export default function Discount() {
               name="discountType"
               value={form.discountType}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {discountTypes.map((type) => (
                 <option key={type} value={type}>
@@ -238,7 +228,7 @@ export default function Discount() {
               value={form.discountValue}
               onChange={handleInputChange}
               min={0}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter discount value"
             />
           </div>
@@ -257,7 +247,7 @@ export default function Discount() {
               name="startDate"
               value={form.startDate}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -272,7 +262,7 @@ export default function Discount() {
               name="endDate"
               value={form.endDate}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -286,7 +276,7 @@ export default function Discount() {
               name="status"
               value={form.status}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
@@ -301,7 +291,7 @@ export default function Discount() {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
             <i className="fa fa-save" aria-hidden="true"></i> Save
@@ -309,7 +299,7 @@ export default function Discount() {
 
           <button
             onClick={handleRefresh}
-            className="inline-flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
             <i className="fa fa-refresh" aria-hidden="true"></i> Refresh
@@ -317,7 +307,7 @@ export default function Discount() {
 
           <button
             onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
             <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
@@ -326,33 +316,33 @@ export default function Discount() {
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow p-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-300">
-            <thead className="bg-indigo-600 text-white">
-              <tr>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Discount Name
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Discount Type
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Discount Value
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Start Date
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   End Date
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="border border-indigo-700 px-4 py-2 text-center text-sm font-semibold">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
@@ -362,7 +352,7 @@ export default function Discount() {
                 <tr>
                   <td
                     colSpan={8}
-                    className="text-center px-4 py-6 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No discounts found.
                   </td>
@@ -371,43 +361,43 @@ export default function Discount() {
               {paginatedData.map((item, idx) => (
                 <tr
                   key={item.id}
-                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.discountName}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.discountType}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.discountType === "Percentage"
                       ? `${item.discountValue}%`
                       : `$${item.discountValue}`}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.startDate}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.endDate}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">
+                  <td className="px-4 py-3 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         item.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {item.status}
                     </span>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center text-sm space-x-2">
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => handleEdit(item.id)}
-                      className="text-indigo-600 hover:text-indigo-800"
+                      className="text-primary hover:text-primary/80 transition-colors"
                       aria-label={`Edit discount ${item.discountName}`}
                       type="button"
                     >
@@ -415,7 +405,7 @@ export default function Discount() {
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
                       aria-label={`Delete discount ${item.discountName}`}
                       type="button"
                     >
@@ -428,50 +418,15 @@ export default function Discount() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex justify-between items-center mt-6"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed`}
-            type="button"
-            aria-label="Previous page"
-          >
-            <i className="fa fa-chevron-left mr-1" aria-hidden="true"></i> Prev
-          </button>
-
-          <ul className="inline-flex -space-x-px">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => goToPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1.5 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    page === currentPage
-                      ? "bg-indigo-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100"
-                  }`}
-                  type="button"
-                >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed`}
-            type="button"
-            aria-label="Next page"
-          >
-            Next <i className="fa fa-chevron-right ml-1" aria-hidden="true"></i>
-          </button>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          page={currentPage}
+          pageSize={itemsPerPage}
+          total={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+          pageSizes={[5, 10, 20, 50]}
+        />
       </section>
     </div>
   );

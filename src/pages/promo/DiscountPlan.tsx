@@ -151,7 +151,7 @@ export default function DiscountPlan() {
       status: statuses[0],
     });
     setEditingId(null);
-    setPlans(discountPlansData);
+    loadData();
     setCurrentPage(1);
   };
 

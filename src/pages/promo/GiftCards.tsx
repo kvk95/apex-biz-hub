@@ -161,7 +161,7 @@ export default function GiftCards() {
   };
 
   const handleRefresh = () => {
-    setData(giftCardsData);
+    loadData();
     setSearchTerm("");
     setCurrentPage(1);
     setPageSize(10);

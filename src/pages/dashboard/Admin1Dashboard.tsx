@@ -14,7 +14,7 @@ import { KPICard } from "@/components/KPI/KPICard";
 import { Chart } from "@/components/Chart/Chart";
 import { DataTable, Column, RowAction } from "@/components/DataTable/DataTable";
 
-interface data {
+interface DashboardData {
   stats: Array<{
     id: string;
     title: string;
@@ -41,7 +41,7 @@ interface data {
 }
 
 export default function Dashboard() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,7 +88,7 @@ export default function Dashboard() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Admin1Dashboard");
+    const response = await apiService.get<DashboardData>("Admin1Dashboard");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -188,7 +188,7 @@ export default function Dashboard() {
           <CardContent>
             <Chart
               type="area"
-              data={data.salesData}
+              data={data?.salesData || []}
               dataKey="sales"
               xAxisKey="month"
               height={300}
@@ -203,7 +203,7 @@ export default function Dashboard() {
           <CardContent>
             <Chart
               type="bar"
-              data={data.categoryData}
+              data={data?.categoryData || []}
               dataKey="sales"
               xAxisKey="name"
               height={300}
@@ -220,7 +220,7 @@ export default function Dashboard() {
           <CardContent>
             <DataTable
               columns={recentOrderColumns}
-              data={data.recentOrders}
+              data={data?.recentOrders || []}
               rowActions={rowActions}
             />
           </CardContent>
@@ -236,7 +236,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {data.lowStockProducts.map((product) => (
+                {(data?.lowStockProducts || []).map((product) => (
                   <div key={product.sku} className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
@@ -267,7 +267,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {data.topCustomers.map((customer, index) => (
+                {(data?.topCustomers || []).map((customer, index) => (
                   <div key={customer.email} className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                       {index + 1}
