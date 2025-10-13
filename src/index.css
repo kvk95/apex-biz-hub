@@ -247,33 +247,28 @@ ul {
   list-style: none;
 }
 
-
-.custom-scroll1 {}
+.custom-scroll1 {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
 
 /* Target scrollbar for this specific div in WebKit browsers */
 .custom-scroll1::-webkit-scrollbar {
-  width: 5px;
-  /* Width of the scrollbar */
-
+  width: 3px;
 }
 
 .custom-scroll1::-webkit-scrollbar-track {
-  background: 0 0 100%;
-  /* Track color */
+  background: transparent;
   border-radius: 10px;
-  /* Rounded track */
 }
 
 .custom-scroll1::-webkit-scrollbar-thumb {
   background: #ccc;
-  /* Thumb color */
   border-radius: 10px;
-  /* Rounded thumb */
 }
 
 .custom-scroll1::-webkit-scrollbar-thumb:hover {
   background: #555;
-  /* Thumb color on hover */
 }
 
 .glass-holder {
@@ -310,6 +305,11 @@ ul {
   font-weight: 400;
   padding: 8px 10px 8px 30px;
 }
+
+.sidebarOuter  i {
+  color: #646B72;
+}
+
 
 table.min-w-full thead th {
   background-color: #F9FAFB;
