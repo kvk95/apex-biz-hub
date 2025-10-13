@@ -1,93 +1,31 @@
-import React, { useState, useMemo } from "react";
-
-const TAX_REPORT_DATA = [
-  {
-    date: "2023-01-01",
-    invoiceNo: "INV-1001",
-    customer: "John Doe",
-    taxRate: "5%",
-    taxAmount: 10.0,
-    totalAmount: 210.0,
-  },
-  {
-    date: "2023-01-02",
-    invoiceNo: "INV-1002",
-    customer: "Jane Smith",
-    taxRate: "10%",
-    taxAmount: 20.0,
-    totalAmount: 220.0,
-  },
-  {
-    date: "2023-01-03",
-    invoiceNo: "INV-1003",
-    customer: "Acme Corp",
-    taxRate: "8%",
-    taxAmount: 16.0,
-    totalAmount: 216.0,
-  },
-  {
-    date: "2023-01-04",
-    invoiceNo: "INV-1004",
-    customer: "Global Inc",
-    taxRate: "12%",
-    taxAmount: 24.0,
-    totalAmount: 224.0,
-  },
-  {
-    date: "2023-01-05",
-    invoiceNo: "INV-1005",
-    customer: "Foo Bar",
-    taxRate: "7%",
-    taxAmount: 14.0,
-    totalAmount: 214.0,
-  },
-  {
-    date: "2023-01-06",
-    invoiceNo: "INV-1006",
-    customer: "Baz Qux",
-    taxRate: "6%",
-    taxAmount: 12.0,
-    totalAmount: 212.0,
-  },
-  {
-    date: "2023-01-07",
-    invoiceNo: "INV-1007",
-    customer: "Lorem Ipsum",
-    taxRate: "9%",
-    taxAmount: 18.0,
-    totalAmount: 218.0,
-  },
-  {
-    date: "2023-01-08",
-    invoiceNo: "INV-1008",
-    customer: "Dolor Sit",
-    taxRate: "11%",
-    taxAmount: 22.0,
-    totalAmount: 222.0,
-  },
-  {
-    date: "2023-01-09",
-    invoiceNo: "INV-1009",
-    customer: "Amet Consectetur",
-    taxRate: "5%",
-    taxAmount: 10.0,
-    totalAmount: 210.0,
-  },
-  {
-    date: "2023-01-10",
-    invoiceNo: "INV-1010",
-    customer: "Adipiscing Elit",
-    taxRate: "10%",
-    taxAmount: 20.0,
-    totalAmount: 220.0,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const TAX_RATES = ["All", "5%", "6%", "7%", "8%", "9%", "10%", "11%", "12%"];
 
 const ITEMS_PER_PAGE = 5;
 
 export default function TaxReport() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("TaxReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // States for filters
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -98,7 +36,7 @@ export default function TaxReport() {
 
   // Filtered data based on inputs
   const filteredData = useMemo(() => {
-    return TAX_REPORT_DATA.filter((item) => {
+    return data.filter((item) => {
       const itemDate = new Date(item.date);
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
@@ -110,7 +48,7 @@ export default function TaxReport() {
 
       return true;
     });
-  }, [startDate, endDate, selectedTaxRate]);
+  }, [data, startDate, endDate, selectedTaxRate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);

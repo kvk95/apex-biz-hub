@@ -122,12 +122,7 @@ export default function BanIpAddress() {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
-
-  // Title set
-  useEffect(() => {
-    document.title = "Ban IP Address - DreamsPOS";
-  }, []);
-
+ 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
       <h1 className="text-3xl font-semibold mb-6">Ban IP Address</h1>

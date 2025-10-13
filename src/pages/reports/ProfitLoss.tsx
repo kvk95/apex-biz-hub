@@ -1,103 +1,5 @@
-import React, { useState } from "react";
-
-const profitLossData = [
-  {
-    id: 1,
-    date: "01-10-2025",
-    totalSales: 10000,
-    totalPurchase: 5000,
-    expense: 1500,
-    profitLoss: 3500,
-  },
-  {
-    id: 2,
-    date: "02-10-2025",
-    totalSales: 12000,
-    totalPurchase: 6000,
-    expense: 2000,
-    profitLoss: 4000,
-  },
-  {
-    id: 3,
-    date: "03-10-2025",
-    totalSales: 9000,
-    totalPurchase: 4000,
-    expense: 1000,
-    profitLoss: 4000,
-  },
-  {
-    id: 4,
-    date: "04-10-2025",
-    totalSales: 11000,
-    totalPurchase: 7000,
-    expense: 1200,
-    profitLoss: 2800,
-  },
-  {
-    id: 5,
-    date: "05-10-2025",
-    totalSales: 13000,
-    totalPurchase: 6500,
-    expense: 1800,
-    profitLoss: 3700,
-  },
-  {
-    id: 6,
-    date: "06-10-2025",
-    totalSales: 14000,
-    totalPurchase: 8000,
-    expense: 2200,
-    profitLoss: 3800,
-  },
-  {
-    id: 7,
-    date: "07-10-2025",
-    totalSales: 12500,
-    totalPurchase: 6000,
-    expense: 1700,
-    profitLoss: 3800,
-  },
-  {
-    id: 8,
-    date: "08-10-2025",
-    totalSales: 11500,
-    totalPurchase: 5500,
-    expense: 1600,
-    profitLoss: 4400,
-  },
-  {
-    id: 9,
-    date: "09-10-2025",
-    totalSales: 10500,
-    totalPurchase: 5000,
-    expense: 1300,
-    profitLoss: 4200,
-  },
-  {
-    id: 10,
-    date: "10-10-2025",
-    totalSales: 9500,
-    totalPurchase: 4500,
-    expense: 1100,
-    profitLoss: 3900,
-  },
-  {
-    id: 11,
-    date: "11-10-2025",
-    totalSales: 9800,
-    totalPurchase: 4700,
-    expense: 1150,
-    profitLoss: 3950,
-  },
-  {
-    id: 12,
-    date: "12-10-2025",
-    totalSales: 10200,
-    totalPurchase: 4900,
-    expense: 1250,
-    profitLoss: 4050,
-  },
-];
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
@@ -106,8 +8,28 @@ export default function ProfitLoss() {
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ProfitLoss");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter data by date range if set
-  const filteredData = profitLossData.filter((item) => {
+  const filteredData = data.filter((item: any) => {
     if (fromDate && new Date(item.date) < new Date(fromDate)) return false;
     if (toDate && new Date(item.date) > new Date(toDate)) return false;
     return true;
@@ -297,7 +219,7 @@ export default function ProfitLoss() {
                   </td>
                 </tr>
               )}
-              {pagedData.map((item) => (
+              {pagedData.map((item: any) => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-right">

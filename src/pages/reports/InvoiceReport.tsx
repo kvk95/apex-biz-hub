@@ -1,167 +1,38 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
-const invoiceReportData = {
-  filters: {
+const PAGE_SIZE = 5;
+
+const InvoiceReport: React.FC = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("InvoiceReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // State for filters
+  const [filters, setFilters] = useState({
     fromDate: "2022-01-01",
     toDate: "2022-12-31",
     customer: "",
     invoiceStatus: "All",
     paymentStatus: "All",
     paymentMethod: "All",
-  },
-  customers: [
-    "All",
-    "John Doe",
-    "Jane Smith",
-    "Acme Corp",
-    "Dreams Technologies",
-    "Customer A",
-    "Customer B",
-  ],
-  invoiceStatuses: ["All", "Paid", "Unpaid", "Partial"],
-  paymentStatuses: ["All", "Paid", "Unpaid", "Partial"],
-  paymentMethods: ["All", "Cash", "Credit Card", "Cheque", "Bank Transfer"],
-  invoices: [
-    {
-      id: 1,
-      invoiceNo: "INV-0001",
-      customer: "John Doe",
-      date: "2022-01-15",
-      dueDate: "2022-01-30",
-      status: "Paid",
-      paymentStatus: "Paid",
-      paymentMethod: "Cash",
-      total: 250.0,
-    },
-    {
-      id: 2,
-      invoiceNo: "INV-0002",
-      customer: "Jane Smith",
-      date: "2022-02-10",
-      dueDate: "2022-02-25",
-      status: "Unpaid",
-      paymentStatus: "Unpaid",
-      paymentMethod: "Credit Card",
-      total: 450.5,
-    },
-    {
-      id: 3,
-      invoiceNo: "INV-0003",
-      customer: "Acme Corp",
-      date: "2022-03-05",
-      dueDate: "2022-03-20",
-      status: "Partial",
-      paymentStatus: "Partial",
-      paymentMethod: "Cheque",
-      total: 1200.0,
-    },
-    {
-      id: 4,
-      invoiceNo: "INV-0004",
-      customer: "Dreams Technologies",
-      date: "2022-04-12",
-      dueDate: "2022-04-27",
-      status: "Paid",
-      paymentStatus: "Paid",
-      paymentMethod: "Bank Transfer",
-      total: 980.75,
-    },
-    {
-      id: 5,
-      invoiceNo: "INV-0005",
-      customer: "Customer A",
-      date: "2022-05-20",
-      dueDate: "2022-06-04",
-      status: "Unpaid",
-      paymentStatus: "Unpaid",
-      paymentMethod: "Cash",
-      total: 300.0,
-    },
-    {
-      id: 6,
-      invoiceNo: "INV-0006",
-      customer: "Customer B",
-      date: "2022-06-15",
-      dueDate: "2022-06-30",
-      status: "Paid",
-      paymentStatus: "Paid",
-      paymentMethod: "Credit Card",
-      total: 150.0,
-    },
-    {
-      id: 7,
-      invoiceNo: "INV-0007",
-      customer: "John Doe",
-      date: "2022-07-10",
-      dueDate: "2022-07-25",
-      status: "Unpaid",
-      paymentStatus: "Unpaid",
-      paymentMethod: "Cheque",
-      total: 670.0,
-    },
-    {
-      id: 8,
-      invoiceNo: "INV-0008",
-      customer: "Jane Smith",
-      date: "2022-08-05",
-      dueDate: "2022-08-20",
-      status: "Partial",
-      paymentStatus: "Partial",
-      paymentMethod: "Bank Transfer",
-      total: 890.0,
-    },
-    {
-      id: 9,
-      invoiceNo: "INV-0009",
-      customer: "Acme Corp",
-      date: "2022-09-01",
-      dueDate: "2022-09-16",
-      status: "Paid",
-      paymentStatus: "Paid",
-      paymentMethod: "Cash",
-      total: 430.0,
-    },
-    {
-      id: 10,
-      invoiceNo: "INV-0010",
-      customer: "Dreams Technologies",
-      date: "2022-10-10",
-      dueDate: "2022-10-25",
-      status: "Unpaid",
-      paymentStatus: "Unpaid",
-      paymentMethod: "Credit Card",
-      total: 720.0,
-    },
-    {
-      id: 11,
-      invoiceNo: "INV-0011",
-      customer: "Customer A",
-      date: "2022-11-15",
-      dueDate: "2022-11-30",
-      status: "Paid",
-      paymentStatus: "Paid",
-      paymentMethod: "Cheque",
-      total: 560.0,
-    },
-    {
-      id: 12,
-      invoiceNo: "INV-0012",
-      customer: "Customer B",
-      date: "2022-12-05",
-      dueDate: "2022-12-20",
-      status: "Partial",
-      paymentStatus: "Partial",
-      paymentMethod: "Bank Transfer",
-      total: 310.0,
-    },
-  ],
-};
-
-const PAGE_SIZE = 5;
-
-const InvoiceReport: React.FC = () => {
-  // State for filters
-  const [filters, setFilters] = useState(invoiceReportData.filters);
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,9 +49,24 @@ const InvoiceReport: React.FC = () => {
     setCurrentPage(1); // Reset to first page on filter change
   };
 
+  // Extract filter option arrays from data or use empty arrays if not loaded
+  const customers = data?.customers || [
+    "All",
+    "John Doe",
+    "Jane Smith",
+    "Acme Corp",
+    "Dreams Technologies",
+    "Customer A",
+    "Customer B",
+  ];
+  const invoiceStatuses = data?.invoiceStatuses || ["All", "Paid", "Unpaid", "Partial"];
+  const paymentStatuses = data?.paymentStatuses || ["All", "Paid", "Unpaid", "Partial"];
+  const paymentMethods = data?.paymentMethods || ["All", "Cash", "Credit Card", "Cheque", "Bank Transfer"];
+
   // Filter invoices based on filters
   const filteredInvoices = useMemo(() => {
-    return invoiceReportData.invoices.filter((inv) => {
+    const invoices = data?.invoices || [];
+    return invoices.filter((inv: any) => {
       // Filter by date range
       const fromDate = filters.fromDate ? new Date(filters.fromDate) : null;
       const toDate = filters.toDate ? new Date(filters.toDate) : null;
@@ -211,7 +97,7 @@ const InvoiceReport: React.FC = () => {
 
       return true;
     });
-  }, [filters]);
+  }, [filters, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredInvoices.length / PAGE_SIZE);
@@ -228,7 +114,14 @@ const InvoiceReport: React.FC = () => {
 
   // Refresh button handler (reset filters)
   const handleRefresh = () => {
-    setFilters(invoiceReportData.filters);
+    setFilters({
+      fromDate: "2022-01-01",
+      toDate: "2022-12-31",
+      customer: "",
+      invoiceStatus: "All",
+      paymentStatus: "All",
+      paymentMethod: "All",
+    });
     setCurrentPage(1);
   };
 
@@ -309,7 +202,7 @@ const InvoiceReport: React.FC = () => {
                 onChange={handleFilterChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {invoiceReportData.customers.map((cust) => (
+                {customers.map((cust) => (
                   <option key={cust} value={cust}>
                     {cust}
                   </option>
@@ -332,7 +225,7 @@ const InvoiceReport: React.FC = () => {
                 onChange={handleFilterChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {invoiceReportData.invoiceStatuses.map((status) => (
+                {invoiceStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
@@ -355,7 +248,7 @@ const InvoiceReport: React.FC = () => {
                 onChange={handleFilterChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {invoiceReportData.paymentStatuses.map((status) => (
+                {paymentStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
@@ -378,7 +271,7 @@ const InvoiceReport: React.FC = () => {
                 onChange={handleFilterChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {invoiceReportData.paymentMethods.map((method) => (
+                {paymentMethods.map((method) => (
                   <option key={method} value={method}>
                     {method}
                   </option>
@@ -453,7 +346,7 @@ const InvoiceReport: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  paginatedInvoices.map((inv) => (
+                  paginatedInvoices.map((inv: any) => (
                     <tr
                       key={inv.id}
                       className="hover:bg-indigo-50 cursor-pointer"

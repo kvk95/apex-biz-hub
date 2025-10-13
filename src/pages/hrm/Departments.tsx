@@ -5,7 +5,7 @@ const pageSizeOptions = [5, 10, 20];
 
 const Departments: React.FC = () => {
   useEffect(() => {
-    document.title = "Departments - Dreams POS";
+    
   }, []);
 
   // State for form inputs

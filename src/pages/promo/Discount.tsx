@@ -36,7 +36,6 @@ export default function Discount() {
   );
 
   useEffect(() => {
-    document.title = "Discount - Dreams POS";
     loadData();
   }, []);
 

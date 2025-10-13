@@ -23,11 +23,7 @@ export default function Pos1() {
   useEffect(() => {
     loadData();
   }, []);
-
-  // Page title
-  useEffect(() => {
-    document.title = "POS 1 | Dreams POS";
-  }, []);
+ 
 
   // Customer selection and search
   const [customerSearch, setCustomerSearch] = useState("");

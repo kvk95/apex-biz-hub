@@ -1,118 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const soldStockData = [
-  {
-    invoiceId: "INV-001",
-    stockId: "STK-1001",
-    productName: "Apple iPhone 13",
-    category: "Smartphones",
-    quantity: 2,
-    unitPrice: 799,
-    totalPrice: 1598,
-    customerName: "John Doe",
-    date: "2025-10-01",
-  },
-  {
-    invoiceId: "INV-002",
-    stockId: "STK-1002",
-    productName: "Samsung Galaxy S21",
-    category: "Smartphones",
-    quantity: 1,
-    unitPrice: 699,
-    totalPrice: 699,
-    customerName: "Jane Smith",
-    date: "2025-10-02",
-  },
-  {
-    invoiceId: "INV-003",
-    stockId: "STK-1003",
-    productName: "Sony WH-1000XM4",
-    category: "Headphones",
-    quantity: 3,
-    unitPrice: 350,
-    totalPrice: 1050,
-    customerName: "Alice Johnson",
-    date: "2025-10-03",
-  },
-  {
-    invoiceId: "INV-004",
-    stockId: "STK-1004",
-    productName: "Dell XPS 13",
-    category: "Laptops",
-    quantity: 1,
-    unitPrice: 1200,
-    totalPrice: 1200,
-    customerName: "Bob Brown",
-    date: "2025-10-04",
-  },
-  {
-    invoiceId: "INV-005",
-    stockId: "STK-1005",
-    productName: "Apple MacBook Pro",
-    category: "Laptops",
-    quantity: 2,
-    unitPrice: 1500,
-    totalPrice: 3000,
-    customerName: "Carol White",
-    date: "2025-10-05",
-  },
-  {
-    invoiceId: "INV-006",
-    stockId: "STK-1006",
-    productName: "Google Pixel 6",
-    category: "Smartphones",
-    quantity: 1,
-    unitPrice: 599,
-    totalPrice: 599,
-    customerName: "David Green",
-    date: "2025-10-06",
-  },
-  {
-    invoiceId: "INV-007",
-    stockId: "STK-1007",
-    productName: "Bose QuietComfort 35 II",
-    category: "Headphones",
-    quantity: 2,
-    unitPrice: 299,
-    totalPrice: 598,
-    customerName: "Eva Blue",
-    date: "2025-10-07",
-  },
-  {
-    invoiceId: "INV-008",
-    stockId: "STK-1008",
-    productName: "HP Spectre x360",
-    category: "Laptops",
-    quantity: 1,
-    unitPrice: 1300,
-    totalPrice: 1300,
-    customerName: "Frank Black",
-    date: "2025-10-08",
-  },
-  {
-    invoiceId: "INV-009",
-    stockId: "STK-1009",
-    productName: "Apple AirPods Pro",
-    category: "Headphones",
-    quantity: 4,
-    unitPrice: 249,
-    totalPrice: 996,
-    customerName: "Grace Yellow",
-    date: "2025-10-09",
-  },
-  {
-    invoiceId: "INV-010",
-    stockId: "STK-1010",
-    productName: "Lenovo ThinkPad X1",
-    category: "Laptops",
-    quantity: 1,
-    unitPrice: 1400,
-    totalPrice: 1400,
-    customerName: "Henry Violet",
-    date: "2025-10-10",
-  },
-  // Add more data as needed to demonstrate pagination
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All",
@@ -122,10 +9,25 @@ const categories = [
   "Accessories",
 ];
 
-const SoldStock: React.FC = () => {
-  // Page title exactly as in reference page
-  React.useEffect(() => {
-    document.title = "Sold Stock - Dreams POS";
+const SoldStock: React.FC = () => { 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SoldStock");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Filters state
@@ -142,7 +44,7 @@ const SoldStock: React.FC = () => {
 
   // Filtered data based on filters
   const filteredData = useMemo(() => {
-    return soldStockData.filter((item) => {
+    return data.filter((item: any) => {
       if (
         invoiceIdFilter &&
         !item.invoiceId.toLowerCase().includes(invoiceIdFilter.toLowerCase())
@@ -165,6 +67,7 @@ const SoldStock: React.FC = () => {
       return true;
     });
   }, [
+    data,
     invoiceIdFilter,
     stockIdFilter,
     categoryFilter,
@@ -415,7 +318,7 @@ const SoldStock: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((item, idx) => (
+                paginatedData.map((item: any, idx: number) => (
                   <tr
                     key={item.invoiceId + item.stockId}
                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}

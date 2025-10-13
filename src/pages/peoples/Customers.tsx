@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
 
@@ -152,7 +151,7 @@ const Customers = () => {
       city: "",
       country: "",
       zip: "",
-      status: "Active",O
+      status: "Active",
     });
     setEditingId(null);
   }

@@ -1,142 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const bestSellerData = [
-  {
-    id: 1,
-    productName: "Apple iPhone 12 Pro",
-    sku: "IP12PRO-256GB",
-    category: "Mobile",
-    quantity: 120,
-    price: 999,
-    total: 119880,
-  },
-  {
-    id: 2,
-    productName: "Samsung Galaxy S21",
-    sku: "SGS21-128GB",
-    category: "Mobile",
-    quantity: 95,
-    price: 799,
-    total: 75905,
-  },
-  {
-    id: 3,
-    productName: "Sony WH-1000XM4",
-    sku: "SONY-WH1000XM4",
-    category: "Headphones",
-    quantity: 150,
-    price: 349,
-    total: 52350,
-  },
-  {
-    id: 4,
-    productName: "Dell XPS 13",
-    sku: "DELL-XPS13",
-    category: "Laptop",
-    quantity: 60,
-    price: 1199,
-    total: 71940,
-  },
-  {
-    id: 5,
-    productName: "Apple MacBook Pro 16",
-    sku: "MBP16-2021",
-    category: "Laptop",
-    quantity: 40,
-    price: 2399,
-    total: 95960,
-  },
-  {
-    id: 6,
-    productName: "Amazon Echo Dot 4th Gen",
-    sku: "AMZ-ECHO4",
-    category: "Smart Home",
-    quantity: 200,
-    price: 49,
-    total: 9800,
-  },
-  {
-    id: 7,
-    productName: "Google Nest Hub",
-    sku: "GOOG-NESTHUB",
-    category: "Smart Home",
-    quantity: 85,
-    price: 89,
-    total: 7565,
-  },
-  {
-    id: 8,
-    productName: "Fitbit Charge 4",
-    sku: "FITBIT-CHARGE4",
-    category: "Wearable",
-    quantity: 130,
-    price: 149,
-    total: 19370,
-  },
-  {
-    id: 9,
-    productName: "Canon EOS R5",
-    sku: "CANON-EOSR5",
-    category: "Camera",
-    quantity: 25,
-    price: 3899,
-    total: 97475,
-  },
-  {
-    id: 10,
-    productName: "Nintendo Switch",
-    sku: "NINT-SWITCH",
-    category: "Gaming",
-    quantity: 180,
-    price: 299,
-    total: 53820,
-  },
-  {
-    id: 11,
-    productName: "Apple AirPods Pro",
-    sku: "AIRPODS-PRO",
-    category: "Headphones",
-    quantity: 220,
-    price: 249,
-    total: 54780,
-  },
-  {
-    id: 12,
-    productName: "Microsoft Surface Pro 7",
-    sku: "MS-SURFACE7",
-    category: "Laptop",
-    quantity: 55,
-    price: 899,
-    total: 49445,
-  },
-  {
-    id: 13,
-    productName: "JBL Flip 5",
-    sku: "JBL-FLIP5",
-    category: "Speakers",
-    quantity: 140,
-    price: 119,
-    total: 16660,
-  },
-  {
-    id: 14,
-    productName: "GoPro HERO9",
-    sku: "GOPRO-HERO9",
-    category: "Camera",
-    quantity: 70,
-    price: 399,
-    total: 27930,
-  },
-  {
-    id: 15,
-    productName: "Samsung QLED TV 55\"",
-    sku: "SAM-QLED55",
-    category: "TV",
-    quantity: 30,
-    price: 1099,
-    total: 32970,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All Categories",
@@ -151,10 +14,26 @@ const categories = [
   "TV",
 ];
 
-const BestSeller: React.FC = () => {
-  // Page title as in reference
-  React.useEffect(() => {
-    document.title = "Best Seller | Dreams POS";
+const BestSeller: React.FC = () => { 
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("BestSeller");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Filters state
@@ -167,7 +46,7 @@ const BestSeller: React.FC = () => {
 
   // Filtered data based on search and category
   const filteredData = useMemo(() => {
-    return bestSellerData.filter((item) => {
+    return data.filter((item: any) => {
       const matchesCategory =
         selectedCategory === "All Categories" ||
         item.category === selectedCategory;
@@ -176,7 +55,7 @@ const BestSeller: React.FC = () => {
         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -335,7 +214,7 @@ const BestSeller: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              paginatedData.map((item) => (
+              paginatedData.map((item: any) => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.productName}

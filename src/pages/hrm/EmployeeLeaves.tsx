@@ -35,7 +35,7 @@ const employees = [
 export default function EmployeeLeaves() {
   // Page title exactly as in reference page
   React.useEffect(() => {
-    document.title = "Employee Leaves - Dreams POS";
+    
   }, []);
 
   // Form state for filters and inputs

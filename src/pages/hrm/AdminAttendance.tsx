@@ -15,7 +15,7 @@ const statuses = ["All Status", "Present", "Absent", "Leave"];
 export default function AdminAttendance() {
   // Page title as in reference page
   React.useEffect(() => {
-    document.title = "Admin - Attendance";
+    
   }, []);
 
   // Filters state

@@ -82,7 +82,7 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
-    document.title = "Discount - Dreams POS";
+    
     loadData();
   }, []);
 

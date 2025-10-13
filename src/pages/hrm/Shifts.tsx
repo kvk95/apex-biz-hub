@@ -6,7 +6,7 @@ const pageSize = 5;
 export default function Shifts() {
   // Page title as in reference page
   useEffect(() => {
-    document.title = "Shifts - Dreams POS";
+    
   }, []);
 
   // States for form fields

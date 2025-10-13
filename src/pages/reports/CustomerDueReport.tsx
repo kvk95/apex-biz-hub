@@ -1,107 +1,13 @@
-import React, { useState, useMemo } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "123-456-7890",
-    email: "john@example.com",
-    address: "123 Main St, Cityville",
-    dueAmount: 150.0,
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    phone: "987-654-3210",
-    email: "jane@example.com",
-    address: "456 Oak Ave, Townsville",
-    dueAmount: 200.5,
-  },
-  {
-    id: 3,
-    name: "Robert Johnson",
-    phone: "555-123-4567",
-    email: "robert@example.com",
-    address: "789 Pine Rd, Villagetown",
-    dueAmount: 320.75,
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    phone: "444-555-6666",
-    email: "emily@example.com",
-    address: "321 Elm St, Hamlet",
-    dueAmount: 80.0,
-  },
-  {
-    id: 5,
-    name: "Michael Brown",
-    phone: "222-333-4444",
-    email: "michael@example.com",
-    address: "654 Maple Blvd, Metropolis",
-    dueAmount: 450.25,
-  },
-  {
-    id: 6,
-    name: "Linda Wilson",
-    phone: "111-222-3333",
-    email: "linda@example.com",
-    address: "987 Cedar Ln, Capital City",
-    dueAmount: 120.0,
-  },
-  {
-    id: 7,
-    name: "David Martinez",
-    phone: "777-888-9999",
-    email: "david@example.com",
-    address: "159 Spruce Dr, Smalltown",
-    dueAmount: 60.5,
-  },
-  {
-    id: 8,
-    name: "Susan Lee",
-    phone: "333-444-5555",
-    email: "susan@example.com",
-    address: "753 Birch Ct, Bigcity",
-    dueAmount: 210.0,
-  },
-  {
-    id: 9,
-    name: "James Taylor",
-    phone: "666-777-8888",
-    email: "james@example.com",
-    address: "852 Walnut St, Oldtown",
-    dueAmount: 175.75,
-  },
-  {
-    id: 10,
-    name: "Patricia Anderson",
-    phone: "999-000-1111",
-    email: "patricia@example.com",
-    address: "951 Chestnut Ave, Newcity",
-    dueAmount: 95.0,
-  },
-  {
-    id: 11,
-    name: "Mark Thomas",
-    phone: "101-202-3030",
-    email: "mark@example.com",
-    address: "357 Aspen Rd, Rivertown",
-    dueAmount: 300.0,
-  },
-  {
-    id: 12,
-    name: "Barbara Jackson",
-    phone: "404-505-6060",
-    email: "barbara@example.com",
-    address: "258 Fir St, Lakeside",
-    dueAmount: 130.5,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function CustomerDueReport() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchName, setSearchName] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
   const [searchEmail, setSearchEmail] = useState("");
@@ -110,9 +16,25 @@ export default function CustomerDueReport() {
   const [searchDueTo, setSearchDueTo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CustomerDueReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter customers based on search fields
   const filteredCustomers = useMemo(() => {
-    return customersData.filter((c) => {
+    return data.filter((c: any) => {
       const matchName = c.name.toLowerCase().includes(searchName.toLowerCase());
       const matchPhone = c.phone.toLowerCase().includes(searchPhone.toLowerCase());
       const matchEmail = c.email.toLowerCase().includes(searchEmail.toLowerCase());
@@ -123,7 +45,7 @@ export default function CustomerDueReport() {
       const matchDueTo = isNaN(dueToNum) ? true : c.dueAmount <= dueToNum;
       return matchName && matchPhone && matchEmail && matchAddress && matchDueFrom && matchDueTo;
     });
-  }, [searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
+  }, [data, searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredCustomers.length / pageSize);
@@ -340,7 +262,7 @@ export default function CustomerDueReport() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedCustomers.map((customer, idx) => (
+                  paginatedCustomers.map((customer: any, idx: number) => (
                     <tr
                       key={customer.id}
                       className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}

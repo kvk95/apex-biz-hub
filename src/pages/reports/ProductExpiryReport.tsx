@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useMemo, useState } from "react";
 
 type ProductExpiry = {
   productName: string;
@@ -16,170 +17,6 @@ type ProductExpiry = {
   supplier: string;
   status: "Expired" | "Expiring" | "Safe";
 };
-
-const PRODUCTS_DATA: ProductExpiry[] = [
-  {
-    productName: "Orange Juice",
-    productCode: "OJ-001",
-    barcode: "1234567890123",
-    category: "Beverages",
-    subCategory: "Juices",
-    brand: "FreshFarms",
-    unit: "Bottle",
-    quantity: 120,
-    expiryDate: "2025-10-15",
-    purchasePrice: 1.5,
-    salePrice: 2.5,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier A",
-    status: "Expiring",
-  },
-  {
-    productName: "Milk Powder",
-    productCode: "MP-234",
-    barcode: "2345678901234",
-    category: "Dairy",
-    subCategory: "Powder",
-    brand: "DairyBest",
-    unit: "Pack",
-    quantity: 50,
-    expiryDate: "2025-09-30",
-    purchasePrice: 5.0,
-    salePrice: 7.5,
-    warehouse: "Secondary Warehouse",
-    supplier: "Supplier B",
-    status: "Expired",
-  },
-  {
-    productName: "Cheddar Cheese",
-    productCode: "CC-789",
-    barcode: "3456789012345",
-    category: "Dairy",
-    subCategory: "Cheese",
-    brand: "CheeseCo",
-    unit: "Kg",
-    quantity: 30,
-    expiryDate: "2025-12-20",
-    purchasePrice: 8.0,
-    salePrice: 12.0,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier C",
-    status: "Safe",
-  },
-  {
-    productName: "Apple Juice",
-    productCode: "AJ-002",
-    barcode: "4567890123456",
-    category: "Beverages",
-    subCategory: "Juices",
-    brand: "FreshFarms",
-    unit: "Bottle",
-    quantity: 100,
-    expiryDate: "2025-11-10",
-    purchasePrice: 1.6,
-    salePrice: 2.6,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier A",
-    status: "Expiring",
-  },
-  {
-    productName: "Yogurt",
-    productCode: "YG-345",
-    barcode: "5678901234567",
-    category: "Dairy",
-    subCategory: "Yogurt",
-    brand: "DairyBest",
-    unit: "Cup",
-    quantity: 80,
-    expiryDate: "2025-10-05",
-    purchasePrice: 0.8,
-    salePrice: 1.2,
-    warehouse: "Secondary Warehouse",
-    supplier: "Supplier B",
-    status: "Expiring",
-  },
-  {
-    productName: "Butter",
-    productCode: "BT-456",
-    barcode: "6789012345678",
-    category: "Dairy",
-    subCategory: "Butter",
-    brand: "ButterKing",
-    unit: "Pack",
-    quantity: 40,
-    expiryDate: "2026-01-15",
-    purchasePrice: 3.5,
-    salePrice: 5.0,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier C",
-    status: "Safe",
-  },
-  {
-    productName: "Tomato Sauce",
-    productCode: "TS-567",
-    barcode: "7890123456789",
-    category: "Condiments",
-    subCategory: "Sauces",
-    brand: "SauceMaster",
-    unit: "Bottle",
-    quantity: 70,
-    expiryDate: "2025-12-01",
-    purchasePrice: 1.2,
-    salePrice: 2.0,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier D",
-    status: "Safe",
-  },
-  {
-    productName: "Chocolate Milk",
-    productCode: "CM-678",
-    barcode: "8901234567890",
-    category: "Beverages",
-    subCategory: "Milk",
-    brand: "DairyBest",
-    unit: "Bottle",
-    quantity: 90,
-    expiryDate: "2025-10-25",
-    purchasePrice: 1.7,
-    salePrice: 2.7,
-    warehouse: "Secondary Warehouse",
-    supplier: "Supplier B",
-    status: "Expiring",
-  },
-  {
-    productName: "Salt",
-    productCode: "SL-789",
-    barcode: "9012345678901",
-    category: "Spices",
-    subCategory: "Salt",
-    brand: "SpiceWorld",
-    unit: "Pack",
-    quantity: 200,
-    expiryDate: "2027-05-01",
-    purchasePrice: 0.5,
-    salePrice: 1.0,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier E",
-    status: "Safe",
-  },
-  {
-    productName: "Black Pepper",
-    productCode: "BP-890",
-    barcode: "0123456789012",
-    category: "Spices",
-    subCategory: "Pepper",
-    brand: "SpiceWorld",
-    unit: "Pack",
-    quantity: 150,
-    expiryDate: "2026-08-15",
-    purchasePrice: 1.0,
-    salePrice: 1.8,
-    warehouse: "Main Warehouse",
-    supplier: "Supplier E",
-    status: "Safe",
-  },
-  // Add more products as needed to test pagination
-];
 
 const CATEGORIES = [
   "All",
@@ -224,6 +61,26 @@ const STATUS_OPTIONS = [
 const PAGE_SIZE = 5;
 
 export default function ProductExpiryReport() {
+  const [data, setData] = useState<ProductExpiry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<ProductExpiry[]>("ProductExpiryReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filters state
   const [productName, setProductName] = useState("");
   const [productCode, setProductCode] = useState("");
@@ -240,7 +97,7 @@ export default function ProductExpiryReport() {
 
   // Filtered data memoized
   const filteredData = useMemo(() => {
-    return PRODUCTS_DATA.filter((p) => {
+    return data.filter((p) => {
       if (productName && !p.productName.toLowerCase().includes(productName.toLowerCase()))
         return false;
       if (productCode && !p.productCode.toLowerCase().includes(productCode.toLowerCase()))
@@ -254,7 +111,7 @@ export default function ProductExpiryReport() {
       if (expiryTo && p.expiryDate > expiryTo) return false;
       return true;
     });
-  }, [productName, productCode, category, brand, warehouse, supplier, status, expiryFrom, expiryTo]);
+  }, [data, productName, productCode, category, brand, warehouse, supplier, status, expiryFrom, expiryTo]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);

@@ -1,172 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const inventoryData = [
-  {
-    id: 1,
-    productName: "Apple iPhone 14 Pro Max",
-    sku: "IP14PM-256GB",
-    category: "Smartphones",
-    brand: "Apple",
-    quantity: 120,
-    price: 1199.99,
-    totalValue: 143998.8,
-    status: "In Stock",
-  },
-  {
-    id: 2,
-    productName: "Samsung Galaxy S23 Ultra",
-    sku: "SGS23U-512GB",
-    category: "Smartphones",
-    brand: "Samsung",
-    quantity: 85,
-    price: 1299.99,
-    totalValue: 110499.15,
-    status: "In Stock",
-  },
-  {
-    id: 3,
-    productName: "Sony WH-1000XM5 Headphones",
-    sku: "SONYWHXM5",
-    category: "Audio",
-    brand: "Sony",
-    quantity: 200,
-    price: 399.99,
-    totalValue: 79998,
-    status: "In Stock",
-  },
-  {
-    id: 4,
-    productName: "Dell XPS 15 Laptop",
-    sku: "DELLXPS15",
-    category: "Laptops",
-    brand: "Dell",
-    quantity: 45,
-    price: 1499.99,
-    totalValue: 67499.55,
-    status: "Low Stock",
-  },
-  {
-    id: 5,
-    productName: "Apple MacBook Air M2",
-    sku: "MBAIR-M2",
-    category: "Laptops",
-    brand: "Apple",
-    quantity: 30,
-    price: 1199.99,
-    totalValue: 35999.7,
-    status: "Low Stock",
-  },
-  {
-    id: 6,
-    productName: "Logitech MX Master 3 Mouse",
-    sku: "LOGIMX3",
-    category: "Accessories",
-    brand: "Logitech",
-    quantity: 150,
-    price: 99.99,
-    totalValue: 14998.5,
-    status: "In Stock",
-  },
-  {
-    id: 7,
-    productName: "Canon EOS R6 Camera",
-    sku: "CANONR6",
-    category: "Cameras",
-    brand: "Canon",
-    quantity: 25,
-    price: 2499.99,
-    totalValue: 62499.75,
-    status: "Low Stock",
-  },
-  {
-    id: 8,
-    productName: "Apple Watch Series 8",
-    sku: "AWS8",
-    category: "Wearables",
-    brand: "Apple",
-    quantity: 100,
-    price: 399.99,
-    totalValue: 39999,
-    status: "In Stock",
-  },
-  {
-    id: 9,
-    productName: "Samsung Galaxy Tab S8",
-    sku: "SGTS8",
-    category: "Tablets",
-    brand: "Samsung",
-    quantity: 60,
-    price: 699.99,
-    totalValue: 41999.4,
-    status: "In Stock",
-  },
-  {
-    id: 10,
-    productName: "Bose QuietComfort Earbuds",
-    sku: "BOSEQC",
-    category: "Audio",
-    brand: "Bose",
-    quantity: 80,
-    price: 279.99,
-    totalValue: 22399.2,
-    status: "In Stock",
-  },
-  {
-    id: 11,
-    productName: "Microsoft Surface Pro 9",
-    sku: "MSPRO9",
-    category: "Tablets",
-    brand: "Microsoft",
-    quantity: 40,
-    price: 999.99,
-    totalValue: 39999.6,
-    status: "Low Stock",
-  },
-  {
-    id: 12,
-    productName: "Google Pixel 7 Pro",
-    sku: "PIX7P",
-    category: "Smartphones",
-    brand: "Google",
-    quantity: 70,
-    price: 899.99,
-    totalValue: 62999.3,
-    status: "In Stock",
-  },
-  {
-    id: 13,
-    productName: "JBL Flip 6 Speaker",
-    sku: "JBLFLIP6",
-    category: "Audio",
-    brand: "JBL",
-    quantity: 110,
-    price: 129.99,
-    totalValue: 14298.9,
-    status: "In Stock",
-  },
-  {
-    id: 14,
-    productName: "HP Envy 13 Laptop",
-    sku: "HPENVY13",
-    category: "Laptops",
-    brand: "HP",
-    quantity: 50,
-    price: 1099.99,
-    totalValue: 54999.5,
-    status: "In Stock",
-  },
-  {
-    id: 15,
-    productName: "Fitbit Charge 5",
-    sku: "FITCHG5",
-    category: "Wearables",
-    brand: "Fitbit",
-    quantity: 90,
-    price: 149.99,
-    totalValue: 13499.1,
-    status: "In Stock",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All Categories",
@@ -198,21 +31,37 @@ const brands = [
 const statuses = ["All Status", "In Stock", "Low Stock", "Out of Stock"];
 
 const InventoryReport: React.FC = () => {
-  // Filters state
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("InventoryReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Filtered data based on filters and search
   const filteredData = useMemo(() => {
-    return inventoryData.filter((item) => {
+    return data.filter((item) => {
       const matchCategory =
         selectedCategory === "All Categories" ||
         item.category === selectedCategory;
@@ -224,21 +73,16 @@ const InventoryReport: React.FC = () => {
         searchTerm === "" ||
         item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Date filter is not applicable as data has no date field, so ignore
-
       return matchCategory && matchBrand && matchStatus && matchSearch;
     });
-  }, [selectedCategory, selectedBrand, selectedStatus, searchTerm]);
+  }, [data, selectedCategory, selectedBrand, selectedStatus, searchTerm]);
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Handlers
   const handleResetFilters = () => {
     setSelectedCategory("All Categories");
     setSelectedBrand("All Brands");
@@ -252,20 +96,13 @@ const InventoryReport: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-  };
-
-  // Title as per reference page: "Inventory Report"
-  React.useEffect(() => {
-    document.title = "Inventory Report";
-  }, []);
+  }; 
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Page Title */}
         <h1 className="text-3xl font-semibold mb-6">Inventory Report</h1>
 
-        {/* Filters Section */}
         <section className="bg-white rounded shadow p-6 mb-6">
           <form
             onSubmit={(e) => {
@@ -274,7 +111,6 @@ const InventoryReport: React.FC = () => {
             }}
             className="grid grid-cols-1 md:grid-cols-6 gap-4"
           >
-            {/* Category */}
             <div>
               <label
                 htmlFor="category"
@@ -297,7 +133,6 @@ const InventoryReport: React.FC = () => {
               </select>
             </div>
 
-            {/* Brand */}
             <div>
               <label
                 htmlFor="brand"
@@ -320,7 +155,6 @@ const InventoryReport: React.FC = () => {
               </select>
             </div>
 
-            {/* Status */}
             <div>
               <label
                 htmlFor="status"
@@ -343,7 +177,6 @@ const InventoryReport: React.FC = () => {
               </select>
             </div>
 
-            {/* Date From */}
             <div>
               <label
                 htmlFor="dateFrom"
@@ -361,7 +194,6 @@ const InventoryReport: React.FC = () => {
               />
             </div>
 
-            {/* Date To */}
             <div>
               <label
                 htmlFor="dateTo"
@@ -379,7 +211,6 @@ const InventoryReport: React.FC = () => {
               />
             </div>
 
-            {/* Search */}
             <div className="md:col-span-2">
               <label
                 htmlFor="search"
@@ -398,7 +229,6 @@ const InventoryReport: React.FC = () => {
               />
             </div>
 
-            {/* Buttons */}
             <div className="flex items-end space-x-3 md:col-span-4">
               <button
                 type="submit"
@@ -431,7 +261,6 @@ const InventoryReport: React.FC = () => {
           </form>
         </section>
 
-        {/* Table Section */}
         <section className="bg-white rounded shadow p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -507,7 +336,6 @@ const InventoryReport: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-700">
               Showing{" "}
@@ -549,7 +377,6 @@ const InventoryReport: React.FC = () => {
                 </svg>
               </button>
 
-              {/* Page numbers */}
               {[...Array(totalPages)].map((_, i) => {
                 const page = i + 1;
                 return (

@@ -4,12 +4,8 @@ import { apiService } from "@/services/ApiService";
 const ROLES = ["Admin", "User"];
 const STATUS = ["Active", "Inactive"];
 
-export default function Users() {
-  // Page title as in reference page
-  React.useEffect(() => {
-    document.title = "Users - Dreams POS";
-  }, []);
-
+export default function Users() { 
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;

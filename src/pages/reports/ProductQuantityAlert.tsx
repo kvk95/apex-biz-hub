@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 type Product = {
   productCode: string;
@@ -11,168 +12,35 @@ type Product = {
   quantity: number;
 };
 
-const PRODUCTS_DATA: Product[] = [
-  {
-    productCode: "P-0001",
-    productName: "Apple iPhone 14 Pro Max",
-    category: "Electronics",
-    subCategory: "Mobile Phones",
-    brand: "Apple",
-    unit: "Piece",
-    alertQuantity: 5,
-    quantity: 3,
-  },
-  {
-    productCode: "P-0002",
-    productName: "Samsung Galaxy S22 Ultra",
-    category: "Electronics",
-    subCategory: "Mobile Phones",
-    brand: "Samsung",
-    unit: "Piece",
-    alertQuantity: 7,
-    quantity: 2,
-  },
-  {
-    productCode: "P-0003",
-    productName: "Sony WH-1000XM4 Headphones",
-    category: "Electronics",
-    subCategory: "Audio",
-    brand: "Sony",
-    unit: "Piece",
-    alertQuantity: 10,
-    quantity: 8,
-  },
-  {
-    productCode: "P-0004",
-    productName: "Dell XPS 13 Laptop",
-    category: "Computers",
-    subCategory: "Laptops",
-    brand: "Dell",
-    unit: "Piece",
-    alertQuantity: 4,
-    quantity: 1,
-  },
-  {
-    productCode: "P-0005",
-    productName: "Logitech MX Master 3 Mouse",
-    category: "Computers",
-    subCategory: "Accessories",
-    brand: "Logitech",
-    unit: "Piece",
-    alertQuantity: 15,
-    quantity: 12,
-  },
-  {
-    productCode: "P-0006",
-    productName: "HP Envy Printer",
-    category: "Office Equipment",
-    subCategory: "Printers",
-    brand: "HP",
-    unit: "Piece",
-    alertQuantity: 3,
-    quantity: 1,
-  },
-  {
-    productCode: "P-0007",
-    productName: "Canon EOS 90D Camera",
-    category: "Photography",
-    subCategory: "Cameras",
-    brand: "Canon",
-    unit: "Piece",
-    alertQuantity: 2,
-    quantity: 0,
-  },
-  {
-    productCode: "P-0008",
-    productName: "Nike Air Max 270",
-    category: "Footwear",
-    subCategory: "Sneakers",
-    brand: "Nike",
-    unit: "Pair",
-    alertQuantity: 20,
-    quantity: 18,
-  },
-  {
-    productCode: "P-0009",
-    productName: "Adidas Ultraboost",
-    category: "Footwear",
-    subCategory: "Running Shoes",
-    brand: "Adidas",
-    unit: "Pair",
-    alertQuantity: 15,
-    quantity: 10,
-  },
-  {
-    productCode: "P-0010",
-    productName: "KitchenAid Stand Mixer",
-    category: "Home Appliances",
-    subCategory: "Kitchen",
-    brand: "KitchenAid",
-    unit: "Piece",
-    alertQuantity: 6,
-    quantity: 4,
-  },
-  {
-    productCode: "P-0011",
-    productName: "Samsung 55\" QLED TV",
-    category: "Electronics",
-    subCategory: "Televisions",
-    brand: "Samsung",
-    unit: "Piece",
-    alertQuantity: 3,
-    quantity: 2,
-  },
-  {
-    productCode: "P-0012",
-    productName: "Bose SoundLink Speaker",
-    category: "Electronics",
-    subCategory: "Audio",
-    brand: "Bose",
-    unit: "Piece",
-    alertQuantity: 8,
-    quantity: 7,
-  },
-  {
-    productCode: "P-0013",
-    productName: "Microsoft Surface Pro 8",
-    category: "Computers",
-    subCategory: "Tablets",
-    brand: "Microsoft",
-    unit: "Piece",
-    alertQuantity: 5,
-    quantity: 3,
-  },
-  {
-    productCode: "P-0014",
-    productName: "Apple MacBook Air M2",
-    category: "Computers",
-    subCategory: "Laptops",
-    brand: "Apple",
-    unit: "Piece",
-    alertQuantity: 4,
-    quantity: 2,
-  },
-  {
-    productCode: "P-0015",
-    productName: "Sony PlayStation 5",
-    category: "Gaming",
-    subCategory: "Consoles",
-    brand: "Sony",
-    unit: "Piece",
-    alertQuantity: 7,
-    quantity: 5,
-  },
-];
-
 const PAGE_SIZE = 5;
 
 export default function ProductQuantityAlert() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ProductQuantityAlert");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filtered products that are below alert quantity
-  const alertProducts = PRODUCTS_DATA.filter(
-    (p) => p.quantity <= p.alertQuantity
+  const alertProducts = data.filter(
+    (p: Product) => p.quantity <= p.alertQuantity
   );
 
   // Pagination calculations
@@ -370,7 +238,7 @@ export default function ProductQuantityAlert() {
                   </td>
                 </tr>
               )}
-              {currentProducts.map((product) => (
+              {currentProducts.map((product: Product) => (
                 <tr key={product.productCode} className="hover:bg-gray-50">
                   <td className="px-4 py-3 whitespace-nowrap">
                     {product.productCode}

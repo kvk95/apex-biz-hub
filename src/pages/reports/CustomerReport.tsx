@@ -1,122 +1,28 @@
-import React, { useState, useMemo } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    totalPurchase: 1200,
-    lastPurchaseDate: "2023-09-15",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "987-654-3210",
-    totalPurchase: 850,
-    lastPurchaseDate: "2023-09-10",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    email: "michael@example.com",
-    phone: "555-123-4567",
-    totalPurchase: 430,
-    lastPurchaseDate: "2023-09-05",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    email: "emily@example.com",
-    phone: "444-555-6666",
-    totalPurchase: 980,
-    lastPurchaseDate: "2023-08-30",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "William Brown",
-    email: "william@example.com",
-    phone: "222-333-4444",
-    totalPurchase: 670,
-    lastPurchaseDate: "2023-08-25",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    name: "Olivia Wilson",
-    email: "olivia@example.com",
-    phone: "777-888-9999",
-    totalPurchase: 1150,
-    lastPurchaseDate: "2023-08-20",
-    status: "Active",
-  },
-  {
-    id: 7,
-    name: "James Taylor",
-    email: "james@example.com",
-    phone: "111-222-3333",
-    totalPurchase: 540,
-    lastPurchaseDate: "2023-08-15",
-    status: "Active",
-  },
-  {
-    id: 8,
-    name: "Sophia Martinez",
-    email: "sophia@example.com",
-    phone: "999-000-1111",
-    totalPurchase: 730,
-    lastPurchaseDate: "2023-08-10",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    name: "Benjamin Anderson",
-    email: "benjamin@example.com",
-    phone: "666-777-8888",
-    totalPurchase: 880,
-    lastPurchaseDate: "2023-08-05",
-    status: "Active",
-  },
-  {
-    id: 10,
-    name: "Mia Thomas",
-    email: "mia@example.com",
-    phone: "333-444-5555",
-    totalPurchase: 1020,
-    lastPurchaseDate: "2023-08-01",
-    status: "Active",
-  },
-  {
-    id: 11,
-    name: "Alexander Jackson",
-    email: "alexander@example.com",
-    phone: "123-321-1234",
-    totalPurchase: 760,
-    lastPurchaseDate: "2023-07-28",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    name: "Isabella White",
-    email: "isabella@example.com",
-    phone: "432-123-4321",
-    totalPurchase: 940,
-    lastPurchaseDate: "2023-07-25",
-    status: "Active",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
-export default function CustomerReport() {
-  // Title as per reference page
-  React.useEffect(() => {
-    document.title = "Customer Report - Dreams POS";
+export default function CustomerReport() { 
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CustomerReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Filters state
@@ -129,7 +35,7 @@ export default function CustomerReport() {
 
   // Filtered and paginated data
   const filteredData = useMemo(() => {
-    return customersData.filter((c) => {
+    return data.filter((c: any) => {
       return (
         c.name.toLowerCase().includes(searchName.toLowerCase()) &&
         c.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
@@ -137,7 +43,7 @@ export default function CustomerReport() {
         (filterStatus === "" || c.status === filterStatus)
       );
     });
-  }, [searchName, searchEmail, searchPhone, filterStatus]);
+  }, [data, searchName, searchEmail, searchPhone, filterStatus]);
 
   const pageCount = Math.ceil(filteredData.length / pageSize);
 
@@ -291,7 +197,7 @@ export default function CustomerReport() {
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((customer) => (
+                paginatedData.map((customer: any) => (
                   <tr
                     key={customer.id}
                     className="hover:bg-gray-50 border-b border-gray-200"

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 type PurchaseRecord = {
   purchaseNo: string;
@@ -11,129 +12,6 @@ type PurchaseRecord = {
   paymentStatus: string;
 };
 
-const purchaseData: PurchaseRecord[] = [
-  {
-    purchaseNo: "1001",
-    supplier: "Supplier 1",
-    purchaseDate: "2023-08-01",
-    purchaseStatus: "Received",
-    grandTotal: "1,200.00",
-    paidAmount: "1,000.00",
-    dueAmount: "200.00",
-    paymentStatus: "Partial",
-  },
-  {
-    purchaseNo: "1002",
-    supplier: "Supplier 2",
-    purchaseDate: "2023-08-02",
-    purchaseStatus: "Pending",
-    grandTotal: "850.00",
-    paidAmount: "850.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1003",
-    supplier: "Supplier 3",
-    purchaseDate: "2023-08-03",
-    purchaseStatus: "Received",
-    grandTotal: "2,500.00",
-    paidAmount: "1,500.00",
-    dueAmount: "1,000.00",
-    paymentStatus: "Partial",
-  },
-  {
-    purchaseNo: "1004",
-    supplier: "Supplier 4",
-    purchaseDate: "2023-08-04",
-    purchaseStatus: "Received",
-    grandTotal: "3,200.00",
-    paidAmount: "3,200.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1005",
-    supplier: "Supplier 5",
-    purchaseDate: "2023-08-05",
-    purchaseStatus: "Pending",
-    grandTotal: "1,100.00",
-    paidAmount: "0.00",
-    dueAmount: "1,100.00",
-    paymentStatus: "Due",
-  },
-  {
-    purchaseNo: "1006",
-    supplier: "Supplier 6",
-    purchaseDate: "2023-08-06",
-    purchaseStatus: "Received",
-    grandTotal: "900.00",
-    paidAmount: "900.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1007",
-    supplier: "Supplier 7",
-    purchaseDate: "2023-08-07",
-    purchaseStatus: "Received",
-    grandTotal: "1,750.00",
-    paidAmount: "1,000.00",
-    dueAmount: "750.00",
-    paymentStatus: "Partial",
-  },
-  {
-    purchaseNo: "1008",
-    supplier: "Supplier 8",
-    purchaseDate: "2023-08-08",
-    purchaseStatus: "Pending",
-    grandTotal: "2,300.00",
-    paidAmount: "2,300.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1009",
-    supplier: "Supplier 9",
-    purchaseDate: "2023-08-09",
-    purchaseStatus: "Received",
-    grandTotal: "1,600.00",
-    paidAmount: "1,600.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1010",
-    supplier: "Supplier 10",
-    purchaseDate: "2023-08-10",
-    purchaseStatus: "Pending",
-    grandTotal: "1,400.00",
-    paidAmount: "700.00",
-    dueAmount: "700.00",
-    paymentStatus: "Partial",
-  },
-  {
-    purchaseNo: "1011",
-    supplier: "Supplier 11",
-    purchaseDate: "2023-08-11",
-    purchaseStatus: "Received",
-    grandTotal: "1,900.00",
-    paidAmount: "1,900.00",
-    dueAmount: "0.00",
-    paymentStatus: "Paid",
-  },
-  {
-    purchaseNo: "1012",
-    supplier: "Supplier 12",
-    purchaseDate: "2023-08-12",
-    purchaseStatus: "Received",
-    grandTotal: "2,100.00",
-    paidAmount: "1,000.00",
-    dueAmount: "1,100.00",
-    paymentStatus: "Partial",
-  },
-];
-
 const purchaseStatuses = [
   "All",
   "Received",
@@ -145,6 +23,26 @@ const purchaseStatuses = [
 const paymentStatuses = ["All", "Paid", "Partial", "Due"];
 
 const PurchaseReport: React.FC = () => {
+  const [data, setData] = useState<PurchaseRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<PurchaseRecord[]>("PurchaseReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filters state
   const [purchaseNo, setPurchaseNo] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -159,7 +57,7 @@ const PurchaseReport: React.FC = () => {
 
   // Filtered data based on inputs
   const filteredData = useMemo(() => {
-    return purchaseData.filter((item) => {
+    return data.filter((item) => {
       if (
         purchaseNo &&
         !item.purchaseNo.toLowerCase().includes(purchaseNo.toLowerCase())
@@ -178,7 +76,7 @@ const PurchaseReport: React.FC = () => {
       if (dateTo && item.purchaseDate > dateTo) return false;
       return true;
     });
-  }, [purchaseNo, supplier, purchaseStatus, paymentStatus, dateFrom, dateTo]);
+  }, [data, purchaseNo, supplier, purchaseStatus, paymentStatus, dateFrom, dateTo]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);

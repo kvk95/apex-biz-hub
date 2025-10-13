@@ -32,8 +32,7 @@ export default function GiftCards() {
 
   
     useEffect(() => {
-      document.title = "GiftCards - Dreams POS";
-      loadData();
+            loadData();
     }, []);
   
     const loadData = async () => {

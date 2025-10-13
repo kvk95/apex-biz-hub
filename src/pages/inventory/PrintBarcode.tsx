@@ -6,7 +6,7 @@ const pageSizeOptions = [5, 10, 15, 20];
 function PrintBarcode() {
   // Page title
   useEffect(() => {
-    document.title = "Print Barcode | Dreams POS";
+    
   }, []);
 
   const [data, setData] = useState([]);

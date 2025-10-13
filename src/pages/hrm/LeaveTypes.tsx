@@ -13,7 +13,7 @@ const PAGE_SIZE = 5;
 const LeaveTypes: React.FC = () => {
   // Page title as per reference page
   useEffect(() => {
-    document.title = "Dreams POS - Leave Types";
+    
   }, []);
 
   // State for pagination

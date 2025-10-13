@@ -1,157 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const productData = [
-  {
-    productCode: "PRD-001",
-    productName: "Apple iPhone 14 Pro Max",
-    category: "Mobile",
-    unit: "PCS",
-    purchasePrice: 1200,
-    salePrice: 1400,
-    stockQty: 25,
-    stockValue: 30000,
-  },
-  {
-    productCode: "PRD-002",
-    productName: "Samsung Galaxy S23 Ultra",
-    category: "Mobile",
-    unit: "PCS",
-    purchasePrice: 1100,
-    salePrice: 1300,
-    stockQty: 30,
-    stockValue: 33000,
-  },
-  {
-    productCode: "PRD-003",
-    productName: "Dell XPS 13 Laptop",
-    category: "Laptop",
-    unit: "PCS",
-    purchasePrice: 900,
-    salePrice: 1100,
-    stockQty: 15,
-    stockValue: 13500,
-  },
-  {
-    productCode: "PRD-004",
-    productName: "Sony WH-1000XM5 Headphones",
-    category: "Accessories",
-    unit: "PCS",
-    purchasePrice: 250,
-    salePrice: 300,
-    stockQty: 50,
-    stockValue: 12500,
-  },
-  {
-    productCode: "PRD-005",
-    productName: "Apple MacBook Air M2",
-    category: "Laptop",
-    unit: "PCS",
-    purchasePrice: 1000,
-    salePrice: 1200,
-    stockQty: 20,
-    stockValue: 20000,
-  },
-  {
-    productCode: "PRD-006",
-    productName: "Logitech MX Master 3 Mouse",
-    category: "Accessories",
-    unit: "PCS",
-    purchasePrice: 70,
-    salePrice: 90,
-    stockQty: 40,
-    stockValue: 2800,
-  },
-  {
-    productCode: "PRD-007",
-    productName: "Samsung 4K UHD Monitor",
-    category: "Monitor",
-    unit: "PCS",
-    purchasePrice: 300,
-    salePrice: 350,
-    stockQty: 18,
-    stockValue: 5400,
-  },
-  {
-    productCode: "PRD-008",
-    productName: "Canon EOS R6 Camera",
-    category: "Camera",
-    unit: "PCS",
-    purchasePrice: 2200,
-    salePrice: 2500,
-    stockQty: 10,
-    stockValue: 22000,
-  },
-  {
-    productCode: "PRD-009",
-    productName: "Apple iPad Pro 12.9",
-    category: "Tablet",
-    unit: "PCS",
-    purchasePrice: 900,
-    salePrice: 1100,
-    stockQty: 22,
-    stockValue: 19800,
-  },
-  {
-    productCode: "PRD-010",
-    productName: "Microsoft Surface Pro 9",
-    category: "Tablet",
-    unit: "PCS",
-    purchasePrice: 850,
-    salePrice: 1050,
-    stockQty: 16,
-    stockValue: 13600,
-  },
-  {
-    productCode: "PRD-011",
-    productName: "Bose QuietComfort 45",
-    category: "Accessories",
-    unit: "PCS",
-    purchasePrice: 280,
-    salePrice: 320,
-    stockQty: 35,
-    stockValue: 9800,
-  },
-  {
-    productCode: "PRD-012",
-    productName: "HP Envy 15 Laptop",
-    category: "Laptop",
-    unit: "PCS",
-    purchasePrice: 950,
-    salePrice: 1150,
-    stockQty: 12,
-    stockValue: 11400,
-  },
-  {
-    productCode: "PRD-013",
-    productName: "Google Pixel 7 Pro",
-    category: "Mobile",
-    unit: "PCS",
-    purchasePrice: 800,
-    salePrice: 1000,
-    stockQty: 28,
-    stockValue: 22400,
-  },
-  {
-    productCode: "PRD-014",
-    productName: "Asus ROG Gaming Laptop",
-    category: "Laptop",
-    unit: "PCS",
-    purchasePrice: 1400,
-    salePrice: 1600,
-    stockQty: 8,
-    stockValue: 11200,
-  },
-  {
-    productCode: "PRD-015",
-    productName: "JBL Flip 6 Speaker",
-    category: "Accessories",
-    unit: "PCS",
-    purchasePrice: 100,
-    salePrice: 120,
-    stockQty: 60,
-    stockValue: 6000,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All",
@@ -166,11 +14,6 @@ const categories = [
 const units = ["PCS", "Box", "Kg", "Liter"];
 
 export default function ProductReport() {
-  // Page title as per reference page
-  React.useEffect(() => {
-    document.title = "Product Report - DreamsPOS";
-  }, []);
-
   // Filters state
   const [productCode, setProductCode] = useState("");
   const [productName, setProductName] = useState("");
@@ -183,9 +26,29 @@ export default function ProductReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ProductReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter and search logic
   const filteredData = useMemo(() => {
-    return productData
+    return data
       .filter((p) =>
         productCode.trim()
           ? p.productCode.toLowerCase().includes(productCode.trim().toLowerCase())
@@ -204,7 +67,7 @@ export default function ProductReport() {
       .filter((p) =>
         maxStock.trim() ? p.stockQty <= Number(maxStock) : true
       );
-  }, [productCode, productName, category, unit, minStock, maxStock]);
+  }, [data, productCode, productName, category, unit, minStock, maxStock]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

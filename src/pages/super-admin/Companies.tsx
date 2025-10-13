@@ -3,11 +3,7 @@ import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
-export default function Companies() {
-  // Page title as in reference page: "Companies"
-  React.useEffect(() => {
-    document.title = "Companies";
-  }, []);
+export default function Companies() { 
 
   // Form state for Add/Edit company
   const initialFormState = {

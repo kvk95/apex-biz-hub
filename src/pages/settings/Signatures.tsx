@@ -146,12 +146,7 @@ export default function Signatures() {
     if (page < 1) page = 1;
     else if (page > pageCount) page = pageCount;
     setCurrentPage(page);
-  };
-
-  // Page title as per reference page
-  useEffect(() => {
-    document.title = "Signatures - Dreams POS";
-  }, []);
+  }; 
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">

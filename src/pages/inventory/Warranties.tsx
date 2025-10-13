@@ -1,6 +1,5 @@
-import React, { useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const pageSizeOptions = [5, 10, 15];
 

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 interface SaleRecord {
   date: string;
@@ -12,125 +13,27 @@ interface SaleRecord {
   total: number;
 }
 
-const salesData: SaleRecord[] = [
-  {
-    date: "2023-01-01",
-    invoice: "INV-1001",
-    customer: "John Doe",
-    product: "Product A",
-    qty: 2,
-    price: 50,
-    discount: 5,
-    tax: 4.5,
-    total: 99.5,
-  },
-  {
-    date: "2023-01-02",
-    invoice: "INV-1002",
-    customer: "Alice Smith",
-    product: "Product B",
-    qty: 1,
-    price: 100,
-    discount: 10,
-    tax: 8.1,
-    total: 98.1,
-  },
-  {
-    date: "2023-01-03",
-    invoice: "INV-1003",
-    customer: "Robert Johnson",
-    product: "Product C",
-    qty: 5,
-    price: 20,
-    discount: 0,
-    tax: 9,
-    total: 109,
-  },
-  {
-    date: "2023-01-04",
-    invoice: "INV-1004",
-    customer: "Emma Wilson",
-    product: "Product A",
-    qty: 3,
-    price: 50,
-    discount: 7.5,
-    tax: 6.3,
-    total: 148.8,
-  },
-  {
-    date: "2023-01-05",
-    invoice: "INV-1005",
-    customer: "Michael Brown",
-    product: "Product D",
-    qty: 4,
-    price: 30,
-    discount: 6,
-    tax: 7.2,
-    total: 126.2,
-  },
-  {
-    date: "2023-01-06",
-    invoice: "INV-1006",
-    customer: "John Doe",
-    product: "Product B",
-    qty: 2,
-    price: 100,
-    discount: 15,
-    tax: 14.4,
-    total: 199.4,
-  },
-  {
-    date: "2023-01-07",
-    invoice: "INV-1007",
-    customer: "Alice Smith",
-    product: "Product C",
-    qty: 1,
-    price: 20,
-    discount: 0,
-    tax: 1.8,
-    total: 21.8,
-  },
-  {
-    date: "2023-01-08",
-    invoice: "INV-1008",
-    customer: "Robert Johnson",
-    product: "Product D",
-    qty: 6,
-    price: 30,
-    discount: 9,
-    tax: 13.5,
-    total: 193.5,
-  },
-  {
-    date: "2023-01-09",
-    invoice: "INV-1009",
-    customer: "Emma Wilson",
-    product: "Product A",
-    qty: 4,
-    price: 50,
-    discount: 10,
-    tax: 14.4,
-    total: 194.4,
-  },
-  {
-    date: "2023-01-10",
-    invoice: "INV-1010",
-    customer: "Michael Brown",
-    product: "Product B",
-    qty: 3,
-    price: 100,
-    discount: 20,
-    tax: 21.6,
-    total: 301.6,
-  },
-];
-
 const pageSizeOptions = [5, 10, 15];
 
 const SalesReport: React.FC = () => {
-  // Page title exactly as reference page: "Sales Report"
-  React.useEffect(() => {
-    document.title = "Sales Report";
+  const [data, setData] = useState<SaleRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<SaleRecord[]>("SalesReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Filters states
@@ -143,7 +46,7 @@ const SalesReport: React.FC = () => {
 
   // Filtered data based on inputs
   const filteredData = useMemo(() => {
-    return salesData.filter((record) => {
+    return data.filter((record) => {
       if (startDate && record.date < startDate) return false;
       if (endDate && record.date > endDate) return false;
       if (customer && !record.customer.toLowerCase().includes(customer.toLowerCase()))
@@ -152,7 +55,7 @@ const SalesReport: React.FC = () => {
         return false;
       return true;
     });
-  }, [startDate, endDate, customer, product]);
+  }, [startDate, endDate, customer, product, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / pageSize);

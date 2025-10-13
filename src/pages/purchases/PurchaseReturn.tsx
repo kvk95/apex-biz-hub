@@ -6,7 +6,7 @@ const PAGE_SIZE = 5;
 export default function PurchaseReturn() {
   // Page title as per reference page
   React.useEffect(() => {
-    document.title = "Purchase Return | Dreams POS";
+    
   }, []);
 
   // State for form inputs

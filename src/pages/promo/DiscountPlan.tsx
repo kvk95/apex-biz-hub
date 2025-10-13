@@ -36,12 +36,7 @@ export default function DiscountPlan() {
     const start = (currentPage - 1) * itemsPerPage;
     return plans.slice(start, start + itemsPerPage);
   }, [plans, currentPage]);
-
-  
-    useEffect(() => {
-      document.title = "DiscountPlan - Dreams POS";
-      loadData();
-    }, []);
+   
   
     const loadData = async () => {
       setLoading(true);

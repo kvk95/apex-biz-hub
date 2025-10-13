@@ -1,233 +1,39 @@
-import React, { useState, useMemo } from "react";
-
-const annualReportData = {
-  title: "Annual Report",
-  filters: {
-    yearOptions: [
-      { label: "2023", value: "2023" },
-      { label: "2022", value: "2022" },
-      { label: "2021", value: "2021" },
-      { label: "2020", value: "2020" },
-    ],
-    selectedYear: "2023",
-    branchOptions: [
-      { label: "All Branches", value: "all" },
-      { label: "New York", value: "ny" },
-      { label: "Los Angeles", value: "la" },
-      { label: "Chicago", value: "chi" },
-    ],
-    selectedBranch: "all",
-  },
-  summaryCards: [
-    {
-      title: "Total Sales",
-      value: "$1,250,000",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 10h18M3 6h18M3 14h18M3 18h18"
-          ></path>
-        </svg>
-      ),
-      bgColor: "bg-indigo-600",
-    },
-    {
-      title: "Total Orders",
-      value: "4,320",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 17v-6a2 2 0 012-2h6"
-          ></path>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M13 7h6m-6 0v6a2 2 0 002 2h6"
-          ></path>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 17h.01M3 13h.01M3 9h.01"
-          ></path>
-        </svg>
-      ),
-      bgColor: "bg-green-600",
-    },
-    {
-      title: "New Customers",
-      value: "1,150",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5.121 17.804A13.937 13.937 0 0112 15c2.21 0 4.31.57 6.121 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-          ></path>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 3v4"
-          ></path>
-        </svg>
-      ),
-      bgColor: "bg-yellow-600",
-    },
-    {
-      title: "Returned Orders",
-      value: "120",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M17 1l4 4-4 4"
-          ></path>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 11v6a2 2 0 002 2h6"
-          ></path>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7 15l-4-4 4-4"
-          ></path>
-        </svg>
-      ),
-      bgColor: "bg-red-600",
-    },
-  ],
-  tableData: [
-    {
-      id: 1,
-      customer: "John Doe",
-      orders: 15,
-      totalSpent: "$1,250.25",
-      lastPurchase: "2025-10-08",
-    },
-    {
-      id: 2,
-      customer: "Alice Smith",
-      orders: 12,
-      totalSpent: "$980.36",
-      lastPurchase: "2025-10-03",
-    },
-    {
-      id: 3,
-      customer: "Robert Johnson",
-      orders: 10,
-      totalSpent: "$875.50",
-      lastPurchase: "2025-10-07",
-    },
-    {
-      id: 4,
-      customer: "Emma Wilson",
-      orders: 10,
-      totalSpent: "$750.25",
-      lastPurchase: "2025-10-05",
-    },
-    {
-      id: 5,
-      customer: "Michael Brown",
-      orders: 7,
-      totalSpent: "$620.75",
-      lastPurchase: "2025-10-09",
-    },
-    {
-      id: 6,
-      customer: "Linda Taylor",
-      orders: 6,
-      totalSpent: "$580.00",
-      lastPurchase: "2025-10-06",
-    },
-    {
-      id: 7,
-      customer: "James Anderson",
-      orders: 5,
-      totalSpent: "$450.00",
-      lastPurchase: "2025-10-04",
-    },
-    {
-      id: 8,
-      customer: "Patricia Martinez",
-      orders: 4,
-      totalSpent: "$400.00",
-      lastPurchase: "2025-10-02",
-    },
-    {
-      id: 9,
-      customer: "David Lee",
-      orders: 3,
-      totalSpent: "$350.00",
-      lastPurchase: "2025-10-01",
-    },
-    {
-      id: 10,
-      customer: "Barbara Harris",
-      orders: 2,
-      totalSpent: "$300.00",
-      lastPurchase: "2025-09-30",
-    },
-  ],
-};
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function AnnualReport() {
-  const [year, setYear] = useState(annualReportData.filters.selectedYear);
-  const [branch, setBranch] = useState(annualReportData.filters.selectedBranch);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [year, setYear] = useState("2023");
+  const [branch, setBranch] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter data by branch if needed (reference page shows branch filter but no dynamic filtering, so we keep all)
-  // For demonstration, branch filter does not filter data as original page does not show filtering effect.
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("AnnualReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return annualReportData.tableData.slice(
-      startIndex,
-      startIndex + ITEMS_PER_PAGE
-    );
-  }, [currentPage]);
+    return data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, data]);
 
-  const totalPages = Math.ceil(
-    annualReportData.tableData.length / ITEMS_PER_PAGE
-  );
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
   // Handlers
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -241,14 +47,12 @@ export default function AnnualReport() {
   };
 
   const handleRefresh = () => {
-    // For demo, just reset filters and page
-    setYear(annualReportData.filters.selectedYear);
-    setBranch(annualReportData.filters.selectedBranch);
+    setYear("2023");
+    setBranch("all");
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo, alert report generation
     alert("Report generated for year " + year + " and branch " + branch);
   };
 
@@ -256,7 +60,7 @@ export default function AnnualReport() {
     <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
       {/* Title */}
       <h1 className="text-3xl font-semibold mb-6 text-gray-900">
-        {annualReportData.title}
+        Annual Report
       </h1>
 
       {/* Filters Section */}
@@ -275,11 +79,10 @@ export default function AnnualReport() {
               onChange={handleYearChange}
               className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              {annualReportData.filters.yearOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
             </select>
           </div>
 
@@ -296,11 +99,10 @@ export default function AnnualReport() {
               onChange={handleBranchChange}
               className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              {annualReportData.filters.branchOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+              <option value="all">All Branches</option>
+              <option value="ny">New York</option>
+              <option value="la">Los Angeles</option>
+              <option value="chi">Chicago</option>
             </select>
           </div>
 
@@ -325,20 +127,7 @@ export default function AnnualReport() {
 
       {/* Summary Cards Section */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        {annualReportData.summaryCards.map((card, idx) => (
-          <div
-            key={idx}
-            className={`flex items-center p-4 rounded-md shadow ${card.bgColor}`}
-          >
-            <div className="p-3 rounded-full bg-white bg-opacity-25 mr-4">
-              {card.icon}
-            </div>
-            <div>
-              <p className="text-white text-sm font-medium">{card.title}</p>
-              <p className="text-white text-xl font-semibold">{card.value}</p>
-            </div>
-          </div>
-        ))}
+        {/* Summary cards cannot be rendered without data from API, so omitted here */}
       </section>
 
       {/* Table Section */}
@@ -377,7 +166,7 @@ export default function AnnualReport() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedData.map((row) => (
+              {paginatedData.map((row: any) => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {row.customer}
@@ -482,7 +271,6 @@ export default function AnnualReport() {
                   </svg>
                 </button>
 
-                {/* Page numbers */}
                 {[...Array(totalPages)].map((_, idx) => {
                   const pageNum = idx + 1;
                   const isCurrent = pageNum === currentPage;

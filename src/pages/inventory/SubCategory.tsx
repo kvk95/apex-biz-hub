@@ -13,7 +13,7 @@ const categories = [
 export default function SubCategory() {
   // Page title as in reference page
   useEffect(() => {
-    document.title = "Sub Category | Dreams POS";
+    
   }, []);
 
   // Form state

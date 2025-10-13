@@ -34,7 +34,7 @@ const years = ["2023", "2022", "2021", "2020"];
 export default function EmployeeSalary() {
   // Page title as per reference page
   React.useEffect(() => {
-    document.title = "Employee Salary - Dreams POS";
+    
   }, []);
 
   // Form state

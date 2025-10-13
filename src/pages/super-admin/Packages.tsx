@@ -3,11 +3,7 @@ import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
-const Packages: React.FC = () => {
-  // Page title as per reference page
-  React.useEffect(() => {
-    document.title = "Packages - Dreams POS";
-  }, []);
+const Packages: React.FC = () => { 
 
   // Form state for add/edit package
   const [form, setForm] = useState({

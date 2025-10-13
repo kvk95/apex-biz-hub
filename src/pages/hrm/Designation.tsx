@@ -6,7 +6,7 @@ const ITEMS_PER_PAGE = 5;
 const Designation: React.FC = () => {
   // Page title as in reference: "Designation"
   useEffect(() => {
-    document.title = "Designation";
+    
   }, []);
 
   // Form state

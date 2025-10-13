@@ -11,7 +11,7 @@ type ExpenseCategory = {
 export default function ExpenseCategory() {
   // Page title as per reference page
   useEffect(() => {
-    document.title = "Expense Category - Dreams POS";
+    
   }, []);
 
   const [data, setData] = useState([]);

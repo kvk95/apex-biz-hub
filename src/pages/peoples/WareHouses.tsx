@@ -4,11 +4,7 @@ import { apiService } from "@/services/ApiService";
 const ITEMS_PER_PAGE = 5;
 
 export default function Warehouses() {
-  // Page title as per reference page
-  React.useEffect(() => {
-    document.title = "Warehouses - DreamsPOS";
-  }, []);
-
+ 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
 

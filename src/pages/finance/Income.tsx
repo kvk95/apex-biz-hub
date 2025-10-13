@@ -10,7 +10,7 @@ const ITEMS_PER_PAGE = 5;
 export default function Income() {
   // Page title as in reference: "Income"
   useEffect(() => {
-    document.title = "Income";
+    
   }, []);
 
   // Filters state

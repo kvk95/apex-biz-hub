@@ -104,7 +104,7 @@ const PAGE_SIZE = 5;
 export default function Profile() {
   // Page title as in reference
   React.useEffect(() => {
-    document.title = "Profile - DreamsPOS";
+    
   }, []);
 
   // Tabs state

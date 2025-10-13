@@ -1,111 +1,30 @@
-import React, { useState, useMemo } from "react";
-
-const incomeReportData = [
-  {
-    date: "2023-01-01",
-    invoiceNo: "INV-001",
-    customer: "John Doe",
-    paymentStatus: "Paid",
-    paymentMethod: "Cash",
-    totalAmount: 150.0,
-  },
-  {
-    date: "2023-01-02",
-    invoiceNo: "INV-002",
-    customer: "Alice Smith",
-    paymentStatus: "Unpaid",
-    paymentMethod: "Credit Card",
-    totalAmount: 230.5,
-  },
-  {
-    date: "2023-01-03",
-    invoiceNo: "INV-003",
-    customer: "Robert Johnson",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    totalAmount: 320.75,
-  },
-  {
-    date: "2023-01-04",
-    invoiceNo: "INV-004",
-    customer: "Emma Wilson",
-    paymentStatus: "Paid",
-    paymentMethod: "Cash",
-    totalAmount: 120.0,
-  },
-  {
-    date: "2023-01-05",
-    invoiceNo: "INV-005",
-    customer: "Michael Brown",
-    paymentStatus: "Unpaid",
-    paymentMethod: "Credit Card",
-    totalAmount: 450.0,
-  },
-  {
-    date: "2023-01-06",
-    invoiceNo: "INV-006",
-    customer: "Sophia Lee",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    totalAmount: 275.0,
-  },
-  {
-    date: "2023-01-07",
-    invoiceNo: "INV-007",
-    customer: "David Kim",
-    paymentStatus: "Paid",
-    paymentMethod: "Cash",
-    totalAmount: 180.0,
-  },
-  {
-    date: "2023-01-08",
-    invoiceNo: "INV-008",
-    customer: "Linda Martinez",
-    paymentStatus: "Unpaid",
-    paymentMethod: "Credit Card",
-    totalAmount: 390.0,
-  },
-  {
-    date: "2023-01-09",
-    invoiceNo: "INV-009",
-    customer: "James Wilson",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    totalAmount: 210.0,
-  },
-  {
-    date: "2023-01-10",
-    invoiceNo: "INV-010",
-    customer: "Patricia Taylor",
-    paymentStatus: "Paid",
-    paymentMethod: "Cash",
-    totalAmount: 160.0,
-  },
-  {
-    date: "2023-01-11",
-    invoiceNo: "INV-011",
-    customer: "Mark Anderson",
-    paymentStatus: "Unpaid",
-    paymentMethod: "Credit Card",
-    totalAmount: 280.0,
-  },
-  {
-    date: "2023-01-12",
-    invoiceNo: "INV-012",
-    customer: "Nancy Thomas",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    totalAmount: 350.0,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const paymentStatusOptions = ["All", "Paid", "Unpaid"];
 const paymentMethodOptions = ["All", "Cash", "Credit Card", "Bank Transfer"];
 
-const IncomeReport: React.FC = () => {
-  // Page title as in reference
-  React.useEffect(() => {
-    document.title = "Income Report - Dreams POS";
+const IncomeReport: React.FC = () => { 
+
+  // API state
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("IncomeReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Filters state
@@ -121,7 +40,7 @@ const IncomeReport: React.FC = () => {
 
   // Filtered data based on filters
   const filteredData = useMemo(() => {
-    return incomeReportData.filter((item) => {
+    return data.filter((item) => {
       // Filter by date range
       if (startDate && item.date < startDate) return false;
       if (endDate && item.date > endDate) return false;
@@ -143,7 +62,7 @@ const IncomeReport: React.FC = () => {
 
       return true;
     });
-  }, [startDate, endDate, paymentStatus, paymentMethod, searchInvoice]);
+  }, [data, startDate, endDate, paymentStatus, paymentMethod, searchInvoice]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -163,7 +82,7 @@ const IncomeReport: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    // For demo, just reset filters and page
+    loadData();
     handleResetFilters();
   };
 

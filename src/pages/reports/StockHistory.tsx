@@ -1,163 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const stockHistoryData = [
-  {
-    date: "2023-01-01",
-    productName: "Product A",
-    productCode: "PA001",
-    supplierName: "Supplier X",
-    purchaseQty: 100,
-    purchaseReturnQty: 5,
-    salesQty: 80,
-    salesReturnQty: 2,
-    stockQty: 113,
-    unitPrice: 10.0,
-    totalPrice: 1130.0,
-  },
-  {
-    date: "2023-01-02",
-    productName: "Product B",
-    productCode: "PB002",
-    supplierName: "Supplier Y",
-    purchaseQty: 200,
-    purchaseReturnQty: 10,
-    salesQty: 150,
-    salesReturnQty: 5,
-    stockQty: 235,
-    unitPrice: 15.0,
-    totalPrice: 3525.0,
-  },
-  {
-    date: "2023-01-03",
-    productName: "Product C",
-    productCode: "PC003",
-    supplierName: "Supplier Z",
-    purchaseQty: 50,
-    purchaseReturnQty: 0,
-    salesQty: 30,
-    salesReturnQty: 1,
-    stockQty: 21,
-    unitPrice: 20.0,
-    totalPrice: 420.0,
-  },
-  {
-    date: "2023-01-04",
-    productName: "Product D",
-    productCode: "PD004",
-    supplierName: "Supplier X",
-    purchaseQty: 300,
-    purchaseReturnQty: 20,
-    salesQty: 250,
-    salesReturnQty: 10,
-    stockQty: 320,
-    unitPrice: 8.5,
-    totalPrice: 2720.0,
-  },
-  {
-    date: "2023-01-05",
-    productName: "Product E",
-    productCode: "PE005",
-    supplierName: "Supplier Y",
-    purchaseQty: 120,
-    purchaseReturnQty: 3,
-    salesQty: 100,
-    salesReturnQty: 4,
-    stockQty: 113,
-    unitPrice: 12.0,
-    totalPrice: 1356.0,
-  },
-  {
-    date: "2023-01-06",
-    productName: "Product F",
-    productCode: "PF006",
-    supplierName: "Supplier Z",
-    purchaseQty: 80,
-    purchaseReturnQty: 2,
-    salesQty: 60,
-    salesReturnQty: 1,
-    stockQty: 57,
-    unitPrice: 18.0,
-    totalPrice: 1026.0,
-  },
-  {
-    date: "2023-01-07",
-    productName: "Product G",
-    productCode: "PG007",
-    supplierName: "Supplier X",
-    purchaseQty: 90,
-    purchaseReturnQty: 5,
-    salesQty: 70,
-    salesReturnQty: 3,
-    stockQty: 112,
-    unitPrice: 9.5,
-    totalPrice: 1064.0,
-  },
-  {
-    date: "2023-01-08",
-    productName: "Product H",
-    productCode: "PH008",
-    supplierName: "Supplier Y",
-    purchaseQty: 110,
-    purchaseReturnQty: 4,
-    salesQty: 90,
-    salesReturnQty: 2,
-    stockQty: 114,
-    unitPrice: 11.0,
-    totalPrice: 1254.0,
-  },
-  {
-    date: "2023-01-09",
-    productName: "Product I",
-    productCode: "PI009",
-    supplierName: "Supplier Z",
-    purchaseQty: 130,
-    purchaseReturnQty: 6,
-    salesQty: 110,
-    salesReturnQty: 5,
-    stockQty: 109,
-    unitPrice: 14.0,
-    totalPrice: 1526.0,
-  },
-  {
-    date: "2023-01-10",
-    productName: "Product J",
-    productCode: "PJ010",
-    supplierName: "Supplier X",
-    purchaseQty: 140,
-    purchaseReturnQty: 7,
-    salesQty: 120,
-    salesReturnQty: 6,
-    stockQty: 107,
-    unitPrice: 13.0,
-    totalPrice: 1391.0,
-  },
-  {
-    date: "2023-01-11",
-    productName: "Product K",
-    productCode: "PK011",
-    supplierName: "Supplier Y",
-    purchaseQty: 150,
-    purchaseReturnQty: 8,
-    salesQty: 130,
-    salesReturnQty: 7,
-    stockQty: 115,
-    unitPrice: 16.0,
-    totalPrice: 1840.0,
-  },
-  {
-    date: "2023-01-12",
-    productName: "Product L",
-    productCode: "PL012",
-    supplierName: "Supplier Z",
-    purchaseQty: 160,
-    purchaseReturnQty: 9,
-    salesQty: 140,
-    salesReturnQty: 8,
-    stockQty: 123,
-    unitPrice: 17.0,
-    totalPrice: 2091.0,
-  },
-];
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const suppliers = [
   { value: "", label: "Select Supplier" },
@@ -183,6 +25,26 @@ const products = [
 ];
 
 const StockHistory: React.FC = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("StockHistory");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filters state
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -195,7 +57,7 @@ const StockHistory: React.FC = () => {
 
   // Filtered data memoized
   const filteredData = useMemo(() => {
-    return stockHistoryData.filter((item) => {
+    return data.filter((item: any) => {
       const itemDate = new Date(item.date);
       const fromDate = dateFrom ? new Date(dateFrom) : null;
       const toDate = dateTo ? new Date(dateTo) : null;
@@ -206,7 +68,7 @@ const StockHistory: React.FC = () => {
       if (selectedProduct && item.productName !== selectedProduct) return false;
       return true;
     });
-  }, [dateFrom, dateTo, selectedSupplier, selectedProduct]);
+  }, [data, dateFrom, dateTo, selectedSupplier, selectedProduct]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

@@ -212,7 +212,7 @@ export default function PurchaseOrder() {
 
   // Page title
   useEffect(() => {
-    document.title = "Purchase Order - Dreams POS";
+    
   }, []);
 
   useEffect(() => {

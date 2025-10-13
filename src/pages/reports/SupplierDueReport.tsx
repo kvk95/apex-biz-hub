@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 interface SupplierDue {
   supplierName: string;
@@ -9,99 +10,6 @@ interface SupplierDue {
   totalAmount: number;
   action: string;
 }
-
-const supplierDueData: SupplierDue[] = [
-  {
-    supplierName: "Supplier One",
-    phone: "1234567890",
-    email: "supplier1@example.com",
-    dueAmount: 1500,
-    paidAmount: 5000,
-    totalAmount: 6500,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Two",
-    phone: "0987654321",
-    email: "supplier2@example.com",
-    dueAmount: 2500,
-    paidAmount: 3000,
-    totalAmount: 5500,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Three",
-    phone: "1122334455",
-    email: "supplier3@example.com",
-    dueAmount: 1000,
-    paidAmount: 4000,
-    totalAmount: 5000,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Four",
-    phone: "6677889900",
-    email: "supplier4@example.com",
-    dueAmount: 500,
-    paidAmount: 2000,
-    totalAmount: 2500,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Five",
-    phone: "4455667788",
-    email: "supplier5@example.com",
-    dueAmount: 3000,
-    paidAmount: 7000,
-    totalAmount: 10000,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Six",
-    phone: "5566778899",
-    email: "supplier6@example.com",
-    dueAmount: 1200,
-    paidAmount: 3200,
-    totalAmount: 4400,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Seven",
-    phone: "9988776655",
-    email: "supplier7@example.com",
-    dueAmount: 800,
-    paidAmount: 2200,
-    totalAmount: 3000,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Eight",
-    phone: "3344556677",
-    email: "supplier8@example.com",
-    dueAmount: 900,
-    paidAmount: 1100,
-    totalAmount: 2000,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Nine",
-    phone: "2233445566",
-    email: "supplier9@example.com",
-    dueAmount: 600,
-    paidAmount: 1400,
-    totalAmount: 2000,
-    action: "View",
-  },
-  {
-    supplierName: "Supplier Ten",
-    phone: "7788990011",
-    email: "supplier10@example.com",
-    dueAmount: 1100,
-    paidAmount: 3900,
-    totalAmount: 5000,
-    action: "View",
-  },
-];
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -114,9 +22,29 @@ const SupplierDueReport: React.FC = () => {
   const [pageSize, setPageSize] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [data, setData] = useState<SupplierDue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<SupplierDue[]>("SupplierDueReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter data based on inputs
   const filteredData = useMemo(() => {
-    return supplierDueData.filter((item) => {
+    return data.filter((item) => {
       const matchesSupplierName = item.supplierName
         .toLowerCase()
         .includes(supplierName.toLowerCase());
@@ -128,7 +56,7 @@ const SupplierDueReport: React.FC = () => {
 
       return matchesSupplierName && matchesPhone && matchesEmail;
     });
-  }, [supplierName, phone, email]);
+  }, [supplierName, phone, email, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / pageSize);

@@ -18,11 +18,7 @@ const STATUS_OPTIONS = ["Active", "Inactive"];
 
 const PAGE_SIZE = 5;
 
-export default function Stores() {
-  // Page title as in reference page
-  useEffect(() => {
-    document.title = "Stores - Dreams POS";
-  }, []);
+export default function Stores() { 
 
   const [data, setData] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);

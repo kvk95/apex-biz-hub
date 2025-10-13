@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
 
 type Expense = {
   id: number;
@@ -20,112 +21,9 @@ const expenseHeads = [
 
 const paymentTypes = ["Cash", "Cheque", "Card", "Online"];
 
-const initialExpenses: Expense[] = [
-  {
-    id: 1,
-    date: "2023-08-01",
-    expenseHead: "Office Rent",
-    paymentType: "Cheque",
-    amount: 1200,
-    description: "Monthly office rent payment",
-  },
-  {
-    id: 2,
-    date: "2023-08-03",
-    expenseHead: "Electricity Bill",
-    paymentType: "Online",
-    amount: 300,
-    description: "Electricity bill for July",
-  },
-  {
-    id: 3,
-    date: "2023-08-05",
-    expenseHead: "Internet Bill",
-    paymentType: "Card",
-    amount: 150,
-    description: "Monthly internet subscription",
-  },
-  {
-    id: 4,
-    date: "2023-08-10",
-    expenseHead: "Travel Expenses",
-    paymentType: "Cash",
-    amount: 75,
-    description: "Taxi fare for client meeting",
-  },
-  {
-    id: 5,
-    date: "2023-08-12",
-    expenseHead: "Stationery",
-    paymentType: "Cash",
-    amount: 45,
-    description: "Office stationery purchase",
-  },
-  {
-    id: 6,
-    date: "2023-08-15",
-    expenseHead: "Miscellaneous",
-    paymentType: "Cheque",
-    amount: 100,
-    description: "Miscellaneous office expenses",
-  },
-  {
-    id: 7,
-    date: "2023-08-18",
-    expenseHead: "Office Rent",
-    paymentType: "Cheque",
-    amount: 1200,
-    description: "Monthly office rent payment",
-  },
-  {
-    id: 8,
-    date: "2023-08-20",
-    expenseHead: "Electricity Bill",
-    paymentType: "Online",
-    amount: 310,
-    description: "Electricity bill for August",
-  },
-  {
-    id: 9,
-    date: "2023-08-22",
-    expenseHead: "Internet Bill",
-    paymentType: "Card",
-    amount: 160,
-    description: "Monthly internet subscription",
-  },
-  {
-    id: 10,
-    date: "2023-08-25",
-    expenseHead: "Travel Expenses",
-    paymentType: "Cash",
-    amount: 90,
-    description: "Taxi fare for office supplies",
-  },
-  {
-    id: 11,
-    date: "2023-08-28",
-    expenseHead: "Stationery",
-    paymentType: "Cash",
-    amount: 60,
-    description: "Office stationery purchase",
-  },
-  {
-    id: 12,
-    date: "2023-08-30",
-    expenseHead: "Miscellaneous",
-    paymentType: "Cheque",
-    amount: 120,
-    description: "Miscellaneous office expenses",
-  },
-];
-
 const PAGE_SIZE = 5;
 
-export default function ExpenseReport() {
-  // Title as per reference page
-  React.useEffect(() => {
-    document.title = "Expense Report";
-  }, []);
+export default function ExpenseReport() { 
 
   // State for form inputs
   const [date, setDate] = useState("");
@@ -135,7 +33,27 @@ export default function ExpenseReport() {
   const [description, setDescription] = useState("");
 
   // Expenses state
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ExpenseReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setExpenses(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -231,7 +149,7 @@ export default function ExpenseReport() {
 
   const handleRefresh = () => {
     if (window.confirm("Are you sure you want to refresh and reset all data?")) {
-      setExpenses(initialExpenses);
+      loadData();
       resetForm();
       setCurrentPage(1);
     }
@@ -402,50 +320,57 @@ export default function ExpenseReport() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {paginatedExpenses.length === 0 && (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
+                    Loading...
+                  </td>
+                </tr>
+              ) : paginatedExpenses.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-4 text-gray-500">
                     No expenses found.
                   </td>
                 </tr>
+              ) : (
+                paginatedExpenses.map((exp) => (
+                  <tr key={exp.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                      {exp.date}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                      {exp.expenseHead}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                      {exp.paymentType}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700 text-right">
+                      ${exp.amount.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                      {exp.description}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-center text-sm space-x-2">
+                      <button
+                        onClick={() => handleEdit(exp.id)}
+                        className="text-indigo-600 hover:text-indigo-900 font-semibold focus:outline-none"
+                        aria-label={`Edit expense ${exp.id}`}
+                        title="Edit"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exp.id)}
+                        className="text-red-600 hover:text-red-900 font-semibold focus:outline-none"
+                        aria-label={`Delete expense ${exp.id}`}
+                        title="Delete"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
-              {paginatedExpenses.map((exp) => (
-                <tr key={exp.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {exp.date}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {exp.expenseHead}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {exp.paymentType}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700 text-right">
-                    ${exp.amount.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {exp.description}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-center text-sm space-x-2">
-                    <button
-                      onClick={() => handleEdit(exp.id)}
-                      className="text-indigo-600 hover:text-indigo-900 font-semibold focus:outline-none"
-                      aria-label={`Edit expense ${exp.id}`}
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(exp.id)}
-                      className="text-red-600 hover:text-red-900 font-semibold focus:outline-none"
-                      aria-label={`Delete expense ${exp.id}`}
-                      title="Delete"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
             </tbody>
             <tfoot>
               <tr className="bg-gray-100 font-semibold text-gray-800">

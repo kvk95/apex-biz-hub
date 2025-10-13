@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
 
@@ -164,7 +163,7 @@ export default function Brands() {
 
   // Title as per reference page
   useEffect(() => {
-    document.title = "Brands - Dreams POS";
+    
   }, []);
 
   useEffect(() => {

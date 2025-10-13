@@ -23,12 +23,7 @@ const Preference: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
-
-  // Page title
-  useEffect(() => {
-    document.title = "Preference";
-  }, []);
+  }, []); 
 
   // General Settings state
   const [companyName, setCompanyName] = useState("");

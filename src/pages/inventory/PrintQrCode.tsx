@@ -27,7 +27,7 @@ const PrintQrCode: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    document.title = "Print QR Code";
+    
   }, []);
 
   const [search, setSearch] = useState("");

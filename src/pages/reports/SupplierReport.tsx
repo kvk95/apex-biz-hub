@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 type SupplierData = {
   supplierName: string;
@@ -14,142 +15,13 @@ type SupplierData = {
   dueAmount: number;
 };
 
-const supplierDataJSON: SupplierData[] = [
-  {
-    supplierName: "Supplier 1",
-    supplierCode: "SUP001",
-    contactPerson: "John Doe",
-    phone: "123-456-7890",
-    email: "supplier1@example.com",
-    address: "123 Main St",
-    city: "New York",
-    country: "USA",
-    totalPurchase: 10000,
-    paidAmount: 7000,
-    dueAmount: 3000,
-  },
-  {
-    supplierName: "Supplier 2",
-    supplierCode: "SUP002",
-    contactPerson: "Jane Smith",
-    phone: "234-567-8901",
-    email: "supplier2@example.com",
-    address: "456 Market St",
-    city: "Los Angeles",
-    country: "USA",
-    totalPurchase: 15000,
-    paidAmount: 15000,
-    dueAmount: 0,
-  },
-  {
-    supplierName: "Supplier 3",
-    supplierCode: "SUP003",
-    contactPerson: "Alice Johnson",
-    phone: "345-678-9012",
-    email: "supplier3@example.com",
-    address: "789 Broadway",
-    city: "Chicago",
-    country: "USA",
-    totalPurchase: 20000,
-    paidAmount: 12000,
-    dueAmount: 8000,
-  },
-  {
-    supplierName: "Supplier 4",
-    supplierCode: "SUP004",
-    contactPerson: "Bob Brown",
-    phone: "456-789-0123",
-    email: "supplier4@example.com",
-    address: "321 Center Rd",
-    city: "Houston",
-    country: "USA",
-    totalPurchase: 5000,
-    paidAmount: 5000,
-    dueAmount: 0,
-  },
-  {
-    supplierName: "Supplier 5",
-    supplierCode: "SUP005",
-    contactPerson: "Carol White",
-    phone: "567-890-1234",
-    email: "supplier5@example.com",
-    address: "654 Lakeview Dr",
-    city: "Phoenix",
-    country: "USA",
-    totalPurchase: 12000,
-    paidAmount: 9000,
-    dueAmount: 3000,
-  },
-  {
-    supplierName: "Supplier 6",
-    supplierCode: "SUP006",
-    contactPerson: "David Green",
-    phone: "678-901-2345",
-    email: "supplier6@example.com",
-    address: "987 Hill St",
-    city: "Philadelphia",
-    country: "USA",
-    totalPurchase: 8000,
-    paidAmount: 8000,
-    dueAmount: 0,
-  },
-  {
-    supplierName: "Supplier 7",
-    supplierCode: "SUP007",
-    contactPerson: "Eva Black",
-    phone: "789-012-3456",
-    email: "supplier7@example.com",
-    address: "159 River Rd",
-    city: "San Antonio",
-    country: "USA",
-    totalPurchase: 11000,
-    paidAmount: 6000,
-    dueAmount: 5000,
-  },
-  {
-    supplierName: "Supplier 8",
-    supplierCode: "SUP008",
-    contactPerson: "Frank Blue",
-    phone: "890-123-4567",
-    email: "supplier8@example.com",
-    address: "753 Oak Ln",
-    city: "San Diego",
-    country: "USA",
-    totalPurchase: 9000,
-    paidAmount: 9000,
-    dueAmount: 0,
-  },
-  {
-    supplierName: "Supplier 9",
-    supplierCode: "SUP009",
-    contactPerson: "Grace Yellow",
-    phone: "901-234-5678",
-    email: "supplier9@example.com",
-    address: "852 Pine St",
-    city: "Dallas",
-    country: "USA",
-    totalPurchase: 13000,
-    paidAmount: 11000,
-    dueAmount: 2000,
-  },
-  {
-    supplierName: "Supplier 10",
-    supplierCode: "SUP010",
-    contactPerson: "Henry Orange",
-    phone: "012-345-6789",
-    email: "supplier10@example.com",
-    address: "951 Cedar Ave",
-    city: "San Jose",
-    country: "USA",
-    totalPurchase: 14000,
-    paidAmount: 14000,
-    dueAmount: 0,
-  },
-];
-
 const ITEMS_PER_PAGE = 5;
 
 const SupplierReport: React.FC = () => {
+  const [data, setData] = useState<SupplierData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchSupplier, setSearchSupplier] = useState("");
   const [searchCode, setSearchCode] = useState("");
   const [searchContact, setSearchContact] = useState("");
@@ -159,9 +31,24 @@ const SupplierReport: React.FC = () => {
   const [searchCountry, setSearchCountry] = useState("");
   const [page, setPage] = useState(1);
 
-  // Filtered and paginated data
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<SupplierData[]>("SupplierReport");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const filteredData = useMemo(() => {
-    return supplierDataJSON.filter((item) => {
+    return data.filter((item) => {
       return (
         item.supplierName.toLowerCase().includes(searchSupplier.toLowerCase()) &&
         item.supplierCode.toLowerCase().includes(searchCode.toLowerCase()) &&
@@ -173,6 +60,7 @@ const SupplierReport: React.FC = () => {
       );
     });
   }, [
+    data,
     searchSupplier,
     searchCode,
     searchContact,
@@ -189,14 +77,12 @@ const SupplierReport: React.FC = () => {
     return filteredData.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredData, page]);
 
-  // Reset page to 1 if filteredData changes and current page is out of range
   React.useEffect(() => {
     if (page > totalPages) {
       setPage(1);
     }
   }, [totalPages, page]);
 
-  // Handlers for buttons (Report, Refresh)
   const handleReport = () => {
     alert("Report generated (simulated).");
   };
