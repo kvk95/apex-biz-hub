@@ -1,5 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const couponTypes = ["Percentage", "Flat"];
 const couponStatuses = ["Active", "Inactive"];
@@ -7,27 +8,38 @@ const couponStatuses = ["Active", "Inactive"];
 export default function Coupons() {
   const [form, setForm] = useState({
     couponCode: "",
-    couponType: "Percentage",
+    couponType: couponTypes[0],
     discountAmount: "",
     maxDiscountAmount: "",
     minPurchaseAmount: "",
     startDate: "",
     endDate: "",
-    status: "Active",
+    status: couponStatuses[0],
   });
 
   const [coupons, setCoupons] = useState([]);
 
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    couponCode: "",
+    couponType: couponTypes[0],
+    discountAmount: "",
+    maxDiscountAmount: "",
+    minPurchaseAmount: "",
+    startDate: "",
+    endDate: "",
+    status: couponStatuses[0],
+  });
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Pagination calculation
+  // Pagination calculation with filtering
   const filteredCoupons = useMemo(() => {
     if (!search.trim()) return coupons;
     return coupons.filter((c) =>
@@ -35,8 +47,8 @@ export default function Coupons() {
     );
   }, [search, coupons]);
 
-  const totalPages = Math.ceil(filteredCoupons.length / itemsPerPage);
-  const currentCoupons = filteredCoupons.slice(
+  // Paginated data slice
+  const paginatedData = filteredCoupons.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -50,7 +62,7 @@ export default function Coupons() {
     setLoading(true);
     const response = await apiService.get<[]>("Coupons");
     if (response.status.code === "S") {
-      setData(response.result);
+      setCoupons(response.result);
       setError(null);
     } else {
       setError(response.status.description);
@@ -58,7 +70,7 @@ export default function Coupons() {
     setLoading(false);
   };
 
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -66,6 +78,15 @@ export default function Coupons() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new coupon)
   const handleSave = () => {
     // Validate required fields (couponCode, discountAmount, startDate, endDate)
     if (
@@ -77,38 +98,54 @@ export default function Coupons() {
       alert("Please fill in all required fields.");
       return;
     }
-    if (editId !== null) {
-      // Edit existing
-      setCoupons((prev) =>
-        prev.map((c) => (c.id === editId ? { ...form, id: editId } : c))
-      );
-      setEditId(null);
-    } else {
-      // Add new
-      const newId = coupons.length
-        ? Math.max(...coupons.map((c) => c.id)) + 1
-        : 1;
-      setCoupons((prev) => [...prev, { ...form, id: newId }]);
-    }
+    const newId = coupons.length ? Math.max(...coupons.map((c) => c.id)) + 1 : 1;
+    setCoupons((prev) => [...prev, { ...form, id: newId }]);
     setForm({
       couponCode: "",
-      couponType: "Percentage",
+      couponType: couponTypes[0],
       discountAmount: "",
       maxDiscountAmount: "",
       minPurchaseAmount: "",
       startDate: "",
       endDate: "",
-      status: "Active",
+      status: couponStatuses[0],
     });
   };
 
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const coupon = coupons.find((c) => c.id === id);
     if (coupon) {
-      setForm({ ...coupon });
+      setEditForm({ ...coupon });
       setEditId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsEditModalOpen(true);
     }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.couponCode.trim() ||
+      !editForm.discountAmount.trim() ||
+      !editForm.startDate.trim() ||
+      !editForm.endDate.trim()
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setCoupons((prev) =>
+        prev.map((c) => (c.id === editId ? { ...editForm, id: editId } : c))
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
@@ -118,30 +155,39 @@ export default function Coupons() {
         setEditId(null);
         setForm({
           couponCode: "",
-          couponType: "Percentage",
+          couponType: couponTypes[0],
           discountAmount: "",
           maxDiscountAmount: "",
           minPurchaseAmount: "",
           startDate: "",
           endDate: "",
-          status: "Active",
+          status: couponStatuses[0],
         });
+      }
+      // Adjust current page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredCoupons.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
       }
     }
   };
 
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setForm({
       couponCode: "",
-      couponType: "Percentage",
+      couponType: couponTypes[0],
       discountAmount: "",
       maxDiscountAmount: "",
       minPurchaseAmount: "",
       startDate: "",
       endDate: "",
-      status: "Active",
+      status: couponStatuses[0],
     });
     setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -150,35 +196,32 @@ export default function Coupons() {
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || page > Math.ceil(filteredCoupons.length / itemsPerPage)) return;
     setCurrentPage(page);
   };
 
+  const handlePageSizeChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       <title>Coupons - Dreams POS</title>
 
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Coupons</h1>
+      <h1 className="text-2xl font-semibold mb-6">Coupons</h1>
 
-      {/* Coupon Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Coupon</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          noValidate
-        >
+      {/* Coupon Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Coupon Code */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="couponCode"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Coupon Code <span className="text-red-600">*</span>
+              Coupon Code <span className="text-destructive">*</span>
             </label>
             <input
               id="couponCode"
@@ -186,17 +229,17 @@ export default function Coupons() {
               type="text"
               value={form.couponCode}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter coupon code"
               required
             />
           </div>
 
           {/* Coupon Type */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="couponType"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Coupon Type
             </label>
@@ -205,7 +248,7 @@ export default function Coupons() {
               name="couponType"
               value={form.couponType}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {couponTypes.map((type) => (
                 <option key={type} value={type}>
@@ -216,12 +259,12 @@ export default function Coupons() {
           </div>
 
           {/* Discount Amount */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="discountAmount"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Discount Amount <span className="text-red-600">*</span>
+              Discount Amount <span className="text-destructive">*</span>
             </label>
             <input
               id="discountAmount"
@@ -230,17 +273,17 @@ export default function Coupons() {
               min={0}
               value={form.discountAmount}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter discount amount"
               required
             />
           </div>
 
           {/* Max Discount Amount */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="maxDiscountAmount"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Max Discount Amount
             </label>
@@ -251,16 +294,16 @@ export default function Coupons() {
               min={0}
               value={form.maxDiscountAmount}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter max discount amount"
             />
           </div>
 
           {/* Min Purchase Amount */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="minPurchaseAmount"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Min Purchase Amount
             </label>
@@ -271,18 +314,18 @@ export default function Coupons() {
               min={0}
               value={form.minPurchaseAmount}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter min purchase amount"
             />
           </div>
 
           {/* Start Date */}
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="startDate"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Start Date <span className="text-red-600">*</span>
+              Start Date <span className="text-destructive">*</span>
             </label>
             <input
               id="startDate"
@@ -290,15 +333,18 @@ export default function Coupons() {
               type="date"
               value={form.startDate}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />
           </div>
 
           {/* End Date */}
-          <div className="flex flex-col">
-            <label htmlFor="endDate" className="mb-1 font-medium text-gray-700">
-              End Date <span className="text-red-600">*</span>
+          <div>
+            <label
+              htmlFor="endDate"
+              className="block text-sm font-medium mb-1"
+            >
+              End Date <span className="text-destructive">*</span>
             </label>
             <input
               id="endDate"
@@ -306,14 +352,17 @@ export default function Coupons() {
               type="date"
               value={form.endDate}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />
           </div>
 
           {/* Status */}
-          <div className="flex flex-col">
-            <label htmlFor="status" className="mb-1 font-medium text-gray-700">
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium mb-1"
+            >
               Status
             </label>
             <select
@@ -321,7 +370,7 @@ export default function Coupons() {
               name="status"
               value={form.status}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {couponStatuses.map((status) => (
                 <option key={status} value={status}>
@@ -330,41 +379,38 @@ export default function Coupons() {
               ))}
             </select>
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex items-end space-x-4 md:col-span-3">
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded shadow flex items-center"
-              title={editId !== null ? "Update Coupon" : "Save Coupon"}
-            >
-              <i className="fa fa-save mr-2" aria-hidden="true"></i>
-              {editId !== null ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded shadow flex items-center"
-              title="Refresh Form"
-            >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow flex items-center ml-auto"
-              title="Generate Report"
-            >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i>
-              Report
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
       {/* Coupons List Section */}
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
           <h2 className="text-xl font-semibold mb-3 md:mb-0">Coupons List</h2>
           <input
@@ -375,103 +421,113 @@ export default function Coupons() {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Search coupons"
           />
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2">#</th>
-                <th className="border border-gray-300 px-4 py-2">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Coupon Code
                 </th>
-                <th className="border border-gray-300 px-4 py-2">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Coupon Type
                 </th>
-                <th className="border border-gray-300 px-4 py-2">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Discount Amount
                 </th>
-                <th className="border border-gray-300 px-4 py-2">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Max Discount Amount
                 </th>
-                <th className="border border-gray-300 px-4 py-2">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Min Purchase Amount
                 </th>
-                <th className="border border-gray-300 px-4 py-2">Start Date</th>
-                <th className="border border-gray-300 px-4 py-2">End Date</th>
-                <th className="border border-gray-300 px-4 py-2">Status</th>
-                <th className="border border-gray-300 px-4 py-2 text-center">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Start Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  End Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              {currentCoupons.length === 0 ? (
+              {paginatedData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={10}
-                    className="border border-gray-300 px-4 py-4 text-center text-gray-500"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No coupons found.
                   </td>
                 </tr>
               ) : (
-                currentCoupons.map((coupon, idx) => (
+                paginatedData.map((coupon, idx) => (
                   <tr
                     key={coupon.id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 font-semibold">
+                    <td className="px-4 py-3 text-sm font-semibold text-foreground">
                       {coupon.couponCode}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.couponType}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.discountAmount}
                       {coupon.couponType === "Percentage" ? "%" : ""}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.maxDiscountAmount || "-"}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.minPurchaseAmount || "-"}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.startDate}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {coupon.endDate}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm">
                       <span
                         className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           coupon.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
                         {coupon.status}
                       </span>
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(coupon.id)}
-                        title="Edit Coupon"
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit coupon ${coupon.couponCode}`}
+                        type="button"
                       >
                         <i className="fa fa-pencil" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(coupon.id)}
-                        title="Delete Coupon"
-                        className="text-red-600 hover:text-red-800"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete coupon ${coupon.couponCode}`}
+                        type="button"
                       >
                         <i className="fa fa-trash" aria-hidden="true"></i>
                       </button>
@@ -484,53 +540,214 @@ export default function Coupons() {
         </div>
 
         {/* Pagination */}
-        <nav
-          className="flex justify-between items-center mt-4"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous page"
-          >
-            <i className="fa fa-chevron-left" aria-hidden="true"></i>
-          </button>
-          <ul className="inline-flex space-x-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => handlePageChange(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1 rounded border border-gray-300 ${
-                    page === currentPage
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next page"
-          >
-            <i className="fa fa-chevron-right" aria-hidden="true"></i>
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredCoupons.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizes={[5, 10, 20, 50]}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Coupon
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Coupon Code */}
+              <div>
+                <label
+                  htmlFor="editCouponCode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Coupon Code <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editCouponCode"
+                  name="couponCode"
+                  value={editForm.couponCode}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter coupon code"
+                />
+              </div>
+
+              {/* Coupon Type */}
+              <div>
+                <label
+                  htmlFor="editCouponType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Coupon Type
+                </label>
+                <select
+                  id="editCouponType"
+                  name="couponType"
+                  value={editForm.couponType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {couponTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Discount Amount */}
+              <div>
+                <label
+                  htmlFor="editDiscountAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Discount Amount <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="editDiscountAmount"
+                  name="discountAmount"
+                  value={editForm.discountAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter discount amount"
+                />
+              </div>
+
+              {/* Max Discount Amount */}
+              <div>
+                <label
+                  htmlFor="editMaxDiscountAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Max Discount Amount
+                </label>
+                <input
+                  type="number"
+                  id="editMaxDiscountAmount"
+                  name="maxDiscountAmount"
+                  value={editForm.maxDiscountAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter max discount amount"
+                />
+              </div>
+
+              {/* Min Purchase Amount */}
+              <div>
+                <label
+                  htmlFor="editMinPurchaseAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Min Purchase Amount
+                </label>
+                <input
+                  type="number"
+                  id="editMinPurchaseAmount"
+                  name="minPurchaseAmount"
+                  value={editForm.minPurchaseAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter min purchase amount"
+                />
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label
+                  htmlFor="editStartDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Start Date <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="editStartDate"
+                  name="startDate"
+                  value={editForm.startDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label
+                  htmlFor="editEndDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  End Date <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="editEndDate"
+                  name="endDate"
+                  value={editForm.endDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {couponStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,14 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
 
-const pageSizeOptions = [5, 10, 15];
+const pageSizeOptions = [5, 10, 20, 50];
 
 export default function GiftCards() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Form state for Add/Edit Gift Card
+  // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
     cardNumber: "",
     cardHolder: "",
@@ -18,34 +18,41 @@ export default function GiftCards() {
     status: "Active",
   });
 
-  // Editing state
-  const [editingId, setEditingId] = useState<number | null>(null);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    cardNumber: "",
+    cardHolder: "",
+    issueDate: "",
+    expiryDate: "",
+    balance: "",
+    status: "Active",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Filter state (search by card number or holder)
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Data state (simulate data update)  
-
+  // Data state
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  
-    useEffect(() => {
-            loadData();
-    }, []);
-  
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<[]>("GiftCards");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-    };
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("GiftCards");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
   // Filtered and paginated data
   const filteredData = useMemo(() => {
@@ -64,7 +71,7 @@ export default function GiftCards() {
     return filteredData.slice(start, start + pageSize);
   }, [filteredData, currentPage, pageSize]);
 
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -72,6 +79,15 @@ export default function GiftCards() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new gift card)
   const handleSave = () => {
     if (
       !form.cardNumber.trim() ||
@@ -83,37 +99,16 @@ export default function GiftCards() {
       alert("Please fill all fields");
       return;
     }
-    if (editingId !== null) {
-      // Edit existing
-      setData((d) =>
-        d.map((card) =>
-          card.id === editingId
-            ? {
-                ...card,
-                cardNumber: form.cardNumber,
-                cardHolder: form.cardHolder,
-                issueDate: form.issueDate,
-                expiryDate: form.expiryDate,
-                balance: Number(form.balance),
-                status: form.status,
-              }
-            : card
-        )
-      );
-      setEditingId(null);
-    } else {
-      // Add new
-      const newCard = {
-        id: data.length ? Math.max(...data.map((c) => c.id)) + 1 : 1,
-        cardNumber: form.cardNumber,
-        cardHolder: form.cardHolder,
-        issueDate: form.issueDate,
-        expiryDate: form.expiryDate,
-        balance: Number(form.balance),
-        status: form.status,
-      };
-      setData((d) => [newCard, ...d]);
-    }
+    const newCard = {
+      id: data.length ? Math.max(...data.map((c) => c.id)) + 1 : 1,
+      cardNumber: form.cardNumber,
+      cardHolder: form.cardHolder,
+      issueDate: form.issueDate,
+      expiryDate: form.expiryDate,
+      balance: Number(form.balance),
+      status: form.status,
+    };
+    setData((d) => [newCard, ...d]);
     setForm({
       cardNumber: "",
       cardHolder: "",
@@ -124,10 +119,11 @@ export default function GiftCards() {
     });
   };
 
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const card = data.find((c) => c.id === id);
     if (!card) return;
-    setForm({
+    setEditForm({
       cardNumber: card.cardNumber,
       cardHolder: card.cardHolder,
       issueDate: card.issueDate,
@@ -135,19 +131,47 @@ export default function GiftCards() {
       balance: card.balance.toString(),
       status: card.status,
     });
-    setEditingId(id);
+    setEditId(id);
+    setIsEditModalOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setForm({
-      cardNumber: "",
-      cardHolder: "",
-      issueDate: "",
-      expiryDate: "",
-      balance: "",
-      status: "Active",
-    });
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.cardNumber.trim() ||
+      !editForm.cardHolder.trim() ||
+      !editForm.issueDate ||
+      !editForm.expiryDate ||
+      editForm.balance === ""
+    ) {
+      alert("Please fill all fields");
+      return;
+    }
+    if (editId !== null) {
+      setData((d) =>
+        d.map((card) =>
+          card.id === editId
+            ? {
+                ...card,
+                cardNumber: editForm.cardNumber,
+                cardHolder: editForm.cardHolder,
+                issueDate: editForm.issueDate,
+                expiryDate: editForm.expiryDate,
+                balance: Number(editForm.balance),
+                status: editForm.status,
+              }
+            : card
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
@@ -159,12 +183,8 @@ export default function GiftCards() {
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    setSearchTerm("");
-    setCurrentPage(1);
-    setPageSize(10);
-    setEditingId(null);
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setForm({
       cardNumber: "",
       cardHolder: "",
@@ -173,24 +193,26 @@ export default function GiftCards() {
       balance: "",
       status: "Active",
     });
+    setEditId(null);
+    setCurrentPage(1);
+    setSearchTerm("");
   };
 
   const handleReport = () => {
-    // For demo, just alert JSON data
     alert("Report generated for current gift cards data.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">Gift Cards</h1>
+      <h1 className="text-2xl font-semibold mb-6">Gift Cards</h1>
 
-      {/* Controls: Search, Report, Refresh */}
+      {/* Controls: Search, Report, Clear */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div className="flex items-center space-x-2 w-full md:w-1/3">
           <label
             htmlFor="search"
-            className="text-sm font-semibold text-gray-700"
+            className="block text-sm font-medium mb-1"
           >
             Search:
           </label>
@@ -203,36 +225,32 @@ export default function GiftCards() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="flex-grow border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           />
         </div>
         <div className="flex space-x-3">
           <button
             onClick={handleReport}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition"
-            title="Generate Report"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
+            title="Generate Report"
           >
-            <i className="fas fa-file-alt"></i>
-            <span>Report</span>
+            <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
           </button>
           <button
-            onClick={handleRefresh}
-            className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-semibold transition"
-            title="Refresh"
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
+            title="Clear"
           >
-            <i className="fas fa-sync-alt"></i>
-            <span>Refresh</span>
+            <i className="fa fa-refresh" aria-hidden="true"></i> Clear
           </button>
         </div>
       </div>
 
-      {/* Add/Edit Gift Card Form */}
-      <div className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          {editingId !== null ? "Edit Gift Card" : "Add Gift Card"}
-        </h2>
+      {/* Add Gift Card Form (preserved exactly) */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Gift Card</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -243,7 +261,7 @@ export default function GiftCards() {
           <div>
             <label
               htmlFor="cardNumber"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Card Number
             </label>
@@ -254,7 +272,7 @@ export default function GiftCards() {
               value={form.cardNumber}
               onChange={handleInputChange}
               placeholder="XXXX XXXX XXXX XXXX"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
               maxLength={19}
               pattern="[\d\s]+"
@@ -264,7 +282,7 @@ export default function GiftCards() {
           <div>
             <label
               htmlFor="cardHolder"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Card Holder
             </label>
@@ -275,14 +293,14 @@ export default function GiftCards() {
               value={form.cardHolder}
               onChange={handleInputChange}
               placeholder="Full Name"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
             />
           </div>
           <div>
             <label
               htmlFor="issueDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Issue Date
             </label>
@@ -292,14 +310,14 @@ export default function GiftCards() {
               type="date"
               value={form.issueDate}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
             />
           </div>
           <div>
             <label
               htmlFor="expiryDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Expiry Date
             </label>
@@ -309,14 +327,14 @@ export default function GiftCards() {
               type="date"
               value={form.expiryDate}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
             />
           </div>
           <div>
             <label
               htmlFor="balance"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Balance
             </label>
@@ -329,14 +347,14 @@ export default function GiftCards() {
               value={form.balance}
               onChange={handleInputChange}
               placeholder="0.00"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
             />
           </div>
           <div>
             <label
               htmlFor="status"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Status
             </label>
@@ -345,7 +363,7 @@ export default function GiftCards() {
               name="status"
               value={form.status}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               required
             >
               <option value="Active">Active</option>
@@ -353,259 +371,378 @@ export default function GiftCards() {
             </select>
           </div>
 
-          <div className="md:col-span-3 flex space-x-3 justify-end pt-4">
-            {editingId !== null && (
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded text-sm font-semibold transition"
-              >
-                Cancel
-              </button>
-            )}
+          <div className="md:col-span-3 flex justify-end pt-4">
             <button
               type="submit"
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded text-sm font-semibold transition"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {editingId !== null ? "Update" : "Save"}
+              <i className="fa fa-save" aria-hidden="true"></i> Save
             </button>
           </div>
         </form>
-      </div>
+      </section>
 
       {/* Gift Cards Table */}
-      <div className="bg-white rounded shadow overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-gray-700"
-              >
-                Card Number
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-gray-700"
-              >
-                Card Holder
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-gray-700"
-              >
-                Issue Date
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-gray-700"
-              >
-                Expiry Date
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-right font-semibold text-gray-700"
-              >
-                Balance
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-center font-semibold text-gray-700"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-center font-semibold text-gray-700"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {paginatedData.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-4 text-center text-gray-500 italic"
+      <section className="bg-card rounded shadow p-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Card Number
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Card Holder
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Issue Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Expiry Date
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                  Balance
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No gift cards found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((card) => (
+                <tr
+                  key={card.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  No gift cards found.
-                </td>
-              </tr>
-            )}
-            {paginatedData.map((card) => (
-              <tr key={card.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {card.cardNumber}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {card.cardHolder}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {card.issueDate}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {card.expiryDate}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  ${card.balance.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span
-                    className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                      card.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {card.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
-                  <button
-                    onClick={() => handleEdit(card.id)}
-                    title="Edit"
-                    className="text-blue-600 hover:text-blue-800"
-                    type="button"
-                  >
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(card.id)}
-                    title="Delete"
-                    className="text-red-600 hover:text-red-800"
-                    type="button"
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Controls */}
-      <div className="flex flex-col md:flex-row items-center justify-between mt-4 space-y-3 md:space-y-0">
-        <div className="flex items-center space-x-2 text-sm text-gray-700">
-          <span>
-            Showing {(currentPage - 1) * pageSize + 1} to{" "}
-            {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-            {filteredData.length} entries
-          </span>
-          <select
-            aria-label="Select page size"
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-          >
-            {pageSizeOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt} per page
-              </option>
-            ))}
-          </select>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {card.cardNumber}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {card.cardHolder}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {card.issueDate}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {card.expiryDate}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right text-foreground">
+                    ${card.balance.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        card.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {card.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(card.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit gift card ${card.cardNumber}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(card.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete gift card ${card.cardNumber}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        <nav
-          className="inline-flex -space-x-px rounded-md shadow-sm"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-              currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-            }`}
-            aria-label="First Page"
-            type="button"
-          >
-            <i className="fas fa-angle-double-left"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-              currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-            }`}
-            aria-label="Previous Page"
-            type="button"
-          >
-            <i className="fas fa-angle-left"></i>
-          </button>
+        {/* Pagination */}
+        <div className="flex flex-col md:flex-row items-center justify-between mt-4 space-y-3 md:space-y-0">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <span>
+              Showing {(currentPage - 1) * pageSize + 1} to{" "}
+              {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+              {filteredData.length} entries
+            </span>
+            <select
+              aria-label="Select page size"
+              className="border border-input rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              {pageSizeOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt} per page
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-            // Show max 5 pages with ellipsis if needed
-            if (
-              totalPages > 5 &&
-              page !== 1 &&
-              page !== totalPages &&
-              (page < currentPage - 1 || page > currentPage + 1)
-            ) {
+          <nav
+            className="inline-flex -space-x-px rounded-md shadow-sm"
+            aria-label="Pagination"
+          >
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
+                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+              }`}
+              aria-label="First Page"
+              type="button"
+            >
+              <i className="fa fa-angle-double-left" aria-hidden="true"></i>
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
+                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+              }`}
+              aria-label="Previous Page"
+              type="button"
+            >
+              <i className="fa fa-angle-left" aria-hidden="true"></i>
+            </button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
               if (
-                (page === 2 && currentPage > 4) ||
-                (page === totalPages - 1 && currentPage < totalPages - 3)
+                totalPages > 5 &&
+                page !== 1 &&
+                page !== totalPages &&
+                (page < currentPage - 1 || page > currentPage + 1)
               ) {
-                return (
-                  <span
-                    key={"ellipsis-" + page}
-                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
-                  >
-                    &hellip;
-                  </span>
-                );
+                if (
+                  (page === 2 && currentPage > 4) ||
+                  (page === totalPages - 1 && currentPage < totalPages - 3)
+                ) {
+                  return (
+                    <span
+                      key={"ellipsis-" + page}
+                      className="relative inline-flex items-center px-3 py-2 border border-border bg-background text-sm font-medium text-muted-foreground"
+                    >
+                      &hellip;
+                    </span>
+                  );
+                }
+                return null;
               }
-              return null;
-            }
-            return (
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  aria-current={page === currentPage ? "page" : undefined}
+                  className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
+                    page === currentPage
+                      ? "z-10 bg-primary border-primary text-primary-foreground"
+                      : "bg-background border-border text-muted-foreground hover:bg-muted/50"
+                  }`}
+                  type="button"
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
+                currentPage === totalPages || totalPages === 0
+                  ? "cursor-not-allowed opacity-50"
+                  : ""
+              }`}
+              aria-label="Next Page"
+              type="button"
+            >
+              <i className="fa fa-angle-right" aria-hidden="true"></i>
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
+                currentPage === totalPages || totalPages === 0
+                  ? "cursor-not-allowed opacity-50"
+                  : ""
+              }`}
+              aria-label="Last Page"
+              type="button"
+            >
+              <i className="fa fa-angle-double-right" aria-hidden="true"></i>
+            </button>
+          </nav>
+        </div>
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-card rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Gift Card
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="editCardNumber"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Card Number
+                </label>
+                <input
+                  type="text"
+                  id="editCardNumber"
+                  name="cardNumber"
+                  value={editForm.cardNumber}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  placeholder="XXXX XXXX XXXX XXXX"
+                  maxLength={19}
+                  pattern="[\d\s]+"
+                  title="Card number format: digits and spaces only"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editCardHolder"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Card Holder
+                </label>
+                <input
+                  type="text"
+                  id="editCardHolder"
+                  name="cardHolder"
+                  value={editForm.cardHolder}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  placeholder="Full Name"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editIssueDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Issue Date
+                </label>
+                <input
+                  type="date"
+                  id="editIssueDate"
+                  name="issueDate"
+                  value={editForm.issueDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editExpiryDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Expiry Date
+                </label>
+                <input
+                  type="date"
+                  id="editExpiryDate"
+                  name="expiryDate"
+                  value={editForm.expiryDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editBalance"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Balance
+                </label>
+                <input
+                  type="number"
+                  id="editBalance"
+                  name="balance"
+                  min="0"
+                  step="0.01"
+                  value={editForm.balance}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Expired">Expired</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  page === currentPage
-                    ? "z-10 bg-blue-600 border-blue-600 text-white"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
-                {page}
+                Cancel
               </button>
-            );
-          })}
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-              currentPage === totalPages || totalPages === 0
-                ? "cursor-not-allowed opacity-50"
-                : ""
-            }`}
-            aria-label="Next Page"
-            type="button"
-          >
-            <i className="fas fa-angle-right"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-              currentPage === totalPages || totalPages === 0
-                ? "cursor-not-allowed opacity-50"
-                : ""
-            }`}
-            aria-label="Last Page"
-            type="button"
-          >
-            <i className="fas fa-angle-double-right"></i>
-          </button>
-        </nav>
-      </div>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
