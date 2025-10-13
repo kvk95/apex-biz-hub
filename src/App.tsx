@@ -130,13 +130,6 @@ import Users from "./pages/user-management/Users";
 
 const queryClient = new QueryClient();
 
-interface MenuItem {
-  title: string;
-  url?: string;
-  icon: string;
-  items?: MenuItem[];
-}
-
 function RouteChangeHandler() {
   const location = useLocation();
 
@@ -150,36 +143,8 @@ function RouteChangeHandler() {
   return null; // No UI output, just side-effects
 }
 
-
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-   
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [routes, setRoutes] = useState<any[]>([]);
-
-
-   // Fetch menuItems dynamically from JSON
-  useEffect(() => {
-    fetch("/data/menuItems.json")
-      .then((res) => res.json())
-      .then((data) => {
-        setMenuItems(data);
-        
-        // Function to generate routes from menu items
-        const generateRoutes = (menu: any[]) => {
-          return menu.map((item: any) => (
-            <Route key={item.title} path={item.url} element={<div>{item.title}</div>} />
-          ));
-        };
-
-        // Dynamically create routes based on the JSON data
-        setRoutes(generateRoutes(data.flatMap(item => item.items || []))); 
-
-        console.log(routes);
-      })
-      .catch((err) => console.error("Error fetching menu data:", err));
-  }, [ ]);
 
   return (
     <QueryClientProvider client={queryClient}>

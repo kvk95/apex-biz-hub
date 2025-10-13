@@ -17,7 +17,7 @@ import { useTheme } from "../theme/theme-provider";
 interface MenuItem {
   title: string;
   url?: string;
-  icon: string; // Direct FontAwesome icon class name
+  icon: string; // FontAwesome class name, e.g. "fa fa-tachometer-alt"
   badge?: string;
   items?: MenuItem[];
 }
@@ -31,7 +31,6 @@ interface MenuItemComponentProps {
   level?: number;
 }
 
-// Main Menu Item component
 function MenuItemComponent({
   item,
   openMenus,
@@ -42,34 +41,40 @@ function MenuItemComponent({
 }: MenuItemComponentProps) {
   const isOpen = openMenus.includes(item.title);
   const isSelected = isActive(item.url);
-  const IconClass = item.icon; // Use the icon directly from JSON
+  const IconClass = item.icon;
+
+  const { theme } = useTheme();
+  const primaryHsl = theme.primary ?? "220 98% 61%";
+  const selectionBg = `hsl(${primaryHsl})`;
+  const selectionText = "white";
 
   if (item.items && item.items.length > 0) {
     return (
-      <div>
+      <div className="sidebarOuter">
         <SidebarMenuItem>
           <SidebarMenuButton
             className={cn(
               "w-full transition-colors hover:bg-gray-100",
-              isOpen ? "bg-gray-100" : "",
+              isOpen && "bg-gray-100",
               `pl-${2 + level * 2}`
             )}
             onClick={() => toggleMenu(item.title)}
+            style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}
           >
-            <i className={`${IconClass} mr-2`} aria-hidden="true"></i>
+            <i className={`${IconClass} mr-2`} aria-hidden="true" />
             <span>{item.title}</span>
             <i
               className={`fa ${isOpen ? "fa-chevron-down" : "fa-chevron-right"} ml-auto`}
               aria-hidden="true"
-            ></i>
+            />
           </SidebarMenuButton>
         </SidebarMenuItem>
         {isOpen && (
           <SidebarMenuSub>
-            {item.items.map((sub) => (
+            {item.items.map((subItem) => (
               <MenuItemComponent
-                key={sub.title}
-                item={sub}
+                key={subItem.title}
+                item={subItem}
                 openMenus={openMenus}
                 toggleMenu={toggleMenu}
                 isActive={isActive}
@@ -81,40 +86,37 @@ function MenuItemComponent({
         )}
       </div>
     );
-  } else {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          asChild
-          className={cn(
-            "w-full transition-colors hover:bg-gray-100",
-            isActive(item.url) ? "bg-blue-500 text-white" : "",
-            `pl-${2 + level * 2}`
-          )}
-        >
-          <NavLink to={item.url || "#"}>
-            <i className={`${IconClass} mr-2`} aria-hidden="true"></i>
-            <span>{item.title}</span>
-            {item.badge && (
-              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                {item.badge}
-              </span>
-            )}
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
   }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        className={cn(
+          "w-full transition-colors hover:bg-gray-100",
+          `pl-${2 + level * 2}`
+        )}
+        style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}
+      >
+        <NavLink to={item.url || "#"} className="flex items-center">
+          <i className={`${IconClass} mr-2`} aria-hidden="true" />
+          <span>{item.title}</span>
+          {item.badge && (
+            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+              {item.badge}
+            </span>
+          )}
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
 }
 
-// Main Sidebar component
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
-
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -122,6 +124,7 @@ export function AppSidebar() {
       .then((res) => res.json())
       .then((data) => {
         setMenuItems(data);
+
         const findActivePath = (items: MenuItem[], path: string[] = []): string[] => {
           for (const item of items) {
             if (item.url && location.pathname === item.url) {
@@ -134,19 +137,17 @@ export function AppSidebar() {
           }
           return [];
         };
+
         const activePath = findActivePath(data);
         setOpenMenus(activePath);
-      });
+      })
+      .catch(console.error);
   }, [location.pathname]);
 
   const toggleMenu = (title: string) => {
-    setOpenMenus((prev) => {
-      if (prev.includes(title)) {
-        return prev.filter((t) => t !== title);
-      } else {
-        return [...prev, title]; // Open clicked menu
-      }
-    });
+    setOpenMenus((prev) =>
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+    );
   };
 
   const isActive = (url?: string) => {
@@ -156,16 +157,15 @@ export function AppSidebar() {
 
   const hasActiveChild = (items?: MenuItem[]) => {
     if (!items) return false;
-    return items.some(
-      (i) => isActive(i.url) || hasActiveChild(i.items)
-    );
+    return items.some((item) => isActive(item.url) || hasActiveChild(item.items));
   };
 
   const sidebarStyle = {
     backgroundColor: `hsl(${theme.sidebarColor})`,
-    color: parseFloat(theme.sidebarColor.split(" ")[2]) < 50
-      ? "hsl(0 0% 98%)"
-      : "hsl(240 10% 3.9%)",
+    color:
+      parseFloat(theme.sidebarColor.split(" ")[2]) < 50
+        ? "hsl(0 0% 98%)"
+        : "hsl(240 10% 3.9%)",
   };
 
   return (
@@ -188,8 +188,6 @@ export function AppSidebar() {
                 toggleMenu={toggleMenu}
                 isActive={isActive}
                 hasActiveChild={hasActiveChild}
-                theme={theme}
-                state={"expanded"}
                 level={0}
               />
             ))}

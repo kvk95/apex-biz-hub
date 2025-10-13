@@ -69,7 +69,7 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4">
       {/* Left: Showing info */}
       <div className="text-sm text-muted-foreground">
         Showing {startItem} to {endItem} of {total} results
