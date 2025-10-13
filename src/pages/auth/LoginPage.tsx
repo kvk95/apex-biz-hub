@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Dummy login function for demonstration; replace with your auth logic
@@ -21,7 +21,7 @@ async function fakeLogin({ email, password }) {
 
 // Array of login images
 const loginImages = ["ph1.png"];
-const loginImageUrl1 = `/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
+const loginImageUrl1 = `/assets/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
 
 
 function LoginPage({ onLoginSuccess }) {
@@ -29,11 +29,20 @@ function LoginPage({ onLoginSuccess }) {
 
   // Public folder image path 
   const loginImageAlt = "Login Illustration";
+  const [backgroundImage, setBackgroundImage] = useState('');
+
 
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("password");
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+   useEffect(() => {
+    // Dynamically change the background image on page load
+    const images = ['/assets/images/login2.jpg', '/assets/images/loginbg1.jpg', '/assets/images/loginbg3.jpg', '/assets/images/loginbg3.jpg'];
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    setBackgroundImage(randomImage);
+  }, []);
 
   // Inside LoginPage's handleSubmit, replace navigate call with onLoginSuccess:
   const handleSubmit = async (e) => {
@@ -52,7 +61,9 @@ function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-3 glass-holder">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-3 glass-holder"  style={{
+        background: `url(${backgroundImage}) center/cover no-repeat`,
+      }}>
       <div className="hidden bg-muted lg:block relative"> 
       </div>
       <div className="flex items-center justify-center py-12 " style={{paddingTop:"3px"}}>

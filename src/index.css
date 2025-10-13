@@ -277,11 +277,12 @@ ul {
 }
 
 .glass-holder {
-  background: url('images/login2.jpg') center/cover no-repeat;
+  background: url('/assets/images/login2.jpg') center/cover no-repeat;
   height: 100vh;
   justify-content: center;
   align-items: center;
 }
+
 
 
 /* Glassmorphism card */

@@ -1,3 +1,6 @@
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ShoppingCart,
@@ -7,12 +10,11 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useApiService } from "@/hooks/useApiService";
 import { KPICard } from "@/components/KPI/KPICard";
 import { Chart } from "@/components/Chart/Chart";
 import { DataTable, Column, RowAction } from "@/components/DataTable/DataTable";
 
-interface DashboardData {
+interface data {
   stats: Array<{
     id: string;
     title: string;
@@ -21,7 +23,12 @@ interface DashboardData {
     icon: string;
     gradient: string;
   }>;
-  salesData: Array<{ month: string; sales: number; purchases: number; profit: number }>;
+  salesData: Array<{
+    month: string;
+    sales: number;
+    purchases: number;
+    profit: number;
+  }>;
   categoryData: Array<{ name: string; sales: number }>;
   recentOrders: Array<any>;
   lowStockProducts: Array<any>;
@@ -34,7 +41,9 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
-  const { data: dashboardData, loading, error } = useApiService<DashboardData>('dashboard');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const lowStockColumns: Column[] = [
     { key: "name", label: "Product", sortable: true },
@@ -43,9 +52,7 @@ export default function Dashboard() {
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <Badge variant="destructive">{value} left</Badge>
-      ),
+      render: (value) => <Badge variant="destructive">{value} left</Badge>,
     },
   ];
 
@@ -74,6 +81,23 @@ export default function Dashboard() {
     { key: "date", label: "Date" },
   ];
 
+  useEffect(() => {
+    document.title = "Discount - Dreams POS";
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Admin1Dashboard");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
   const rowActions: RowAction[] = [
     {
       label: "View Details",
@@ -86,15 +110,27 @@ export default function Dashboard() {
   ];
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="flex items-center justify-center h-screen text-destructive">Error: {error}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-destructive">
+        Error: {error}
+      </div>
+    );
   }
 
-  if (!dashboardData) {
-    return <div className="flex items-center justify-center h-screen">No data available</div>;
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        No data available
+      </div>
+    );
   }
 
   return (
@@ -102,7 +138,9 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
+          <p className="text-muted-foreground">
+            Welcome back! Here's what's happening today.
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Today</Button>
@@ -150,7 +188,7 @@ export default function Dashboard() {
           <CardContent>
             <Chart
               type="area"
-              data={dashboardData.salesData}
+              data={data.salesData}
               dataKey="sales"
               xAxisKey="month"
               height={300}
@@ -165,7 +203,7 @@ export default function Dashboard() {
           <CardContent>
             <Chart
               type="bar"
-              data={dashboardData.categoryData}
+              data={data.categoryData}
               dataKey="sales"
               xAxisKey="name"
               height={300}
@@ -182,7 +220,7 @@ export default function Dashboard() {
           <CardContent>
             <DataTable
               columns={recentOrderColumns}
-              data={dashboardData.recentOrders}
+              data={data.recentOrders}
               rowActions={rowActions}
             />
           </CardContent>
@@ -198,19 +236,23 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {dashboardData.lowStockProducts.map((product) => (
+                {data.lowStockProducts.map((product) => (
                   <div key={product.sku} className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.sku}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.sku}
+                        </p>
                       </div>
                       <Badge variant="destructive">{product.stock} left</Badge>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full bg-warning transition-all"
-                        style={{ width: `${(product.stock / product.minStock) * 100}%` }}
+                        style={{
+                          width: `${(product.stock / product.minStock) * 100}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -225,16 +267,20 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {dashboardData.topCustomers.map((customer, index) => (
+                {data.topCustomers.map((customer, index) => (
                   <div key={customer.email} className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                       {index + 1}
                     </div>
                     <div className="flex-1 space-y-1">
                       <p className="font-medium">{customer.name}</p>
-                      <p className="text-xs text-muted-foreground">{customer.orders} orders</p>
+                      <p className="text-xs text-muted-foreground">
+                        {customer.orders} orders
+                      </p>
                     </div>
-                    <p className="font-semibold text-success">{customer.total}</p>
+                    <p className="font-semibold text-success">
+                      {customer.total}
+                    </p>
                   </div>
                 ))}
               </div>
