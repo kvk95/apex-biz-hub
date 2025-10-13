@@ -235,7 +235,7 @@ export default function GiftCards() {
             type="button"
             title="Generate Report"
           >
-            <i className="fa fa-file-text-o" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-" aria-hidden="true"></i> Report
           </button>
           <button
             onClick={handleClear}
@@ -243,7 +243,7 @@ export default function GiftCards() {
             type="button"
             title="Clear"
           >
-            <i className="fa fa-refresh" aria-hidden="true"></i> Clear
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
         </div>
       </div>
@@ -459,7 +459,7 @@ export default function GiftCards() {
                       aria-label={`Edit gift card ${card.cardNumber}`}
                       type="button"
                     >
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
                       onClick={() => handleDelete(card.id)}
@@ -467,7 +467,7 @@ export default function GiftCards() {
                       aria-label={`Delete gift card ${card.cardNumber}`}
                       type="button"
                     >
-                      <i className="fa fa-trash" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -523,7 +523,7 @@ export default function GiftCards() {
               aria-label="Previous Page"
               type="button"
             >
-              <i className="fa fa-angle-left" aria-hidden="true"></i>
+              <i className="fa fa-angle-left fa-light" aria-hidden="true"></i>
             </button>
 
             {/* Page numbers */}
@@ -575,7 +575,7 @@ export default function GiftCards() {
               aria-label="Next Page"
               type="button"
             >
-              <i className="fa fa-angle-right" aria-hidden="true"></i>
+              <i className="fa fa-angle-right fa-light" aria-hidden="true"></i>
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
@@ -587,7 +587,7 @@ export default function GiftCards() {
               aria-label="Last Page"
               type="button"
             >
-              <i className="fa fa-angle-double-right" aria-hidden="true"></i>
+              <i className="fa fa-angle-double-right  fa-light" aria-hidden="true"></i>
             </button>
           </nav>
         </div>

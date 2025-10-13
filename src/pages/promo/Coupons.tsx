@@ -53,8 +53,7 @@ export default function Coupons() {
     currentPage * itemsPerPage
   );
 
-  useEffect(() => {
-    document.title = "Coupons - Dreams POS";
+  useEffect(() => { 
     loadData();
   }, []);
 
@@ -236,7 +235,7 @@ export default function Coupons() {
           </div>
 
           {/* Coupon Type */}
-          <div>
+          <div >
             <label
               htmlFor="couponType"
               className="block text-sm font-medium mb-1"
@@ -411,7 +410,7 @@ export default function Coupons() {
 
       {/* Coupons List Section */}
       <section className="bg-card rounded shadow py-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-4">
           <h2 className="text-xl font-semibold mb-3 md:mb-0">Coupons List</h2>
           <input
             type="text"
@@ -520,7 +519,7 @@ export default function Coupons() {
                         aria-label={`Edit coupon ${coupon.couponCode}`}
                         type="button"
                       >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(coupon.id)}
@@ -528,7 +527,7 @@ export default function Coupons() {
                         aria-label={`Delete coupon ${coupon.couponCode}`}
                         type="button"
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash  fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
