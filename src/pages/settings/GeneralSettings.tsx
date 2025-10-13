@@ -1,105 +1,5 @@
-import React, { useState } from "react";
-
-const generalSettingsData = {
-  companyInfo: {
-    companyName: "Dreams POS",
-    companyEmail: "dreamspos@gmail.com",
-    companyPhone: "123-456-7890",
-    companyAddress: "123 Dreams Street, Dream City, DC 12345",
-    companyLogoUrl:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/img/logo.png",
-  },
-  currencySettings: {
-    currencySymbol: "$",
-    currencyCode: "USD",
-    currencyPosition: "left", // left or right
-    thousandSeparator: ",",
-    decimalSeparator: ".",
-    numberOfDecimals: 2,
-  },
-  taxSettings: {
-    taxName: "VAT",
-    taxRate: 15,
-    taxType: "Inclusive", // Inclusive or Exclusive
-  },
-  invoiceSettings: {
-    invoicePrefix: "INV",
-    invoiceStartNumber: 1000,
-    invoiceFooterNote: "Thank you for your business!",
-  },
-  users: [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      role: "Admin",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "User",
-      status: "Inactive",
-    },
-    {
-      id: 3,
-      name: "Bob Johnson",
-      email: "bob@example.com",
-      role: "User",
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "Alice Williams",
-      email: "alice@example.com",
-      role: "Admin",
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Michael Brown",
-      email: "michael@example.com",
-      role: "User",
-      status: "Active",
-    },
-    {
-      id: 6,
-      name: "Emily Davis",
-      email: "emily@example.com",
-      role: "User",
-      status: "Inactive",
-    },
-    {
-      id: 7,
-      name: "David Wilson",
-      email: "david@example.com",
-      role: "User",
-      status: "Active",
-    },
-    {
-      id: 8,
-      name: "Sarah Miller",
-      email: "sarah@example.com",
-      role: "Admin",
-      status: "Active",
-    },
-    {
-      id: 9,
-      name: "Chris Moore",
-      email: "chris@example.com",
-      role: "User",
-      status: "Active",
-    },
-    {
-      id: 10,
-      name: "Jessica Taylor",
-      email: "jessica@example.com",
-      role: "User",
-      status: "Inactive",
-    },
-  ],
-};
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const roles = ["Admin", "User"];
 const statuses = ["Active", "Inactive"];
@@ -110,63 +10,82 @@ const currencyPositions = [
 const taxTypes = ["Inclusive", "Exclusive"];
 
 export default function GeneralSettings() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("GeneralSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Company Info State
-  const [companyName, setCompanyName] = useState(
-    generalSettingsData.companyInfo.companyName
-  );
-  const [companyEmail, setCompanyEmail] = useState(
-    generalSettingsData.companyInfo.companyEmail
-  );
-  const [companyPhone, setCompanyPhone] = useState(
-    generalSettingsData.companyInfo.companyPhone
-  );
-  const [companyAddress, setCompanyAddress] = useState(
-    generalSettingsData.companyInfo.companyAddress
-  );
-  const [companyLogoUrl, setCompanyLogoUrl] = useState(
-    generalSettingsData.companyInfo.companyLogoUrl
-  );
+  const [companyName, setCompanyName] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyLogoUrl, setCompanyLogoUrl] = useState("");
 
   // Currency Settings State
-  const [currencySymbol, setCurrencySymbol] = useState(
-    generalSettingsData.currencySettings.currencySymbol
-  );
-  const [currencyCode, setCurrencyCode] = useState(
-    generalSettingsData.currencySettings.currencyCode
-  );
-  const [currencyPosition, setCurrencyPosition] = useState(
-    generalSettingsData.currencySettings.currencyPosition
-  );
-  const [thousandSeparator, setThousandSeparator] = useState(
-    generalSettingsData.currencySettings.thousandSeparator
-  );
-  const [decimalSeparator, setDecimalSeparator] = useState(
-    generalSettingsData.currencySettings.decimalSeparator
-  );
-  const [numberOfDecimals, setNumberOfDecimals] = useState(
-    generalSettingsData.currencySettings.numberOfDecimals
-  );
+  const [currencySymbol, setCurrencySymbol] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("");
+  const [currencyPosition, setCurrencyPosition] = useState("");
+  const [thousandSeparator, setThousandSeparator] = useState("");
+  const [decimalSeparator, setDecimalSeparator] = useState("");
+  const [numberOfDecimals, setNumberOfDecimals] = useState(0);
 
   // Tax Settings State
-  const [taxName, setTaxName] = useState(generalSettingsData.taxSettings.taxName);
-  const [taxRate, setTaxRate] = useState(generalSettingsData.taxSettings.taxRate);
-  const [taxType, setTaxType] = useState(generalSettingsData.taxSettings.taxType);
+  const [taxName, setTaxName] = useState("");
+  const [taxRate, setTaxRate] = useState(0);
+  const [taxType, setTaxType] = useState("");
 
   // Invoice Settings State
-  const [invoicePrefix, setInvoicePrefix] = useState(
-    generalSettingsData.invoiceSettings.invoicePrefix
-  );
-  const [invoiceStartNumber, setInvoiceStartNumber] = useState(
-    generalSettingsData.invoiceSettings.invoiceStartNumber
-  );
-  const [invoiceFooterNote, setInvoiceFooterNote] = useState(
-    generalSettingsData.invoiceSettings.invoiceFooterNote
-  );
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [invoiceStartNumber, setInvoiceStartNumber] = useState(0);
+  const [invoiceFooterNote, setInvoiceFooterNote] = useState("");
 
   // Users Table Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 5;
-  const totalPages = Math.ceil(generalSettingsData.users.length / usersPerPage);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const generalSettings = data[0];
+      setCompanyName(generalSettings.companyInfo.companyName);
+      setCompanyEmail(generalSettings.companyInfo.companyEmail);
+      setCompanyPhone(generalSettings.companyInfo.companyPhone);
+      setCompanyAddress(generalSettings.companyInfo.companyAddress);
+      setCompanyLogoUrl(generalSettings.companyInfo.companyLogoUrl);
+
+      setCurrencySymbol(generalSettings.currencySettings.currencySymbol);
+      setCurrencyCode(generalSettings.currencySettings.currencyCode);
+      setCurrencyPosition(generalSettings.currencySettings.currencyPosition);
+      setThousandSeparator(generalSettings.currencySettings.thousandSeparator);
+      setDecimalSeparator(generalSettings.currencySettings.decimalSeparator);
+      setNumberOfDecimals(generalSettings.currencySettings.numberOfDecimals);
+
+      setTaxName(generalSettings.taxSettings.taxName);
+      setTaxRate(generalSettings.taxSettings.taxRate);
+      setTaxType(generalSettings.taxSettings.taxType);
+
+      setInvoicePrefix(generalSettings.invoiceSettings.invoicePrefix);
+      setInvoiceStartNumber(generalSettings.invoiceSettings.invoiceStartNumber);
+      setInvoiceFooterNote(generalSettings.invoiceSettings.invoiceFooterNote);
+    }
+  }, [data]);
+
+  const totalPages = data.length > 0 ? Math.ceil(data[0].users.length / usersPerPage) : 0;
 
   // Pagination handlers
   const paginate = (pageNumber: number) => {
@@ -176,10 +95,10 @@ export default function GeneralSettings() {
   };
 
   // Current users slice
-  const currentUsers = generalSettingsData.users.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
+  const currentUsers =
+    data.length > 0
+      ? data[0].users.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
+      : [];
 
   // Handlers for buttons (simulate save, refresh, report)
   const handleSave = () => {
@@ -188,28 +107,31 @@ export default function GeneralSettings() {
 
   const handleRefresh = () => {
     // Reset all fields to initial data
-    setCompanyName(generalSettingsData.companyInfo.companyName);
-    setCompanyEmail(generalSettingsData.companyInfo.companyEmail);
-    setCompanyPhone(generalSettingsData.companyInfo.companyPhone);
-    setCompanyAddress(generalSettingsData.companyInfo.companyAddress);
-    setCompanyLogoUrl(generalSettingsData.companyInfo.companyLogoUrl);
+    if (data.length > 0) {
+      const generalSettings = data[0];
+      setCompanyName(generalSettings.companyInfo.companyName);
+      setCompanyEmail(generalSettings.companyInfo.companyEmail);
+      setCompanyPhone(generalSettings.companyInfo.companyPhone);
+      setCompanyAddress(generalSettings.companyInfo.companyAddress);
+      setCompanyLogoUrl(generalSettings.companyInfo.companyLogoUrl);
 
-    setCurrencySymbol(generalSettingsData.currencySettings.currencySymbol);
-    setCurrencyCode(generalSettingsData.currencySettings.currencyCode);
-    setCurrencyPosition(generalSettingsData.currencySettings.currencyPosition);
-    setThousandSeparator(generalSettingsData.currencySettings.thousandSeparator);
-    setDecimalSeparator(generalSettingsData.currencySettings.decimalSeparator);
-    setNumberOfDecimals(generalSettingsData.currencySettings.numberOfDecimals);
+      setCurrencySymbol(generalSettings.currencySettings.currencySymbol);
+      setCurrencyCode(generalSettings.currencySettings.currencyCode);
+      setCurrencyPosition(generalSettings.currencySettings.currencyPosition);
+      setThousandSeparator(generalSettings.currencySettings.thousandSeparator);
+      setDecimalSeparator(generalSettings.currencySettings.decimalSeparator);
+      setNumberOfDecimals(generalSettings.currencySettings.numberOfDecimals);
 
-    setTaxName(generalSettingsData.taxSettings.taxName);
-    setTaxRate(generalSettingsData.taxSettings.taxRate);
-    setTaxType(generalSettingsData.taxSettings.taxType);
+      setTaxName(generalSettings.taxSettings.taxName);
+      setTaxRate(generalSettings.taxSettings.taxRate);
+      setTaxType(generalSettings.taxSettings.taxType);
 
-    setInvoicePrefix(generalSettingsData.invoiceSettings.invoicePrefix);
-    setInvoiceStartNumber(generalSettingsData.invoiceSettings.invoiceStartNumber);
-    setInvoiceFooterNote(generalSettingsData.invoiceSettings.invoiceFooterNote);
+      setInvoicePrefix(generalSettings.invoiceSettings.invoicePrefix);
+      setInvoiceStartNumber(generalSettings.invoiceSettings.invoiceStartNumber);
+      setInvoiceFooterNote(generalSettings.invoiceSettings.invoiceFooterNote);
 
-    setCurrentPage(1);
+      setCurrentPage(1);
+    }
   };
 
   const handleReport = () => {

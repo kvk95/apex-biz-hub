@@ -1,119 +1,13 @@
-import React, { useState } from "react";
-
-const appearanceData = [
-  {
-    id: 1,
-    name: "Dreams POS",
-    theme: "Light",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Dreams POS Dark",
-    theme: "Dark",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    name: "Dreams POS Blue",
-    theme: "Blue",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Dreams POS Green",
-    theme: "Green",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Dreams POS Red",
-    theme: "Red",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    name: "Dreams POS Yellow",
-    theme: "Yellow",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Active",
-  },
-  {
-    id: 7,
-    name: "Dreams POS Purple",
-    theme: "Purple",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Active",
-  },
-  {
-    id: 8,
-    name: "Dreams POS Orange",
-    theme: "Orange",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    name: "Dreams POS Cyan",
-    theme: "Cyan",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Active",
-  },
-  {
-    id: 10,
-    name: "Dreams POS Magenta",
-    theme: "Magenta",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Active",
-  },
-  {
-    id: 11,
-    name: "Dreams POS Lime",
-    theme: "Lime",
-    sidebar: "Expanded",
-    header: "Fixed",
-    footer: "Static",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    name: "Dreams POS Teal",
-    theme: "Teal",
-    sidebar: "Collapsed",
-    header: "Static",
-    footer: "Fixed",
-    status: "Active",
-  },
-];
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function Appearance() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     themeName: "",
@@ -123,7 +17,23 @@ export default function Appearance() {
     status: "Active",
   });
 
-  const totalPages = Math.ceil(appearanceData.length / pageSize);
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Appearance");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalPages = Math.ceil(data.length / pageSize);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -149,7 +59,7 @@ export default function Appearance() {
     alert("Report functionality is not implemented in this demo.");
   };
 
-  const paginatedData = appearanceData.slice(
+  const paginatedData = data.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );

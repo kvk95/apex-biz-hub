@@ -1,107 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const purchaseData = [
-  {
-    id: 1,
-    invoiceNo: "INV-1001",
-    supplierName: "ABC Suppliers",
-    purchaseDate: "2025-10-01",
-    totalAmount: 1520.5,
-    paidAmount: 1000,
-    dueAmount: 520.5,
-    status: "Partial",
-  },
-  {
-    id: 2,
-    invoiceNo: "INV-1002",
-    supplierName: "XYZ Traders",
-    purchaseDate: "2025-10-03",
-    totalAmount: 2300,
-    paidAmount: 2300,
-    dueAmount: 0,
-    status: "Paid",
-  },
-  {
-    id: 3,
-    invoiceNo: "INV-1003",
-    supplierName: "Global Wholesale",
-    purchaseDate: "2025-10-05",
-    totalAmount: 980,
-    paidAmount: 0,
-    dueAmount: 980,
-    status: "Due",
-  },
-  {
-    id: 4,
-    invoiceNo: "INV-1004",
-    supplierName: "Sunrise Enterprises",
-    purchaseDate: "2025-10-07",
-    totalAmount: 4500,
-    paidAmount: 4500,
-    dueAmount: 0,
-    status: "Paid",
-  },
-  {
-    id: 5,
-    invoiceNo: "INV-1005",
-    supplierName: "Metro Supplies",
-    purchaseDate: "2025-10-08",
-    totalAmount: 1250,
-    paidAmount: 800,
-    dueAmount: 450,
-    status: "Partial",
-  },
-  {
-    id: 6,
-    invoiceNo: "INV-1006",
-    supplierName: "Prime Distributors",
-    purchaseDate: "2025-10-09",
-    totalAmount: 3100,
-    paidAmount: 3100,
-    dueAmount: 0,
-    status: "Paid",
-  },
-  {
-    id: 7,
-    invoiceNo: "INV-1007",
-    supplierName: "Eastern Traders",
-    purchaseDate: "2025-10-10",
-    totalAmount: 670,
-    paidAmount: 0,
-    dueAmount: 670,
-    status: "Due",
-  },
-  {
-    id: 8,
-    invoiceNo: "INV-1008",
-    supplierName: "Northern Wholesale",
-    purchaseDate: "2025-10-11",
-    totalAmount: 890,
-    paidAmount: 890,
-    dueAmount: 0,
-    status: "Paid",
-  },
-  {
-    id: 9,
-    invoiceNo: "INV-1009",
-    supplierName: "Southern Supplies",
-    purchaseDate: "2025-10-12",
-    totalAmount: 1400,
-    paidAmount: 700,
-    dueAmount: 700,
-    status: "Partial",
-  },
-  {
-    id: 10,
-    invoiceNo: "INV-1010",
-    supplierName: "Western Traders",
-    purchaseDate: "2025-10-13",
-    totalAmount: 2200,
-    paidAmount: 2200,
-    dueAmount: 0,
-    status: "Paid",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const suppliers = [
   "ABC Suppliers",
@@ -121,8 +19,36 @@ const paymentMethods = ["Cash", "Cheque", "Bank Transfer", "Credit Card"];
 const pageSize = 5;
 
 export default function PurchaseTransaction() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PurchaseTransaction");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [paginatedData, setPaginatedData] = useState(purchaseData.slice(0, pageSize));
+  const [paginatedData, setPaginatedData] = useState([]);
+
+  useEffect(() => {
+    const start = (currentPage - 1) * pageSize;
+    setPaginatedData(data.slice(start, start + pageSize));
+  }, [currentPage, data]);
+
+  const totalPages = Math.ceil(data.length / pageSize);
+
   const [form, setForm] = useState({
     invoiceNo: "",
     supplierName: "",
@@ -134,13 +60,6 @@ export default function PurchaseTransaction() {
     paymentDate: "",
     paymentNote: "",
   });
-
-  useEffect(() => {
-    const start = (currentPage - 1) * pageSize;
-    setPaginatedData(purchaseData.slice(start, start + pageSize));
-  }, [currentPage]);
-
-  const totalPages = Math.ceil(purchaseData.length / pageSize);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -434,8 +353,8 @@ export default function PurchaseTransaction() {
                 <div>
                   <p className="text-sm text-gray-700">
                     Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{" "}
-                    <span className="font-medium">{Math.min(currentPage * pageSize, purchaseData.length)}</span> of{" "}
-                    <span className="font-medium">{purchaseData.length}</span> results
+                    <span className="font-medium">{Math.min(currentPage * pageSize, data.length)}</span> of{" "}
+                    <span className="font-medium">{data.length}</span> results
                   </p>
                 </div>
                 <div>

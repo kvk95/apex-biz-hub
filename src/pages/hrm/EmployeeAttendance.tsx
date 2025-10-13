@@ -1,127 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const employeesData = [
-  {
-    id: 1,
-    employeeId: "EMP001",
-    name: "John Doe",
-    department: "Sales",
-    date: "2023-10-01",
-    checkIn: "09:00 AM",
-    checkOut: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 2,
-    employeeId: "EMP002",
-    name: "Jane Smith",
-    department: "Marketing",
-    date: "2023-10-01",
-    checkIn: "09:15 AM",
-    checkOut: "06:15 PM",
-    status: "Present",
-  },
-  {
-    id: 3,
-    employeeId: "EMP003",
-    name: "Michael Johnson",
-    department: "HR",
-    date: "2023-10-01",
-    checkIn: "Absent",
-    checkOut: "-",
-    status: "Absent",
-  },
-  {
-    id: 4,
-    employeeId: "EMP004",
-    name: "Emily Davis",
-    department: "IT",
-    date: "2023-10-01",
-    checkIn: "09:05 AM",
-    checkOut: "06:05 PM",
-    status: "Present",
-  },
-  {
-    id: 5,
-    employeeId: "EMP005",
-    name: "William Brown",
-    department: "Finance",
-    date: "2023-10-01",
-    checkIn: "Late",
-    checkOut: "06:30 PM",
-    status: "Late",
-  },
-  {
-    id: 6,
-    employeeId: "EMP006",
-    name: "Olivia Wilson",
-    department: "Sales",
-    date: "2023-10-01",
-    checkIn: "09:00 AM",
-    checkOut: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 7,
-    employeeId: "EMP007",
-    name: "James Taylor",
-    department: "Marketing",
-    date: "2023-10-01",
-    checkIn: "Absent",
-    checkOut: "-",
-    status: "Absent",
-  },
-  {
-    id: 8,
-    employeeId: "EMP008",
-    name: "Sophia Martinez",
-    department: "HR",
-    date: "2023-10-01",
-    checkIn: "09:10 AM",
-    checkOut: "06:10 PM",
-    status: "Present",
-  },
-  {
-    id: 9,
-    employeeId: "EMP009",
-    name: "David Anderson",
-    department: "IT",
-    date: "2023-10-01",
-    checkIn: "09:00 AM",
-    checkOut: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 10,
-    employeeId: "EMP010",
-    name: "Isabella Thomas",
-    department: "Finance",
-    date: "2023-10-01",
-    checkIn: "Late",
-    checkOut: "06:45 PM",
-    status: "Late",
-  },
-  {
-    id: 11,
-    employeeId: "EMP011",
-    name: "Liam Jackson",
-    department: "Sales",
-    date: "2023-10-01",
-    checkIn: "09:00 AM",
-    checkOut: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 12,
-    employeeId: "EMP012",
-    name: "Mia White",
-    department: "Marketing",
-    date: "2023-10-01",
-    checkIn: "09:20 AM",
-    checkOut: "06:20 PM",
-    status: "Late",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const departments = [
   { label: "All Departments", value: "" },
@@ -142,6 +20,10 @@ const statuses = [
 const pageSizeOptions = [5, 10, 20];
 
 export default function EmployeeAttendance() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchText, setSearchText] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -149,9 +31,25 @@ export default function EmployeeAttendance() {
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState("");
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("EmployeeAttendance");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched data
   const filteredData = useMemo(() => {
-    return employeesData
+    return data
       .filter((emp) =>
         emp.name.toLowerCase().includes(searchText.toLowerCase()) ||
         emp.employeeId.toLowerCase().includes(searchText.toLowerCase())
@@ -161,7 +59,7 @@ export default function EmployeeAttendance() {
       )
       .filter((emp) => (selectedStatus ? emp.status === selectedStatus : true))
       .filter((emp) => (dateFilter ? emp.date === dateFilter : true));
-  }, [searchText, selectedDepartment, selectedStatus, dateFilter]);
+  }, [data, searchText, selectedDepartment, selectedStatus, dateFilter]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -211,7 +109,6 @@ export default function EmployeeAttendance() {
   };
 
   const handleReport = () => {
-    // Placeholder for report generation logic
     alert("Report generation is not implemented in this demo.");
   };
 

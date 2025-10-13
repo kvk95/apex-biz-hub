@@ -1,119 +1,30 @@
-import React, { useState, useMemo } from "react";
-
-const warrantiesData = [
-  {
-    id: 1,
-    warrantyNo: "WRT-0001",
-    customerName: "John Doe",
-    productName: "Samsung Galaxy S21",
-    purchaseDate: "2023-01-15",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-  {
-    id: 2,
-    warrantyNo: "WRT-0002",
-    customerName: "Jane Smith",
-    productName: "Apple MacBook Pro",
-    purchaseDate: "2022-11-20",
-    warrantyPeriod: "24 Months",
-    status: "Expired",
-  },
-  {
-    id: 3,
-    warrantyNo: "WRT-0003",
-    customerName: "Michael Johnson",
-    productName: "Sony WH-1000XM4",
-    purchaseDate: "2023-05-05",
-    warrantyPeriod: "18 Months",
-    status: "Active",
-  },
-  {
-    id: 4,
-    warrantyNo: "WRT-0004",
-    customerName: "Emily Davis",
-    productName: "Dell XPS 13",
-    purchaseDate: "2023-03-10",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-  {
-    id: 5,
-    warrantyNo: "WRT-0005",
-    customerName: "Chris Lee",
-    productName: "Canon EOS R6",
-    purchaseDate: "2022-09-30",
-    warrantyPeriod: "24 Months",
-    status: "Expired",
-  },
-  {
-    id: 6,
-    warrantyNo: "WRT-0006",
-    customerName: "Sarah Wilson",
-    productName: "iPhone 13 Pro",
-    purchaseDate: "2023-02-18",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-  {
-    id: 7,
-    warrantyNo: "WRT-0007",
-    customerName: "David Martinez",
-    productName: "LG OLED TV",
-    purchaseDate: "2022-12-01",
-    warrantyPeriod: "36 Months",
-    status: "Active",
-  },
-  {
-    id: 8,
-    warrantyNo: "WRT-0008",
-    customerName: "Anna Brown",
-    productName: "Bose QuietComfort 35 II",
-    purchaseDate: "2023-04-22",
-    warrantyPeriod: "18 Months",
-    status: "Active",
-  },
-  {
-    id: 9,
-    warrantyNo: "WRT-0009",
-    customerName: "James Taylor",
-    productName: "Microsoft Surface Pro 7",
-    purchaseDate: "2022-10-15",
-    warrantyPeriod: "12 Months",
-    status: "Expired",
-  },
-  {
-    id: 10,
-    warrantyNo: "WRT-0010",
-    customerName: "Patricia Anderson",
-    productName: "GoPro HERO9",
-    purchaseDate: "2023-06-01",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-  {
-    id: 11,
-    warrantyNo: "WRT-0011",
-    customerName: "Robert Thomas",
-    productName: "Nintendo Switch",
-    purchaseDate: "2023-01-25",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-  {
-    id: 12,
-    warrantyNo: "WRT-0012",
-    customerName: "Linda Jackson",
-    productName: "Fitbit Charge 5",
-    purchaseDate: "2023-03-30",
-    warrantyPeriod: "12 Months",
-    status: "Active",
-  },
-];
+import React, { useMemo } from "react";
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const pageSizeOptions = [5, 10, 15];
 
 export default function Warranties() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Warranties");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -125,14 +36,14 @@ export default function Warranties() {
 
   // Filtered data based on search inputs
   const filteredData = useMemo(() => {
-    return warrantiesData.filter((w) => {
+    return data.filter((w) => {
       return (
         w.warrantyNo.toLowerCase().includes(searchWarrantyNo.toLowerCase()) &&
         w.customerName.toLowerCase().includes(searchCustomerName.toLowerCase()) &&
         (searchStatus === "" || w.status === searchStatus)
       );
     });
-  }, [searchWarrantyNo, searchCustomerName, searchStatus]);
+  }, [data, searchWarrantyNo, searchCustomerName, searchStatus]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / pageSize);

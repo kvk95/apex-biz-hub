@@ -1,137 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const companiesData = [
-  {
-    id: 1,
-    companyName: "Dreams Technologies",
-    contactPerson: "John Doe",
-    email: "john.doe@dreamspos.com",
-    phone: "+1 234 567 890",
-    address: "123 Dream St, Silicon Valley, CA",
-    city: "San Jose",
-    state: "CA",
-    zip: "95112",
-    country: "USA",
-    status: "Active",
-  },
-  {
-    id: 2,
-    companyName: "Tech Innovations",
-    contactPerson: "Jane Smith",
-    email: "jane.smith@techinnov.com",
-    phone: "+1 987 654 321",
-    address: "456 Innovation Blvd, New York, NY",
-    city: "New York",
-    state: "NY",
-    zip: "10001",
-    country: "USA",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    companyName: "Future Solutions",
-    contactPerson: "Michael Johnson",
-    email: "michael.j@futuresol.com",
-    phone: "+44 20 7946 0958",
-    address: "789 Future Rd, London",
-    city: "London",
-    state: "",
-    zip: "SW1A 1AA",
-    country: "UK",
-    status: "Active",
-  },
-  {
-    id: 4,
-    companyName: "NextGen Corp",
-    contactPerson: "Emily Davis",
-    email: "emily.d@nextgencorp.com",
-    phone: "+61 2 9374 4000",
-    address: "101 NextGen Ave, Sydney",
-    city: "Sydney",
-    state: "NSW",
-    zip: "2000",
-    country: "Australia",
-    status: "Active",
-  },
-  {
-    id: 5,
-    companyName: "Alpha Enterprises",
-    contactPerson: "Robert Brown",
-    email: "robert.b@alphaent.com",
-    phone: "+49 30 123456",
-    address: "202 Alpha St, Berlin",
-    city: "Berlin",
-    state: "",
-    zip: "10115",
-    country: "Germany",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    companyName: "Beta Technologies",
-    contactPerson: "Linda Wilson",
-    email: "linda.w@betatech.com",
-    phone: "+81 3 1234 5678",
-    address: "303 Beta Rd, Tokyo",
-    city: "Tokyo",
-    state: "",
-    zip: "100-0001",
-    country: "Japan",
-    status: "Active",
-  },
-  {
-    id: 7,
-    companyName: "Gamma Solutions",
-    contactPerson: "David Lee",
-    email: "david.l@gammasol.com",
-    phone: "+33 1 2345 6789",
-    address: "404 Gamma Blvd, Paris",
-    city: "Paris",
-    state: "",
-    zip: "75001",
-    country: "France",
-    status: "Active",
-  },
-  {
-    id: 8,
-    companyName: "Delta Dynamics",
-    contactPerson: "Susan Clark",
-    email: "susan.c@deltadyn.com",
-    phone: "+39 06 12345678",
-    address: "505 Delta St, Rome",
-    city: "Rome",
-    state: "",
-    zip: "00100",
-    country: "Italy",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    companyName: "Epsilon Enterprises",
-    contactPerson: "Mark Turner",
-    email: "mark.t@epsilonent.com",
-    phone: "+55 11 1234 5678",
-    address: "606 Epsilon Ave, Sao Paulo",
-    city: "Sao Paulo",
-    state: "",
-    zip: "01000-000",
-    country: "Brazil",
-    status: "Active",
-  },
-  {
-    id: 10,
-    companyName: "Zeta Innovations",
-    contactPerson: "Patricia Moore",
-    email: "patricia.m@zetainnov.com",
-    phone: "+27 11 123 4567",
-    address: "707 Zeta Rd, Johannesburg",
-    city: "Johannesburg",
-    state: "",
-    zip: "2000",
-    country: "South Africa",
-    status: "Active",
-  },
-];
+import React, { useState, useEffect, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -157,20 +25,38 @@ export default function Companies() {
   };
   const [form, setForm] = useState(initialFormState);
   const [isEditing, setIsEditing] = useState(false);
-  const [companies, setCompanies] = useState(companiesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Companies");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter companies by search term (company name or contact person)
   const filteredCompanies = useMemo(() => {
-    if (!searchTerm.trim()) return companies;
-    return companies.filter(
+    if (!searchTerm.trim()) return data;
+    return data.filter(
       (c) =>
-        c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+        c.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [companies, searchTerm]);
+  }, [data, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredCompanies.length / pageSize);
@@ -198,20 +84,20 @@ export default function Companies() {
       return;
     }
     if (isEditing) {
-      setCompanies((prev) =>
+      setData((prev) =>
         prev.map((c) => (c.id === form.id ? { ...form } : c))
       );
     } else {
       const newId =
-        companies.length > 0 ? Math.max(...companies.map((c) => c.id)) + 1 : 1;
-      setCompanies((prev) => [...prev, { ...form, id: newId }]);
+        data.length > 0 ? Math.max(...data.map((c) => c.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId }]);
     }
     setForm(initialFormState);
     setIsEditing(false);
   };
 
   const handleEdit = (id: number) => {
-    const company = companies.find((c) => c.id === id);
+    const company = data.find((c) => c.id === id);
     if (company) {
       setForm(company);
       setIsEditing(true);
@@ -221,7 +107,7 @@ export default function Companies() {
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
-      setCompanies((prev) => prev.filter((c) => c.id !== id));
+      setData((prev) => prev.filter((c) => c.id !== id));
       // Reset page if deleting last item on last page
       if (
         (filteredCompanies.length - 1) % pageSize === 0 &&
@@ -234,7 +120,7 @@ export default function Companies() {
   };
 
   const handleRefresh = () => {
-    setCompanies(companiesData);
+    loadData();
     setSearchTerm("");
     setCurrentPage(1);
     setForm(initialFormState);
@@ -245,7 +131,7 @@ export default function Companies() {
     // For demo: just alert JSON of current companies
     alert(
       "Company Report:\n\n" +
-        JSON.stringify(companies, null, 2) +
+        JSON.stringify(data, null, 2) +
         "\n\n(Report functionality placeholder)"
     );
   };
@@ -554,7 +440,16 @@ export default function Companies() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {paginatedCompanies.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={11}
+                  className="px-4 py-6 text-center text-gray-500 italic"
+                >
+                  Loading...
+                </td>
+              </tr>
+            ) : paginatedCompanies.length === 0 ? (
               <tr>
                 <td
                   colSpan={11}

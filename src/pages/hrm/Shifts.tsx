@@ -1,91 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-const shiftsData = [
-  {
-    id: 1,
-    shiftName: "Morning Shift",
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    status: "Active",
-  },
-  {
-    id: 2,
-    shiftName: "Evening Shift",
-    startTime: "05:00 PM",
-    endTime: "01:00 AM",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    shiftName: "Night Shift",
-    startTime: "01:00 AM",
-    endTime: "09:00 AM",
-    status: "Active",
-  },
-  {
-    id: 4,
-    shiftName: "Custom Shift 1",
-    startTime: "10:00 AM",
-    endTime: "06:00 PM",
-    status: "Active",
-  },
-  {
-    id: 5,
-    shiftName: "Custom Shift 2",
-    startTime: "06:00 PM",
-    endTime: "02:00 AM",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    shiftName: "Custom Shift 3",
-    startTime: "02:00 AM",
-    endTime: "10:00 AM",
-    status: "Active",
-  },
-  {
-    id: 7,
-    shiftName: "Custom Shift 4",
-    startTime: "08:00 AM",
-    endTime: "04:00 PM",
-    status: "Active",
-  },
-  {
-    id: 8,
-    shiftName: "Custom Shift 5",
-    startTime: "04:00 PM",
-    endTime: "12:00 AM",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    shiftName: "Custom Shift 6",
-    startTime: "12:00 AM",
-    endTime: "08:00 AM",
-    status: "Active",
-  },
-  {
-    id: 10,
-    shiftName: "Custom Shift 7",
-    startTime: "07:00 AM",
-    endTime: "03:00 PM",
-    status: "Active",
-  },
-  {
-    id: 11,
-    shiftName: "Custom Shift 8",
-    startTime: "03:00 PM",
-    endTime: "11:00 PM",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    shiftName: "Custom Shift 9",
-    startTime: "11:00 PM",
-    endTime: "07:00 AM",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
@@ -107,8 +21,26 @@ export default function Shifts() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Data state
-  const [shifts, setShifts] = useState(shiftsData);
+  // Data state and API loading states
+  const [shifts, setShifts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Shifts");
+    if (response.status.code === "S") {
+      setShifts(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(shifts.length / pageSize);
@@ -189,7 +121,7 @@ export default function Shifts() {
   };
 
   const handleRefresh = () => {
-    setShifts(shiftsData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };

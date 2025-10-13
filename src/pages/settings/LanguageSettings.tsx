@@ -1,103 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const languageData = [
-  {
-    id: 1,
-    languageName: "English",
-    languageCode: "en",
-    languageFlag: "us",
-    languageOrder: 1,
-    languageStatus: "Active",
-  },
-  {
-    id: 2,
-    languageName: "Arabic",
-    languageCode: "ar",
-    languageFlag: "sa",
-    languageOrder: 2,
-    languageStatus: "Inactive",
-  },
-  {
-    id: 3,
-    languageName: "French",
-    languageCode: "fr",
-    languageFlag: "fr",
-    languageOrder: 3,
-    languageStatus: "Active",
-  },
-  {
-    id: 4,
-    languageName: "German",
-    languageCode: "de",
-    languageFlag: "de",
-    languageOrder: 4,
-    languageStatus: "Active",
-  },
-  {
-    id: 5,
-    languageName: "Spanish",
-    languageCode: "es",
-    languageFlag: "es",
-    languageOrder: 5,
-    languageStatus: "Inactive",
-  },
-  {
-    id: 6,
-    languageName: "Italian",
-    languageCode: "it",
-    languageFlag: "it",
-    languageOrder: 6,
-    languageStatus: "Active",
-  },
-  {
-    id: 7,
-    languageName: "Portuguese",
-    languageCode: "pt",
-    languageFlag: "pt",
-    languageOrder: 7,
-    languageStatus: "Active",
-  },
-  {
-    id: 8,
-    languageName: "Russian",
-    languageCode: "ru",
-    languageFlag: "ru",
-    languageOrder: 8,
-    languageStatus: "Inactive",
-  },
-  {
-    id: 9,
-    languageName: "Chinese",
-    languageCode: "zh",
-    languageFlag: "cn",
-    languageOrder: 9,
-    languageStatus: "Active",
-  },
-  {
-    id: 10,
-    languageName: "Japanese",
-    languageCode: "ja",
-    languageFlag: "jp",
-    languageOrder: 10,
-    languageStatus: "Inactive",
-  },
-  {
-    id: 11,
-    languageName: "Korean",
-    languageCode: "ko",
-    languageFlag: "kr",
-    languageOrder: 11,
-    languageStatus: "Active",
-  },
-  {
-    id: 12,
-    languageName: "Hindi",
-    languageCode: "hi",
-    languageFlag: "in",
-    languageOrder: 12,
-    languageStatus: "Active",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
@@ -114,8 +16,25 @@ const LanguageSettings: React.FC = () => {
     languageStatus: "Active",
   });
 
-  // Data state (simulate editable data)
-  const [data, setData] = useState(languageData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("LanguageSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Editing state
   const [isEditing, setIsEditing] = useState(false);
@@ -225,7 +144,7 @@ const LanguageSettings: React.FC = () => {
 
   // Refresh data (reset to original)
   const handleRefresh = () => {
-    setData(languageData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };
@@ -240,13 +159,6 @@ const LanguageSettings: React.FC = () => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
-
-  // Flags map for FontAwesome flag icons (using country codes)
-  // The reference page uses flags as images, here we use font awesome flags with country code suffixes.
-  // FontAwesome uses "flag-icon-xx" classes, but since we must use <i> tags with font awesome icons,
-  // we will use the "fa-flag-xx" style if available or fallback to generic flag icon.
-  // Because FontAwesome does not have country flag icons by default, we will use generic flag icon and show country code text next to it.
-  // This replicates the reference page's flag presence visually with a minimal approach.
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 interface LeaveType {
   id: number;
@@ -6,21 +7,6 @@ interface LeaveType {
   days: number;
   status: "Active" | "Inactive";
 }
-
-const leaveTypesData: LeaveType[] = [
-  { id: 1, leaveType: "Casual Leave", days: 12, status: "Active" },
-  { id: 2, leaveType: "Sick Leave", days: 10, status: "Active" },
-  { id: 3, leaveType: "Maternity Leave", days: 90, status: "Inactive" },
-  { id: 4, leaveType: "Paternity Leave", days: 15, status: "Active" },
-  { id: 5, leaveType: "Annual Leave", days: 30, status: "Active" },
-  { id: 6, leaveType: "Unpaid Leave", days: 0, status: "Inactive" },
-  { id: 7, leaveType: "Compensatory Off", days: 5, status: "Active" },
-  { id: 8, leaveType: "Bereavement Leave", days: 7, status: "Active" },
-  { id: 9, leaveType: "Study Leave", days: 20, status: "Inactive" },
-  { id: 10, leaveType: "Sabbatical Leave", days: 180, status: "Inactive" },
-  { id: 11, leaveType: "Leave Without Pay", days: 0, status: "Active" },
-  { id: 12, leaveType: "Special Leave", days: 10, status: "Active" },
-];
 
 const PAGE_SIZE = 5;
 
@@ -38,11 +24,35 @@ const LeaveTypes: React.FC = () => {
   const [days, setDays] = useState("");
   const [status, setStatus] = useState("Active");
 
-  // State for leave types list (simulate data source)
-  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>(leaveTypesData);
+  // State for leave types list (from API)
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
 
   // State for editing
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // State for API data loading and error
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("LeaveTypes");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+      setLeaveTypes(response.result);
+      setCurrentPage(1);
+      setEditingId(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(leaveTypes.length / PAGE_SIZE);
@@ -121,9 +131,8 @@ const LeaveTypes: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setLeaveTypes(leaveTypesData);
+    loadData();
     resetForm();
-    setCurrentPage(1);
   };
 
   const handleReport = () => {

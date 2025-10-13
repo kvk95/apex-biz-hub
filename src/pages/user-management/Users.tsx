@@ -1,103 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const USERS_DATA = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "123-456-7890",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "987-654-3210",
-    role: "User",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    email: "michael.johnson@example.com",
-    phone: "555-123-4567",
-    role: "User",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
-    phone: "444-987-6543",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "William Brown",
-    email: "william.brown@example.com",
-    phone: "333-222-1111",
-    role: "User",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    name: "Olivia Wilson",
-    email: "olivia.wilson@example.com",
-    phone: "222-333-4444",
-    role: "User",
-    status: "Active",
-  },
-  {
-    id: 7,
-    name: "James Taylor",
-    email: "james.taylor@example.com",
-    phone: "111-222-3333",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 8,
-    name: "Sophia Martinez",
-    email: "sophia.martinez@example.com",
-    phone: "999-888-7777",
-    role: "User",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    name: "Benjamin Anderson",
-    email: "benjamin.anderson@example.com",
-    phone: "666-555-4444",
-    role: "User",
-    status: "Active",
-  },
-  {
-    id: 10,
-    name: "Isabella Thomas",
-    email: "isabella.thomas@example.com",
-    phone: "777-666-5555",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 11,
-    name: "Daniel Jackson",
-    email: "daniel.jackson@example.com",
-    phone: "888-777-6666",
-    role: "User",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    name: "Mia White",
-    email: "mia.white@example.com",
-    phone: "555-666-7777",
-    role: "User",
-    status: "Active",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ROLES = ["Admin", "User"];
 const STATUS = ["Active", "Inactive"];
@@ -122,8 +24,33 @@ export default function Users() {
     status: "Active",
   });
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Users");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Users data state
-  const [users, setUsers] = useState(USERS_DATA);
+  const [users, setUsers] = useState(data);
+
+  // Sync users state with fetched data
+  useEffect(() => {
+    setUsers(data);
+  }, [data]);
 
   // Search/filter state
   const [searchTerm, setSearchTerm] = useState("");
@@ -187,7 +114,7 @@ export default function Users() {
     setIsEditing(false);
   }
 
-  function handleEdit(user: typeof USERS_DATA[0]) {
+  function handleEdit(user: typeof users[0]) {
     setForm(user);
     setIsEditing(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -203,7 +130,7 @@ export default function Users() {
   }
 
   function handleRefresh() {
-    setUsers(USERS_DATA);
+    loadData();
     resetForm();
     setSearchTerm("");
     setCurrentPage(1);

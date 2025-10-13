@@ -1,124 +1,34 @@
-import React, { useState } from "react";
-
-const socialAuthData = [
-  {
-    id: 1,
-    socialName: "Facebook",
-    socialIcon: "fab fa-facebook-f",
-    clientId: "1234567890",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/facebook/callback",
-    status: "Active",
-  },
-  {
-    id: 2,
-    socialName: "Google",
-    socialIcon: "fab fa-google",
-    clientId: "0987654321",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/google/callback",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    socialName: "Twitter",
-    socialIcon: "fab fa-twitter",
-    clientId: "1122334455",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/twitter/callback",
-    status: "Active",
-  },
-  {
-    id: 4,
-    socialName: "LinkedIn",
-    socialIcon: "fab fa-linkedin-in",
-    clientId: "6677889900",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/linkedin/callback",
-    status: "Inactive",
-  },
-  {
-    id: 5,
-    socialName: "Instagram",
-    socialIcon: "fab fa-instagram",
-    clientId: "4455667788",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/instagram/callback",
-    status: "Active",
-  },
-  {
-    id: 6,
-    socialName: "GitHub",
-    socialIcon: "fab fa-github",
-    clientId: "2233445566",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/github/callback",
-    status: "Active",
-  },
-  {
-    id: 7,
-    socialName: "Amazon",
-    socialIcon: "fab fa-amazon",
-    clientId: "9988776655",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/amazon/callback",
-    status: "Inactive",
-  },
-  {
-    id: 8,
-    socialName: "Microsoft",
-    socialIcon: "fab fa-microsoft",
-    clientId: "5566778899",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/microsoft/callback",
-    status: "Active",
-  },
-  {
-    id: 9,
-    socialName: "Pinterest",
-    socialIcon: "fab fa-pinterest-p",
-    clientId: "3344556677",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/pinterest/callback",
-    status: "Inactive",
-  },
-  {
-    id: 10,
-    socialName: "Slack",
-    socialIcon: "fab fa-slack",
-    clientId: "7788990011",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/slack/callback",
-    status: "Active",
-  },
-  {
-    id: 11,
-    socialName: "Dropbox",
-    socialIcon: "fab fa-dropbox",
-    clientId: "8899001122",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/dropbox/callback",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    socialName: "Yahoo",
-    socialIcon: "fab fa-yahoo",
-    clientId: "9900112233",
-    clientSecret: "************",
-    redirectUrl: "https://yourdomain.com/yahoo/callback",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useState, useEffect } from "react";
 
 export default function SocialAuthentication() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SocialAuthentication");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate pagination
-  const totalPages = Math.ceil(socialAuthData.length / itemsPerPage);
-  const currentData = socialAuthData.slice(
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const currentData = data.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -381,9 +291,9 @@ export default function SocialAuthentication() {
                 </span>{" "}
                 to{" "}
                 <span className="font-semibold">
-                  {Math.min(currentPage * itemsPerPage, socialAuthData.length)}
+                  {Math.min(currentPage * itemsPerPage, data.length)}
                 </span>{" "}
-                of <span className="font-semibold">{socialAuthData.length}</span> entries
+                of <span className="font-semibold">{data.length}</span> entries
               </div>
               <ul className="inline-flex items-center -space-x-px">
                 <li>

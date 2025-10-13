@@ -1,91 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-const subCategoriesData = [
-  {
-    id: 1,
-    category: "Beverages",
-    subCategory: "Soft Drinks",
-    description: "Carbonated soft drinks",
-    status: "Active",
-  },
-  {
-    id: 2,
-    category: "Beverages",
-    subCategory: "Juices",
-    description: "Fresh fruit juices",
-    status: "Active",
-  },
-  {
-    id: 3,
-    category: "Snacks",
-    subCategory: "Chips",
-    description: "Potato chips and snacks",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    category: "Snacks",
-    subCategory: "Nuts",
-    description: "Roasted nuts",
-    status: "Active",
-  },
-  {
-    id: 5,
-    category: "Dairy",
-    subCategory: "Milk",
-    description: "Fresh milk products",
-    status: "Active",
-  },
-  {
-    id: 6,
-    category: "Dairy",
-    subCategory: "Cheese",
-    description: "Various cheese types",
-    status: "Inactive",
-  },
-  {
-    id: 7,
-    category: "Bakery",
-    subCategory: "Bread",
-    description: "Fresh baked bread",
-    status: "Active",
-  },
-  {
-    id: 8,
-    category: "Bakery",
-    subCategory: "Cakes",
-    description: "Assorted cakes",
-    status: "Active",
-  },
-  {
-    id: 9,
-    category: "Frozen",
-    subCategory: "Ice Cream",
-    description: "Frozen desserts",
-    status: "Active",
-  },
-  {
-    id: 10,
-    category: "Frozen",
-    subCategory: "Frozen Meals",
-    description: "Ready to eat frozen meals",
-    status: "Inactive",
-  },
-  {
-    id: 11,
-    category: "Produce",
-    subCategory: "Fruits",
-    description: "Fresh fruits",
-    status: "Active",
-  },
-  {
-    id: 12,
-    category: "Produce",
-    subCategory: "Vegetables",
-    description: "Fresh vegetables",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "Beverages",
@@ -111,7 +25,9 @@ export default function SubCategory() {
   });
 
   // Table data and pagination state
-  const [data, setData] = useState(subCategoriesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -125,6 +41,22 @@ export default function SubCategory() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SubCategory");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Handlers
   const handleInputChange = (
@@ -204,7 +136,7 @@ export default function SubCategory() {
 
   const handleRefresh = () => {
     // Reset data to initial JSON and form
-    setData(subCategoriesData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };

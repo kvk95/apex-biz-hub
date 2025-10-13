@@ -1,102 +1,12 @@
-import React, { useState, useMemo } from "react";
-
-const emailSettingsData = [
-  {
-    id: 1,
-    email: "admin@example.com",
-    smtpHost: "smtp.example.com",
-    smtpPort: 587,
-    smtpUser: "admin",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 2,
-    email: "support@example.com",
-    smtpHost: "smtp.support.com",
-    smtpPort: 465,
-    smtpUser: "support",
-    smtpPass: "********",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    email: "sales@example.com",
-    smtpHost: "smtp.sales.com",
-    smtpPort: 25,
-    smtpUser: "sales",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 4,
-    email: "info@example.com",
-    smtpHost: "smtp.info.com",
-    smtpPort: 2525,
-    smtpUser: "info",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 5,
-    email: "marketing@example.com",
-    smtpHost: "smtp.marketing.com",
-    smtpPort: 587,
-    smtpUser: "marketing",
-    smtpPass: "********",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    email: "hr@example.com",
-    smtpHost: "smtp.hr.com",
-    smtpPort: 465,
-    smtpUser: "hr",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 7,
-    email: "ceo@example.com",
-    smtpHost: "smtp.ceo.com",
-    smtpPort: 25,
-    smtpUser: "ceo",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 8,
-    email: "cto@example.com",
-    smtpHost: "smtp.cto.com",
-    smtpPort: 2525,
-    smtpUser: "cto",
-    smtpPass: "********",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    email: "finance@example.com",
-    smtpHost: "smtp.finance.com",
-    smtpPort: 587,
-    smtpUser: "finance",
-    smtpPass: "********",
-    status: "Active",
-  },
-  {
-    id: 10,
-    email: "legal@example.com",
-    smtpHost: "smtp.legal.com",
-    smtpPort: 465,
-    smtpUser: "legal",
-    smtpPass: "********",
-    status: "Inactive",
-  },
-];
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function EmailSettings() {
-  const [data, setData] = useState(emailSettingsData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState({
     email: "",
@@ -107,6 +17,22 @@ export default function EmailSettings() {
     status: "Active",
   });
   const [editId, setEditId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("EmailSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const totalPages = Math.ceil(data.length / pageSize);
 
@@ -168,7 +94,6 @@ export default function EmailSettings() {
     }
 
     if (editId !== null) {
-      // Update existing
       setData((d) =>
         d.map((item) =>
           item.id === editId
@@ -186,7 +111,6 @@ export default function EmailSettings() {
       );
       setEditId(null);
     } else {
-      // Add new
       const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
       setData((d) => [
         ...d,
@@ -212,7 +136,7 @@ export default function EmailSettings() {
   }
 
   function handleRefresh() {
-    setData(emailSettingsData);
+    loadData();
     setCurrentPage(1);
     setEditId(null);
     setForm({
@@ -226,7 +150,6 @@ export default function EmailSettings() {
   }
 
   function handleReport() {
-    // For demonstration, just alert JSON data
     alert("Report Data:\n" + JSON.stringify(data, null, 2));
   }
 

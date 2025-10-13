@@ -1,87 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const packagesData = [
-  {
-    id: 1,
-    packageName: "Basic",
-    price: "₹ 1000",
-    duration: "1 Month",
-    description: "Basic package for starters",
-    status: "Active",
-  },
-  {
-    id: 2,
-    packageName: "Standard",
-    price: "₹ 2500",
-    duration: "3 Months",
-    description: "Standard package for regular users",
-    status: "Active",
-  },
-  {
-    id: 3,
-    packageName: "Premium",
-    price: "₹ 4000",
-    duration: "6 Months",
-    description: "Premium package with extra features",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    packageName: "Enterprise",
-    price: "₹ 10000",
-    duration: "12 Months",
-    description: "Enterprise package for businesses",
-    status: "Active",
-  },
-  {
-    id: 5,
-    packageName: "Custom",
-    price: "₹ 0",
-    duration: "Custom Duration",
-    description: "Custom package tailored for you",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    packageName: "Trial",
-    price: "₹ 0",
-    duration: "7 Days",
-    description: "Trial package for evaluation",
-    status: "Active",
-  },
-  {
-    id: 7,
-    packageName: "Gold",
-    price: "₹ 7000",
-    duration: "9 Months",
-    description: "Gold package with premium support",
-    status: "Active",
-  },
-  {
-    id: 8,
-    packageName: "Silver",
-    price: "₹ 3500",
-    duration: "4 Months",
-    description: "Silver package with standard support",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    packageName: "Bronze",
-    price: "₹ 1500",
-    duration: "2 Months",
-    description: "Bronze package for budget users",
-    status: "Active",
-  },
-  {
-    id: 10,
-    packageName: "VIP",
-    price: "₹ 15000",
-    duration: "24 Months",
-    description: "VIP package with all features",
-    status: "Active",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -106,8 +24,25 @@ const Packages: React.FC = () => {
   // Editing package id
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Packages data state
-  const [data, setData] = useState(packagesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Packages");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -153,22 +88,22 @@ const Packages: React.FC = () => {
     }
     if (mode === "add") {
       const newPackage = {
-        id: data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1,
+        id: data.length ? Math.max(...data.map((d: any) => d.id)) + 1 : 1,
         ...form,
       };
-      setData((d) => [...d, newPackage]);
+      setData((d: any) => [...d, newPackage]);
       resetForm();
       setCurrentPage(totalPages); // Go to last page where new item is added
     } else if (mode === "edit" && editId !== null) {
-      setData((d) =>
-        d.map((item) => (item.id === editId ? { id: editId, ...form } : item))
+      setData((d: any) =>
+        d.map((item: any) => (item.id === editId ? { id: editId, ...form } : item))
       );
       resetForm();
     }
   };
 
   const handleEdit = (id: number) => {
-    const pkg = data.find((d) => d.id === id);
+    const pkg = data.find((d: any) => d.id === id);
     if (pkg) {
       setForm({
         packageName: pkg.packageName,
@@ -185,7 +120,7 @@ const Packages: React.FC = () => {
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this package?")) {
-      setData((d) => d.filter((item) => item.id !== id));
+      setData((d: any) => d.filter((item: any) => item.id !== id));
       if (paginatedData.length === 1 && currentPage > 1) {
         setCurrentPage((p) => p - 1);
       }
@@ -196,7 +131,7 @@ const Packages: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setData(packagesData);
+    loadData();
     resetForm();
     setCurrentPage(1);
     setPageSize(5);
@@ -433,7 +368,7 @@ const Packages: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((pkg, idx) => (
+                paginatedData.map((pkg: any, idx: number) => (
                   <tr key={pkg.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {(currentPage - 1) * pageSize + idx + 1}

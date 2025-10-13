@@ -1,103 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const signaturesData = [
-  {
-    id: 1,
-    customerName: "John Doe",
-    customerId: "CUST001",
-    signatureDate: "2025-10-01",
-    signatureStatus: "Active",
-    remarks: "Verified signature",
-  },
-  {
-    id: 2,
-    customerName: "Jane Smith",
-    customerId: "CUST002",
-    signatureDate: "2025-09-28",
-    signatureStatus: "Inactive",
-    remarks: "Signature expired",
-  },
-  {
-    id: 3,
-    customerName: "Michael Johnson",
-    customerId: "CUST003",
-    signatureDate: "2025-09-30",
-    signatureStatus: "Active",
-    remarks: "New signature added",
-  },
-  {
-    id: 4,
-    customerName: "Emily Davis",
-    customerId: "CUST004",
-    signatureDate: "2025-10-03",
-    signatureStatus: "Active",
-    remarks: "Verified signature",
-  },
-  {
-    id: 5,
-    customerName: "William Brown",
-    customerId: "CUST005",
-    signatureDate: "2025-09-25",
-    signatureStatus: "Inactive",
-    remarks: "Signature revoked",
-  },
-  {
-    id: 6,
-    customerName: "Olivia Wilson",
-    customerId: "CUST006",
-    signatureDate: "2025-10-02",
-    signatureStatus: "Active",
-    remarks: "Signature renewed",
-  },
-  {
-    id: 7,
-    customerName: "James Taylor",
-    customerId: "CUST007",
-    signatureDate: "2025-09-27",
-    signatureStatus: "Active",
-    remarks: "Verified signature",
-  },
-  {
-    id: 8,
-    customerName: "Sophia Martinez",
-    customerId: "CUST008",
-    signatureDate: "2025-10-04",
-    signatureStatus: "Active",
-    remarks: "New signature added",
-  },
-  {
-    id: 9,
-    customerName: "Benjamin Anderson",
-    customerId: "CUST009",
-    signatureDate: "2025-09-29",
-    signatureStatus: "Inactive",
-    remarks: "Signature expired",
-  },
-  {
-    id: 10,
-    customerName: "Isabella Thomas",
-    customerId: "CUST010",
-    signatureDate: "2025-10-05",
-    signatureStatus: "Active",
-    remarks: "Verified signature",
-  },
-  {
-    id: 11,
-    customerName: "Liam Jackson",
-    customerId: "CUST011",
-    signatureDate: "2025-09-26",
-    signatureStatus: "Active",
-    remarks: "Signature renewed",
-  },
-  {
-    id: 12,
-    customerName: "Mia White",
-    customerId: "CUST012",
-    signatureDate: "2025-10-06",
-    signatureStatus: "Active",
-    remarks: "New signature added",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 20];
 
@@ -113,7 +15,26 @@ export default function Signatures() {
     remarks: "",
   });
   const [editId, setEditId] = useState<number | null>(null);
-  const [data, setData] = useState(signaturesData);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Signatures");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Filtered and paginated data
   const filteredData = useMemo(() => {
@@ -135,7 +56,9 @@ export default function Signatures() {
 
   // Handlers
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
@@ -215,7 +138,7 @@ export default function Signatures() {
       remarks: "",
     });
     setEditId(null);
-    setData(signaturesData);
+    loadData();
   };
 
   // Pagination navigation handlers
@@ -226,7 +149,7 @@ export default function Signatures() {
   };
 
   // Page title as per reference page
-  React.useEffect(() => {
+  useEffect(() => {
     document.title = "Signatures - Dreams POS";
   }, []);
 
@@ -478,9 +401,13 @@ export default function Signatures() {
             ) : (
               paginatedData.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">{item.customerName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {item.customerName}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">{item.customerId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.signatureDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {item.signatureDate}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${

@@ -1,127 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const leavesData = [
-  {
-    id: 1,
-    employeeName: "John Doe",
-    leaveType: "Casual Leave",
-    fromDate: "2023-08-01",
-    toDate: "2023-08-03",
-    noOfDays: 3,
-    reason: "Family function",
-    status: "Approved",
-  },
-  {
-    id: 2,
-    employeeName: "Jane Smith",
-    leaveType: "Sick Leave",
-    fromDate: "2023-08-05",
-    toDate: "2023-08-07",
-    noOfDays: 3,
-    reason: "Fever and cold",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    employeeName: "Michael Johnson",
-    leaveType: "Earned Leave",
-    fromDate: "2023-08-10",
-    toDate: "2023-08-12",
-    noOfDays: 3,
-    reason: "Vacation",
-    status: "Rejected",
-  },
-  {
-    id: 4,
-    employeeName: "Emily Davis",
-    leaveType: "Casual Leave",
-    fromDate: "2023-08-15",
-    toDate: "2023-08-16",
-    noOfDays: 2,
-    reason: "Personal work",
-    status: "Approved",
-  },
-  {
-    id: 5,
-    employeeName: "William Brown",
-    leaveType: "Sick Leave",
-    fromDate: "2023-08-18",
-    toDate: "2023-08-20",
-    noOfDays: 3,
-    reason: "Medical treatment",
-    status: "Pending",
-  },
-  {
-    id: 6,
-    employeeName: "Olivia Wilson",
-    leaveType: "Earned Leave",
-    fromDate: "2023-08-22",
-    toDate: "2023-08-25",
-    noOfDays: 4,
-    reason: "Holiday trip",
-    status: "Approved",
-  },
-  {
-    id: 7,
-    employeeName: "James Taylor",
-    leaveType: "Casual Leave",
-    fromDate: "2023-08-27",
-    toDate: "2023-08-28",
-    noOfDays: 2,
-    reason: "Urgent work",
-    status: "Rejected",
-  },
-  {
-    id: 8,
-    employeeName: "Sophia Martinez",
-    leaveType: "Sick Leave",
-    fromDate: "2023-08-29",
-    toDate: "2023-08-30",
-    noOfDays: 2,
-    reason: "Flu",
-    status: "Approved",
-  },
-  {
-    id: 9,
-    employeeName: "David Anderson",
-    leaveType: "Earned Leave",
-    fromDate: "2023-09-01",
-    toDate: "2023-09-03",
-    noOfDays: 3,
-    reason: "Family trip",
-    status: "Pending",
-  },
-  {
-    id: 10,
-    employeeName: "Isabella Thomas",
-    leaveType: "Casual Leave",
-    fromDate: "2023-09-05",
-    toDate: "2023-09-06",
-    noOfDays: 2,
-    reason: "Personal reasons",
-    status: "Approved",
-  },
-  {
-    id: 11,
-    employeeName: "Daniel Jackson",
-    leaveType: "Sick Leave",
-    fromDate: "2023-09-08",
-    toDate: "2023-09-09",
-    noOfDays: 2,
-    reason: "Cold & cough",
-    status: "Rejected",
-  },
-  {
-    id: 12,
-    employeeName: "Mia White",
-    leaveType: "Earned Leave",
-    fromDate: "2023-09-11",
-    toDate: "2023-09-13",
-    noOfDays: 3,
-    reason: "Holiday",
-    status: "Approved",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const leaveTypes = [
   "Casual Leave",
@@ -134,6 +12,26 @@ const leaveTypes = [
 const statuses = ["All", "Approved", "Pending", "Rejected"];
 
 export default function AdminLeaves() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("AdminLeaves");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -155,11 +53,11 @@ export default function AdminLeaves() {
   });
 
   // Handle pagination change
-  const totalPages = Math.ceil(leavesData.length / itemsPerPage);
+  const totalPages = Math.ceil(data.length / itemsPerPage);
 
   // Filtered and searched data
   const filteredLeaves = useMemo(() => {
-    return leavesData.filter((leave) => {
+    return data.filter((leave: any) => {
       const statusMatch =
         filterStatus === "All" ? true : leave.status === filterStatus;
       const leaveTypeMatch =
@@ -169,7 +67,7 @@ export default function AdminLeaves() {
         .includes(searchName.toLowerCase());
       return statusMatch && leaveTypeMatch && nameMatch;
     });
-  }, [filterStatus, filterLeaveType, searchName]);
+  }, [filterStatus, filterLeaveType, searchName, data]);
 
   // Paginated data
   const paginatedLeaves = useMemo(() => {
@@ -185,7 +83,9 @@ export default function AdminLeaves() {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((f) => ({ ...f, [name]: value }));
@@ -193,7 +93,6 @@ export default function AdminLeaves() {
 
   const handleAddLeave = (e: React.FormEvent) => {
     e.preventDefault();
-    // For this task, just alert or reset form (no backend)
     alert("Leave request saved (mock)");
     setFormData({
       employeeName: "",
@@ -207,7 +106,6 @@ export default function AdminLeaves() {
   };
 
   const handleRefresh = () => {
-    // For mock, just reset filters and page
     setFilterStatus("All");
     setFilterLeaveType("All");
     setSearchName("");
@@ -215,7 +113,6 @@ export default function AdminLeaves() {
   };
 
   const handleReport = () => {
-    // Mock report action
     alert("Report generated (mock)");
   };
 
@@ -373,7 +270,7 @@ export default function AdminLeaves() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedLeaves.map((leave) => (
+                  paginatedLeaves.map((leave: any) => (
                     <tr key={leave.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 whitespace-nowrap">
                         {leave.employeeName}
@@ -502,7 +399,10 @@ export default function AdminLeaves() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Add Leave
             </h2>
-            <form onSubmit={handleAddLeave} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <form
+              onSubmit={handleAddLeave}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            >
               <div>
                 <label
                   htmlFor="employeeName"

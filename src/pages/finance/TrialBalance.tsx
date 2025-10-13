@@ -1,84 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 10;
-
-const trialBalanceData = [
-  {
-    accountName: "Cash",
-    debit: 5000,
-    credit: 0,
-  },
-  {
-    accountName: "Accounts Receivable",
-    debit: 7000,
-    credit: 0,
-  },
-  {
-    accountName: "Inventory",
-    debit: 12000,
-    credit: 0,
-  },
-  {
-    accountName: "Prepaid Expenses",
-    debit: 1500,
-    credit: 0,
-  },
-  {
-    accountName: "Accounts Payable",
-    debit: 0,
-    credit: 4000,
-  },
-  {
-    accountName: "Notes Payable",
-    debit: 0,
-    credit: 3000,
-  },
-  {
-    accountName: "Owner's Equity",
-    debit: 0,
-    credit: 15000,
-  },
-  {
-    accountName: "Sales Revenue",
-    debit: 0,
-    credit: 25000,
-  },
-  {
-    accountName: "Service Revenue",
-    debit: 0,
-    credit: 8000,
-  },
-  {
-    accountName: "Salaries Expense",
-    debit: 6000,
-    credit: 0,
-  },
-  {
-    accountName: "Rent Expense",
-    debit: 2000,
-    credit: 0,
-  },
-  {
-    accountName: "Utilities Expense",
-    debit: 800,
-    credit: 0,
-  },
-  {
-    accountName: "Depreciation Expense",
-    debit: 1200,
-    credit: 0,
-  },
-  {
-    accountName: "Interest Expense",
-    debit: 400,
-    credit: 0,
-  },
-  {
-    accountName: "Miscellaneous Expense",
-    debit: 300,
-    credit: 0,
-  },
-];
 
 const accountsOptions = [
   "Cash",
@@ -99,15 +22,35 @@ const accountsOptions = [
 ];
 
 export default function TrialBalance() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("TrialBalance");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered data based on account filter and search term
   const filteredData = useMemo(() => {
-    return trialBalanceData.filter((item) => {
+    return data.filter((item: any) => {
       const matchesAccount =
         accountFilter === "" || item.accountName === accountFilter;
       const matchesSearch =
@@ -115,7 +58,7 @@ export default function TrialBalance() {
         item.accountName.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesAccount && matchesSearch;
     });
-  }, [accountFilter, searchTerm]);
+  }, [accountFilter, searchTerm, data]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -138,12 +81,10 @@ export default function TrialBalance() {
   };
 
   const onReport = () => {
-    // Placeholder for report functionality
     alert("Report generated (placeholder)");
   };
 
   const onSave = () => {
-    // Placeholder for save functionality
     alert("Save action triggered (placeholder)");
   };
 

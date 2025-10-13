@@ -1,163 +1,49 @@
 import React, { useState, useEffect } from "react";
-
-const invoiceSettingsData = {
-  invoiceSettings: {
-    invoicePrefix: "INV-",
-    invoiceStartNo: 1001,
-    invoiceFooter: "Thank you for your business!",
-    invoiceTerms: "Payment due within 30 days.",
-    invoiceNote: "Please contact us for any questions.",
-    invoiceLogoUrl: "",
-  },
-  invoiceTemplates: [
-    {
-      id: 1,
-      name: "Classic",
-      previewUrl: "/images/template-classic.png",
-      selected: true,
-    },
-    {
-      id: 2,
-      name: "Modern",
-      previewUrl: "/images/template-modern.png",
-      selected: false,
-    },
-    {
-      id: 3,
-      name: "Minimal",
-      previewUrl: "/images/template-minimal.png",
-      selected: false,
-    },
-  ],
-  invoiceList: [
-    {
-      id: 1,
-      invoiceNo: "INV-1001",
-      customer: "John Doe",
-      date: "2025-10-01",
-      dueDate: "2025-10-31",
-      total: "$1,200.00",
-      status: "Paid",
-    },
-    {
-      id: 2,
-      invoiceNo: "INV-1002",
-      customer: "Jane Smith",
-      date: "2025-10-05",
-      dueDate: "2025-11-04",
-      total: "$850.00",
-      status: "Unpaid",
-    },
-    {
-      id: 3,
-      invoiceNo: "INV-1003",
-      customer: "Acme Corp",
-      date: "2025-10-07",
-      dueDate: "2025-11-06",
-      total: "$2,450.00",
-      status: "Partial",
-    },
-    {
-      id: 4,
-      invoiceNo: "INV-1004",
-      customer: "Beta LLC",
-      date: "2025-10-10",
-      dueDate: "2025-11-09",
-      total: "$3,100.00",
-      status: "Paid",
-    },
-    {
-      id: 5,
-      invoiceNo: "INV-1005",
-      customer: "Gamma Inc",
-      date: "2025-10-12",
-      dueDate: "2025-11-11",
-      total: "$1,750.00",
-      status: "Unpaid",
-    },
-    {
-      id: 6,
-      invoiceNo: "INV-1006",
-      customer: "Delta Co",
-      date: "2025-10-15",
-      dueDate: "2025-11-14",
-      total: "$980.00",
-      status: "Paid",
-    },
-    {
-      id: 7,
-      invoiceNo: "INV-1007",
-      customer: "Epsilon Ltd",
-      date: "2025-10-18",
-      dueDate: "2025-11-17",
-      total: "$2,200.00",
-      status: "Unpaid",
-    },
-    {
-      id: 8,
-      invoiceNo: "INV-1008",
-      customer: "Zeta Partners",
-      date: "2025-10-20",
-      dueDate: "2025-11-19",
-      total: "$1,300.00",
-      status: "Partial",
-    },
-    {
-      id: 9,
-      invoiceNo: "INV-1009",
-      customer: "Eta Group",
-      date: "2025-10-22",
-      dueDate: "2025-11-21",
-      total: "$1,600.00",
-      status: "Paid",
-    },
-    {
-      id: 10,
-      invoiceNo: "INV-1010",
-      customer: "Theta Enterprises",
-      date: "2025-10-25",
-      dueDate: "2025-11-24",
-      total: "$2,900.00",
-      status: "Unpaid",
-    },
-  ],
-};
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
 export default function InvoiceSettings() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<any>("InvoiceSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for invoice settings form
-  const [invoicePrefix, setInvoicePrefix] = useState(
-    invoiceSettingsData.invoiceSettings.invoicePrefix
-  );
-  const [invoiceStartNo, setInvoiceStartNo] = useState(
-    invoiceSettingsData.invoiceSettings.invoiceStartNo
-  );
-  const [invoiceFooter, setInvoiceFooter] = useState(
-    invoiceSettingsData.invoiceSettings.invoiceFooter
-  );
-  const [invoiceTerms, setInvoiceTerms] = useState(
-    invoiceSettingsData.invoiceSettings.invoiceTerms
-  );
-  const [invoiceNote, setInvoiceNote] = useState(
-    invoiceSettingsData.invoiceSettings.invoiceNote
-  );
-  const [invoiceLogoUrl, setInvoiceLogoUrl] = useState(
-    invoiceSettingsData.invoiceSettings.invoiceLogoUrl
-  );
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [invoiceStartNo, setInvoiceStartNo] = useState(0);
+  const [invoiceFooter, setInvoiceFooter] = useState("");
+  const [invoiceTerms, setInvoiceTerms] = useState("");
+  const [invoiceNote, setInvoiceNote] = useState("");
+  const [invoiceLogoUrl, setInvoiceLogoUrl] = useState("");
 
   // Invoice template selection state
-  const [templates, setTemplates] = useState(invoiceSettingsData.invoiceTemplates);
+  const [templates, setTemplates] = useState<any[]>([]);
 
   // Invoice list pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(invoiceSettingsData.invoiceList.length / PAGE_SIZE);
+  const totalPages = Math.ceil((data?.invoiceList?.length || 0) / PAGE_SIZE);
 
   // Paginated invoices
-  const paginatedInvoices = invoiceSettingsData.invoiceList.slice(
+  const paginatedInvoices = data?.invoiceList?.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
-  );
+  ) || [];
 
   // Handlers
   const handleTemplateSelect = (id: number) => {
@@ -167,24 +53,15 @@ export default function InvoiceSettings() {
   };
 
   const handleRefresh = () => {
-    // Reset form to initial data
-    setInvoicePrefix(invoiceSettingsData.invoiceSettings.invoicePrefix);
-    setInvoiceStartNo(invoiceSettingsData.invoiceSettings.invoiceStartNo);
-    setInvoiceFooter(invoiceSettingsData.invoiceSettings.invoiceFooter);
-    setInvoiceTerms(invoiceSettingsData.invoiceSettings.invoiceTerms);
-    setInvoiceNote(invoiceSettingsData.invoiceSettings.invoiceNote);
-    setInvoiceLogoUrl(invoiceSettingsData.invoiceSettings.invoiceLogoUrl);
-    setTemplates(invoiceSettingsData.invoiceTemplates);
+    loadData();
     setCurrentPage(1);
   };
 
   const handleSave = () => {
-    // For demo, just alert saved data
     alert("Invoice settings saved successfully!");
   };
 
   const handleReport = () => {
-    // For demo, alert report generation
     alert("Invoice report generated!");
   };
 
@@ -194,12 +71,25 @@ export default function InvoiceSettings() {
     setCurrentPage(page);
   };
 
+  useEffect(() => {
+    if (data) {
+      setInvoicePrefix(data.invoiceSettings?.invoicePrefix || "");
+      setInvoiceStartNo(data.invoiceSettings?.invoiceStartNo || 0);
+      setInvoiceFooter(data.invoiceSettings?.invoiceFooter || "");
+      setInvoiceTerms(data.invoiceSettings?.invoiceTerms || "");
+      setInvoiceNote(data.invoiceSettings?.invoiceNote || "");
+      setInvoiceLogoUrl(data.invoiceSettings?.invoiceLogoUrl || "");
+      setTemplates(data.invoiceTemplates || []);
+    }
+  }, [data]);
+
+  if (loading) return <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">Loading...</div>;
+  if (error) return <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">Error: {error}</div>;
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      {/* Title */}
       <h1 className="text-3xl font-semibold mb-6">Invoice Settings</h1>
 
-      {/* Invoice Settings Form */}
       <section className="bg-white rounded-lg shadow p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Invoice Settings</h2>
         <form className="space-y-6">
@@ -331,7 +221,6 @@ export default function InvoiceSettings() {
         </form>
       </section>
 
-      {/* Invoice Template Selection */}
       <section className="bg-white rounded-lg shadow p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Invoice Template</h2>
         <div className="flex flex-wrap gap-6">
@@ -364,7 +253,6 @@ export default function InvoiceSettings() {
         </div>
       </section>
 
-      {/* Invoice List with Pagination */}
       <section className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Invoices</h2>
         <div className="overflow-x-auto">
@@ -419,7 +307,6 @@ export default function InvoiceSettings() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
         <nav
           className="flex justify-between items-center mt-6"
           aria-label="Pagination"

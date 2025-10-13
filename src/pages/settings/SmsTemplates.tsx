@@ -1,84 +1,14 @@
-import React, { useState, useEffect } from "react";
-
-const smsTemplatesData = [
-  {
-    id: 1,
-    title: "Order Confirmation",
-    message:
-      "Dear {customer_name}, your order #{order_id} has been confirmed. Thank you for shopping with us!",
-  },
-  {
-    id: 2,
-    title: "Delivery Update",
-    message:
-      "Hello {customer_name}, your order #{order_id} is out for delivery and will reach you soon.",
-  },
-  {
-    id: 3,
-    title: "Payment Reminder",
-    message:
-      "Dear {customer_name}, this is a reminder that your payment for order #{order_id} is due on {due_date}.",
-  },
-  {
-    id: 4,
-    title: "Promotional Offer",
-    message:
-      "Hi {customer_name}, enjoy a special discount of 20% on your next purchase. Use code SAVE20.",
-  },
-  {
-    id: 5,
-    title: "Account Activation",
-    message:
-      "Welcome {customer_name}! Your account has been activated successfully. Start shopping now.",
-  },
-  {
-    id: 6,
-    title: "Password Reset",
-    message:
-      "Dear {customer_name}, click the link to reset your password: {reset_link}. If you didn't request this, ignore this message.",
-  },
-  {
-    id: 7,
-    title: "Feedback Request",
-    message:
-      "Hi {customer_name}, we value your feedback. Please rate your recent purchase experience.",
-  },
-  {
-    id: 8,
-    title: "Subscription Renewal",
-    message:
-      "Dear {customer_name}, your subscription will renew on {renewal_date}. Thank you for staying with us.",
-  },
-  {
-    id: 9,
-    title: "Event Invitation",
-    message:
-      "Hello {customer_name}, you're invited to our exclusive event on {event_date}. RSVP now!",
-  },
-  {
-    id: 10,
-    title: "Thank You Note",
-    message:
-      "Dear {customer_name}, thank you for your recent purchase. We appreciate your business!",
-  },
-  {
-    id: 11,
-    title: "Order Cancellation",
-    message:
-      "Dear {customer_name}, your order #{order_id} has been cancelled as per your request.",
-  },
-  {
-    id: 12,
-    title: "Shipping Delay",
-    message:
-      "Hello {customer_name}, due to unforeseen circumstances, your order #{order_id} delivery is delayed.",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
 
 const pageSize = 5;
 
 export default function SmsTemplates() {
-  const [templates, setTemplates] = useState(smsTemplatesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [templates, setTemplates] = useState(data);
   const [currentPage, setCurrentPage] = useState(1);
   const [titleFilter, setTitleFilter] = useState("");
   const [messageFilter, setMessageFilter] = useState("");
@@ -90,11 +20,31 @@ export default function SmsTemplates() {
   const [formTitle, setFormTitle] = useState("");
   const [formMessage, setFormMessage] = useState("");
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SmsTemplates");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    setTemplates(data);
+  }, [data]);
+
   // Filter templates based on title and message filters
   const filteredTemplates = templates.filter(
     (t) =>
-      t.title.toLowerCase().includes(titleFilter.toLowerCase()) &&
-      t.message.toLowerCase().includes(messageFilter.toLowerCase())
+      t?.title?.toLowerCase().includes(titleFilter.toLowerCase()) &&
+      t?.message?.toLowerCase().includes(messageFilter.toLowerCase())
   );
 
   // Pagination calculations
@@ -252,64 +202,69 @@ export default function SmsTemplates() {
       {/* SMS Templates Table Section */}
       <section className="bg-white rounded shadow p-4 mb-6 overflow-x-auto">
         <h2 className="text-lg font-semibold mb-4">SMS Templates List</h2>
-        <table className="min-w-full border border-gray-300 text-left text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="border border-gray-300 px-4 py-2 w-16">#</th>
-              <th className="border border-gray-300 px-4 py-2 w-48">Title</th>
-              <th className="border border-gray-300 px-4 py-2">Message</th>
-              <th className="border border-gray-300 px-4 py-2 w-36">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedTemplates.length === 0 ? (
+        {loading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>Error: {error}</div>
+        ) : (
+          <table className="min-w-full border border-gray-300 text-left text-sm">
+            <thead className="bg-gray-50">
               <tr>
-                <td
-                  colSpan={4}
-                  className="border border-gray-300 px-4 py-6 text-center text-gray-500"
-                >
-                  No SMS templates found.
-                </td>
+                <th className="border border-gray-300 px-4 py-2 w-16">#</th>
+                <th className="border border-gray-300 px-4 py-2 w-48">Title</th>
+                <th className="border border-gray-300 px-4 py-2">Message</th>
+                <th className="border border-gray-300 px-4 py-2 w-36">Actions</th>
               </tr>
-            ) : (
-              paginatedTemplates.map((template, idx) => (
-                <tr
-                  key={template.id}
-                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="border border-gray-300 px-4 py-2 align-top">
-                    {(currentPage - 1) * pageSize + idx + 1}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 align-top">
-                    {template.title}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 align-top whitespace-pre-wrap">
-                    {template.message}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 align-top space-x-2">
-                    <button
-                      onClick={() => handleEdit(template)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
-                      aria-label={`Edit template ${template.title}`}
-                    >
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Delete"
-                      aria-label={`Delete template ${template.title}`}
-                    >
-                      <i className="fa fa-trash" aria-hidden="true"></i>
-                    </button>
+            </thead>
+            <tbody>
+              {paginatedTemplates.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="border border-gray-300 px-4 py-6 text-center text-gray-500"
+                  >
+                    No SMS templates found.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
+              ) : (
+                paginatedTemplates.map((template, idx) => (
+                  <tr
+                    key={template.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border border-gray-300 px-4 py-2 align-top">
+                      {(currentPage - 1) * pageSize + idx + 1}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 align-top">
+                      {template.title}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 align-top whitespace-pre-wrap">
+                      {template.message}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 align-top space-x-2">
+                      <button
+                        onClick={() => handleEdit(template)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit"
+                        aria-label={`Edit template ${template.title}`}
+                      >
+                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(template.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete"
+                        aria-label={`Delete template ${template.title}`}
+                      >
+                        <i className="fa fa-trash" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
         {/* Pagination Controls */}
         <nav
           className="flex justify-between items-center mt-4"

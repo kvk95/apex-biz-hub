@@ -1,171 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageTitle = "Superadmin Dashboard";
-
-const summaryCardsData = [
-  {
-    title: "Total Sales",
-    value: "1,25,000",
-    icon: "fas fa-shopping-cart",
-    bgColor: "bg-blue-600",
-  },
-  {
-    title: "Total Orders",
-    value: "3,200",
-    icon: "fas fa-clipboard-list",
-    bgColor: "bg-green-600",
-  },
-  {
-    title: "Total Customers",
-    value: "1,500",
-    icon: "fas fa-users",
-    bgColor: "bg-yellow-600",
-  },
-  {
-    title: "Total Products",
-    value: "850",
-    icon: "fas fa-box-open",
-    bgColor: "bg-red-600",
-  },
-];
-
-const salesReportData = [
-  { month: "January", sales: 12000, orders: 320, customers: 150 },
-  { month: "February", sales: 15000, orders: 400, customers: 180 },
-  { month: "March", sales: 18000, orders: 450, customers: 210 },
-  { month: "April", sales: 22000, orders: 500, customers: 250 },
-  { month: "May", sales: 25000, orders: 550, customers: 280 },
-  { month: "June", sales: 27000, orders: 600, customers: 300 },
-  { month: "July", sales: 30000, orders: 650, customers: 320 },
-  { month: "August", sales: 32000, orders: 700, customers: 350 },
-  { month: "September", sales: 35000, orders: 750, customers: 370 },
-  { month: "October", sales: 38000, orders: 800, customers: 400 },
-  { month: "November", sales: 40000, orders: 850, customers: 420 },
-  { month: "December", sales: 45000, orders: 900, customers: 450 },
-];
-
-const recentOrdersData = [
-  {
-    id: 1,
-    orderId: "ORD001",
-    customerName: "John Doe",
-    product: "Laptop",
-    quantity: 1,
-    price: 1200,
-    status: "Delivered",
-    date: "2025-10-01",
-  },
-  {
-    id: 2,
-    orderId: "ORD002",
-    customerName: "Jane Smith",
-    product: "Smartphone",
-    quantity: 2,
-    price: 800,
-    status: "Processing",
-    date: "2025-10-03",
-  },
-  {
-    id: 3,
-    orderId: "ORD003",
-    customerName: "Alice Johnson",
-    product: "Headphones",
-    quantity: 3,
-    price: 150,
-    status: "Cancelled",
-    date: "2025-10-05",
-  },
-  {
-    id: 4,
-    orderId: "ORD004",
-    customerName: "Bob Brown",
-    product: "Monitor",
-    quantity: 1,
-    price: 300,
-    status: "Delivered",
-    date: "2025-10-06",
-  },
-  {
-    id: 5,
-    orderId: "ORD005",
-    customerName: "Charlie Davis",
-    product: "Keyboard",
-    quantity: 4,
-    price: 100,
-    status: "Processing",
-    date: "2025-10-07",
-  },
-  {
-    id: 6,
-    orderId: "ORD006",
-    customerName: "Diana Evans",
-    product: "Mouse",
-    quantity: 2,
-    price: 50,
-    status: "Delivered",
-    date: "2025-10-08",
-  },
-  {
-    id: 7,
-    orderId: "ORD007",
-    customerName: "Ethan Foster",
-    product: "Tablet",
-    quantity: 1,
-    price: 600,
-    status: "Processing",
-    date: "2025-10-09",
-  },
-  {
-    id: 8,
-    orderId: "ORD008",
-    customerName: "Fiona Green",
-    product: "Smartwatch",
-    quantity: 1,
-    price: 200,
-    status: "Delivered",
-    date: "2025-10-10",
-  },
-  {
-    id: 9,
-    orderId: "ORD009",
-    customerName: "George Harris",
-    product: "Camera",
-    quantity: 1,
-    price: 900,
-    status: "Cancelled",
-    date: "2025-10-11",
-  },
-  {
-    id: 10,
-    orderId: "ORD010",
-    customerName: "Hannah Irving",
-    product: "Printer",
-    quantity: 1,
-    price: 250,
-    status: "Delivered",
-    date: "2025-10-12",
-  },
-  {
-    id: 11,
-    orderId: "ORD011",
-    customerName: "Ian Jacobs",
-    product: "Router",
-    quantity: 2,
-    price: 120,
-    status: "Processing",
-    date: "2025-10-13",
-  },
-  {
-    id: 12,
-    orderId: "ORD012",
-    customerName: "Julia King",
-    product: "External HDD",
-    quantity: 1,
-    price: 150,
-    status: "Delivered",
-    date: "2025-10-14",
-  },
-];
 
 const pageSize = 5;
 
@@ -175,16 +11,42 @@ export default function SuperadminDashboard() {
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SuperadminDashboard");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Assuming data.result contains keys like summaryCardsData, salesReportData, recentOrdersData
+  // For now, fallback to empty arrays if data is not structured yet
+  const summaryCardsData = data.summaryCardsData || [];
+  const salesReportData = data.salesReportData || [];
+  const recentOrdersData = data.recentOrdersData || [];
+
   // Filter recent orders by search fields
   const filteredOrders = useMemo(() => {
-    return recentOrdersData.filter((order) => {
+    return recentOrdersData.filter((order: any) => {
       return (
         order.orderId.toLowerCase().includes(searchOrderId.toLowerCase()) &&
         order.customerName.toLowerCase().includes(searchCustomer.toLowerCase()) &&
         (searchStatus === "" || order.status === searchStatus)
       );
     });
-  }, [searchOrderId, searchCustomer, searchStatus]);
+  }, [searchOrderId, searchCustomer, searchStatus, recentOrdersData]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
@@ -232,7 +94,7 @@ export default function SuperadminDashboard() {
         <main className="p-6 space-y-8">
           {/* Summary Cards */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {summaryCardsData.map(({ title, value, icon, bgColor }) => (
+            {summaryCardsData.map(({ title, value, icon, bgColor }: any) => (
               <div
                 key={title}
                 className={`flex items-center p-4 rounded-lg shadow-md text-white ${bgColor}`}
@@ -272,7 +134,7 @@ export default function SuperadminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {salesReportData.map(({ month, sales, orders, customers }) => (
+                  {salesReportData.map(({ month, sales, orders, customers }: any) => (
                     <tr
                       key={month}
                       className="border-b last:border-b-0 hover:bg-gray-50"
@@ -399,7 +261,7 @@ export default function SuperadminDashboard() {
                         price,
                         status,
                         date,
-                      }) => (
+                      }: any) => (
                         <tr
                           key={id}
                           className="border-b last:border-b-0 hover:bg-gray-50"

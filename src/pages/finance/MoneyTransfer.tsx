@@ -1,111 +1,31 @@
-import React, { useState, useMemo } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "123-456-7890",
-    email: "john@example.com",
-    accountNo: "123456789",
-    balance: 5000,
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    phone: "987-654-3210",
-    email: "jane@example.com",
-    accountNo: "987654321",
-    balance: 7500,
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    phone: "555-123-4567",
-    email: "michael@example.com",
-    accountNo: "555666777",
-    balance: 12000,
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    phone: "444-555-6666",
-    email: "emily@example.com",
-    accountNo: "444555666",
-    balance: 3000,
-  },
-  {
-    id: 5,
-    name: "William Brown",
-    phone: "222-333-4444",
-    email: "william@example.com",
-    accountNo: "222333444",
-    balance: 9800,
-  },
-  {
-    id: 6,
-    name: "Olivia Wilson",
-    phone: "111-222-3333",
-    email: "olivia@example.com",
-    accountNo: "111222333",
-    balance: 6700,
-  },
-  {
-    id: 7,
-    name: "James Taylor",
-    phone: "999-888-7777",
-    email: "james@example.com",
-    accountNo: "999888777",
-    balance: 4500,
-  },
-  {
-    id: 8,
-    name: "Sophia Martinez",
-    phone: "666-777-8888",
-    email: "sophia@example.com",
-    accountNo: "666777888",
-    balance: 8200,
-  },
-  {
-    id: 9,
-    name: "Benjamin Anderson",
-    phone: "333-444-5555",
-    email: "benjamin@example.com",
-    accountNo: "333444555",
-    balance: 15000,
-  },
-  {
-    id: 10,
-    name: "Isabella Thomas",
-    phone: "777-888-9999",
-    email: "isabella@example.com",
-    accountNo: "777888999",
-    balance: 4000,
-  },
-];
-
-const banksData = [
-  { id: 1, name: "Bank of America" },
-  { id: 2, name: "Chase Bank" },
-  { id: 3, name: "Wells Fargo" },
-  { id: 4, name: "Citibank" },
-  { id: 5, name: "HSBC" },
-];
-
-const currencies = [
-  { code: "USD", name: "US Dollar" },
-  { code: "EUR", name: "Euro" },
-  { code: "GBP", name: "British Pound" },
-  { code: "INR", name: "Indian Rupee" },
-  { code: "JPY", name: "Japanese Yen" },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function MoneyTransfer() {
-  // Pagination state for customer list
+  const [customersData, setCustomersData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("MoneyTransfer");
+    if (response.status.code === "S") {
+      setCustomersData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Form state
   const [form, setForm] = useState({
     customerName: "",
     customerPhone: "",
@@ -121,15 +41,13 @@ export default function MoneyTransfer() {
     description: "",
   });
 
-  // Filtered and paginated customers for table
   const paginatedCustomers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return customersData.slice(start, start + pageSize);
-  }, [currentPage]);
+  }, [currentPage, customersData]);
 
   const totalPages = Math.ceil(customersData.length / pageSize);
 
-  // Handlers
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -182,10 +100,8 @@ export default function MoneyTransfer() {
       <title>Money Transfer - Dreams POS</title>
       <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
         <div className="max-w-7xl mx-auto p-6">
-          {/* Page Title */}
           <h1 className="text-3xl font-semibold mb-6">Money Transfer</h1>
 
-          {/* Customer Details Section */}
           <section className="bg-white rounded shadow p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Customer Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -261,7 +177,6 @@ export default function MoneyTransfer() {
             </div>
           </section>
 
-          {/* Transfer Section */}
           <section className="bg-white rounded shadow p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Transfer Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -310,11 +225,11 @@ export default function MoneyTransfer() {
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
                   <option value="">Select Bank</option>
-                  {banksData.map((b) => (
-                    <option key={b.id} value={b.name}>
-                      {b.name}
-                    </option>
-                  ))}
+                  <option value="Bank of America">Bank of America</option>
+                  <option value="Chase Bank">Chase Bank</option>
+                  <option value="Wells Fargo">Wells Fargo</option>
+                  <option value="Citibank">Citibank</option>
+                  <option value="HSBC">HSBC</option>
                 </select>
               </div>
               <div>
@@ -357,11 +272,11 @@ export default function MoneyTransfer() {
                   onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
-                  {currencies.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name}
-                    </option>
-                  ))}
+                  <option value="USD">US Dollar</option>
+                  <option value="EUR">Euro</option>
+                  <option value="GBP">British Pound</option>
+                  <option value="INR">Indian Rupee</option>
+                  <option value="JPY">Japanese Yen</option>
                 </select>
               </div>
               <div className="md:col-span-2">
@@ -381,7 +296,6 @@ export default function MoneyTransfer() {
             </div>
           </section>
 
-          {/* Buttons */}
           <section className="flex flex-wrap gap-3 mb-6">
             <button
               type="button"
@@ -406,7 +320,6 @@ export default function MoneyTransfer() {
             </button>
           </section>
 
-          {/* Customer List Table with Pagination */}
           <section className="bg-white rounded shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Customer List</h2>
             <div className="overflow-x-auto">
@@ -486,7 +399,6 @@ export default function MoneyTransfer() {
               </table>
             </div>
 
-            {/* Pagination Controls */}
             <nav
               className="flex justify-end items-center mt-4 space-x-2"
               aria-label="Pagination"

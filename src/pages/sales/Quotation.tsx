@@ -1,119 +1,29 @@
-import React, { useState, useMemo } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "123-456-7890",
-    email: "john@example.com",
-    address: "123 Main St, Cityville",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    phone: "987-654-3210",
-    email: "jane@example.com",
-    address: "456 Elm St, Townsville",
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    phone: "555-123-4567",
-    email: "michael@example.com",
-    address: "789 Oak St, Villagetown",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    phone: "444-555-6666",
-    email: "emily@example.com",
-    address: "321 Pine St, Hamlet",
-  },
-  {
-    id: 5,
-    name: "William Brown",
-    phone: "222-333-4444",
-    email: "william@example.com",
-    address: "654 Maple St, Borough",
-  },
-  {
-    id: 6,
-    name: "Olivia Wilson",
-    phone: "111-222-3333",
-    email: "olivia@example.com",
-    address: "987 Birch St, Metropolis",
-  },
-  {
-    id: 7,
-    name: "James Taylor",
-    phone: "777-888-9999",
-    email: "james@example.com",
-    address: "159 Cedar St, Capital City",
-  },
-  {
-    id: 8,
-    name: "Sophia Martinez",
-    phone: "888-999-0000",
-    email: "sophia@example.com",
-    address: "753 Spruce St, Downtown",
-  },
-  {
-    id: 9,
-    name: "Benjamin Anderson",
-    phone: "666-777-8888",
-    email: "benjamin@example.com",
-    address: "852 Walnut St, Uptown",
-  },
-  {
-    id: 10,
-    name: "Isabella Thomas",
-    phone: "333-444-5555",
-    email: "isabella@example.com",
-    address: "951 Chestnut St, Suburbia",
-  },
-];
-
-const productsData = [
-  {
-    id: 1,
-    name: "Product A",
-    code: "PA-001",
-    price: 25.0,
-    unit: "pcs",
-  },
-  {
-    id: 2,
-    name: "Product B",
-    code: "PB-002",
-    price: 40.0,
-    unit: "pcs",
-  },
-  {
-    id: 3,
-    name: "Product C",
-    code: "PC-003",
-    price: 15.5,
-    unit: "pcs",
-  },
-  {
-    id: 4,
-    name: "Product D",
-    code: "PD-004",
-    price: 60.0,
-    unit: "pcs",
-  },
-  {
-    id: 5,
-    name: "Product E",
-    code: "PE-005",
-    price: 100.0,
-    unit: "pcs",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function Quotation() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Quotation");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state for customers table
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -123,32 +33,43 @@ export default function Quotation() {
     const d = new Date();
     return d.toISOString().slice(0, 10);
   });
-  const [customer, setCustomer] = useState(customersData[0].id);
-  const [customerDetails, setCustomerDetails] = useState(customersData[0]);
-  const [productRows, setProductRows] = useState([
+
+  // Since customersData and productsData are removed, 
+  // we need to handle initial states carefully.
+  // For now, keep customer and customerDetails as null or empty objects.
+  const [customer, setCustomer] = useState<number | null>(null);
+  const [customerDetails, setCustomerDetails] = useState<any>(null);
+  const [productRows, setProductRows] = useState<
     {
-      id: 1,
-      productId: productsData[0].id,
-      code: productsData[0].code,
-      price: productsData[0].price,
-      quantity: 1,
-      unit: productsData[0].unit,
-      total: productsData[0].price * 1,
-    },
-  ]);
+      id: number;
+      productId: number;
+      code: string;
+      price: number;
+      quantity: number;
+      unit: string;
+      total: number;
+    }[]
+  >([]);
+
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0);
 
-  // Update customer details on customer change
+  // Because customersData and productsData no longer exist,
+  // onCustomerChange, onProductChange, addProductRow, and other related functions
+  // cannot function properly without data.
+  // We keep their definitions but they will need to be adapted once data shape is known.
+
   const onCustomerChange = (id: number) => {
     setCustomer(id);
-    const cust = customersData.find((c) => c.id === id);
-    if (cust) setCustomerDetails(cust);
+    if (data && Array.isArray(data.customers)) {
+      const cust = data.customers.find((c: any) => c.id === id);
+      if (cust) setCustomerDetails(cust);
+    }
   };
 
-  // Update product row data on product change
   const onProductChange = (rowId: number, productId: number) => {
-    const product = productsData.find((p) => p.id === productId);
+    if (!data || !Array.isArray(data.products)) return;
+    const product = data.products.find((p: any) => p.id === productId);
     setProductRows((rows) =>
       rows.map((row) =>
         row.id === rowId && product
@@ -165,7 +86,6 @@ export default function Quotation() {
     );
   };
 
-  // Update quantity on change
   const onQuantityChange = (rowId: number, quantity: number) => {
     setProductRows((rows) =>
       rows.map((row) =>
@@ -180,12 +100,13 @@ export default function Quotation() {
     );
   };
 
-  // Add new product row
   const addProductRow = () => {
+    if (!data || !Array.isArray(data.products) || data.products.length === 0)
+      return;
     const newId = productRows.length
       ? Math.max(...productRows.map((r) => r.id)) + 1
       : 1;
-    const firstProduct = productsData[0];
+    const firstProduct = data.products[0];
     setProductRows((rows) => [
       ...rows,
       {
@@ -200,12 +121,10 @@ export default function Quotation() {
     ]);
   };
 
-  // Remove product row
   const removeProductRow = (rowId: number) => {
     setProductRows((rows) => rows.filter((r) => r.id !== rowId));
   };
 
-  // Calculate totals
   const subTotal = useMemo(() => {
     return productRows.reduce((acc, row) => acc + row.total, 0);
   }, [productRows]);
@@ -223,39 +142,49 @@ export default function Quotation() {
   }, [subTotal, discountAmount, taxAmount]);
 
   // Pagination logic for customers table
-  const totalPages = Math.ceil(customersData.length / pageSize);
-  const paginatedCustomers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return customersData.slice(start, start + pageSize);
-  }, [currentPage]);
+  const totalPages = data && Array.isArray(data.customers)
+    ? Math.ceil(data.customers.length / pageSize)
+    : 0;
 
-  // Handlers for pagination buttons
+  const paginatedCustomers = useMemo(() => {
+    if (!data || !Array.isArray(data.customers)) return [];
+    const start = (currentPage - 1) * pageSize;
+    return data.customers.slice(start, start + pageSize);
+  }, [currentPage, data]);
+
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
-  // Handlers for buttons (report, refresh, save)
   const onReportClick = () => {
     alert("Report button clicked - Implement report generation");
   };
   const onRefreshClick = () => {
-    // Reset form to initial state
     setQuotationNo("QTN-0001");
     setQuotationDate(new Date().toISOString().slice(0, 10));
-    setCustomer(customersData[0].id);
-    setCustomerDetails(customersData[0]);
-    setProductRows([
-      {
-        id: 1,
-        productId: productsData[0].id,
-        code: productsData[0].code,
-        price: productsData[0].price,
-        quantity: 1,
-        unit: productsData[0].unit,
-        total: productsData[0].price * 1,
-      },
-    ]);
+    if (data && Array.isArray(data.customers) && data.customers.length > 0) {
+      setCustomer(data.customers[0].id);
+      setCustomerDetails(data.customers[0]);
+    } else {
+      setCustomer(null);
+      setCustomerDetails(null);
+    }
+    if (data && Array.isArray(data.products) && data.products.length > 0) {
+      setProductRows([
+        {
+          id: 1,
+          productId: data.products[0].id,
+          code: data.products[0].code,
+          price: data.products[0].price,
+          quantity: 1,
+          unit: data.products[0].unit,
+          total: data.products[0].price * 1,
+        },
+      ]);
+    } else {
+      setProductRows([]);
+    }
     setDiscount(0);
     setTax(0);
     setCurrentPage(1);
@@ -342,15 +271,17 @@ export default function Quotation() {
                 </label>
                 <select
                   id="customerSelect"
-                  value={customer}
+                  value={customer ?? ""}
                   onChange={(e) => onCustomerChange(Number(e.target.value))}
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {customersData.map((cust) => (
-                    <option key={cust.id} value={cust.id}>
-                      {cust.name}
-                    </option>
-                  ))}
+                  {data &&
+                    Array.isArray(data.customers) &&
+                    data.customers.map((cust: any) => (
+                      <option key={cust.id} value={cust.id}>
+                        {cust.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
@@ -367,7 +298,7 @@ export default function Quotation() {
                 <input
                   type="text"
                   readOnly
-                  value={customerDetails.name}
+                  value={customerDetails?.name ?? ""}
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                 />
               </div>
@@ -378,7 +309,7 @@ export default function Quotation() {
                 <input
                   type="text"
                   readOnly
-                  value={customerDetails.phone}
+                  value={customerDetails?.phone ?? ""}
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                 />
               </div>
@@ -389,7 +320,7 @@ export default function Quotation() {
                 <input
                   type="email"
                   readOnly
-                  value={customerDetails.email}
+                  value={customerDetails?.email ?? ""}
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                 />
               </div>
@@ -400,7 +331,7 @@ export default function Quotation() {
                 <input
                   type="text"
                   readOnly
-                  value={customerDetails.address}
+                  value={customerDetails?.address ?? ""}
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                 />
               </div>
@@ -434,11 +365,13 @@ export default function Quotation() {
                           }
                           className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          {productsData.map((prod) => (
-                            <option key={prod.id} value={prod.id}>
-                              {prod.name}
-                            </option>
-                          ))}
+                          {data &&
+                            Array.isArray(data.products) &&
+                            data.products.map((prod: any) => (
+                              <option key={prod.id} value={prod.id}>
+                                {prod.name}
+                              </option>
+                            ))}
                         </select>
                       </td>
                       <td className="px-4 py-2">{row.code}</td>
@@ -551,7 +484,7 @@ export default function Quotation() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {paginatedCustomers.map((cust) => (
+                  {paginatedCustomers.map((cust: any) => (
                     <tr key={cust.id}>
                       <td className="px-4 py-2">{cust.name}</td>
                       <td className="px-4 py-2">{cust.phone}</td>

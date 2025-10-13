@@ -1,91 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const paymentGatewaysData = [
-  {
-    id: 1,
-    gatewayName: "Paypal",
-    type: "Online",
-    status: "Active",
-    description: "Paypal payment gateway",
-  },
-  {
-    id: 2,
-    gatewayName: "Stripe",
-    type: "Online",
-    status: "Inactive",
-    description: "Stripe payment gateway",
-  },
-  {
-    id: 3,
-    gatewayName: "Payoneer",
-    type: "Online",
-    status: "Active",
-    description: "Payoneer payment gateway",
-  },
-  {
-    id: 4,
-    gatewayName: "Authorize.net",
-    type: "Online",
-    status: "Active",
-    description: "Authorize.net payment gateway",
-  },
-  {
-    id: 5,
-    gatewayName: "2Checkout",
-    type: "Online",
-    status: "Inactive",
-    description: "2Checkout payment gateway",
-  },
-  {
-    id: 6,
-    gatewayName: "Skrill",
-    type: "Online",
-    status: "Active",
-    description: "Skrill payment gateway",
-  },
-  {
-    id: 7,
-    gatewayName: "WorldPay",
-    type: "Online",
-    status: "Inactive",
-    description: "WorldPay payment gateway",
-  },
-  {
-    id: 8,
-    gatewayName: "Google Pay",
-    type: "Online",
-    status: "Active",
-    description: "Google Pay payment gateway",
-  },
-  {
-    id: 9,
-    gatewayName: "Apple Pay",
-    type: "Online",
-    status: "Active",
-    description: "Apple Pay payment gateway",
-  },
-  {
-    id: 10,
-    gatewayName: "Amazon Pay",
-    type: "Online",
-    status: "Inactive",
-    description: "Amazon Pay payment gateway",
-  },
-  {
-    id: 11,
-    gatewayName: "Square",
-    type: "Online",
-    status: "Active",
-    description: "Square payment gateway",
-  },
-  {
-    id: 12,
-    gatewayName: "Alipay",
-    type: "Online",
-    status: "Inactive",
-    description: "Alipay payment gateway",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PaymentGatewaySettings: React.FC = () => {
   // Pagination state
@@ -103,8 +17,26 @@ const PaymentGatewaySettings: React.FC = () => {
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Data state (simulate data update)
-  const [data, setData] = useState(paymentGatewaysData);
+  // Data state
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PaymentGatewaySettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -180,14 +112,12 @@ const PaymentGatewaySettings: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    // Reset data to initial state
-    setData(paymentGatewaysData);
+    loadData();
     setCurrentPage(1);
     handleCancel();
   };
 
   const handleReport = () => {
-    // For demonstration: alert JSON data
     alert(JSON.stringify(data, null, 2));
   };
 

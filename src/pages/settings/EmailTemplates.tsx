@@ -1,96 +1,13 @@
-import React, { useState, useMemo } from "react";
-
-const emailTemplatesData = [
-  {
-    id: 1,
-    title: "Order Confirmation",
-    subject: "Your order has been confirmed!",
-    status: "Active",
-    createdDate: "2023-01-15",
-  },
-  {
-    id: 2,
-    title: "Shipping Notification",
-    subject: "Your order is on the way",
-    status: "Active",
-    createdDate: "2023-02-10",
-  },
-  {
-    id: 3,
-    title: "Password Reset",
-    subject: "Reset your password instructions",
-    status: "Inactive",
-    createdDate: "2023-03-05",
-  },
-  {
-    id: 4,
-    title: "Welcome Email",
-    subject: "Welcome to our service!",
-    status: "Active",
-    createdDate: "2023-04-01",
-  },
-  {
-    id: 5,
-    title: "Subscription Expiry",
-    subject: "Your subscription is about to expire",
-    status: "Inactive",
-    createdDate: "2023-05-20",
-  },
-  {
-    id: 6,
-    title: "Invoice",
-    subject: "Your invoice is ready",
-    status: "Active",
-    createdDate: "2023-06-15",
-  },
-  {
-    id: 7,
-    title: "Feedback Request",
-    subject: "We value your feedback",
-    status: "Active",
-    createdDate: "2023-07-10",
-  },
-  {
-    id: 8,
-    title: "Account Activation",
-    subject: "Activate your account",
-    status: "Inactive",
-    createdDate: "2023-08-05",
-  },
-  {
-    id: 9,
-    title: "Promotion",
-    subject: "Special offer just for you",
-    status: "Active",
-    createdDate: "2023-09-01",
-  },
-  {
-    id: 10,
-    title: "Newsletter",
-    subject: "Monthly news and updates",
-    status: "Active",
-    createdDate: "2023-10-01",
-  },
-  {
-    id: 11,
-    title: "Event Invitation",
-    subject: "You're invited!",
-    status: "Active",
-    createdDate: "2023-10-05",
-  },
-  {
-    id: 12,
-    title: "Account Suspension",
-    subject: "Your account has been suspended",
-    status: "Inactive",
-    createdDate: "2023-10-07",
-  },
-];
+import React, { useMemo, useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
 const EmailTemplates: React.FC = () => {
-  const [templates, setTemplates] = useState(emailTemplatesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -101,9 +18,25 @@ const EmailTemplates: React.FC = () => {
     status: string;
   }>({ title: "", subject: "", status: "Active" });
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("EmailTemplates");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter and search
   const filteredTemplates = useMemo(() => {
-    return templates.filter((t) => {
+    return data.filter((t: any) => {
       const matchesSearch =
         t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.subject.toLowerCase().includes(searchTerm.toLowerCase());
@@ -111,7 +44,7 @@ const EmailTemplates: React.FC = () => {
         filterStatus === "All" ? true : t.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [templates, searchTerm, filterStatus]);
+  }, [data, searchTerm, filterStatus]);
 
   // Pagination
   const pageCount = Math.ceil(filteredTemplates.length / PAGE_SIZE);
@@ -122,7 +55,7 @@ const EmailTemplates: React.FC = () => {
 
   // Handlers
   const onEdit = (id: number) => {
-    const tpl = templates.find((t) => t.id === id);
+    const tpl = data.find((t: any) => t.id === id);
     if (!tpl) return;
     setEditingId(id);
     setEditedTemplate({
@@ -139,7 +72,7 @@ const EmailTemplates: React.FC = () => {
 
   const onSave = () => {
     if (editingId === null) return;
-    setTemplates((prev) =>
+    setData((prev: any[]) =>
       prev.map((t) =>
         t.id === editingId
           ? {
@@ -161,7 +94,7 @@ const EmailTemplates: React.FC = () => {
         "Are you sure you want to delete this email template? This action cannot be undone."
       )
     ) {
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
+      setData((prev) => prev.filter((t) => t.id !== id));
       if ((currentPage - 1) * PAGE_SIZE >= filteredTemplates.length - 1) {
         setCurrentPage(Math.max(currentPage - 1, 1));
       }
@@ -169,7 +102,7 @@ const EmailTemplates: React.FC = () => {
   };
 
   const onRefresh = () => {
-    setTemplates(emailTemplatesData);
+    loadData();
     setSearchTerm("");
     setFilterStatus("All");
     setCurrentPage(1);

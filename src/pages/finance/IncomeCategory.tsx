@@ -1,55 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const incomeCategoriesData = [
-  {
-    id: 1,
-    incomeCategory: "Salary",
-    description: "Monthly salary income",
-    status: "Active",
-  },
-  {
-    id: 2,
-    incomeCategory: "Business",
-    description: "Income from business",
-    status: "Active",
-  },
-  {
-    id: 3,
-    incomeCategory: "Interest",
-    description: "Interest income from bank",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    incomeCategory: "Rental",
-    description: "Rental income",
-    status: "Active",
-  },
-  {
-    id: 5,
-    incomeCategory: "Dividends",
-    description: "Dividend income",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    incomeCategory: "Freelance",
-    description: "Freelance projects",
-    status: "Active",
-  },
-  {
-    id: 7,
-    incomeCategory: "Gifts",
-    description: "Gift income",
-    status: "Inactive",
-  },
-  {
-    id: 8,
-    incomeCategory: "Other",
-    description: "Other income sources",
-    status: "Active",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
@@ -60,7 +10,9 @@ const IncomeCategory: React.FC = () => {
   const [status, setStatus] = useState("Active");
 
   // Data state
-  const [data, setData] = useState(incomeCategoriesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Pagination state
@@ -72,6 +24,22 @@ const IncomeCategory: React.FC = () => {
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("IncomeCategory");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Reset form
   const resetForm = () => {
@@ -136,7 +104,7 @@ const IncomeCategory: React.FC = () => {
 
   // Refresh data (reset to initial)
   const handleRefresh = () => {
-    setData(incomeCategoriesData);
+    loadData();
     setCurrentPage(1);
     resetForm();
   };

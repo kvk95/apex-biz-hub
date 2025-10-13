@@ -1,175 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const stockData = [
-  {
-    id: 1,
-    productName: "Apple iPhone 14 Pro Max",
-    productCode: "IP14PM",
-    category: "Mobile",
-    supplier: "Apple Inc.",
-    unit: "Piece",
-    purchaseQty: 100,
-    saleQty: 80,
-    stockQty: 20,
-    purchasePrice: 1099,
-    salePrice: 1299,
-    stockValue: 21980,
-  },
-  {
-    id: 2,
-    productName: "Samsung Galaxy S23 Ultra",
-    productCode: "SGS23U",
-    category: "Mobile",
-    supplier: "Samsung",
-    unit: "Piece",
-    purchaseQty: 150,
-    saleQty: 120,
-    stockQty: 30,
-    purchasePrice: 999,
-    salePrice: 1199,
-    stockValue: 29970,
-  },
-  {
-    id: 3,
-    productName: "Sony WH-1000XM5 Headphones",
-    productCode: "SONYWH5",
-    category: "Accessories",
-    supplier: "Sony",
-    unit: "Piece",
-    purchaseQty: 200,
-    saleQty: 160,
-    stockQty: 40,
-    purchasePrice: 350,
-    salePrice: 399,
-    stockValue: 14000,
-  },
-  {
-    id: 4,
-    productName: "Dell XPS 13 Laptop",
-    productCode: "DXPS13",
-    category: "Computers",
-    supplier: "Dell",
-    unit: "Piece",
-    purchaseQty: 50,
-    saleQty: 35,
-    stockQty: 15,
-    purchasePrice: 1200,
-    salePrice: 1400,
-    stockValue: 18000,
-  },
-  {
-    id: 5,
-    productName: "Logitech MX Master 3 Mouse",
-    productCode: "LOGMX3",
-    category: "Accessories",
-    supplier: "Logitech",
-    unit: "Piece",
-    purchaseQty: 300,
-    saleQty: 250,
-    stockQty: 50,
-    purchasePrice: 100,
-    salePrice: 120,
-    stockValue: 5000,
-  },
-  {
-    id: 6,
-    productName: "Apple MacBook Pro 16\"",
-    productCode: "MBP16",
-    category: "Computers",
-    supplier: "Apple Inc.",
-    unit: "Piece",
-    purchaseQty: 40,
-    saleQty: 30,
-    stockQty: 10,
-    purchasePrice: 2500,
-    salePrice: 2800,
-    stockValue: 25000,
-  },
-  {
-    id: 7,
-    productName: "Canon EOS R6 Camera",
-    productCode: "CANREOSR6",
-    category: "Photography",
-    supplier: "Canon",
-    unit: "Piece",
-    purchaseQty: 25,
-    saleQty: 20,
-    stockQty: 5,
-    purchasePrice: 2500,
-    salePrice: 2700,
-    stockValue: 12500,
-  },
-  {
-    id: 8,
-    productName: "HP Envy 15 Laptop",
-    productCode: "HPENVY15",
-    category: "Computers",
-    supplier: "HP",
-    unit: "Piece",
-    purchaseQty: 60,
-    saleQty: 45,
-    stockQty: 15,
-    purchasePrice: 1100,
-    salePrice: 1300,
-    stockValue: 16500,
-  },
-  {
-    id: 9,
-    productName: "Bose QuietComfort Earbuds",
-    productCode: "BOSEQC",
-    category: "Accessories",
-    supplier: "Bose",
-    unit: "Piece",
-    purchaseQty: 180,
-    saleQty: 150,
-    stockQty: 30,
-    purchasePrice: 280,
-    salePrice: 320,
-    stockValue: 8400,
-  },
-  {
-    id: 10,
-    productName: "Microsoft Surface Pro 9",
-    productCode: "MSPRO9",
-    category: "Computers",
-    supplier: "Microsoft",
-    unit: "Piece",
-    purchaseQty: 70,
-    saleQty: 55,
-    stockQty: 15,
-    purchasePrice: 1300,
-    salePrice: 1500,
-    stockValue: 19500,
-  },
-  {
-    id: 11,
-    productName: "Google Pixel 7 Pro",
-    productCode: "GP7P",
-    category: "Mobile",
-    supplier: "Google",
-    unit: "Piece",
-    purchaseQty: 90,
-    saleQty: 70,
-    stockQty: 20,
-    purchasePrice: 899,
-    salePrice: 1099,
-    stockValue: 17980,
-  },
-  {
-    id: 12,
-    productName: "JBL Charge 5 Speaker",
-    productCode: "JBLCH5",
-    category: "Accessories",
-    supplier: "JBL",
-    unit: "Piece",
-    purchaseQty: 140,
-    saleQty: 110,
-    stockQty: 30,
-    purchasePrice: 180,
-    salePrice: 220,
-    stockValue: 5400,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All Categories",
@@ -199,6 +29,10 @@ const units = ["Piece", "Box", "Packet", "Kg"];
 const pageSizeOptions = [10, 25, 50, 100];
 
 export default function ManageStock() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [supplierFilter, setSupplierFilter] = useState("All Suppliers");
@@ -206,9 +40,25 @@ export default function ManageStock() {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ManageStock");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched data
   const filteredData = useMemo(() => {
-    return stockData.filter((item) => {
+    return data.filter((item) => {
       const matchesSearch =
         item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.productCode.toLowerCase().includes(searchTerm.toLowerCase());
@@ -219,7 +69,7 @@ export default function ManageStock() {
       const matchesUnit = unitFilter === "" || item.unit === unitFilter;
       return matchesSearch && matchesCategory && matchesSupplier && matchesUnit;
     });
-  }, [searchTerm, categoryFilter, supplierFilter, unitFilter]);
+  }, [data, searchTerm, categoryFilter, supplierFilter, unitFilter]);
 
   const pageCount = Math.ceil(filteredData.length / pageSize);
 

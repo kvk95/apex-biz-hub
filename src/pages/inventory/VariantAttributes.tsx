@@ -1,108 +1,30 @@
 import React, { useState, useEffect } from "react";
-
-const variantAttributesData = [
-  {
-    id: 1,
-    variantName: "Color",
-    variantValue: "Red",
-    status: "Active",
-  },
-  {
-    id: 2,
-    variantName: "Color",
-    variantValue: "Blue",
-    status: "Active",
-  },
-  {
-    id: 3,
-    variantName: "Size",
-    variantValue: "Small",
-    status: "Active",
-  },
-  {
-    id: 4,
-    variantName: "Size",
-    variantValue: "Medium",
-    status: "Inactive",
-  },
-  {
-    id: 5,
-    variantName: "Material",
-    variantValue: "Cotton",
-    status: "Active",
-  },
-  {
-    id: 6,
-    variantName: "Material",
-    variantValue: "Polyester",
-    status: "Inactive",
-  },
-  {
-    id: 7,
-    variantName: "Pattern",
-    variantValue: "Striped",
-    status: "Active",
-  },
-  {
-    id: 8,
-    variantName: "Pattern",
-    variantValue: "Plain",
-    status: "Active",
-  },
-  {
-    id: 9,
-    variantName: "Fit",
-    variantValue: "Slim",
-    status: "Active",
-  },
-  {
-    id: 10,
-    variantName: "Fit",
-    variantValue: "Regular",
-    status: "Inactive",
-  },
-  {
-    id: 11,
-    variantName: "Neck",
-    variantValue: "Round",
-    status: "Active",
-  },
-  {
-    id: 12,
-    variantName: "Neck",
-    variantValue: "V-Neck",
-    status: "Active",
-  },
-  {
-    id: 13,
-    variantName: "Sleeve",
-    variantValue: "Full Sleeve",
-    status: "Active",
-  },
-  {
-    id: 14,
-    variantName: "Sleeve",
-    variantValue: "Half Sleeve",
-    status: "Inactive",
-  },
-  {
-    id: 15,
-    variantName: "Length",
-    variantValue: "Short",
-    status: "Active",
-  },
-  {
-    id: 16,
-    variantName: "Length",
-    variantValue: "Long",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const pageSize = 5;
 
 const VariantAttributes: React.FC = () => {
-  const [data, setData] = useState(variantAttributesData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("VariantAttributes");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [variantName, setVariantName] = useState("");
   const [variantValue, setVariantValue] = useState("");

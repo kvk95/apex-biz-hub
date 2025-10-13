@@ -1,91 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const TAX_RATES_DATA = [
-  {
-    id: 1,
-    taxName: "VAT",
-    taxRate: "10%",
-    taxType: "Percentage",
-    taxDescription: "Value Added Tax",
-  },
-  {
-    id: 2,
-    taxName: "GST",
-    taxRate: "5%",
-    taxType: "Percentage",
-    taxDescription: "Goods and Services Tax",
-  },
-  {
-    id: 3,
-    taxName: "Service Tax",
-    taxRate: "15%",
-    taxType: "Percentage",
-    taxDescription: "Service Tax Description",
-  },
-  {
-    id: 4,
-    taxName: "Excise Duty",
-    taxRate: "12%",
-    taxType: "Percentage",
-    taxDescription: "Excise Duty Description",
-  },
-  {
-    id: 5,
-    taxName: "Custom Duty",
-    taxRate: "8%",
-    taxType: "Percentage",
-    taxDescription: "Custom Duty Description",
-  },
-  {
-    id: 6,
-    taxName: "Sales Tax",
-    taxRate: "7%",
-    taxType: "Percentage",
-    taxDescription: "Sales Tax Description",
-  },
-  {
-    id: 7,
-    taxName: "Luxury Tax",
-    taxRate: "20%",
-    taxType: "Percentage",
-    taxDescription: "Luxury Tax Description",
-  },
-  {
-    id: 8,
-    taxName: "Entertainment Tax",
-    taxRate: "18%",
-    taxType: "Percentage",
-    taxDescription: "Entertainment Tax Description",
-  },
-  {
-    id: 9,
-    taxName: "Import Tax",
-    taxRate: "25%",
-    taxType: "Percentage",
-    taxDescription: "Import Tax Description",
-  },
-  {
-    id: 10,
-    taxName: "Export Tax",
-    taxRate: "3%",
-    taxType: "Percentage",
-    taxDescription: "Export Tax Description",
-  },
-  {
-    id: 11,
-    taxName: "Environmental Tax",
-    taxRate: "9%",
-    taxType: "Percentage",
-    taxDescription: "Environmental Tax Description",
-  },
-  {
-    id: 12,
-    taxName: "Capital Gains Tax",
-    taxRate: "13%",
-    taxType: "Percentage",
-    taxDescription: "Capital Gains Tax Description",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const TAX_TYPES = ["Percentage", "Fixed"];
 
@@ -103,7 +17,25 @@ export default function TaxRates() {
   });
 
   // Data state
-  const [taxRates, setTaxRates] = useState(TAX_RATES_DATA);
+  const [taxRates, setTaxRates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("TaxRates");
+    if (response.status.code === "S") {
+      setTaxRates(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -205,7 +137,7 @@ export default function TaxRates() {
   }
 
   function handleRefresh() {
-    setTaxRates(TAX_RATES_DATA);
+    loadData();
     setCurrentPage(1);
     handleReset();
   }

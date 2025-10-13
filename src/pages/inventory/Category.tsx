@@ -1,55 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const categoriesData = [
-  {
-    id: 1,
-    categoryName: "Beverages",
-    description: "Soft drinks, coffees, teas, beers, and ales",
-    status: "Active",
-  },
-  {
-    id: 2,
-    categoryName: "Condiments",
-    description: "Sweet and savory sauces, relishes, spreads, and seasonings",
-    status: "Active",
-  },
-  {
-    id: 3,
-    categoryName: "Confections",
-    description: "Desserts, candies, and sweet breads",
-    status: "Active",
-  },
-  {
-    id: 4,
-    categoryName: "Dairy Products",
-    description: "Cheeses",
-    status: "Active",
-  },
-  {
-    id: 5,
-    categoryName: "Grains/Cereals",
-    description: "Breads, crackers, pasta, and cereal",
-    status: "Active",
-  },
-  {
-    id: 6,
-    categoryName: "Meat/Poultry",
-    description: "Prepared meats",
-    status: "Active",
-  },
-  {
-    id: 7,
-    categoryName: "Produce",
-    description: "Dried fruit and bean curd",
-    status: "Inactive",
-  },
-  {
-    id: 8,
-    categoryName: "Seafood",
-    description: "Seaweed and fish",
-    status: "Active",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const itemsPerPage = 5;
 
@@ -61,9 +11,30 @@ export default function Category() {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Active");
   // Data state
-  const [categories, setCategories] = useState(categoriesData);
+  const [categories, setCategories] = useState([]);
   // Editing state
   const [editId, setEditId] = useState<number | null>(null);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Category");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+      setCategories(response.result);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(categories.length / itemsPerPage);
@@ -139,7 +110,7 @@ export default function Category() {
   // Handle Refresh (reset form and reload data)
   const handleRefresh = () => {
     resetForm();
-    setCategories(categoriesData);
+    loadData();
     setCurrentPage(1);
   };
 

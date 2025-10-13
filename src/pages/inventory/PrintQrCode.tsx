@@ -1,121 +1,40 @@
-import React, { useState, useMemo } from "react";
-
-const data = [
-  {
-    id: 1,
-    productName: "Product 1",
-    productCode: "P001",
-    category: "Category A",
-    price: 100,
-    quantity: 10,
-  },
-  {
-    id: 2,
-    productName: "Product 2",
-    productCode: "P002",
-    category: "Category B",
-    price: 200,
-    quantity: 15,
-  },
-  {
-    id: 3,
-    productName: "Product 3",
-    productCode: "P003",
-    category: "Category A",
-    price: 150,
-    quantity: 8,
-  },
-  {
-    id: 4,
-    productName: "Product 4",
-    productCode: "P004",
-    category: "Category C",
-    price: 250,
-    quantity: 20,
-  },
-  {
-    id: 5,
-    productName: "Product 5",
-    productCode: "P005",
-    category: "Category B",
-    price: 300,
-    quantity: 5,
-  },
-  {
-    id: 6,
-    productName: "Product 6",
-    productCode: "P006",
-    category: "Category A",
-    price: 120,
-    quantity: 12,
-  },
-  {
-    id: 7,
-    productName: "Product 7",
-    productCode: "P007",
-    category: "Category C",
-    price: 180,
-    quantity: 7,
-  },
-  {
-    id: 8,
-    productName: "Product 8",
-    productCode: "P008",
-    category: "Category B",
-    price: 220,
-    quantity: 9,
-  },
-  {
-    id: 9,
-    productName: "Product 9",
-    productCode: "P009",
-    category: "Category A",
-    price: 130,
-    quantity: 14,
-  },
-  {
-    id: 10,
-    productName: "Product 10",
-    productCode: "P010",
-    category: "Category C",
-    price: 270,
-    quantity: 11,
-  },
-  {
-    id: 11,
-    productName: "Product 11",
-    productCode: "P011",
-    category: "Category B",
-    price: 210,
-    quantity: 6,
-  },
-  {
-    id: 12,
-    productName: "Product 12",
-    productCode: "P012",
-    category: "Category A",
-    price: 140,
-    quantity: 13,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = ["All", "Category A", "Category B", "Category C"];
 
 const pageSizeOptions = [10, 25, 50, 100];
 
 const PrintQrCode: React.FC = () => {
-  // Title
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PrintQrCode");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   React.useEffect(() => {
     document.title = "Print QR Code";
   }, []);
 
-  // Filters and states
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtered data based on search and category
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesCategory =
@@ -125,9 +44,8 @@ const PrintQrCode: React.FC = () => {
         item.productCode.toLowerCase().includes(search.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [search, categoryFilter]);
+  }, [search, categoryFilter, data]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / pageSize);
 
   const paginatedData = useMemo(() => {
@@ -135,7 +53,6 @@ const PrintQrCode: React.FC = () => {
     return filteredData.slice(start, start + pageSize);
   }, [currentPage, pageSize, filteredData]);
 
-  // Handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
@@ -163,7 +80,6 @@ const PrintQrCode: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Dummy handlers for buttons (report, save, print)
   const handleReport = () => alert("Report generated.");
   const handleSave = () => alert("Save action triggered.");
   const handlePrint = () => window.print();
@@ -172,7 +88,6 @@ const PrintQrCode: React.FC = () => {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
       <h1 className="text-2xl font-semibold mb-6 text-center">Print QR Code</h1>
 
-      {/* Filters Section */}
       <section className="bg-white rounded shadow p-6 mb-6">
         <form className="flex flex-wrap gap-4 items-center justify-between">
           <div className="flex flex-col w-full sm:w-1/3">
@@ -271,7 +186,6 @@ const PrintQrCode: React.FC = () => {
         </form>
       </section>
 
-      {/* Table Section */}
       <section className="bg-white rounded shadow p-6">
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
@@ -336,7 +250,6 @@ const PrintQrCode: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-2 sm:space-y-0">
           <div className="text-sm text-gray-600">
             Showing{" "}

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 type LeaveRecord = {
   id: number;
@@ -31,120 +32,6 @@ const employees = [
   { id: "E005", name: "William Brown" },
 ];
 
-// Sample leave data exactly replicating the reference page's table data
-const leaveData: LeaveRecord[] = [
-  {
-    id: 1,
-    employeeId: "E001",
-    employeeName: "John Doe",
-    leaveType: "Casual Leave",
-    fromDate: "2023-07-01",
-    toDate: "2023-07-05",
-    days: 5,
-    reason: "Family function",
-    status: "Approved",
-  },
-  {
-    id: 2,
-    employeeId: "E002",
-    employeeName: "Jane Smith",
-    leaveType: "Sick Leave",
-    fromDate: "2023-07-10",
-    toDate: "2023-07-12",
-    days: 3,
-    reason: "Medical emergency",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    employeeId: "E003",
-    employeeName: "Michael Johnson",
-    leaveType: "Maternity Leave",
-    fromDate: "2023-06-15",
-    toDate: "2023-07-15",
-    days: 31,
-    reason: "Child birth",
-    status: "Approved",
-  },
-  {
-    id: 4,
-    employeeId: "E004",
-    employeeName: "Emily Davis",
-    leaveType: "Paternity Leave",
-    fromDate: "2023-08-01",
-    toDate: "2023-08-07",
-    days: 7,
-    reason: "Newborn care",
-    status: "Rejected",
-  },
-  {
-    id: 5,
-    employeeId: "E005",
-    employeeName: "William Brown",
-    leaveType: "Bereavement Leave",
-    fromDate: "2023-07-20",
-    toDate: "2023-07-22",
-    days: 3,
-    reason: "Family loss",
-    status: "Approved",
-  },
-  {
-    id: 6,
-    employeeId: "E001",
-    employeeName: "John Doe",
-    leaveType: "Casual Leave",
-    fromDate: "2023-09-01",
-    toDate: "2023-09-03",
-    days: 3,
-    reason: "Personal work",
-    status: "Pending",
-  },
-  {
-    id: 7,
-    employeeId: "E002",
-    employeeName: "Jane Smith",
-    leaveType: "Unpaid Leave",
-    fromDate: "2023-10-05",
-    toDate: "2023-10-10",
-    days: 6,
-    reason: "Vacation",
-    status: "Approved",
-  },
-  {
-    id: 8,
-    employeeId: "E003",
-    employeeName: "Michael Johnson",
-    leaveType: "Sick Leave",
-    fromDate: "2023-11-01",
-    toDate: "2023-11-02",
-    days: 2,
-    reason: "Flu",
-    status: "Pending",
-  },
-  {
-    id: 9,
-    employeeId: "E004",
-    employeeName: "Emily Davis",
-    leaveType: "Casual Leave",
-    fromDate: "2023-12-15",
-    toDate: "2023-12-20",
-    days: 6,
-    reason: "Holiday",
-    status: "Approved",
-  },
-  {
-    id: 10,
-    employeeId: "E005",
-    employeeName: "William Brown",
-    leaveType: "Sick Leave",
-    fromDate: "2023-12-25",
-    toDate: "2023-12-27",
-    days: 3,
-    reason: "Cold",
-    status: "Rejected",
-  },
-];
-
 export default function EmployeeLeaves() {
   // Page title exactly as in reference page
   React.useEffect(() => {
@@ -165,9 +52,29 @@ export default function EmployeeLeaves() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [data, setData] = useState<LeaveRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<LeaveRecord[]>("EmployeeLeaves");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered data based on form inputs
   const filteredData = useMemo(() => {
-    return leaveData.filter((item) => {
+    return data.filter((item) => {
       if (form.employeeId && item.employeeId !== form.employeeId) return false;
       if (form.leaveType && item.leaveType !== form.leaveType) return false;
       if (form.status && item.status !== form.status) return false;
@@ -176,7 +83,7 @@ export default function EmployeeLeaves() {
       if (form.reason && !item.reason.toLowerCase().includes(form.reason.toLowerCase())) return false;
       return true;
     });
-  }, [form]);
+  }, [form, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

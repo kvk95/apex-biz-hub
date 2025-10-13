@@ -1,81 +1,39 @@
-import React, { useState, useMemo } from "react";
-
-const invoiceTemplatesData = [
-  {
-    id: 1,
-    invoiceTemplateName: "Invoice Template 1",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice1.png",
-    description: "Clean and professional invoice template with blue accents.",
-  },
-  {
-    id: 2,
-    invoiceTemplateName: "Invoice Template 2",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice2.png",
-    description: "Modern invoice template with green highlights and detailed layout.",
-  },
-  {
-    id: 3,
-    invoiceTemplateName: "Invoice Template 3",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice3.png",
-    description: "Classic invoice template with red headers and simple design.",
-  },
-  {
-    id: 4,
-    invoiceTemplateName: "Invoice Template 4",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice4.png",
-    description: "Minimalist invoice template with black and white theme.",
-  },
-  {
-    id: 5,
-    invoiceTemplateName: "Invoice Template 5",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice5.png",
-    description: "Elegant invoice template with purple accents and clean sections.",
-  },
-  {
-    id: 6,
-    invoiceTemplateName: "Invoice Template 6",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice6.png",
-    description: "Bold invoice template with orange highlights and structured layout.",
-  },
-  {
-    id: 7,
-    invoiceTemplateName: "Invoice Template 7",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice7.png",
-    description: "Creative invoice template with teal colors and modern typography.",
-  },
-  {
-    id: 8,
-    invoiceTemplateName: "Invoice Template 8",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice8.png",
-    description: "Simple invoice template with gray tones and classic structure.",
-  },
-  {
-    id: 9,
-    invoiceTemplateName: "Invoice Template 9",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice9.png",
-    description: "Professional invoice template with navy blue and clean lines.",
-  },
-  {
-    id: 10,
-    invoiceTemplateName: "Invoice Template 10",
-    invoiceTemplateImage: "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice10.png",
-    description: "Stylish invoice template with gold accents and modern feel.",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function InvoiceTemplates() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("InvoiceTemplates");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter data based on search term
   const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return invoiceTemplatesData;
-    return invoiceTemplatesData.filter((item) =>
+    if (!searchTerm.trim()) return data;
+    return data.filter((item) =>
       item.invoiceTemplateName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);

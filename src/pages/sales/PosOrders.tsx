@@ -1,120 +1,30 @@
-import React, { useState, useMemo } from "react";
-
-const ordersData = [
-  {
-    id: 1,
-    orderId: "1001",
-    customerName: "John Doe",
-    date: "2023-09-01",
-    totalAmount: 150.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 2,
-    orderId: "1002",
-    customerName: "Jane Smith",
-    date: "2023-09-02",
-    totalAmount: 200.5,
-    paymentStatus: "Pending",
-    orderStatus: "Processing",
-  },
-  {
-    id: 3,
-    orderId: "1003",
-    customerName: "Michael Johnson",
-    date: "2023-09-03",
-    totalAmount: 75.25,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 4,
-    orderId: "1004",
-    customerName: "Emily Davis",
-    date: "2023-09-04",
-    totalAmount: 320.0,
-    paymentStatus: "Paid",
-    orderStatus: "Cancelled",
-  },
-  {
-    id: 5,
-    orderId: "1005",
-    customerName: "William Brown",
-    date: "2023-09-05",
-    totalAmount: 180.75,
-    paymentStatus: "Pending",
-    orderStatus: "Processing",
-  },
-  {
-    id: 6,
-    orderId: "1006",
-    customerName: "Olivia Wilson",
-    date: "2023-09-06",
-    totalAmount: 95.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 7,
-    orderId: "1007",
-    customerName: "James Taylor",
-    date: "2023-09-07",
-    totalAmount: 210.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 8,
-    orderId: "1008",
-    customerName: "Sophia Anderson",
-    date: "2023-09-08",
-    totalAmount: 130.0,
-    paymentStatus: "Pending",
-    orderStatus: "Processing",
-  },
-  {
-    id: 9,
-    orderId: "1009",
-    customerName: "Benjamin Thomas",
-    date: "2023-09-09",
-    totalAmount: 400.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 10,
-    orderId: "1010",
-    customerName: "Isabella Martinez",
-    date: "2023-09-10",
-    totalAmount: 250.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-  {
-    id: 11,
-    orderId: "1011",
-    customerName: "Liam Garcia",
-    date: "2023-09-11",
-    totalAmount: 175.0,
-    paymentStatus: "Pending",
-    orderStatus: "Processing",
-  },
-  {
-    id: 12,
-    orderId: "1012",
-    customerName: "Mia Rodriguez",
-    date: "2023-09-12",
-    totalAmount: 300.0,
-    paymentStatus: "Paid",
-    orderStatus: "Delivered",
-  },
-];
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const paymentStatusOptions = ["All", "Paid", "Pending"];
 const orderStatusOptions = ["All", "Delivered", "Processing", "Cancelled"];
 
 export default function PosOrders() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PosOrders");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -128,13 +38,11 @@ export default function PosOrders() {
   const [filterDateTo, setFilterDateTo] = useState("");
 
   // Sorting state
-  const [sortField, setSortField] = useState<keyof typeof ordersData[0] | null>(
-    null
-  );
+  const [sortField, setSortField] = useState<keyof typeof data[0] | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Handlers for sorting
-  const handleSort = (field: keyof typeof ordersData[0]) => {
+  const handleSort = (field: keyof typeof data[0]) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -145,7 +53,7 @@ export default function PosOrders() {
 
   // Filtered and sorted data memoized
   const filteredOrders = useMemo(() => {
-    return ordersData
+    return data
       .filter((order) => {
         const matchesOrderId = order.orderId
           .toLowerCase()
@@ -189,6 +97,7 @@ export default function PosOrders() {
         return 0;
       });
   }, [
+    data,
     filterOrderId,
     filterCustomerName,
     filterPaymentStatus,

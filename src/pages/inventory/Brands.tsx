@@ -1,116 +1,30 @@
 import React, { useState, useEffect } from "react";
-
-const brandsData = [
-  {
-    id: 1,
-    brandName: "Apple",
-    brandCode: "APL",
-    brandDescription: "Leading tech company",
-    brandStatus: "Active",
-  },
-  {
-    id: 2,
-    brandName: "Samsung",
-    brandCode: "SMS",
-    brandDescription: "Global electronics giant",
-    brandStatus: "Active",
-  },
-  {
-    id: 3,
-    brandName: "Sony",
-    brandCode: "SNY",
-    brandDescription: "Entertainment and electronics",
-    brandStatus: "Inactive",
-  },
-  {
-    id: 4,
-    brandName: "LG",
-    brandCode: "LG",
-    brandDescription: "Home appliances and electronics",
-    brandStatus: "Active",
-  },
-  {
-    id: 5,
-    brandName: "Microsoft",
-    brandCode: "MSF",
-    brandDescription: "Software and hardware",
-    brandStatus: "Active",
-  },
-  {
-    id: 6,
-    brandName: "Dell",
-    brandCode: "DLL",
-    brandDescription: "Computers and accessories",
-    brandStatus: "Inactive",
-  },
-  {
-    id: 7,
-    brandName: "HP",
-    brandCode: "HP",
-    brandDescription: "Computers and printers",
-    brandStatus: "Active",
-  },
-  {
-    id: 8,
-    brandName: "Lenovo",
-    brandCode: "LNV",
-    brandDescription: "PC and mobile devices",
-    brandStatus: "Active",
-  },
-  {
-    id: 9,
-    brandName: "Asus",
-    brandCode: "ASU",
-    brandDescription: "Computer hardware and electronics",
-    brandStatus: "Active",
-  },
-  {
-    id: 10,
-    brandName: "Acer",
-    brandCode: "ACR",
-    brandDescription: "Computers and displays",
-    brandStatus: "Inactive",
-  },
-  {
-    id: 11,
-    brandName: "Canon",
-    brandCode: "CNN",
-    brandDescription: "Imaging and optical products",
-    brandStatus: "Active",
-  },
-  {
-    id: 12,
-    brandName: "Nikon",
-    brandCode: "NKN",
-    brandDescription: "Cameras and imaging products",
-    brandStatus: "Active",
-  },
-  {
-    id: 13,
-    brandName: "Panasonic",
-    brandCode: "PNC",
-    brandDescription: "Electronics and appliances",
-    brandStatus: "Inactive",
-  },
-  {
-    id: 14,
-    brandName: "Philips",
-    brandCode: "PLP",
-    brandDescription: "Health and consumer lifestyle",
-    brandStatus: "Active",
-  },
-  {
-    id: 15,
-    brandName: "Bose",
-    brandCode: "BSE",
-    brandDescription: "Audio equipment",
-    brandStatus: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const pageSize = 5;
 
 export default function Brands() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Brands");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
   // State for form inputs
@@ -121,7 +35,7 @@ export default function Brands() {
     brandStatus: "Active",
   });
   // State for brands list (simulate data source)
-  const [brands, setBrands] = useState(brandsData);
+  const [brands, setBrands] = useState(data);
   // State for editing
   const [editId, setEditId] = useState<number | null>(null);
 
@@ -226,7 +140,7 @@ export default function Brands() {
   };
 
   const handleRefresh = () => {
-    setBrands(brandsData);
+    setBrands(data);
     setCurrentPage(1);
     setEditId(null);
     setForm({
@@ -252,6 +166,10 @@ export default function Brands() {
   useEffect(() => {
     document.title = "Brands - Dreams POS";
   }, []);
+
+  useEffect(() => {
+    setBrands(data);
+  }, [data]);
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">

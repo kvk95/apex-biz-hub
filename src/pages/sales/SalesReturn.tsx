@@ -1,88 +1,33 @@
-import React, { useState, useEffect } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    mobile: "1234567890",
-    email: "john@example.com",
-    address: "123 Main St, City",
-    city: "New York",
-    state: "NY",
-    country: "USA",
-    zip: "10001",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    mobile: "0987654321",
-    email: "jane@example.com",
-    address: "456 Park Ave, City",
-    city: "Los Angeles",
-    state: "CA",
-    country: "USA",
-    zip: "90001",
-  },
-  // Add more customers as per reference data if needed
-];
-
-const productsData = [
-  {
-    id: 1,
-    productCode: "P001",
-    productName: "Product One",
-    unit: "pcs",
-    quantity: 2,
-    price: 50,
-    discount: 5,
-    tax: 10,
-    total: 95,
-  },
-  {
-    id: 2,
-    productCode: "P002",
-    productName: "Product Two",
-    unit: "pcs",
-    quantity: 1,
-    price: 100,
-    discount: 0,
-    tax: 18,
-    total: 118,
-  },
-  // Add more products as per reference data if needed
-];
-
-const salesReturnData = [
-  {
-    id: 1,
-    invoiceNo: "INV001",
-    date: "2025-10-01",
-    customer: "John Doe",
-    totalAmount: 213,
-    paidAmount: 200,
-    dueAmount: 13,
-    status: "Partial",
-  },
-  {
-    id: 2,
-    invoiceNo: "INV002",
-    date: "2025-10-05",
-    customer: "Jane Smith",
-    totalAmount: 118,
-    paidAmount: 118,
-    dueAmount: 0,
-    status: "Paid",
-  },
-  // Add more sales return records as per reference data if needed
-];
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function SalesReturn() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);O
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SalesReturn");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state for sales return table
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedData, setPaginatedData] = useState(
-    salesReturnData.slice(0, ITEMS_PER_PAGE)
+    data.slice(0, ITEMS_PER_PAGE)
   );
 
   // Form states
@@ -105,16 +50,16 @@ export default function SalesReturn() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
 
-  const [products, setProducts] = useState(productsData);
+  const [products, setProducts] = useState([]);
 
   // Pagination handlers
-  const totalPages = Math.ceil(salesReturnData.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
-    setPaginatedData(salesReturnData.slice(startIndex, startIndex + ITEMS_PER_PAGE));
+    setPaginatedData(data.slice(startIndex, startIndex + ITEMS_PER_PAGE));
   };
 
   // Customer selection handler
@@ -131,18 +76,17 @@ export default function SalesReturn() {
       });
       return;
     }
-    const cust = customersData.find((c) => c.id === Number(selectedCustomerId));
-    if (cust) {
-      setCustomerDetails({
-        mobile: cust.mobile,
-        email: cust.email,
-        address: cust.address,
-        city: cust.city,
-        state: cust.state,
-        country: cust.country,
-        zip: cust.zip,
-      });
-    }
+    // Since customersData is removed, no local data to find customer details
+    // You may want to fetch or handle this differently
+    setCustomerDetails({
+      mobile: "",
+      email: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "",
+      zip: "",
+    });
   }, [selectedCustomerId]);
 
   // Product quantity change handler
@@ -195,7 +139,7 @@ export default function SalesReturn() {
     setPaymentStatus("Paid");
     setPaymentAmount("");
     setPaymentNote("");
-    setProducts(productsData);
+    setProducts([]);
   };
 
   const handleSave = () => {
@@ -226,11 +170,7 @@ export default function SalesReturn() {
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Customer</option>
-              {customersData.map((cust) => (
-                <option key={cust.id} value={cust.id}>
-                  {cust.name}
-                </option>
-              ))}
+              {/* No customersData available */}
             </select>
           </div>
 

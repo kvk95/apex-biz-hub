@@ -1,96 +1,14 @@
-import React, { useState, useMemo } from "react";
-
-const customFieldsData = [
-  {
-    id: 1,
-    name: "Color",
-    type: "Dropdown",
-    status: "Active",
-    createdAt: "2023-05-01",
-  },
-  {
-    id: 2,
-    name: "Size",
-    type: "Text",
-    status: "Active",
-    createdAt: "2023-05-02",
-  },
-  {
-    id: 3,
-    name: "Material",
-    type: "Textarea",
-    status: "Inactive",
-    createdAt: "2023-05-03",
-  },
-  {
-    id: 4,
-    name: "Brand",
-    type: "Dropdown",
-    status: "Active",
-    createdAt: "2023-05-04",
-  },
-  {
-    id: 5,
-    name: "Weight",
-    type: "Text",
-    status: "Active",
-    createdAt: "2023-05-05",
-  },
-  {
-    id: 6,
-    name: "Warranty",
-    type: "Dropdown",
-    status: "Inactive",
-    createdAt: "2023-05-06",
-  },
-  {
-    id: 7,
-    name: "Model Number",
-    type: "Text",
-    status: "Active",
-    createdAt: "2023-05-07",
-  },
-  {
-    id: 8,
-    name: "Manufacturer",
-    type: "Textarea",
-    status: "Active",
-    createdAt: "2023-05-08",
-  },
-  {
-    id: 9,
-    name: "Expiration Date",
-    type: "Date",
-    status: "Inactive",
-    createdAt: "2023-05-09",
-  },
-  {
-    id: 10,
-    name: "Country of Origin",
-    type: "Dropdown",
-    status: "Active",
-    createdAt: "2023-05-10",
-  },
-  {
-    id: 11,
-    name: "Custom Field 1",
-    type: "Text",
-    status: "Active",
-    createdAt: "2023-05-11",
-  },
-  {
-    id: 12,
-    name: "Custom Field 2",
-    type: "Textarea",
-    status: "Inactive",
-    createdAt: "2023-05-12",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function CustomFields() {
-  const [fields, setFields] = useState(customFieldsData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [fields, setFields] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Form state
@@ -102,6 +20,23 @@ export default function CustomFields() {
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CustomFields");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setFields(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const pageCount = Math.ceil(fields.length / ITEMS_PER_PAGE);
@@ -167,7 +102,7 @@ export default function CustomFields() {
   };
 
   const handleRefresh = () => {
-    setFields(customFieldsData);
+    setFields(data);
     setCurrentPage(1);
     setForm({ name: "", type: "Text", status: "Active" });
     setEditingId(null);

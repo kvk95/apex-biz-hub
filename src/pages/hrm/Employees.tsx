@@ -1,29 +1,12 @@
- 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiService } from "@/services/ApiService";
+
 // Uncomment and install these if you use them in your reference page
 // import { FiSearch, FiRefreshCw, FiFileText, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-
-// =============================================
-// REPLACE THIS WITH ACTUAL DATA FROM REFERENCE PAGE
-// =============================================
-const employeesData = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    role: "Admin",
-    status: "Active",
-    joinDate: "2023-01-15",
-  },
-  // Add all other employees exactly as in the reference
-];
 
 const roles = ["Admin", "Manager", "Staff"]; // Replace with actual roles from reference
 const statuses = ["Active", "Inactive"]; // Replace with actual statuses from reference
 
-// =============================================
-// REPLACE THIS WITH ACTUAL SECTIONS/FIELDS FROM REFERENCE PAGE
-// =============================================
 const formFields = [
   { id: "name", label: "Name", type: "text" },
   { id: "email", label: "Email", type: "email" },
@@ -32,17 +15,33 @@ const formFields = [
   // Add all other fields exactly as in the reference
 ];
 
-// =============================================
-// MAIN COMPONENT
-// =============================================
 const Employees = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({});
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10; // Adjust based on reference pagination
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Employees");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter employees based on search
-  const filteredEmployees = employeesData.filter(emp =>
+  const filteredEmployees = data.filter(emp =>
     emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -69,7 +68,7 @@ const Employees = () => {
 
   // Handle edit (replace with actual logic)
   const handleEdit = (id) => {
-    const employee = employeesData.find(emp => emp.id === id);
+    const employee = data.find(emp => emp.id === id);
     setFormData(employee);
   };
 
@@ -83,6 +82,14 @@ const Employees = () => {
   // REPLACE THIS WITH ACTUAL PAGE TITLE FROM REFERENCE
   // =============================================
   const pageTitle = "Employees";
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -247,4 +254,4 @@ const Employees = () => {
   );
 };
 
-export default Employees; 
+export default Employees;

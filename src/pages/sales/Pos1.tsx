@@ -1,92 +1,29 @@
 import React, { useState, useEffect } from "react";
-
-const customersData = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "123-456-7890",
-    address: "123 Main St, Cityville",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    phone: "987-654-3210",
-    address: "456 Oak Ave, Townsville",
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    phone: "555-123-4567",
-    address: "789 Pine Rd, Villagetown",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    phone: "444-555-6666",
-    address: "321 Elm St, Hamlet",
-  },
-  {
-    id: 5,
-    name: "William Brown",
-    phone: "222-333-4444",
-    address: "654 Maple Dr, Borough",
-  },
-  {
-    id: 6,
-    name: "Olivia Wilson",
-    phone: "111-222-3333",
-    address: "987 Cedar Ln, Metropolis",
-  },
-  {
-    id: 7,
-    name: "James Taylor",
-    phone: "777-888-9999",
-    address: "246 Birch Blvd, Capital City",
-  },
-  {
-    id: 8,
-    name: "Sophia Martinez",
-    phone: "333-444-5555",
-    address: "135 Spruce Ct, Downtown",
-  },
-  {
-    id: 9,
-    name: "Benjamin Anderson",
-    phone: "666-777-8888",
-    address: "864 Walnut St, Uptown",
-  },
-  {
-    id: 10,
-    name: "Isabella Thomas",
-    phone: "999-000-1111",
-    address: "753 Chestnut Ave, Suburbia",
-  },
-];
-
-const productsData = [
-  {
-    id: 1,
-    name: "T-Bone Steak",
-    price: 66.0,
-    quantity: 1,
-  },
-  {
-    id: 2,
-    name: "Soup of the Day",
-    price: 7.5,
-    quantity: 1,
-  },
-  {
-    id: 3,
-    name: "Pancakes",
-    price: 27.0,
-    quantity: 1,
-  },
-];
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function Pos1() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Pos1");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Page title
   useEffect(() => {
     document.title = "POS 1 | Dreams POS";
@@ -94,21 +31,21 @@ export default function Pos1() {
 
   // Customer selection and search
   const [customerSearch, setCustomerSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState(customersData[0]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Pagination for customers
   const [customerPage, setCustomerPage] = useState(1);
-  const totalCustomerPages = Math.ceil(customersData.length / ITEMS_PER_PAGE);
-  const pagedCustomers = customersData.slice(
+  const totalCustomerPages = Math.ceil((data.customers?.length || 0) / ITEMS_PER_PAGE);
+  const pagedCustomers = (data.customers || []).slice(
     (customerPage - 1) * ITEMS_PER_PAGE,
     customerPage * ITEMS_PER_PAGE
   );
 
   // Product list and pagination
-  const [products, setProducts] = useState(productsData);
+  const [products, setProducts] = useState([]);
   const [productPage, setProductPage] = useState(1);
-  const totalProductPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-  const pagedProducts = products.slice(
+  const totalProductPages = Math.ceil((data.products?.length || 0) / ITEMS_PER_PAGE);
+  const pagedProducts = (data.products || []).slice(
     (productPage - 1) * ITEMS_PER_PAGE,
     productPage * ITEMS_PER_PAGE
   );
@@ -120,7 +57,7 @@ export default function Pos1() {
   const [paymentStatus, setPaymentStatus] = useState("Paid");
 
   // Calculate totals
-  const subtotal = products.reduce(
+  const subtotal = (data.products || []).reduce(
     (sum, p) => sum + p.price * p.quantity,
     0
   );
@@ -129,24 +66,24 @@ export default function Pos1() {
   const dueAmount = total - paidAmount;
 
   // Handlers
-  const handleCustomerSelect = (customer: typeof customersData[0]) => {
+  const handleCustomerSelect = (customer) => {
     setSelectedCustomer(customer);
   };
 
-  const handleQuantityChange = (id: number, qty: number) => {
+  const handleQuantityChange = (id, qty) => {
     if (qty < 1) return;
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, quantity: qty } : p))
     );
   };
 
-  const handleDiscountChange = (val: number) => {
+  const handleDiscountChange = (val) => {
     if (val < 0) val = 0;
     if (val > 100) val = 100;
     setDiscount(val);
   };
 
-  const handlePaidAmountChange = (val: number) => {
+  const handlePaidAmountChange = (val) => {
     if (val < 0) val = 0;
     if (val > total) val = total;
     setPaidAmount(val);
@@ -157,15 +94,15 @@ export default function Pos1() {
     setPaidAmount(0);
     setPaymentMethod("Cash");
     setPaymentStatus("Paid");
-    setProducts(productsData);
-    setSelectedCustomer(customersData[0]);
+    setProducts(data.products || []);
+    setSelectedCustomer(data.customers?.[0] || null);
     setCustomerPage(1);
     setProductPage(1);
     setCustomerSearch("");
   };
 
   // Filter customers by search
-  const filteredCustomers = customersData.filter((c) =>
+  const filteredCustomers = (data.customers || []).filter((c) =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 

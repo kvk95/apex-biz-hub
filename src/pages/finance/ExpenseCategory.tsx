@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { apiService } from "@/services/ApiService";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 type ExpenseCategory = {
   id: number;
@@ -7,79 +8,34 @@ type ExpenseCategory = {
   status: "Active" | "Inactive";
 };
 
-const initialExpenseCategories: ExpenseCategory[] = [
-  {
-    id: 1,
-    name: "Electricity Bill",
-    description: "Monthly electricity expenses",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Water Bill",
-    description: "Monthly water expenses",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Internet Bill",
-    description: "Monthly internet expenses",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    name: "Office Supplies",
-    description: "Stationery and other office supplies",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Travel Expenses",
-    description: "Travel and transportation costs",
-    status: "Active",
-  },
-  {
-    id: 6,
-    name: "Maintenance",
-    description: "Equipment and facility maintenance",
-    status: "Inactive",
-  },
-  {
-    id: 7,
-    name: "Marketing",
-    description: "Advertising and marketing expenses",
-    status: "Active",
-  },
-  {
-    id: 8,
-    name: "Salaries",
-    description: "Employee salaries and wages",
-    status: "Active",
-  },
-  {
-    id: 9,
-    name: "Rent",
-    description: "Office rent payments",
-    status: "Active",
-  },
-  {
-    id: 10,
-    name: "Miscellaneous",
-    description: "Other miscellaneous expenses",
-    status: "Inactive",
-  },
-] as const;
-
 export default function ExpenseCategory() {
   // Page title as per reference page
   useEffect(() => {
     document.title = "Expense Category - Dreams POS";
   }, []);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ExpenseCategory");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for expense categories data
-  const [categories, setCategories] = useState<ExpenseCategory[]>(
-    initialExpenseCategories
-  );
+  const [categories, setCategories] = useState<ExpenseCategory[]>(data);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,7 +154,7 @@ export default function ExpenseCategory() {
 
   function handleRefresh() {
     // Reset data to initial state
-    setCategories(initialExpenseCategories);
+    setCategories(data);
     resetForm();
     setCurrentPage(1);
   }

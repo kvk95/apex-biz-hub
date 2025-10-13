@@ -1,97 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const deleteAccountRequestsData = [
-  {
-    id: 1,
-    requestNo: "REQ-001",
-    customerName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 890",
-    requestDate: "2025-09-01",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    requestNo: "REQ-002",
-    customerName: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 987 654 321",
-    requestDate: "2025-09-05",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    requestNo: "REQ-003",
-    customerName: "Alice Johnson",
-    email: "alice.johnson@example.com",
-    phone: "+44 20 7946 0958",
-    requestDate: "2025-09-10",
-    status: "Rejected",
-  },
-  {
-    id: 4,
-    requestNo: "REQ-004",
-    customerName: "Bob Williams",
-    email: "bob.williams@example.com",
-    phone: "+61 2 9876 5432",
-    requestDate: "2025-09-15",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    requestNo: "REQ-005",
-    customerName: "Carol Davis",
-    email: "carol.davis@example.com",
-    phone: "+49 30 123456",
-    requestDate: "2025-09-20",
-    status: "Pending",
-  },
-  {
-    id: 6,
-    requestNo: "REQ-006",
-    customerName: "David Brown",
-    email: "david.brown@example.com",
-    phone: "+81 3 1234 5678",
-    requestDate: "2025-09-25",
-    status: "Approved",
-  },
-  {
-    id: 7,
-    requestNo: "REQ-007",
-    customerName: "Eva Green",
-    email: "eva.green@example.com",
-    phone: "+33 1 2345 6789",
-    requestDate: "2025-09-28",
-    status: "Pending",
-  },
-  {
-    id: 8,
-    requestNo: "REQ-008",
-    customerName: "Frank Moore",
-    email: "frank.moore@example.com",
-    phone: "+39 06 12345678",
-    requestDate: "2025-10-01",
-    status: "Rejected",
-  },
-  {
-    id: 9,
-    requestNo: "REQ-009",
-    customerName: "Grace Lee",
-    email: "grace.lee@example.com",
-    phone: "+86 10 1234 5678",
-    requestDate: "2025-10-05",
-    status: "Pending",
-  },
-  {
-    id: 10,
-    requestNo: "REQ-010",
-    customerName: "Henry King",
-    email: "henry.king@example.com",
-    phone: "+91 22 1234 5678",
-    requestDate: "2025-10-08",
-    status: "Approved",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
@@ -112,8 +20,34 @@ export default function DeleteAccountRequest() {
   // Checkbox for confirmation
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("DeleteAccountRequest");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Table data state (simulate dynamic data)
-  const [requests, setRequests] = useState(deleteAccountRequestsData);
+  const [requests, setRequests] = useState(data);
+
+  // Sync requests state with data from API
+  useEffect(() => {
+    setRequests(data);
+    setCurrentPage(1);
+  }, [data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(requests.length / PAGE_SIZE);
@@ -177,9 +111,7 @@ export default function DeleteAccountRequest() {
   }
 
   function handleRefresh() {
-    // Reset to initial data
-    setRequests(deleteAccountRequestsData);
-    setCurrentPage(1);
+    loadData();
   }
 
   function handleReport() {

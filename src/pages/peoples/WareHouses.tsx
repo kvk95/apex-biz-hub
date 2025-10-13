@@ -1,97 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const warehousesData = [
-  {
-    id: 1,
-    warehouseName: "Main Warehouse",
-    warehouseCode: "WH001",
-    warehousePhone: "+1 234 567 890",
-    warehouseEmail: "main@warehouse.com",
-    warehouseAddress: "123 Main St, Cityville",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 2,
-    warehouseName: "Secondary Warehouse",
-    warehouseCode: "WH002",
-    warehousePhone: "+1 987 654 321",
-    warehouseEmail: "secondary@warehouse.com",
-    warehouseAddress: "456 Side St, Townsville",
-    warehouseStatus: "Inactive",
-  },
-  {
-    id: 3,
-    warehouseName: "East Warehouse",
-    warehouseCode: "WH003",
-    warehousePhone: "+1 555 444 333",
-    warehouseEmail: "east@warehouse.com",
-    warehouseAddress: "789 East Rd, East City",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 4,
-    warehouseName: "West Warehouse",
-    warehouseCode: "WH004",
-    warehousePhone: "+1 222 333 444",
-    warehouseEmail: "west@warehouse.com",
-    warehouseAddress: "321 West Blvd, West Town",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 5,
-    warehouseName: "North Warehouse",
-    warehouseCode: "WH005",
-    warehousePhone: "+1 111 222 333",
-    warehouseEmail: "north@warehouse.com",
-    warehouseAddress: "654 North Ave, North City",
-    warehouseStatus: "Inactive",
-  },
-  {
-    id: 6,
-    warehouseName: "South Warehouse",
-    warehouseCode: "WH006",
-    warehousePhone: "+1 444 555 666",
-    warehouseEmail: "south@warehouse.com",
-    warehouseAddress: "987 South St, South Town",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 7,
-    warehouseName: "Central Warehouse",
-    warehouseCode: "WH007",
-    warehousePhone: "+1 777 888 999",
-    warehouseEmail: "central@warehouse.com",
-    warehouseAddress: "159 Central Pkwy, Central City",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 8,
-    warehouseName: "Backup Warehouse",
-    warehouseCode: "WH008",
-    warehousePhone: "+1 888 999 000",
-    warehouseEmail: "backup@warehouse.com",
-    warehouseAddress: "753 Backup Rd, Backup Town",
-    warehouseStatus: "Inactive",
-  },
-  {
-    id: 9,
-    warehouseName: "Overflow Warehouse",
-    warehouseCode: "WH009",
-    warehousePhone: "+1 666 777 888",
-    warehouseEmail: "overflow@warehouse.com",
-    warehouseAddress: "852 Overflow Ln, Overflow City",
-    warehouseStatus: "Active",
-  },
-  {
-    id: 10,
-    warehouseName: "Temporary Warehouse",
-    warehouseCode: "WH010",
-    warehousePhone: "+1 999 000 111",
-    warehouseEmail: "temp@warehouse.com",
-    warehouseAddress: "951 Temp St, Temp Town",
-    warehouseStatus: "Inactive",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -117,8 +25,32 @@ export default function Warehouses() {
   // State to track if editing and which warehouse id
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Warehouses");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for warehouses list (initial data)
-  const [warehouses, setWarehouses] = useState(warehousesData);
+  const [warehouses, setWarehouses] = useState(data);
+
+  useEffect(() => {
+    setWarehouses(data);
+  }, [data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(warehouses.length / ITEMS_PER_PAGE);
@@ -212,7 +144,7 @@ export default function Warehouses() {
 
   // Handle refresh button (resets data and form)
   function handleRefresh() {
-    setWarehouses(warehousesData);
+    loadData();
     setForm({
       warehouseName: "",
       warehouseCode: "",

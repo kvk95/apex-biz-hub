@@ -1,97 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const gdprSettingsData = [
-  {
-    id: 1,
-    customerName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 890",
-    requestType: "Data Access",
-    requestDate: "2025-09-01",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    customerName: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 987 654 321",
-    requestType: "Data Deletion",
-    requestDate: "2025-09-05",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    customerName: "Alice Johnson",
-    email: "alice.johnson@example.com",
-    phone: "+44 20 7946 0958",
-    requestType: "Data Portability",
-    requestDate: "2025-09-10",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    customerName: "Bob Brown",
-    email: "bob.brown@example.com",
-    phone: "+61 2 9374 4000",
-    requestType: "Data Access",
-    requestDate: "2025-09-12",
-    status: "Completed",
-  },
-  {
-    id: 5,
-    customerName: "Charlie Davis",
-    email: "charlie.davis@example.com",
-    phone: "+49 30 123456",
-    requestType: "Data Deletion",
-    requestDate: "2025-09-15",
-    status: "Pending",
-  },
-  {
-    id: 6,
-    customerName: "Diana Evans",
-    email: "diana.evans@example.com",
-    phone: "+81 3 1234 5678",
-    requestType: "Data Portability",
-    requestDate: "2025-09-18",
-    status: "Pending",
-  },
-  {
-    id: 7,
-    customerName: "Ethan Foster",
-    email: "ethan.foster@example.com",
-    phone: "+33 1 2345 6789",
-    requestType: "Data Access",
-    requestDate: "2025-09-20",
-    status: "Completed",
-  },
-  {
-    id: 8,
-    customerName: "Fiona Green",
-    email: "fiona.green@example.com",
-    phone: "+34 91 123 4567",
-    requestType: "Data Deletion",
-    requestDate: "2025-09-22",
-    status: "Pending",
-  },
-  {
-    id: 9,
-    customerName: "George Harris",
-    email: "george.harris@example.com",
-    phone: "+39 06 12345678",
-    requestType: "Data Portability",
-    requestDate: "2025-09-25",
-    status: "Completed",
-  },
-  {
-    id: 10,
-    customerName: "Hannah Irving",
-    email: "hannah.irving@example.com",
-    phone: "+1 415 555 2671",
-    requestType: "Data Access",
-    requestDate: "2025-09-28",
-    status: "Pending",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const requestTypes = [
   "Data Access",
@@ -105,6 +13,26 @@ const statuses = [
 ];
 
 export default function GdprSettings() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("GdprSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -127,7 +55,7 @@ export default function GdprSettings() {
 
   // Filtered data based on form filters
   const filteredData = useMemo(() => {
-    return gdprSettingsData.filter((item) => {
+    return data.filter((item) => {
       const matchesRequestType =
         form.requestType === "" || item.requestType === form.requestType;
       const matchesStatus = form.status === "" || item.status === form.status;
@@ -138,7 +66,7 @@ export default function GdprSettings() {
         matchesRequestType && matchesStatus && matchesStartDate && matchesEndDate
       );
     });
-  }, [form]);
+  }, [form, data]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

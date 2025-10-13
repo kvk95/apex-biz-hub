@@ -1,97 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const invoicesData = [
-  {
-    id: 1,
-    invoiceNo: "INV-001",
-    customer: "John Doe",
-    date: "2025-09-01",
-    dueDate: "2025-09-15",
-    amount: 250.0,
-    status: "Paid",
-  },
-  {
-    id: 2,
-    invoiceNo: "INV-002",
-    customer: "Jane Smith",
-    date: "2025-09-05",
-    dueDate: "2025-09-20",
-    amount: 450.5,
-    status: "Pending",
-  },
-  {
-    id: 3,
-    invoiceNo: "INV-003",
-    customer: "Acme Corp",
-    date: "2025-09-10",
-    dueDate: "2025-09-25",
-    amount: 1200.75,
-    status: "Overdue",
-  },
-  {
-    id: 4,
-    invoiceNo: "INV-004",
-    customer: "Global Industries",
-    date: "2025-09-12",
-    dueDate: "2025-09-27",
-    amount: 980.0,
-    status: "Paid",
-  },
-  {
-    id: 5,
-    invoiceNo: "INV-005",
-    customer: "Mary Johnson",
-    date: "2025-09-15",
-    dueDate: "2025-09-30",
-    amount: 300.0,
-    status: "Pending",
-  },
-  {
-    id: 6,
-    invoiceNo: "INV-006",
-    customer: "XYZ Enterprises",
-    date: "2025-09-18",
-    dueDate: "2025-10-03",
-    amount: 675.25,
-    status: "Paid",
-  },
-  {
-    id: 7,
-    invoiceNo: "INV-007",
-    customer: "Alpha Solutions",
-    date: "2025-09-20",
-    dueDate: "2025-10-05",
-    amount: 150.0,
-    status: "Pending",
-  },
-  {
-    id: 8,
-    invoiceNo: "INV-008",
-    customer: "Beta Technologies",
-    date: "2025-09-22",
-    dueDate: "2025-10-07",
-    amount: 890.0,
-    status: "Overdue",
-  },
-  {
-    id: 9,
-    invoiceNo: "INV-009",
-    customer: "Delta Services",
-    date: "2025-09-25",
-    dueDate: "2025-10-10",
-    amount: 430.0,
-    status: "Paid",
-  },
-  {
-    id: 10,
-    invoiceNo: "INV-010",
-    customer: "Omega Corp",
-    date: "2025-09-28",
-    dueDate: "2025-10-13",
-    amount: 1120.0,
-    status: "Pending",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -102,14 +10,34 @@ const statusColors: Record<string, string> = {
 };
 
 const Invoices: React.FC = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Invoices");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter and search invoices
   const filteredInvoices = useMemo(() => {
-    return invoicesData.filter((inv) => {
+    return data.filter((inv: any) => {
       const matchesSearch =
         inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inv.customer.toLowerCase().includes(searchTerm.toLowerCase());
@@ -117,7 +45,7 @@ const Invoices: React.FC = () => {
         filterStatus === "All" ? true : inv.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, data]);
 
   const totalPages = Math.ceil(filteredInvoices.length / pageSize);
 
@@ -272,7 +200,7 @@ const Invoices: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              paginatedInvoices.map((inv) => (
+              paginatedInvoices.map((inv: any) => (
                 <tr key={inv.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">{inv.invoiceNo}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{inv.customer}</td>

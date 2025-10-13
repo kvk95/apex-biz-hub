@@ -1,113 +1,40 @@
-import React, { useState, useEffect } from "react";
-
-const posSettingsData = {
-  posSettings: {
-    posName: "Dreams POS",
-    posEmail: "dreamspos@example.com",
-    posPhone: "123-456-7890",
-    posAddress: "123 Dreams Street, Dream City",
-    posFooterText: "Thank you for shopping with Dreams POS!",
-    posInvoicePrefix: "DRM",
-    posInvoiceStartNo: 1000,
-    posInvoiceFooter: "Visit Again!",
-    posInvoiceFooter2: "www.dreamspos.com",
-    posInvoiceFooter3: "Contact: 123-456-7890",
-    posInvoiceFooter4: "Email: support@dreamspos.com",
-    posInvoiceFooter5: "Powered by Dreams Technologies",
-    posInvoiceFooter6: "All rights reserved © 2025",
-    posInvoiceFooter7: "Tax ID: 123456789",
-    posInvoiceFooter8: "License No: 987654321",
-    posInvoiceFooter9: "Customer Support: 24/7",
-    posInvoiceFooter10: "POS Version: 1.0.0",
-  },
-  posSettingsList: [
-    {
-      id: 1,
-      posName: "Dreams POS",
-      posEmail: "dreamspos@example.com",
-      posPhone: "123-456-7890",
-      posAddress: "123 Dreams Street, Dream City",
-    },
-    {
-      id: 2,
-      posName: "Retail POS",
-      posEmail: "retailpos@example.com",
-      posPhone: "987-654-3210",
-      posAddress: "456 Retail Road, Market Town",
-    },
-    {
-      id: 3,
-      posName: "Shop POS",
-      posEmail: "shoppos@example.com",
-      posPhone: "555-555-5555",
-      posAddress: "789 Shop Lane, Commerce City",
-    },
-    {
-      id: 4,
-      posName: "Store POS",
-      posEmail: "storepos@example.com",
-      posPhone: "111-222-3333",
-      posAddress: "321 Store Blvd, Sales City",
-    },
-    {
-      id: 5,
-      posName: "Market POS",
-      posEmail: "marketpos@example.com",
-      posPhone: "444-333-2222",
-      posAddress: "654 Market Street, Trade Town",
-    },
-    {
-      id: 6,
-      posName: "Cafe POS",
-      posEmail: "cafepos@example.com",
-      posPhone: "999-888-7777",
-      posAddress: "987 Cafe Avenue, Food City",
-    },
-    {
-      id: 7,
-      posName: "Boutique POS",
-      posEmail: "boutiquepos@example.com",
-      posPhone: "222-333-4444",
-      posAddress: "159 Boutique Road, Fashion City",
-    },
-    {
-      id: 8,
-      posName: "Mall POS",
-      posEmail: "mallpos@example.com",
-      posPhone: "666-777-8888",
-      posAddress: "753 Mall Street, Shopping City",
-    },
-    {
-      id: 9,
-      posName: "Outlet POS",
-      posEmail: "outletpos@example.com",
-      posPhone: "888-999-0000",
-      posAddress: "852 Outlet Blvd, Discount Town",
-    },
-    {
-      id: 10,
-      posName: "Warehouse POS",
-      posEmail: "warehousepos@example.com",
-      posPhone: "333-444-5555",
-      posAddress: "951 Warehouse Lane, Storage City",
-    },
-  ],
-};
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function PosSettings() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PosSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for form fields
-  const [form, setForm] = useState(posSettingsData.posSettings);
+  const [form, setForm] = useState({});
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate total pages
-  const totalPages = Math.ceil(posSettingsData.posSettingsList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
   // Get current page data slice
-  const currentData = posSettingsData.posSettingsList.slice(
+  const currentData = data.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -123,7 +50,9 @@ export default function PosSettings() {
   };
 
   const handleRefresh = () => {
-    setForm(posSettingsData.posSettings);
+    if (data.length > 0) {
+      setForm(data[0]);
+    }
     setCurrentPage(1);
   };
 
@@ -136,6 +65,12 @@ export default function PosSettings() {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
+
+  useEffect(() => {
+    if (data.length > 0) {
+      setForm(data[0]);
+    }
+  }, [data]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
@@ -158,7 +93,7 @@ export default function PosSettings() {
                 type="text"
                 id="posName"
                 name="posName"
-                value={form.posName}
+                value={form.posName || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter POS Name"
@@ -172,7 +107,7 @@ export default function PosSettings() {
                 type="email"
                 id="posEmail"
                 name="posEmail"
-                value={form.posEmail}
+                value={form.posEmail || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter POS Email"
@@ -186,7 +121,7 @@ export default function PosSettings() {
                 type="text"
                 id="posPhone"
                 name="posPhone"
-                value={form.posPhone}
+                value={form.posPhone || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter POS Phone"
@@ -202,7 +137,7 @@ export default function PosSettings() {
             <textarea
               id="posAddress"
               name="posAddress"
-              value={form.posAddress}
+              value={form.posAddress || ""}
               onChange={handleInputChange}
               rows={3}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -218,7 +153,7 @@ export default function PosSettings() {
             <textarea
               id="posFooterText"
               name="posFooterText"
-              value={form.posFooterText}
+              value={form.posFooterText || ""}
               onChange={handleInputChange}
               rows={2}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -236,7 +171,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoicePrefix"
                 name="posInvoicePrefix"
-                value={form.posInvoicePrefix}
+                value={form.posInvoicePrefix || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Prefix"
@@ -250,7 +185,7 @@ export default function PosSettings() {
                 type="number"
                 id="posInvoiceStartNo"
                 name="posInvoiceStartNo"
-                value={form.posInvoiceStartNo}
+                value={form.posInvoiceStartNo || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Start Number"
@@ -265,7 +200,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter"
                 name="posInvoiceFooter"
-                value={form.posInvoiceFooter}
+                value={form.posInvoiceFooter || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -279,7 +214,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter2"
                 name="posInvoiceFooter2"
-                value={form.posInvoiceFooter2}
+                value={form.posInvoiceFooter2 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -293,7 +228,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter3"
                 name="posInvoiceFooter3"
-                value={form.posInvoiceFooter3}
+                value={form.posInvoiceFooter3 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -311,7 +246,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter4"
                 name="posInvoiceFooter4"
-                value={form.posInvoiceFooter4}
+                value={form.posInvoiceFooter4 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -325,7 +260,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter5"
                 name="posInvoiceFooter5"
-                value={form.posInvoiceFooter5}
+                value={form.posInvoiceFooter5 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -339,7 +274,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter6"
                 name="posInvoiceFooter6"
-                value={form.posInvoiceFooter6}
+                value={form.posInvoiceFooter6 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -353,7 +288,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter7"
                 name="posInvoiceFooter7"
-                value={form.posInvoiceFooter7}
+                value={form.posInvoiceFooter7 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -367,7 +302,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter8"
                 name="posInvoiceFooter8"
-                value={form.posInvoiceFooter8}
+                value={form.posInvoiceFooter8 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -384,7 +319,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter9"
                 name="posInvoiceFooter9"
-                value={form.posInvoiceFooter9}
+                value={form.posInvoiceFooter9 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -398,7 +333,7 @@ export default function PosSettings() {
                 type="text"
                 id="posInvoiceFooter10"
                 name="posInvoiceFooter10"
-                value={form.posInvoiceFooter10}
+                value={form.posInvoiceFooter10 || ""}
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Footer text"
@@ -452,7 +387,7 @@ export default function PosSettings() {
               </tr>
             </thead>
             <tbody>
-              {currentData.map((item, idx) => (
+              {currentData.map((item: any, idx: number) => (
                 <tr
                   key={item.id}
                   className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}

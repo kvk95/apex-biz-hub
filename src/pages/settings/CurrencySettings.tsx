@@ -1,111 +1,10 @@
-import React, { useState, useMemo } from "react";
-
-const currencyData = [
-  {
-    id: 1,
-    currencyName: "US Dollar",
-    currencyCode: "USD",
-    currencySymbol: "$",
-    currencyRate: "1.00",
-    currencyStatus: "Active",
-  },
-  {
-    id: 2,
-    currencyName: "Euro",
-    currencyCode: "EUR",
-    currencySymbol: "€",
-    currencyRate: "0.85",
-    currencyStatus: "Active",
-  },
-  {
-    id: 3,
-    currencyName: "British Pound",
-    currencyCode: "GBP",
-    currencySymbol: "£",
-    currencyRate: "0.75",
-    currencyStatus: "Inactive",
-  },
-  {
-    id: 4,
-    currencyName: "Japanese Yen",
-    currencyCode: "JPY",
-    currencySymbol: "¥",
-    currencyRate: "110.00",
-    currencyStatus: "Active",
-  },
-  {
-    id: 5,
-    currencyName: "Canadian Dollar",
-    currencyCode: "CAD",
-    currencySymbol: "C$",
-    currencyRate: "1.25",
-    currencyStatus: "Active",
-  },
-  {
-    id: 6,
-    currencyName: "Australian Dollar",
-    currencyCode: "AUD",
-    currencySymbol: "A$",
-    currencyRate: "1.30",
-    currencyStatus: "Inactive",
-  },
-  {
-    id: 7,
-    currencyName: "Swiss Franc",
-    currencyCode: "CHF",
-    currencySymbol: "Fr",
-    currencyRate: "0.92",
-    currencyStatus: "Active",
-  },
-  {
-    id: 8,
-    currencyName: "Chinese Yuan",
-    currencyCode: "CNY",
-    currencySymbol: "¥",
-    currencyRate: "6.45",
-    currencyStatus: "Active",
-  },
-  {
-    id: 9,
-    currencyName: "Indian Rupee",
-    currencyCode: "INR",
-    currencySymbol: "₹",
-    currencyRate: "74.00",
-    currencyStatus: "Active",
-  },
-  {
-    id: 10,
-    currencyName: "South Korean Won",
-    currencyCode: "KRW",
-    currencySymbol: "₩",
-    currencyRate: "1150.00",
-    currencyStatus: "Inactive",
-  },
-  {
-    id: 11,
-    currencyName: "Brazilian Real",
-    currencyCode: "BRL",
-    currencySymbol: "R$",
-    currencyRate: "5.20",
-    currencyStatus: "Active",
-  },
-  {
-    id: 12,
-    currencyName: "Mexican Peso",
-    currencyCode: "MXN",
-    currencySymbol: "$",
-    currencyRate: "20.00",
-    currencyStatus: "Active",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
 export default function CurrencySettings() {
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Form state for Add/Edit
   const [form, setForm] = useState({
     currencyName: "",
     currencyCode: "",
@@ -113,21 +12,33 @@ export default function CurrencySettings() {
     currencyRate: "",
     currencyStatus: "Active",
   });
-
-  // Editing mode state
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Data state (simulate dynamic data)
-  const [data, setData] = useState(currencyData);
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CurrencySettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
-  // Pagination calculations
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const pageCount = Math.ceil(data.length / PAGE_SIZE);
   const pagedData = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return data.slice(start, start + PAGE_SIZE);
   }, [currentPage, data]);
 
-  // Handlers
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -145,7 +56,6 @@ export default function CurrencySettings() {
       return;
 
     if (editingId !== null) {
-      // Update existing
       setData((d) =>
         d.map((item) =>
           item.id === editingId
@@ -161,7 +71,6 @@ export default function CurrencySettings() {
         )
       );
     } else {
-      // Add new
       const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
       setData((d) => [
         ...d,
@@ -214,13 +123,11 @@ export default function CurrencySettings() {
   };
 
   const handleRefresh = () => {
-    // Reset data to initial static data
-    setData(currencyData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };
 
-  // Pagination buttons array
   const paginationButtons = [];
   for (let i = 1; i <= pageCount; i++) {
     paginationButtons.push(i);
@@ -229,12 +136,10 @@ export default function CurrencySettings() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Title */}
         <h1 className="text-3xl font-semibold mb-6 text-gray-900">
           Currency Settings
         </h1>
 
-        {/* Form Section */}
         <section className="bg-white rounded shadow p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
             Add / Edit Currency
@@ -364,7 +269,6 @@ export default function CurrencySettings() {
           </form>
         </section>
 
-        {/* Table Section */}
         <section className="bg-white rounded shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -476,7 +380,6 @@ export default function CurrencySettings() {
             </table>
           </div>
 
-          {/* Pagination Controls */}
           <nav
             className="flex justify-between items-center mt-6"
             aria-label="Pagination"

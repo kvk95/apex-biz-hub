@@ -1,124 +1,52 @@
-import React, { useState } from "react";
-
-const payslipData = {
-  company: {
-    name: "Dreams Technologies",
-    addressLine1: "Dreams Technologies, 123 Dream St.",
-    addressLine2: "Dream City, Country",
-    phone: "+123 456 7890",
-    email: "info@dreamspos.dreamstechnologies.com",
-    website: "www.dreamspos.dreamstechnologies.com",
-  },
-  employee: {
-    name: "John Doe",
-    designation: "Software Engineer",
-    department: "Development",
-    employeeId: "EMP12345",
-    joiningDate: "2020-01-15",
-    payslipMonth: "September 2025",
-  },
-  salaryDetails: [
-    { id: 1, description: "Basic Salary", amount: 5000 },
-    { id: 2, description: "House Rent Allowance", amount: 2000 },
-    { id: 3, description: "Medical Allowance", amount: 500 },
-    { id: 4, description: "Conveyance", amount: 300 },
-    { id: 5, description: "Special Allowance", amount: 400 },
-  ],
-  deductions: [
-    { id: 1, description: "Professional Tax", amount: 200 },
-    { id: 2, description: "Provident Fund", amount: 600 },
-    { id: 3, description: "Tax Deducted at Source", amount: 800 },
-  ],
-  transactions: [
-    {
-      id: 1,
-      date: "2025-09-01",
-      description: "Salary credited",
-      amount: 7000,
-      type: "Credit",
-    },
-    {
-      id: 2,
-      date: "2025-09-10",
-      description: "Tax Deduction",
-      amount: 800,
-      type: "Debit",
-    },
-    {
-      id: 3,
-      date: "2025-09-15",
-      description: "Provident Fund",
-      amount: 600,
-      type: "Debit",
-    },
-    {
-      id: 4,
-      date: "2025-09-20",
-      description: "Bonus credited",
-      amount: 500,
-      type: "Credit",
-    },
-    {
-      id: 5,
-      date: "2025-09-25",
-      description: "Professional Tax",
-      amount: 200,
-      type: "Debit",
-    },
-    {
-      id: 6,
-      date: "2025-09-28",
-      description: "Medical Allowance",
-      amount: 500,
-      type: "Credit",
-    },
-    {
-      id: 7,
-      date: "2025-09-29",
-      description: "Conveyance",
-      amount: 300,
-      type: "Credit",
-    },
-    {
-      id: 8,
-      date: "2025-09-30",
-      description: "Special Allowance",
-      amount: 400,
-      type: "Credit",
-    },
-  ],
-};
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function Payslip() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const totalSalary = payslipData.salaryDetails.reduce(
-    (acc, cur) => acc + cur.amount,
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Payslip");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalSalary = data.salaryDetails?.reduce(
+    (acc: number, cur: { amount: number }) => acc + cur.amount,
     0
-  );
-  const totalDeductions = payslipData.deductions.reduce(
-    (acc, cur) => acc + cur.amount,
+  ) ?? 0;
+  const totalDeductions = data.deductions?.reduce(
+    (acc: number, cur: { amount: number }) => acc + cur.amount,
     0
-  );
+  ) ?? 0;
   const netSalary = totalSalary - totalDeductions;
 
-  // Pagination logic for transactions table
-  const totalPages = Math.ceil(payslipData.transactions.length / ITEMS_PER_PAGE);
-  const paginatedTransactions = payslipData.transactions.slice(
+  const totalPages = Math.ceil((data.transactions?.length ?? 0) / ITEMS_PER_PAGE);
+  const paginatedTransactions = data.transactions?.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
-  );
+  ) ?? [];
 
-  // Handlers
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
   const refreshPage = () => {
-    // Placeholder for refresh functionality
     setCurrentPage(1);
   };
 
@@ -142,7 +70,7 @@ export default function Payslip() {
                 Payslip
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                {payslipData.employee.payslipMonth}
+                {data.employee?.payslipMonth}
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -181,13 +109,13 @@ export default function Payslip() {
                 Company Information
               </h2>
               <p className="text-gray-800 font-bold text-xl">
-                {payslipData.company.name}
+                {data.company?.name}
               </p>
-              <p className="text-gray-600">{payslipData.company.addressLine1}</p>
-              <p className="text-gray-600">{payslipData.company.addressLine2}</p>
-              <p className="text-gray-600">Phone: {payslipData.company.phone}</p>
-              <p className="text-gray-600">Email: {payslipData.company.email}</p>
-              <p className="text-gray-600">Website: {payslipData.company.website}</p>
+              <p className="text-gray-600">{data.company?.addressLine1}</p>
+              <p className="text-gray-600">{data.company?.addressLine2}</p>
+              <p className="text-gray-600">Phone: {data.company?.phone}</p>
+              <p className="text-gray-600">Email: {data.company?.email}</p>
+              <p className="text-gray-600">Website: {data.company?.website}</p>
             </div>
 
             {/* Employee Info */}
@@ -198,23 +126,23 @@ export default function Payslip() {
               <div className="space-y-2 text-gray-700">
                 <div className="flex justify-between">
                   <label className="font-semibold">Name:</label>
-                  <span>{payslipData.employee.name}</span>
+                  <span>{data.employee?.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <label className="font-semibold">Designation:</label>
-                  <span>{payslipData.employee.designation}</span>
+                  <span>{data.employee?.designation}</span>
                 </div>
                 <div className="flex justify-between">
                   <label className="font-semibold">Department:</label>
-                  <span>{payslipData.employee.department}</span>
+                  <span>{data.employee?.department}</span>
                 </div>
                 <div className="flex justify-between">
                   <label className="font-semibold">Employee ID:</label>
-                  <span>{payslipData.employee.employeeId}</span>
+                  <span>{data.employee?.employeeId}</span>
                 </div>
                 <div className="flex justify-between">
                   <label className="font-semibold">Joining Date:</label>
-                  <span>{payslipData.employee.joiningDate}</span>
+                  <span>{data.employee?.joiningDate}</span>
                 </div>
               </div>
             </div>
@@ -239,7 +167,7 @@ export default function Payslip() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payslipData.salaryDetails.map(({ id, description, amount }) => (
+                  {data.salaryDetails?.map(({ id, description, amount }: any) => (
                     <tr key={id} className="odd:bg-white even:bg-gray-50">
                       <td className="py-2 px-3 border-b border-gray-300">{description}</td>
                       <td className="py-2 px-3 border-b border-gray-300 text-right font-mono">
@@ -274,7 +202,7 @@ export default function Payslip() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payslipData.deductions.map(({ id, description, amount }) => (
+                  {data.deductions?.map(({ id, description, amount }: any) => (
                     <tr key={id} className="odd:bg-white even:bg-gray-50">
                       <td className="py-2 px-3 border-b border-gray-300">{description}</td>
                       <td className="py-2 px-3 border-b border-gray-300 text-right font-mono">
@@ -324,7 +252,7 @@ export default function Payslip() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {paginatedTransactions.map(({ id, date, description, amount, type }) => (
+                  {paginatedTransactions.map(({ id, date, description, amount, type }: any) => (
                     <tr key={id}>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 font-mono">
                         {date}

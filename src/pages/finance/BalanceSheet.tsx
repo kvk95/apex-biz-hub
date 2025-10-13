@@ -1,106 +1,39 @@
-import React, { useState } from "react";
-
-const balanceSheetData = [
-  {
-    id: 1,
-    accountName: "Cash",
-    debit: 15000,
-    credit: 0,
-  },
-  {
-    id: 2,
-    accountName: "Accounts Receivable",
-    debit: 12000,
-    credit: 0,
-  },
-  {
-    id: 3,
-    accountName: "Inventory",
-    debit: 10000,
-    credit: 0,
-  },
-  {
-    id: 4,
-    accountName: "Prepaid Expenses",
-    debit: 3000,
-    credit: 0,
-  },
-  {
-    id: 5,
-    accountName: "Accounts Payable",
-    debit: 0,
-    credit: 8000,
-  },
-  {
-    id: 6,
-    accountName: "Notes Payable",
-    debit: 0,
-    credit: 7000,
-  },
-  {
-    id: 7,
-    accountName: "Owner's Equity",
-    debit: 0,
-    credit: 25000,
-  },
-  {
-    id: 8,
-    accountName: "Sales Revenue",
-    debit: 0,
-    credit: 40000,
-  },
-  {
-    id: 9,
-    accountName: "Cost of Goods Sold",
-    debit: 22000,
-    credit: 0,
-  },
-  {
-    id: 10,
-    accountName: "Salaries Expense",
-    debit: 8000,
-    credit: 0,
-  },
-  {
-    id: 11,
-    accountName: "Rent Expense",
-    debit: 4000,
-    credit: 0,
-  },
-  {
-    id: 12,
-    accountName: "Utilities Expense",
-    debit: 1500,
-    credit: 0,
-  },
-  {
-    id: 13,
-    accountName: "Interest Expense",
-    debit: 1000,
-    credit: 0,
-  },
-  {
-    id: 14,
-    accountName: "Miscellaneous Expense",
-    debit: 500,
-    credit: 0,
-  },
-];
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 7;
 
 export default function BalanceSheet() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(balanceSheetData.length / pageSize);
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("BalanceSheet");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
-  const paginatedData = balanceSheetData.slice(
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalPages = Math.ceil(data.length / pageSize);
+
+  const paginatedData = data.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  const totalDebit = balanceSheetData.reduce((sum, item) => sum + item.debit, 0);
-  const totalCredit = balanceSheetData.reduce((sum, item) => sum + item.credit, 0);
+  const totalDebit = data.reduce((sum, item) => sum + item.debit, 0);
+  const totalCredit = data.reduce((sum, item) => sum + item.credit, 0);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -108,17 +41,14 @@ export default function BalanceSheet() {
   };
 
   const handleRefresh = () => {
-    // Placeholder for refresh logic (e.g., re-fetch data)
-    alert("Data refreshed");
+    loadData();
   };
 
   const handleSave = () => {
-    // Placeholder for save logic
     alert("Balance sheet saved");
   };
 
   const handleReport = () => {
-    // Placeholder for report generation logic
     alert("Report generated");
   };
 

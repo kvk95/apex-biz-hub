@@ -1,120 +1,30 @@
-import React, { useState, useMemo } from "react";
-
-const ordersData = [
-  {
-    id: 1,
-    orderId: "OD12345",
-    customer: "John Doe",
-    date: "2023-09-10",
-    status: "Pending",
-    paymentMethod: "Credit Card",
-    total: 125.0,
-  },
-  {
-    id: 2,
-    orderId: "OD12346",
-    customer: "Jane Smith",
-    date: "2023-09-11",
-    status: "Completed",
-    paymentMethod: "Paypal",
-    total: 89.99,
-  },
-  {
-    id: 3,
-    orderId: "OD12347",
-    customer: "Michael Johnson",
-    date: "2023-09-12",
-    status: "Cancelled",
-    paymentMethod: "Cash",
-    total: 45.5,
-  },
-  {
-    id: 4,
-    orderId: "OD12348",
-    customer: "Emily Davis",
-    date: "2023-09-13",
-    status: "Pending",
-    paymentMethod: "Credit Card",
-    total: 230.0,
-  },
-  {
-    id: 5,
-    orderId: "OD12349",
-    customer: "William Brown",
-    date: "2023-09-14",
-    status: "Completed",
-    paymentMethod: "Paypal",
-    total: 150.75,
-  },
-  {
-    id: 6,
-    orderId: "OD12350",
-    customer: "Olivia Wilson",
-    date: "2023-09-15",
-    status: "Pending",
-    paymentMethod: "Cash",
-    total: 99.99,
-  },
-  {
-    id: 7,
-    orderId: "OD12351",
-    customer: "James Taylor",
-    date: "2023-09-16",
-    status: "Completed",
-    paymentMethod: "Credit Card",
-    total: 175.0,
-  },
-  {
-    id: 8,
-    orderId: "OD12352",
-    customer: "Sophia Martinez",
-    date: "2023-09-17",
-    status: "Cancelled",
-    paymentMethod: "Paypal",
-    total: 60.0,
-  },
-  {
-    id: 9,
-    orderId: "OD12353",
-    customer: "Benjamin Anderson",
-    date: "2023-09-18",
-    status: "Pending",
-    paymentMethod: "Cash",
-    total: 120.0,
-  },
-  {
-    id: 10,
-    orderId: "OD12354",
-    customer: "Isabella Thomas",
-    date: "2023-09-19",
-    status: "Completed",
-    paymentMethod: "Credit Card",
-    total: 200.0,
-  },
-  {
-    id: 11,
-    orderId: "OD12355",
-    customer: "Daniel Jackson",
-    date: "2023-09-20",
-    status: "Pending",
-    paymentMethod: "Paypal",
-    total: 80.0,
-  },
-  {
-    id: 12,
-    orderId: "OD12356",
-    customer: "Mia White",
-    date: "2023-09-21",
-    status: "Completed",
-    paymentMethod: "Cash",
-    total: 140.0,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const paymentMethods = ["All", "Credit Card", "Paypal", "Cash"];
 const statuses = ["All", "Pending", "Completed", "Cancelled"];
 
 export default function OnlineOrders() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("OnlineOrders");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -126,34 +36,32 @@ export default function OnlineOrders() {
   const [searchCustomer, setSearchCustomer] = useState("");
 
   // Sorting state
-  const [sortField, setSortField] = useState<keyof typeof ordersData[0] | null>(
-    null
-  );
+  const [sortField, setSortField] = useState<keyof (typeof data)[0] | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Filtered and sorted data memoized
   const filteredData = useMemo(() => {
-    let data = [...ordersData];
+    let filtered = [...data];
 
     if (filterStatus !== "All") {
-      data = data.filter((o) => o.status === filterStatus);
+      filtered = filtered.filter((o) => o.status === filterStatus);
     }
     if (filterPayment !== "All") {
-      data = data.filter((o) => o.paymentMethod === filterPayment);
+      filtered = filtered.filter((o) => o.paymentMethod === filterPayment);
     }
     if (searchOrderId.trim() !== "") {
-      data = data.filter((o) =>
+      filtered = filtered.filter((o) =>
         o.orderId.toLowerCase().includes(searchOrderId.toLowerCase())
       );
     }
     if (searchCustomer.trim() !== "") {
-      data = data.filter((o) =>
+      filtered = filtered.filter((o) =>
         o.customer.toLowerCase().includes(searchCustomer.toLowerCase())
       );
     }
 
     if (sortField) {
-      data.sort((a, b) => {
+      filtered.sort((a, b) => {
         let aVal = a[sortField];
         let bVal = b[sortField];
         if (typeof aVal === "string") aVal = aVal.toLowerCase();
@@ -165,8 +73,8 @@ export default function OnlineOrders() {
       });
     }
 
-    return data;
-  }, [filterStatus, filterPayment, searchOrderId, searchCustomer, sortField, sortDirection]);
+    return filtered;
+  }, [data, filterStatus, filterPayment, searchOrderId, searchCustomer, sortField, sortDirection]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -176,7 +84,7 @@ export default function OnlineOrders() {
   );
 
   // Handlers
-  const handleSort = (field: keyof typeof ordersData[0]) => {
+  const handleSort = (field: keyof (typeof data)[0]) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -186,7 +94,6 @@ export default function OnlineOrders() {
   };
 
   const handleRefresh = () => {
-    // For demo, just reset filters and pagination
     setFilterStatus("All");
     setFilterPayment("All");
     setSearchOrderId("");
@@ -197,7 +104,6 @@ export default function OnlineOrders() {
   };
 
   const handleReport = () => {
-    // For demo, alert report generation
     alert("Report generated for current filtered orders.");
   };
 

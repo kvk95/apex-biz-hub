@@ -1,107 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const subscriptionsData = [
-  {
-    id: 1,
-    subscriptionId: "SUBS-001",
-    customerName: "John Doe",
-    customerEmail: "john.doe@example.com",
-    subscriptionPlan: "Basic Plan",
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    status: "Active",
-  },
-  {
-    id: 2,
-    subscriptionId: "SUBS-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane.smith@example.com",
-    subscriptionPlan: "Premium Plan",
-    startDate: "2024-02-15",
-    endDate: "2025-02-14",
-    status: "Active",
-  },
-  {
-    id: 3,
-    subscriptionId: "SUBS-003",
-    customerName: "Michael Brown",
-    customerEmail: "michael.brown@example.com",
-    subscriptionPlan: "Basic Plan",
-    startDate: "2023-11-01",
-    endDate: "2024-10-31",
-    status: "Expired",
-  },
-  {
-    id: 4,
-    subscriptionId: "SUBS-004",
-    customerName: "Emily Johnson",
-    customerEmail: "emily.johnson@example.com",
-    subscriptionPlan: "Standard Plan",
-    startDate: "2024-03-10",
-    endDate: "2025-03-09",
-    status: "Active",
-  },
-  {
-    id: 5,
-    subscriptionId: "SUBS-005",
-    customerName: "William Lee",
-    customerEmail: "william.lee@example.com",
-    subscriptionPlan: "Premium Plan",
-    startDate: "2024-04-01",
-    endDate: "2025-03-31",
-    status: "Active",
-  },
-  {
-    id: 6,
-    subscriptionId: "SUBS-006",
-    customerName: "Olivia Davis",
-    customerEmail: "olivia.davis@example.com",
-    subscriptionPlan: "Basic Plan",
-    startDate: "2023-12-01",
-    endDate: "2024-11-30",
-    status: "Expired",
-  },
-  {
-    id: 7,
-    subscriptionId: "SUBS-007",
-    customerName: "James Wilson",
-    customerEmail: "james.wilson@example.com",
-    subscriptionPlan: "Standard Plan",
-    startDate: "2024-05-05",
-    endDate: "2025-05-04",
-    status: "Active",
-  },
-  {
-    id: 8,
-    subscriptionId: "SUBS-008",
-    customerName: "Sophia Martinez",
-    customerEmail: "sophia.martinez@example.com",
-    subscriptionPlan: "Premium Plan",
-    startDate: "2024-06-20",
-    endDate: "2025-06-19",
-    status: "Active",
-  },
-  {
-    id: 9,
-    subscriptionId: "SUBS-009",
-    customerName: "Benjamin Anderson",
-    customerEmail: "benjamin.anderson@example.com",
-    subscriptionPlan: "Basic Plan",
-    startDate: "2023-10-15",
-    endDate: "2024-10-14",
-    status: "Expired",
-  },
-  {
-    id: 10,
-    subscriptionId: "SUBS-010",
-    customerName: "Mia Thomas",
-    customerEmail: "mia.thomas@example.com",
-    subscriptionPlan: "Standard Plan",
-    startDate: "2024-07-01",
-    endDate: "2025-06-30",
-    status: "Active",
-  },
-];
+import React, { useMemo, useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const subscriptionPlans = [
   "Basic Plan",
@@ -118,7 +16,27 @@ const SubscriptionStatusOptions = [
 const PAGE_SIZE = 5;
 
 export default function Subscriptions() {
-  const [subscriptions, setSubscriptions] = useState(subscriptionsData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Subscriptions");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const [subscriptions, setSubscriptions] = useState(data);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterPlan, setFilterPlan] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -133,6 +51,10 @@ export default function Subscriptions() {
     status: "",
   });
   const [isEditingId, setIsEditingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setSubscriptions(data);
+  }, [data]);
 
   // Filter and search logic
   const filteredSubscriptions = useMemo(() => {
@@ -168,7 +90,7 @@ export default function Subscriptions() {
     }));
   }
 
-  function handleEdit(subscription: typeof subscriptionsData[0]) {
+  function handleEdit(subscription: typeof subscriptions[0]) {
     setIsEditingId(subscription.id);
     setFormData({
       subscriptionId: subscription.subscriptionId,
@@ -262,7 +184,6 @@ export default function Subscriptions() {
   }
 
   function handleReport() {
-    // For demo: just alert JSON data of current filtered subscriptions
     alert(
       "Report Data:\n" +
         JSON.stringify(filteredSubscriptions, null, 2)

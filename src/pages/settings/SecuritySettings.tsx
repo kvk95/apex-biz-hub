@@ -1,94 +1,30 @@
-import React, { useState } from "react";
-
-const securitySettingsData = {
-  users: [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      role: "Admin",
-      status: "Active",
-      lastLogin: "2025-10-10 08:45",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      role: "User",
-      status: "Inactive",
-      lastLogin: "2025-10-09 14:22",
-    },
-    {
-      id: 3,
-      name: "Michael Brown",
-      email: "michael.brown@example.com",
-      role: "User",
-      status: "Active",
-      lastLogin: "2025-10-11 01:15",
-    },
-    {
-      id: 4,
-      name: "Emily Johnson",
-      email: "emily.johnson@example.com",
-      role: "Moderator",
-      status: "Active",
-      lastLogin: "2025-10-10 21:30",
-    },
-    {
-      id: 5,
-      name: "William Lee",
-      email: "william.lee@example.com",
-      role: "User",
-      status: "Inactive",
-      lastLogin: "2025-10-08 19:05",
-    },
-    {
-      id: 6,
-      name: "Olivia Davis",
-      email: "olivia.davis@example.com",
-      role: "Admin",
-      status: "Active",
-      lastLogin: "2025-10-11 03:40",
-    },
-    {
-      id: 7,
-      name: "James Wilson",
-      email: "james.wilson@example.com",
-      role: "User",
-      status: "Active",
-      lastLogin: "2025-10-10 11:55",
-    },
-    {
-      id: 8,
-      name: "Sophia Martinez",
-      email: "sophia.martinez@example.com",
-      role: "User",
-      status: "Inactive",
-      lastLogin: "2025-10-09 16:10",
-    },
-    {
-      id: 9,
-      name: "Benjamin Garcia",
-      email: "benjamin.garcia@example.com",
-      role: "Moderator",
-      status: "Active",
-      lastLogin: "2025-10-11 00:05",
-    },
-    {
-      id: 10,
-      name: "Mia Rodriguez",
-      email: "mia.rodriguez@example.com",
-      role: "User",
-      status: "Active",
-      lastLogin: "2025-10-10 22:20",
-    },
-  ],
-};
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const roles = ["Admin", "User", "Moderator"];
 const statuses = ["Active", "Inactive"];
 
 const SecuritySettings: React.FC = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SecuritySettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -126,11 +62,11 @@ const SecuritySettings: React.FC = () => {
   ]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(securitySettingsData.users.length / itemsPerPage);
-  const paginatedUsers = securitySettingsData.users.slice(
+  const totalPages = Math.ceil(data.length > 0 ? data.length : 0 / itemsPerPage);
+  const paginatedUsers = data.length > 0 ? data.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
-  );
+  ) : [];
 
   // Handlers
   const handlePageChange = (page: number) => {

@@ -1,157 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const productsData = [
-  {
-    id: 1,
-    productName: "Apple iPhone 14 Pro Max",
-    category: "Mobile",
-    price: 1200,
-    stock: 15,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/1.png",
-  },
-  {
-    id: 2,
-    productName: "Samsung Galaxy S22 Ultra",
-    category: "Mobile",
-    price: 1100,
-    stock: 10,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/2.png",
-  },
-  {
-    id: 3,
-    productName: "Sony WH-1000XM4 Headphones",
-    category: "Accessories",
-    price: 350,
-    stock: 25,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/3.png",
-  },
-  {
-    id: 4,
-    productName: "Apple MacBook Pro 16\"",
-    category: "Laptop",
-    price: 2500,
-    stock: 5,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/4.png",
-  },
-  {
-    id: 5,
-    productName: "Dell XPS 13",
-    category: "Laptop",
-    price: 1400,
-    stock: 8,
-    status: "Inactive",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/5.png",
-  },
-  {
-    id: 6,
-    productName: "Logitech MX Master 3 Mouse",
-    category: "Accessories",
-    price: 100,
-    stock: 30,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/6.png",
-  },
-  {
-    id: 7,
-    productName: "Apple Watch Series 7",
-    category: "Wearable",
-    price: 400,
-    stock: 20,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/7.png",
-  },
-  {
-    id: 8,
-    productName: "Google Pixel 7 Pro",
-    category: "Mobile",
-    price: 900,
-    stock: 12,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/8.png",
-  },
-  {
-    id: 9,
-    productName: "Bose QuietComfort Earbuds",
-    category: "Accessories",
-    price: 280,
-    stock: 18,
-    status: "Inactive",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/9.png",
-  },
-  {
-    id: 10,
-    productName: "Microsoft Surface Laptop 5",
-    category: "Laptop",
-    price: 1600,
-    stock: 7,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/10.png",
-  },
-  {
-    id: 11,
-    productName: "Samsung Galaxy Watch 5",
-    category: "Wearable",
-    price: 350,
-    stock: 14,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/11.png",
-  },
-  {
-    id: 12,
-    productName: "Canon EOS R6 Camera",
-    category: "Camera",
-    price: 2500,
-    stock: 4,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/12.png",
-  },
-  {
-    id: 13,
-    productName: "Nikon Z7 II Camera",
-    category: "Camera",
-    price: 3000,
-    stock: 3,
-    status: "Inactive",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/13.png",
-  },
-  {
-    id: 14,
-    productName: "Sony Alpha a7 IV",
-    category: "Camera",
-    price: 2800,
-    stock: 6,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/14.png",
-  },
-  {
-    id: 15,
-    productName: "JBL Flip 6 Speaker",
-    category: "Accessories",
-    price: 120,
-    stock: 22,
-    status: "Active",
-    image:
-      "https://dreamspos.dreamstechnologies.com/html/template/assets/images/products/15.png",
-  },
-];
+import React, { useState, useEffect, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All Categories",
@@ -165,15 +13,34 @@ const categories = [
 const statuses = ["All Status", "Active", "Inactive"];
 
 export default function Products() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Products");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched products
   const filteredProducts = useMemo(() => {
-    return productsData
+    return data
       .filter((p) =>
         selectedCategory === "All Categories"
           ? true
@@ -185,7 +52,7 @@ export default function Products() {
       .filter((p) =>
         p.productName.toLowerCase().includes(searchTerm.toLowerCase().trim())
       );
-  }, [searchTerm, selectedCategory, selectedStatus]);
+  }, [data, searchTerm, selectedCategory, selectedStatus]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -364,7 +231,16 @@ export default function Products() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedProducts.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      Loading...
+                    </td>
+                  </tr>
+                ) : paginatedProducts.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}

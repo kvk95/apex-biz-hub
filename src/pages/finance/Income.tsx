@@ -1,139 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const incomeData = [
-  {
-    id: 1,
-    date: "2023-01-01",
-    invoiceId: "INV-001",
-    customer: "John Doe",
-    category: "Sales",
-    account: "Cash",
-    amount: 1500.0,
-    paymentMethod: "Cash",
-    description: "Product sale",
-  },
-  {
-    id: 2,
-    date: "2023-01-03",
-    invoiceId: "INV-002",
-    customer: "Jane Smith",
-    category: "Service",
-    account: "Bank",
-    amount: 2500.5,
-    paymentMethod: "Card",
-    description: "Consulting service",
-  },
-  {
-    id: 3,
-    date: "2023-01-05",
-    invoiceId: "INV-003",
-    customer: "Acme Corp",
-    category: "Sales",
-    account: "Cash",
-    amount: 3200.75,
-    paymentMethod: "Cash",
-    description: "Bulk order",
-  },
-  {
-    id: 4,
-    date: "2023-01-10",
-    invoiceId: "INV-004",
-    customer: "Beta LLC",
-    category: "Service",
-    account: "Bank",
-    amount: 1800.0,
-    paymentMethod: "Card",
-    description: "Maintenance service",
-  },
-  {
-    id: 5,
-    date: "2023-01-12",
-    invoiceId: "INV-005",
-    customer: "Gamma Inc",
-    category: "Sales",
-    account: "Cash",
-    amount: 2100.0,
-    paymentMethod: "Cash",
-    description: "Product sale",
-  },
-  {
-    id: 6,
-    date: "2023-01-15",
-    invoiceId: "INV-006",
-    customer: "Delta Ltd",
-    category: "Service",
-    account: "Bank",
-    amount: 2750.0,
-    paymentMethod: "Card",
-    description: "Consulting service",
-  },
-  {
-    id: 7,
-    date: "2023-01-18",
-    invoiceId: "INV-007",
-    customer: "Epsilon Co",
-    category: "Sales",
-    account: "Cash",
-    amount: 1900.0,
-    paymentMethod: "Cash",
-    description: "Product sale",
-  },
-  {
-    id: 8,
-    date: "2023-01-20",
-    invoiceId: "INV-008",
-    customer: "Zeta Enterprises",
-    category: "Service",
-    account: "Bank",
-    amount: 2300.0,
-    paymentMethod: "Card",
-    description: "Training service",
-  },
-  {
-    id: 9,
-    date: "2023-01-22",
-    invoiceId: "INV-009",
-    customer: "Eta Group",
-    category: "Sales",
-    account: "Cash",
-    amount: 1600.0,
-    paymentMethod: "Cash",
-    description: "Product sale",
-  },
-  {
-    id: 10,
-    date: "2023-01-25",
-    invoiceId: "INV-010",
-    customer: "Theta Partners",
-    category: "Service",
-    account: "Bank",
-    amount: 2800.0,
-    paymentMethod: "Card",
-    description: "Consulting service",
-  },
-  {
-    id: 11,
-    date: "2023-01-27",
-    invoiceId: "INV-011",
-    customer: "Iota Solutions",
-    category: "Sales",
-    account: "Cash",
-    amount: 1950.0,
-    paymentMethod: "Cash",
-    description: "Product sale",
-  },
-  {
-    id: 12,
-    date: "2023-01-30",
-    invoiceId: "INV-012",
-    customer: "Kappa Services",
-    category: "Service",
-    account: "Bank",
-    amount: 2600.0,
-    paymentMethod: "Card",
-    description: "Support service",
-  },
-];
+import React, { useState, useEffect, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = ["All", "Sales", "Service"];
 const accounts = ["All", "Cash", "Bank"];
@@ -143,7 +9,7 @@ const ITEMS_PER_PAGE = 5;
 
 export default function Income() {
   // Page title as in reference: "Income"
-  React.useEffect(() => {
+  useEffect(() => {
     document.title = "Income";
   }, []);
 
@@ -158,9 +24,30 @@ export default function Income() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
+  // API call and state variables
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Income");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched data memoized
   const filteredData = useMemo(() => {
-    return incomeData.filter((item) => {
+    return data.filter((item) => {
       if (filterDateFrom && item.date < filterDateFrom) return false;
       if (filterDateTo && item.date > filterDateTo) return false;
       if (filterCategory !== "All" && item.category !== filterCategory)
@@ -185,6 +72,7 @@ export default function Income() {
     filterAccount,
     filterPaymentMethod,
     searchInvoice,
+    data,
   ]);
 
   // Pagination calculations
@@ -377,114 +265,119 @@ export default function Income() {
 
         {/* Income Table Section */}
         <section className="bg-white rounded shadow p-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Date
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Invoice ID
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Customer
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Category
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Account
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-right font-semibold text-gray-700"
-                  >
-                    Amount
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Payment Method
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    Description
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-center font-semibold text-gray-700"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {paginatedData.length === 0 ? (
+          {loading ? (
+            <div>Loading...</div>
+          ) : error ? (
+            <div>Error: {error}</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="px-4 py-6 text-center text-gray-500 italic"
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
                     >
-                      No income records found.
-                    </td>
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Invoice ID
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Customer
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Category
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Account
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right font-semibold text-gray-700"
+                    >
+                      Amount
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Payment Method
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-semibold text-gray-700"
+                    >
+                      Description
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-center font-semibold text-gray-700"
+                    >
+                      Actions
+                    </th>
                   </tr>
-                ) : (
-                  paginatedData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{item.invoiceId}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{item.customer}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{item.category}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{item.account}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right font-mono">
-                        ${item.amount.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {item.paymentMethod}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">{item.description}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
-                        <button
-                          type="button"
-                          title="Edit"
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          <i className="fas fa-edit" aria-hidden="true"></i>
-                        </button>
-                        <button
-                          type="button"
-                          title="Delete"
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <i className="fas fa-trash-alt" aria-hidden="true"></i>
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {paginatedData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className="px-4 py-6 text-center text-gray-500 italic"
+                      >
+                        No income records found.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
+                  ) : (
+                    paginatedData.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{item.invoiceId}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{item.customer}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{item.category}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{item.account}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right font-mono">
+                          ${item.amount.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {item.paymentMethod}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">{item.description}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
+                          <button
+                            type="button"
+                            title="Edit"
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            <i className="fas fa-edit" aria-hidden="true"></i>
+                          </button>
+                          <button
+                            type="button"
+                            title="Delete"
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <i className="fas fa-trash-alt" aria-hidden="true"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
           {/* Pagination */}
           <nav
             className="mt-6 flex justify-between items-center"

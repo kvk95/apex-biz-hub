@@ -1,151 +1,41 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
-const accountStatementData = {
-  customer: {
-    name: "John Doe",
-    address: "1234 Elm Street, Springfield, USA",
-    phone: "+1 234 567 890",
-    email: "john.doe@example.com",
-    customerId: "CUST-0001",
-  },
-  filters: {
+const PAGE_SIZE = 5;
+
+export default function AccountStatement() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState({
     fromDate: "2023-01-01",
     toDate: "2023-12-31",
     customer: "John Doe",
     invoiceNo: "",
     paymentType: "All",
-  },
-  paymentTypes: ["All", "Cash", "Card", "Cheque", "Bank Transfer"],
-  transactions: [
-    {
-      date: "2023-01-15",
-      invoiceNo: "INV-1001",
-      description: "Product Sale",
-      paymentType: "Cash",
-      debit: 0,
-      credit: 150.0,
-      balance: 150.0,
-    },
-    {
-      date: "2023-02-02",
-      invoiceNo: "INV-1002",
-      description: "Product Sale",
-      paymentType: "Card",
-      debit: 0,
-      credit: 200.0,
-      balance: 350.0,
-    },
-    {
-      date: "2023-02-15",
-      invoiceNo: "PAY-2001",
-      description: "Payment Received",
-      paymentType: "Cash",
-      debit: 150.0,
-      credit: 0,
-      balance: 200.0,
-    },
-    {
-      date: "2023-03-01",
-      invoiceNo: "INV-1003",
-      description: "Product Sale",
-      paymentType: "Cheque",
-      debit: 0,
-      credit: 300.0,
-      balance: 500.0,
-    },
-    {
-      date: "2023-03-10",
-      invoiceNo: "PAY-2002",
-      description: "Payment Received",
-      paymentType: "Card",
-      debit: 200.0,
-      credit: 0,
-      balance: 300.0,
-    },
-    {
-      date: "2023-04-05",
-      invoiceNo: "INV-1004",
-      description: "Product Sale",
-      paymentType: "Bank Transfer",
-      debit: 0,
-      credit: 400.0,
-      balance: 700.0,
-    },
-    {
-      date: "2023-04-20",
-      invoiceNo: "PAY-2003",
-      description: "Payment Received",
-      paymentType: "Cheque",
-      debit: 300.0,
-      credit: 0,
-      balance: 400.0,
-    },
-    {
-      date: "2023-05-01",
-      invoiceNo: "INV-1005",
-      description: "Product Sale",
-      paymentType: "Cash",
-      debit: 0,
-      credit: 250.0,
-      balance: 650.0,
-    },
-    {
-      date: "2023-05-15",
-      invoiceNo: "PAY-2004",
-      description: "Payment Received",
-      paymentType: "Bank Transfer",
-      debit: 400.0,
-      credit: 0,
-      balance: 250.0,
-    },
-    {
-      date: "2023-06-01",
-      invoiceNo: "INV-1006",
-      description: "Product Sale",
-      paymentType: "Card",
-      debit: 0,
-      credit: 350.0,
-      balance: 600.0,
-    },
-    {
-      date: "2023-06-10",
-      invoiceNo: "PAY-2005",
-      description: "Payment Received",
-      paymentType: "Cash",
-      debit: 250.0,
-      credit: 0,
-      balance: 350.0,
-    },
-    {
-      date: "2023-06-20",
-      invoiceNo: "INV-1007",
-      description: "Product Sale",
-      paymentType: "Cheque",
-      debit: 0,
-      credit: 300.0,
-      balance: 650.0,
-    },
-    {
-      date: "2023-07-01",
-      invoiceNo: "PAY-2006",
-      description: "Payment Received",
-      paymentType: "Card",
-      debit: 350.0,
-      credit: 0,
-      balance: 300.0,
-    },
-  ],
-};
-
-const PAGE_SIZE = 5;
-
-export default function AccountStatement() {
-  const [filters, setFilters] = useState(accountStatementData.filters);
+  });
   const [currentPage, setCurrentPage] = useState(1);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("AccountStatement");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Filter transactions by date range, customer, invoice no, payment type
   const filteredTransactions = useMemo(() => {
-    return accountStatementData.transactions.filter((t) => {
+    return data.filter((t: any) => {
       const tDate = new Date(t.date);
       const fromDate = filters.fromDate ? new Date(filters.fromDate) : null;
       const toDate = filters.toDate ? new Date(filters.toDate) : null;
@@ -162,14 +52,10 @@ export default function AccountStatement() {
         t.paymentType !== filters.paymentType
       )
         return false;
-      if (
-        filters.customer &&
-        filters.customer !== accountStatementData.customer.name
-      )
-        return false;
+      if (filters.customer && filters.customer !== "John Doe") return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, data]);
 
   // Pagination calculations
   const pageCount = Math.ceil(filteredTransactions.length / PAGE_SIZE);
@@ -188,12 +74,17 @@ export default function AccountStatement() {
   };
 
   const handleRefresh = () => {
-    setFilters(accountStatementData.filters);
+    setFilters({
+      fromDate: "2023-01-01",
+      toDate: "2023-12-31",
+      customer: "John Doe",
+      invoiceNo: "",
+      paymentType: "All",
+    });
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo: alert report generation
     alert("Report generation is not implemented in this demo.");
   };
 
@@ -237,7 +128,7 @@ export default function AccountStatement() {
                   type="text"
                   id="customerId"
                   name="customerId"
-                  value={accountStatementData.customer.customerId}
+                  value="CUST-0001"
                   readOnly
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 cursor-not-allowed"
                 />
@@ -252,7 +143,7 @@ export default function AccountStatement() {
                 <textarea
                   id="customerAddress"
                   name="address"
-                  value={accountStatementData.customer.address}
+                  value="1234 Elm Street, Springfield, USA"
                   readOnly
                   rows={3}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 cursor-not-allowed resize-none"
@@ -269,7 +160,7 @@ export default function AccountStatement() {
                   type="text"
                   id="customerPhone"
                   name="phone"
-                  value={accountStatementData.customer.phone}
+                  value="+1 234 567 890"
                   readOnly
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 cursor-not-allowed"
                 />
@@ -285,7 +176,7 @@ export default function AccountStatement() {
                   type="email"
                   id="customerEmail"
                   name="email"
-                  value={accountStatementData.customer.email}
+                  value="john.doe@example.com"
                   readOnly
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 cursor-not-allowed"
                 />
@@ -366,7 +257,7 @@ export default function AccountStatement() {
                   onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {accountStatementData.paymentTypes.map((pt) => (
+                  {["All", "Cash", "Card", "Cheque", "Bank Transfer"].map((pt) => (
                     <option key={pt} value={pt}>
                       {pt}
                     </option>

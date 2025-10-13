@@ -1,62 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const localizationData = {
-  languages: [
-    { id: 1, language: "English", code: "en", currency: "USD", timezone: "America/New_York", dateFormat: "MM/DD/YYYY", timeFormat: "12-hour" },
-    { id: 2, language: "French", code: "fr", currency: "EUR", timezone: "Europe/Paris", dateFormat: "DD/MM/YYYY", timeFormat: "24-hour" },
-    { id: 3, language: "Spanish", code: "es", currency: "EUR", timezone: "Europe/Madrid", dateFormat: "DD/MM/YYYY", timeFormat: "24-hour" },
-    { id: 4, language: "German", code: "de", currency: "EUR", timezone: "Europe/Berlin", dateFormat: "DD.MM.YYYY", timeFormat: "24-hour" },
-    { id: 5, language: "Japanese", code: "ja", currency: "JPY", timezone: "Asia/Tokyo", dateFormat: "YYYY/MM/DD", timeFormat: "24-hour" },
-    { id: 6, language: "Chinese", code: "zh", currency: "CNY", timezone: "Asia/Shanghai", dateFormat: "YYYY/MM/DD", timeFormat: "24-hour" },
-    { id: 7, language: "Russian", code: "ru", currency: "RUB", timezone: "Europe/Moscow", dateFormat: "DD.MM.YYYY", timeFormat: "24-hour" },
-    { id: 8, language: "Arabic", code: "ar", currency: "AED", timezone: "Asia/Dubai", dateFormat: "DD/MM/YYYY", timeFormat: "12-hour" },
-    { id: 9, language: "Portuguese", code: "pt", currency: "EUR", timezone: "Europe/Lisbon", dateFormat: "DD/MM/YYYY", timeFormat: "24-hour" },
-    { id: 10, language: "Hindi", code: "hi", currency: "INR", timezone: "Asia/Kolkata", dateFormat: "DD-MM-YYYY", timeFormat: "12-hour" },
-    { id: 11, language: "Italian", code: "it", currency: "EUR", timezone: "Europe/Rome", dateFormat: "DD/MM/YYYY", timeFormat: "24-hour" },
-    { id: 12, language: "Korean", code: "ko", currency: "KRW", timezone: "Asia/Seoul", dateFormat: "YYYY-MM-DD", timeFormat: "24-hour" },
-    { id: 13, language: "Dutch", code: "nl", currency: "EUR", timezone: "Europe/Amsterdam", dateFormat: "DD-MM-YYYY", timeFormat: "24-hour" },
-    { id: 14, language: "Swedish", code: "sv", currency: "SEK", timezone: "Europe/Stockholm", dateFormat: "YYYY-MM-DD", timeFormat: "24-hour" },
-    { id: 15, language: "Turkish", code: "tr", currency: "TRY", timezone: "Europe/Istanbul", dateFormat: "DD.MM.YYYY", timeFormat: "24-hour" },
-  ],
-  currencies: [
-    { id: 1, name: "US Dollar", code: "USD", symbol: "$" },
-    { id: 2, name: "Euro", code: "EUR", symbol: "€" },
-    { id: 3, name: "Japanese Yen", code: "JPY", symbol: "¥" },
-    { id: 4, name: "British Pound", code: "GBP", symbol: "£" },
-    { id: 5, name: "Australian Dollar", code: "AUD", symbol: "A$" },
-    { id: 6, name: "Canadian Dollar", code: "CAD", symbol: "C$" },
-    { id: 7, name: "Swiss Franc", code: "CHF", symbol: "CHF" },
-    { id: 8, name: "Chinese Yuan", code: "CNY", symbol: "¥" },
-    { id: 9, name: "Swedish Krona", code: "SEK", symbol: "kr" },
-    { id: 10, name: "New Zealand Dollar", code: "NZD", symbol: "NZ$" },
-  ],
-  timezones: [
-    "America/New_York",
-    "Europe/Paris",
-    "Europe/Madrid",
-    "Europe/Berlin",
-    "Asia/Tokyo",
-    "Asia/Shanghai",
-    "Europe/Moscow",
-    "Asia/Dubai",
-    "Europe/Lisbon",
-    "Asia/Kolkata",
-    "Europe/Rome",
-    "Asia/Seoul",
-    "Europe/Amsterdam",
-    "Europe/Stockholm",
-    "Europe/Istanbul",
-  ],
-  dateFormats: [
-    "MM/DD/YYYY",
-    "DD/MM/YYYY",
-    "DD.MM.YYYY",
-    "YYYY/MM/DD",
-    "YYYY-MM-DD",
-    "DD-MM-YYYY",
-  ],
-  timeFormats: ["12-hour", "24-hour"],
-};
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -70,10 +13,31 @@ export default function LocalizationSettings() {
     timeFormat: "",
   });
 
-  const [languages, setLanguages] = useState(localizationData.languages);
+  const [languages, setLanguages] = useState([]);
   const [editId, setEditId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("LocalizationSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setLanguages(response.result.languages || []);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Filtered and paginated languages
   const filteredLanguages = useMemo(() => {
@@ -236,7 +200,7 @@ export default function LocalizationSettings() {
               className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select currency</option>
-              {localizationData.currencies.map((c) => (
+              {(data.currencies || []).map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.name} ({c.code})
                 </option>
@@ -255,7 +219,7 @@ export default function LocalizationSettings() {
               className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select timezone</option>
-              {localizationData.timezones.map((tz) => (
+              {(data.timezones || []).map((tz) => (
                 <option key={tz} value={tz}>
                   {tz}
                 </option>
@@ -274,7 +238,7 @@ export default function LocalizationSettings() {
               className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select date format</option>
-              {localizationData.dateFormats.map((df) => (
+              {(data.dateFormats || []).map((df) => (
                 <option key={df} value={df}>
                   {df}
                 </option>
@@ -293,7 +257,7 @@ export default function LocalizationSettings() {
               className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select time format</option>
-              {localizationData.timeFormats.map((tf) => (
+              {(data.timeFormats || []).map((tf) => (
                 <option key={tf} value={tf}>
                   {tf === "12-hour" ? "12-hour (AM/PM)" : "24-hour"}
                 </option>

@@ -1,136 +1,33 @@
-import React, { useState, useEffect } from "react";
-
-const purchaseOrderData = {
-  company: {
-    name: "Dreams Technologies",
-    address: "123 Dream St, Dream City, DC 12345",
-    phone: "+1 234 567 890",
-    email: "info@dreamspos.dreamstechnologies.com",
-  },
-  purchaseOrders: [
-    {
-      id: 1,
-      poNumber: "PO-1001",
-      supplier: "Supplier A",
-      date: "2025-10-01",
-      status: "Pending",
-      total: 1500.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 1",
-          qty: 10,
-          price: 50.0,
-          total: 500.0,
-        },
-        {
-          id: 2,
-          product: "Product 2",
-          qty: 20,
-          price: 50.0,
-          total: 1000.0,
-        },
-      ],
-    },
-    {
-      id: 2,
-      poNumber: "PO-1002",
-      supplier: "Supplier B",
-      date: "2025-10-02",
-      status: "Completed",
-      total: 800.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 3",
-          qty: 8,
-          price: 100.0,
-          total: 800.0,
-        },
-      ],
-    },
-    {
-      id: 3,
-      poNumber: "PO-1003",
-      supplier: "Supplier C",
-      date: "2025-10-03",
-      status: "Pending",
-      total: 1200.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 4",
-          qty: 12,
-          price: 100.0,
-          total: 1200.0,
-        },
-      ],
-    },
-    {
-      id: 4,
-      poNumber: "PO-1004",
-      supplier: "Supplier D",
-      date: "2025-10-04",
-      status: "Pending",
-      total: 600.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 5",
-          qty: 6,
-          price: 100.0,
-          total: 600.0,
-        },
-      ],
-    },
-    {
-      id: 5,
-      poNumber: "PO-1005",
-      supplier: "Supplier E",
-      date: "2025-10-05",
-      status: "Completed",
-      total: 2000.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 6",
-          qty: 20,
-          price: 100.0,
-          total: 2000.0,
-        },
-      ],
-    },
-    {
-      id: 6,
-      poNumber: "PO-1006",
-      supplier: "Supplier F",
-      date: "2025-10-06",
-      status: "Pending",
-      total: 1800.0,
-      items: [
-        {
-          id: 1,
-          product: "Product 7",
-          qty: 18,
-          price: 100.0,
-          total: 1800.0,
-        },
-      ],
-    },
-  ],
-};
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const ITEMS_PER_PAGE = 3;
 
 export default function PurchaseOrder() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PurchaseOrder");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [purchaseOrders, setPurchaseOrders] = useState(
-    purchaseOrderData.purchaseOrders
-  );
-  const [selectedPO, setSelectedPO] = useState<
-    typeof purchaseOrderData.purchaseOrders[0] | null
-  >(null);
+  const [purchaseOrders, setPurchaseOrders] = useState(data);
+  const [selectedPO, setSelectedPO] = useState<typeof data[0] | null>(null);
 
   // Form state for new/edit PO
   const [form, setForm] = useState({
@@ -230,7 +127,7 @@ export default function PurchaseOrder() {
   };
 
   const handleRefresh = () => {
-    setPurchaseOrders(purchaseOrderData.purchaseOrders);
+    setPurchaseOrders([]);
     setCurrentPage(1);
     setForm({
       poNumber: "",
@@ -240,16 +137,17 @@ export default function PurchaseOrder() {
       items: [{ product: "", qty: 1, price: 0 }],
     });
     setSelectedPO(null);
+    loadData();
   };
 
-  const handleSelectPO = (po: typeof purchaseOrderData.purchaseOrders[0]) => {
+  const handleSelectPO = (po: typeof data[0]) => {
     setSelectedPO(po);
     setForm({
       poNumber: po.poNumber,
       supplier: po.supplier,
       date: po.date,
       status: po.status,
-      items: po.items.map((item) => ({
+      items: po.items.map((item: any) => ({
         product: item.product,
         qty: item.qty,
         price: item.price,
@@ -317,6 +215,10 @@ export default function PurchaseOrder() {
     document.title = "Purchase Order - Dreams POS";
   }, []);
 
+  useEffect(() => {
+    setPurchaseOrders(data);
+  }, [data]);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
       <div className="max-w-7xl mx-auto p-6">
@@ -352,16 +254,16 @@ export default function PurchaseOrder() {
           <h2 className="text-xl font-semibold mb-4">Company Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-700">
             <div>
-              <span className="font-medium">Name:</span> {purchaseOrderData.company.name}
+              <span className="font-medium">Name:</span> Dreams Technologies
             </div>
             <div>
-              <span className="font-medium">Address:</span> {purchaseOrderData.company.address}
+              <span className="font-medium">Address:</span> 123 Dream St, Dream City, DC 12345
             </div>
             <div>
-              <span className="font-medium">Phone:</span> {purchaseOrderData.company.phone}
+              <span className="font-medium">Phone:</span> +1 234 567 890
             </div>
             <div>
-              <span className="font-medium">Email:</span> {purchaseOrderData.company.email}
+              <span className="font-medium">Email:</span> info@dreamspos.dreamstechnologies.com
             </div>
           </div>
         </section>

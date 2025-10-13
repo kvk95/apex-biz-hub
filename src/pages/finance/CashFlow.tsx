@@ -1,130 +1,36 @@
-import React, { useState, useMemo } from "react";
-
-const cashFlowData = [
-  {
-    id: 1,
-    date: "2023-01-01",
-    description: "Opening Balance",
-    income: 0,
-    expense: 0,
-    balance: 10000,
-  },
-  {
-    id: 2,
-    date: "2023-01-05",
-    description: "Sales Income",
-    income: 2500,
-    expense: 0,
-    balance: 12500,
-  },
-  {
-    id: 3,
-    date: "2023-01-10",
-    description: "Office Supplies",
-    income: 0,
-    expense: 300,
-    balance: 12200,
-  },
-  {
-    id: 4,
-    date: "2023-01-15",
-    description: "Client Payment",
-    income: 4000,
-    expense: 0,
-    balance: 16200,
-  },
-  {
-    id: 5,
-    date: "2023-01-20",
-    description: "Utility Bill",
-    income: 0,
-    expense: 450,
-    balance: 15750,
-  },
-  {
-    id: 6,
-    date: "2023-01-25",
-    description: "Miscellaneous Expense",
-    income: 0,
-    expense: 150,
-    balance: 15600,
-  },
-  {
-    id: 7,
-    date: "2023-01-30",
-    description: "Sales Income",
-    income: 3200,
-    expense: 0,
-    balance: 18800,
-  },
-  {
-    id: 8,
-    date: "2023-02-01",
-    description: "Rent Payment",
-    income: 0,
-    expense: 1200,
-    balance: 17600,
-  },
-  {
-    id: 9,
-    date: "2023-02-05",
-    description: "Consulting Income",
-    income: 1800,
-    expense: 0,
-    balance: 19400,
-  },
-  {
-    id: 10,
-    date: "2023-02-10",
-    description: "Travel Expense",
-    income: 0,
-    expense: 600,
-    balance: 18800,
-  },
-  {
-    id: 11,
-    date: "2023-02-15",
-    description: "Sales Income",
-    income: 2700,
-    expense: 0,
-    balance: 21500,
-  },
-  {
-    id: 12,
-    date: "2023-02-20",
-    description: "Office Equipment",
-    income: 0,
-    expense: 900,
-    balance: 20600,
-  },
-  {
-    id: 13,
-    date: "2023-02-25",
-    description: "Client Payment",
-    income: 3500,
-    expense: 0,
-    balance: 24100,
-  },
-  {
-    id: 14,
-    date: "2023-02-28",
-    description: "Internet Bill",
-    income: 0,
-    expense: 200,
-    balance: 23900,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function CashFlow() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchDate, setSearchDate] = useState("");
   const [searchDescription, setSearchDescription] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CashFlow");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filter data by search inputs
   const filteredData = useMemo(() => {
-    return cashFlowData.filter((item) => {
+    return data.filter((item) => {
       const matchesDate = searchDate
         ? item.date === searchDate
         : true;
@@ -135,7 +41,7 @@ export default function CashFlow() {
         : true;
       return matchesDate && matchesDesc;
     });
-  }, [searchDate, searchDescription]);
+  }, [data, searchDate, searchDescription]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -152,7 +58,6 @@ export default function CashFlow() {
   };
 
   const handleReport = () => {
-    // For demo, just alert report generation
     alert("Report generated for current filtered data.");
   };
 

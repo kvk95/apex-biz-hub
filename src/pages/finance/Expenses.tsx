@@ -1,103 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const expensesData = [
-  {
-    id: 1,
-    date: "2023-04-01",
-    expenseHead: "Office Rent",
-    amount: 2500,
-    paymentType: "Cash",
-    note: "Monthly office rent payment",
-  },
-  {
-    id: 2,
-    date: "2023-04-03",
-    expenseHead: "Electricity Bill",
-    amount: 450,
-    paymentType: "Cheque",
-    note: "Electricity bill for March",
-  },
-  {
-    id: 3,
-    date: "2023-04-05",
-    expenseHead: "Internet",
-    amount: 120,
-    paymentType: "Cash",
-    note: "Monthly internet charges",
-  },
-  {
-    id: 4,
-    date: "2023-04-07",
-    expenseHead: "Stationery",
-    amount: 75,
-    paymentType: "Cash",
-    note: "Office stationery purchase",
-  },
-  {
-    id: 5,
-    date: "2023-04-10",
-    expenseHead: "Travel",
-    amount: 300,
-    paymentType: "Cheque",
-    note: "Client meeting travel expenses",
-  },
-  {
-    id: 6,
-    date: "2023-04-12",
-    expenseHead: "Maintenance",
-    amount: 200,
-    paymentType: "Cash",
-    note: "Office AC maintenance",
-  },
-  {
-    id: 7,
-    date: "2023-04-15",
-    expenseHead: "Software Subscription",
-    amount: 99,
-    paymentType: "Cash",
-    note: "Monthly software subscription",
-  },
-  {
-    id: 8,
-    date: "2023-04-18",
-    expenseHead: "Cleaning",
-    amount: 150,
-    paymentType: "Cash",
-    note: "Office cleaning charges",
-  },
-  {
-    id: 9,
-    date: "2023-04-20",
-    expenseHead: "Miscellaneous",
-    amount: 60,
-    paymentType: "Cash",
-    note: "Miscellaneous expenses",
-  },
-  {
-    id: 10,
-    date: "2023-04-22",
-    expenseHead: "Snacks",
-    amount: 40,
-    paymentType: "Cash",
-    note: "Office snacks purchase",
-  },
-  {
-    id: 11,
-    date: "2023-04-25",
-    expenseHead: "Printing",
-    amount: 85,
-    paymentType: "Cheque",
-    note: "Printing documents",
-  },
-  {
-    id: 12,
-    date: "2023-04-27",
-    expenseHead: "Courier",
-    amount: 55,
-    paymentType: "Cash",
-    note: "Courier charges",
-  },
-];
+import React, { useMemo, useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const expenseHeads = [
   "Office Rent",
@@ -131,7 +33,12 @@ export default function Expenses() {
   });
 
   // Expenses list state
-  const [expenses, setExpenses] = useState(expensesData);
+  const [expenses, setExpenses] = useState([]);
+
+  // Loading and error state for API
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Editing state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -143,6 +50,23 @@ export default function Expenses() {
     const start = (currentPage - 1) * itemsPerPage;
     return expenses.slice(start, start + itemsPerPage);
   }, [currentPage, expenses]);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Expenses");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setExpenses(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Handlers
   const handleInputChange = (
@@ -239,8 +163,7 @@ export default function Expenses() {
   };
 
   const handleRefresh = () => {
-    // Reset to initial data and form
-    setExpenses(expensesData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };

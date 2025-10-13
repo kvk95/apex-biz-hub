@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useApiService } from "@/hooks/useApiService";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
@@ -22,25 +23,31 @@ export default function OtpSettings() {
     "Your OTP is {{otp}}. Please do not share it with anyone."
   );
   const [status, setStatus] = useState("Active");
-  
-  const { data: apiData, loading } = useApiService<OtpSetting[]>("/otpSettings.json");
   const [data, setData] = useState<OtpSetting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  
-  useEffect(() => {
-    if (apiData) {
-      setData(apiData);
-    }
-  }, [apiData]);
 
-  // Pagination calculations
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<OtpSetting[]>("OtpSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const totalPages = Math.ceil(data.length / pageSize);
   const paginatedData = data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Handlers
   const handleSave = () => {
-    // Save logic: For demo, just update or add new entry to data array
-    // Check if an entry with same otpType and otpLength exists, update it; else add new
     const existingIndex = data.findIndex(
       (item) =>
         item.otpType === otpType &&
@@ -74,7 +81,6 @@ export default function OtpSettings() {
   };
 
   const handleRefresh = () => {
-    // Reset form fields to defaults
     setOtpType("Numeric");
     setOtpLength(6);
     setOtpValidity(5);
@@ -94,7 +100,6 @@ export default function OtpSettings() {
   };
 
   const handleReport = () => {
-    // For demo, just alert JSON data
     alert("Report Data:\n" + JSON.stringify(data, null, 2));
   };
 
@@ -102,10 +107,8 @@ export default function OtpSettings() {
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
       <title>OTP Settings</title>
       <div className="container mx-auto px-4 py-6">
-        {/* Page Title */}
         <h1 className="text-3xl font-semibold mb-6">OTP Settings</h1>
 
-        {/* Form Section */}
         <section className="bg-white rounded shadow p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Add / Edit OTP Settings</h2>
           <form
@@ -116,7 +119,6 @@ export default function OtpSettings() {
             className="space-y-6"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* OTP Type */}
               <div>
                 <label
                   htmlFor="otpType"
@@ -135,7 +137,6 @@ export default function OtpSettings() {
                 </select>
               </div>
 
-              {/* OTP Length */}
               <div>
                 <label
                   htmlFor="otpLength"
@@ -154,7 +155,6 @@ export default function OtpSettings() {
                 />
               </div>
 
-              {/* OTP Validity (minutes) */}
               <div>
                 <label
                   htmlFor="otpValidity"
@@ -173,7 +173,6 @@ export default function OtpSettings() {
                 />
               </div>
 
-              {/* OTP Resend Time (minutes) */}
               <div>
                 <label
                   htmlFor="otpResendTime"
@@ -192,7 +191,6 @@ export default function OtpSettings() {
                 />
               </div>
 
-              {/* OTP Message */}
               <div className="md:col-span-2">
                 <label
                   htmlFor="otpMessage"
@@ -213,7 +211,6 @@ export default function OtpSettings() {
                 </p>
               </div>
 
-              {/* Status */}
               <div>
                 <label
                   htmlFor="status"
@@ -233,7 +230,6 @@ export default function OtpSettings() {
               </div>
             </div>
 
-            {/* Buttons */}
             <div className="flex space-x-4 pt-4">
               <button
                 type="submit"
@@ -259,7 +255,6 @@ export default function OtpSettings() {
           </form>
         </section>
 
-        {/* Table Section */}
         <section className="bg-white rounded shadow p-6">
           <h2 className="text-xl font-semibold mb-4">OTP Settings List</h2>
           <div className="overflow-x-auto">
@@ -321,7 +316,6 @@ export default function OtpSettings() {
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-700">
               Showing{" "}

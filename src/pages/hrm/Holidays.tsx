@@ -1,96 +1,31 @@
 import React, { useState, useEffect } from "react";
-
-const holidaysData = [
-  {
-    id: 1,
-    holidayName: "New Year",
-    holidayDate: "01-01-2023",
-    day: "Sunday",
-    description: "New Year's Day",
-  },
-  {
-    id: 2,
-    holidayName: "Republic Day",
-    holidayDate: "26-01-2023",
-    day: "Thursday",
-    description: "Republic Day Celebration",
-  },
-  {
-    id: 3,
-    holidayName: "Good Friday",
-    holidayDate: "07-04-2023",
-    day: "Friday",
-    description: "Good Friday",
-  },
-  {
-    id: 4,
-    holidayName: "Labor Day",
-    holidayDate: "01-05-2023",
-    day: "Monday",
-    description: "International Workers' Day",
-  },
-  {
-    id: 5,
-    holidayName: "Independence Day",
-    holidayDate: "15-08-2023",
-    day: "Tuesday",
-    description: "Independence Day",
-  },
-  {
-    id: 6,
-    holidayName: "Gandhi Jayanti",
-    holidayDate: "02-10-2023",
-    day: "Monday",
-    description: "Gandhi Jayanti",
-  },
-  {
-    id: 7,
-    holidayName: "Christmas",
-    holidayDate: "25-12-2023",
-    day: "Monday",
-    description: "Christmas Day",
-  },
-  {
-    id: 8,
-    holidayName: "Eid-ul-Fitr",
-    holidayDate: "21-04-2023",
-    day: "Friday",
-    description: "Eid Festival",
-  },
-  {
-    id: 9,
-    holidayName: "Diwali",
-    holidayDate: "12-11-2023",
-    day: "Sunday",
-    description: "Festival of Lights",
-  },
-  {
-    id: 10,
-    holidayName: "Holi",
-    holidayDate: "08-03-2023",
-    day: "Wednesday",
-    description: "Festival of Colors",
-  },
-  {
-    id: 11,
-    holidayName: "Christmas Eve",
-    holidayDate: "24-12-2023",
-    day: "Sunday",
-    description: "Christmas Eve",
-  },
-  {
-    id: 12,
-    holidayName: "Boxing Day",
-    holidayDate: "26-12-2023",
-    day: "Tuesday",
-    description: "Boxing Day",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import React, { useEffect, useState } from "react";
 
 const pageSizeOptions = [5, 10, 15];
 
 export default function Holidays() {
-  const [holidays, setHolidays] = useState(holidaysData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Holidays");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const [holidays, setHolidays] = useState(data);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [form, setForm] = useState({
@@ -203,7 +138,7 @@ export default function Holidays() {
   }
 
   function handleRefresh() {
-    setHolidays(holidaysData);
+    setHolidays(data);
     setCurrentPage(1);
     setForm({ holidayName: "", holidayDate: "", day: "", description: "" });
     setEditId(null);

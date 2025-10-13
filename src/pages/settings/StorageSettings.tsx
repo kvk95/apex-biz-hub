@@ -1,94 +1,33 @@
 import React, { useState, useEffect } from "react";
-
-const storageDataInitial = [
-  {
-    id: 1,
-    storageName: "Main Storage",
-    storageCode: "MS001",
-    storageType: "Warehouse",
-    status: "Active",
-    description: "Primary warehouse storage",
-  },
-  {
-    id: 2,
-    storageName: "Backup Storage",
-    storageCode: "BS002",
-    storageType: "Store",
-    status: "Inactive",
-    description: "Secondary backup storage",
-  },
-  {
-    id: 3,
-    storageName: "Cold Storage",
-    storageCode: "CS003",
-    storageType: "Cold Room",
-    status: "Active",
-    description: "Storage for perishable goods",
-  },
-  {
-    id: 4,
-    storageName: "Outlet Storage",
-    storageCode: "OS004",
-    storageType: "Store",
-    status: "Active",
-    description: "Storage for outlet branch",
-  },
-  {
-    id: 5,
-    storageName: "Overflow Storage",
-    storageCode: "OF005",
-    storageType: "Warehouse",
-    status: "Inactive",
-    description: "Overflow stock storage",
-  },
-  {
-    id: 6,
-    storageName: "Hazardous Storage",
-    storageCode: "HZ006",
-    storageType: "Warehouse",
-    status: "Active",
-    description: "Storage for hazardous materials",
-  },
-  {
-    id: 7,
-    storageName: "Small Parts Storage",
-    storageCode: "SP007",
-    storageType: "Store",
-    status: "Active",
-    description: "Storage for small parts and components",
-  },
-  {
-    id: 8,
-    storageName: "Returns Storage",
-    storageCode: "RT008",
-    storageType: "Warehouse",
-    status: "Inactive",
-    description: "Storage for returned items",
-  },
-  {
-    id: 9,
-    storageName: "Packaging Storage",
-    storageCode: "PK009",
-    storageType: "Store",
-    status: "Active",
-    description: "Storage for packaging materials",
-  },
-  {
-    id: 10,
-    storageName: "Seasonal Storage",
-    storageCode: "SS010",
-    storageType: "Warehouse",
-    status: "Active",
-    description: "Storage for seasonal stock",
-  },
-];
+import { apiService } from "@/services/ApiService";
 
 const storageTypes = ["Warehouse", "Store", "Cold Room"];
 const statuses = ["Active", "Inactive"];
 
 export default function StorageSettings() {
+  // State variables for API data
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // API call logic
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("StorageSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
-  const [storageData, setStorageData] = useState(storageDataInitial);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -103,6 +42,9 @@ export default function StorageSettings() {
 
   // Edit mode state
   const [editId, setEditId] = useState<number | null>(null);
+
+  // Use API data for storage
+  const storageData = data;
 
   // Pagination calculations
   const totalPages = Math.ceil(storageData.length / itemsPerPage);
@@ -119,18 +61,18 @@ export default function StorageSettings() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.storageName.trim() || !form.storageCode.trim()) {
       alert("Storage Name and Storage Code are required.");
       return;
     }
     if (editId !== null) {
       // Update existing
-      setStorageData((prev) =>
-        prev.map((item) =>
-          item.id === editId ? { ...item, ...form } : item
-        )
+      const updatedData = storageData.map((item) =>
+        item.id === editId ? { ...item, ...form } : item
       );
+      // Call API to update data
+      await apiService.put("StorageSettings", updatedData);
       setEditId(null);
     } else {
       // Add new
@@ -138,7 +80,9 @@ export default function StorageSettings() {
         storageData.length > 0
           ? Math.max(...storageData.map((item) => item.id)) + 1
           : 1;
-      setStorageData((prev) => [...prev, { id: newId, ...form }]);
+      const newData = [...storageData, { id: newId, ...form }];
+      // Call API to add new data
+      await apiService.post("StorageSettings", newData);
       // If new item added on last page, update pagination to last page
       const newTotalPages = Math.ceil((storageData.length + 1) / itemsPerPage);
       if (newTotalPages > totalPages) setCurrentPage(newTotalPages);
@@ -167,9 +111,11 @@ export default function StorageSettings() {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this storage?")) {
-      setStorageData((prev) => prev.filter((item) => item.id !== id));
+      const updatedData = storageData.filter((item) => item.id !== id);
+      // Call API to delete data
+      await apiService.delete(`StorageSettings/${id}`);
       // Adjust page if last item on page deleted
       const newTotalPages = Math.ceil((storageData.length - 1) / itemsPerPage);
       if (currentPage > newTotalPages) setCurrentPage(newTotalPages || 1);
@@ -177,7 +123,7 @@ export default function StorageSettings() {
   };
 
   const handleRefresh = () => {
-    setStorageData(storageDataInitial);
+    loadData();
     setCurrentPage(1);
     setForm({
       storageName: "",

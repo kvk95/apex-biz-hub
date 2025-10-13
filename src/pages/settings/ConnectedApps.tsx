@@ -1,135 +1,55 @@
-import React, { useState, useMemo } from "react";
-
-const connectedAppsData = [
-  {
-    id: 1,
-    appName: "Google",
-    appIcon: "fa-google",
-    connectedOn: "2023-02-15",
-    status: "Active",
-    description: "Google account connected for sync",
-  },
-  {
-    id: 2,
-    appName: "Facebook",
-    appIcon: "fa-facebook-f",
-    connectedOn: "2023-01-10",
-    status: "Inactive",
-    description: "Facebook account disconnected",
-  },
-  {
-    id: 3,
-    appName: "Twitter",
-    appIcon: "fa-twitter",
-    connectedOn: "2023-03-01",
-    status: "Active",
-    description: "Twitter account connected for sharing",
-  },
-  {
-    id: 4,
-    appName: "Slack",
-    appIcon: "fa-slack",
-    connectedOn: "2023-02-20",
-    status: "Active",
-    description: "Slack workspace integration",
-  },
-  {
-    id: 5,
-    appName: "Dropbox",
-    appIcon: "fa-dropbox",
-    connectedOn: "2023-01-25",
-    status: "Inactive",
-    description: "Dropbox disconnected",
-  },
-  {
-    id: 6,
-    appName: "GitHub",
-    appIcon: "fa-github",
-    connectedOn: "2023-03-05",
-    status: "Active",
-    description: "GitHub repo sync enabled",
-  },
-  {
-    id: 7,
-    appName: "LinkedIn",
-    appIcon: "fa-linkedin-in",
-    connectedOn: "2023-02-28",
-    status: "Active",
-    description: "LinkedIn profile connected",
-  },
-  {
-    id: 8,
-    appName: "Instagram",
-    appIcon: "fa-instagram",
-    connectedOn: "2023-01-30",
-    status: "Inactive",
-    description: "Instagram disconnected",
-  },
-  {
-    id: 9,
-    appName: "Zoom",
-    appIcon: "fa-video",
-    connectedOn: "2023-02-18",
-    status: "Active",
-    description: "Zoom meetings integration",
-  },
-  {
-    id: 10,
-    appName: "Trello",
-    appIcon: "fa-trello",
-    connectedOn: "2023-02-22",
-    status: "Active",
-    description: "Trello boards sync",
-  },
-  {
-    id: 11,
-    appName: "Asana",
-    appIcon: "fa-tasks",
-    connectedOn: "2023-03-06",
-    status: "Active",
-    description: "Asana task management",
-  },
-  {
-    id: 12,
-    appName: "Spotify",
-    appIcon: "fa-spotify",
-    connectedOn: "2023-01-15",
-    status: "Inactive",
-    description: "Spotify disconnected",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
 export default function ConnectedApps() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ConnectedApps");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
   // Sorting state (optional, to replicate table header sorting icons)
-  const [sortField, setSortField] = useState<keyof typeof connectedAppsData[0] | null>(null);
+  const [sortField, setSortField] = useState<keyof typeof data[0] | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Filter state (if any filter exists on reference page, here none specified so omitted)
-
   // Calculate total pages
-  const totalPages = Math.ceil(connectedAppsData.length / pageSize);
+  const totalPages = Math.ceil(data.length / pageSize);
 
   // Sort and paginate data
   const paginatedData = useMemo(() => {
-    let data = [...connectedAppsData];
+    let sortedData = [...data];
     if (sortField) {
-      data.sort((a, b) => {
+      sortedData.sort((a, b) => {
         if (a[sortField] < b[sortField]) return sortOrder === "asc" ? -1 : 1;
         if (a[sortField] > b[sortField]) return sortOrder === "asc" ? 1 : -1;
         return 0;
       });
     }
-    return data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  }, [currentPage, pageSize, sortField, sortOrder]);
+    return sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [currentPage, pageSize, sortField, sortOrder, data]);
 
   // Handle sorting click
-  function handleSort(field: keyof typeof connectedAppsData[0]) {
+  function handleSort(field: keyof typeof data[0]) {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -155,6 +75,7 @@ export default function ConnectedApps() {
     setCurrentPage(1);
     setSortField(null);
     setSortOrder("asc");
+    loadData();
   }
 
   // Save button handler (simulate save)

@@ -1,155 +1,95 @@
-import React, { useState, useEffect } from "react";
-
-const preferenceData = {
-  title: "Preference",
-  sections: {
-    generalSettings: {
-      companyName: "Dreams POS",
-      companyEmail: "info@dreamspos.com",
-      companyPhone: "+91 9876543210",
-      companyAddress: "123 Dreams Street, Dream City, DC 12345",
-      currency: "USD",
-      timezone: "GMT-5",
-      dateFormat: "MM/DD/YYYY",
-      timeFormat: "12 Hour",
-      language: "English",
-    },
-    invoiceSettings: {
-      invoicePrefix: "INV",
-      invoiceStartNumber: 1001,
-      invoiceFooterNote: "Thank you for your business!",
-      invoiceTerms: "Payment due within 30 days",
-    },
-    userPreferences: {
-      theme: "Light",
-      notifications: true,
-      autoSave: false,
-      itemsPerPage: 10,
-    },
-    users: [
-      {
-        id: 1,
-        name: "John Doe",
-        email: "john.doe@example.com",
-        role: "Admin",
-        status: "Active",
-      },
-      {
-        id: 2,
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        role: "User",
-        status: "Inactive",
-      },
-      {
-        id: 3,
-        name: "Alice Johnson",
-        email: "alice.johnson@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 4,
-        name: "Bob Brown",
-        email: "bob.brown@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 5,
-        name: "Charlie Davis",
-        email: "charlie.davis@example.com",
-        role: "User",
-        status: "Inactive",
-      },
-      {
-        id: 6,
-        name: "Diana Evans",
-        email: "diana.evans@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 7,
-        name: "Ethan Foster",
-        email: "ethan.foster@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 8,
-        name: "Fiona Green",
-        email: "fiona.green@example.com",
-        role: "User",
-        status: "Inactive",
-      },
-      {
-        id: 9,
-        name: "George Harris",
-        email: "george.harris@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 10,
-        name: "Hannah Irving",
-        email: "hannah.irving@example.com",
-        role: "User",
-        status: "Active",
-      },
-      {
-        id: 11,
-        name: "Ian Jackson",
-        email: "ian.jackson@example.com",
-        role: "User",
-        status: "Inactive",
-      },
-      {
-        id: 12,
-        name: "Julia King",
-        email: "julia.king@example.com",
-        role: "User",
-        status: "Active",
-      },
-    ],
-  },
-};
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const roles = ["Admin", "User", "Manager"];
 const statuses = ["Active", "Inactive"];
 
 const Preference: React.FC = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Preference");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Page title
   useEffect(() => {
-    document.title = preferenceData.title;
+    document.title = "Preference";
   }, []);
 
   // General Settings state
-  const [companyName, setCompanyName] = useState(preferenceData.sections.generalSettings.companyName);
-  const [companyEmail, setCompanyEmail] = useState(preferenceData.sections.generalSettings.companyEmail);
-  const [companyPhone, setCompanyPhone] = useState(preferenceData.sections.generalSettings.companyPhone);
-  const [companyAddress, setCompanyAddress] = useState(preferenceData.sections.generalSettings.companyAddress);
-  const [currency, setCurrency] = useState(preferenceData.sections.generalSettings.currency);
-  const [timezone, setTimezone] = useState(preferenceData.sections.generalSettings.timezone);
-  const [dateFormat, setDateFormat] = useState(preferenceData.sections.generalSettings.dateFormat);
-  const [timeFormat, setTimeFormat] = useState(preferenceData.sections.generalSettings.timeFormat);
-  const [language, setLanguage] = useState(preferenceData.sections.generalSettings.language);
+  const [companyName, setCompanyName] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [dateFormat, setDateFormat] = useState("");
+  const [timeFormat, setTimeFormat] = useState("");
+  const [language, setLanguage] = useState("");
 
   // Invoice Settings state
-  const [invoicePrefix, setInvoicePrefix] = useState(preferenceData.sections.invoiceSettings.invoicePrefix);
-  const [invoiceStartNumber, setInvoiceStartNumber] = useState(preferenceData.sections.invoiceSettings.invoiceStartNumber);
-  const [invoiceFooterNote, setInvoiceFooterNote] = useState(preferenceData.sections.invoiceSettings.invoiceFooterNote);
-  const [invoiceTerms, setInvoiceTerms] = useState(preferenceData.sections.invoiceSettings.invoiceTerms);
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [invoiceStartNumber, setInvoiceStartNumber] = useState<number | undefined>(undefined);
+  const [invoiceFooterNote, setInvoiceFooterNote] = useState("");
+  const [invoiceTerms, setInvoiceTerms] = useState("");
 
   // User Preferences state
-  const [theme, setTheme] = useState(preferenceData.sections.userPreferences.theme);
-  const [notifications, setNotifications] = useState(preferenceData.sections.userPreferences.notifications);
-  const [autoSave, setAutoSave] = useState(preferenceData.sections.userPreferences.autoSave);
-  const [itemsPerPage, setItemsPerPage] = useState(preferenceData.sections.userPreferences.itemsPerPage);
+  const [theme, setTheme] = useState("");
+  const [notifications, setNotifications] = useState(false);
+  const [autoSave, setAutoSave] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Users table state with pagination
-  const [users, setUsers] = useState(preferenceData.sections.users);
+  const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // When data changes, update states accordingly
+  useEffect(() => {
+    if (!loading && !error && data) {
+      // Assuming data has the same structure as preferenceData.sections
+      const sections = (data as any).sections || {};
+
+      const generalSettings = sections.generalSettings || {};
+      setCompanyName(generalSettings.companyName || "");
+      setCompanyEmail(generalSettings.companyEmail || "");
+      setCompanyPhone(generalSettings.companyPhone || "");
+      setCompanyAddress(generalSettings.companyAddress || "");
+      setCurrency(generalSettings.currency || "");
+      setTimezone(generalSettings.timezone || "");
+      setDateFormat(generalSettings.dateFormat || "");
+      setTimeFormat(generalSettings.timeFormat || "");
+      setLanguage(generalSettings.language || "");
+
+      const invoiceSettings = sections.invoiceSettings || {};
+      setInvoicePrefix(invoiceSettings.invoicePrefix || "");
+      setInvoiceStartNumber(invoiceSettings.invoiceStartNumber || undefined);
+      setInvoiceFooterNote(invoiceSettings.invoiceFooterNote || "");
+      setInvoiceTerms(invoiceSettings.invoiceTerms || "");
+
+      const userPreferences = sections.userPreferences || {};
+      setTheme(userPreferences.theme || "");
+      setNotifications(userPreferences.notifications || false);
+      setAutoSave(userPreferences.autoSave || false);
+      setItemsPerPage(userPreferences.itemsPerPage || 10);
+
+      setUsers(sections.users || []);
+      setCurrentPage(1);
+    }
+  }, [data, loading, error]);
 
   // Pagination calculations
   const totalUsers = users.length;
@@ -169,29 +109,35 @@ const Preference: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    // Reset all fields to initial data
-    setCompanyName(preferenceData.sections.generalSettings.companyName);
-    setCompanyEmail(preferenceData.sections.generalSettings.companyEmail);
-    setCompanyPhone(preferenceData.sections.generalSettings.companyPhone);
-    setCompanyAddress(preferenceData.sections.generalSettings.companyAddress);
-    setCurrency(preferenceData.sections.generalSettings.currency);
-    setTimezone(preferenceData.sections.generalSettings.timezone);
-    setDateFormat(preferenceData.sections.generalSettings.dateFormat);
-    setTimeFormat(preferenceData.sections.generalSettings.timeFormat);
-    setLanguage(preferenceData.sections.generalSettings.language);
+    if (data) {
+      const sections = (data as any).sections || {};
 
-    setInvoicePrefix(preferenceData.sections.invoiceSettings.invoicePrefix);
-    setInvoiceStartNumber(preferenceData.sections.invoiceSettings.invoiceStartNumber);
-    setInvoiceFooterNote(preferenceData.sections.invoiceSettings.invoiceFooterNote);
-    setInvoiceTerms(preferenceData.sections.invoiceSettings.invoiceTerms);
+      const generalSettings = sections.generalSettings || {};
+      setCompanyName(generalSettings.companyName || "");
+      setCompanyEmail(generalSettings.companyEmail || "");
+      setCompanyPhone(generalSettings.companyPhone || "");
+      setCompanyAddress(generalSettings.companyAddress || "");
+      setCurrency(generalSettings.currency || "");
+      setTimezone(generalSettings.timezone || "");
+      setDateFormat(generalSettings.dateFormat || "");
+      setTimeFormat(generalSettings.timeFormat || "");
+      setLanguage(generalSettings.language || "");
 
-    setTheme(preferenceData.sections.userPreferences.theme);
-    setNotifications(preferenceData.sections.userPreferences.notifications);
-    setAutoSave(preferenceData.sections.userPreferences.autoSave);
-    setItemsPerPage(preferenceData.sections.userPreferences.itemsPerPage);
+      const invoiceSettings = sections.invoiceSettings || {};
+      setInvoicePrefix(invoiceSettings.invoicePrefix || "");
+      setInvoiceStartNumber(invoiceSettings.invoiceStartNumber || undefined);
+      setInvoiceFooterNote(invoiceSettings.invoiceFooterNote || "");
+      setInvoiceTerms(invoiceSettings.invoiceTerms || "");
 
-    setUsers(preferenceData.sections.users);
-    setCurrentPage(1);
+      const userPreferences = sections.userPreferences || {};
+      setTheme(userPreferences.theme || "");
+      setNotifications(userPreferences.notifications || false);
+      setAutoSave(userPreferences.autoSave || false);
+      setItemsPerPage(userPreferences.itemsPerPage || 10);
+
+      setUsers(sections.users || []);
+      setCurrentPage(1);
+    }
   };
 
   const handleReport = () => {
@@ -201,20 +147,20 @@ const Preference: React.FC = () => {
   // Handlers for editing user status and role inline
   const handleUserRoleChange = (id: number, role: string) => {
     setUsers((prev) =>
-      prev.map((user) => (user.id === id ? { ...user, role } : user))
+      prev.map((user: any) => (user.id === id ? { ...user, role } : user))
     );
   };
 
   const handleUserStatusChange = (id: number, status: string) => {
     setUsers((prev) =>
-      prev.map((user) => (user.id === id ? { ...user, status } : user))
+      prev.map((user: any) => (user.id === id ? { ...user, status } : user))
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6 max-w-7xl mx-auto">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 border-b border-gray-300 pb-2">{preferenceData.title}</h1>
+      <h1 className="text-3xl font-semibold mb-6 border-b border-gray-300 pb-2">Preference</h1>
 
       {/* General Settings Section */}
       <section className="mb-10 bg-white rounded shadow p-6">
@@ -373,7 +319,7 @@ const Preference: React.FC = () => {
               id="invoiceStartNumber"
               type="number"
               min={1}
-              value={invoiceStartNumber}
+              value={invoiceStartNumber || ""}
               onChange={(e) => setInvoiceStartNumber(Number(e.target.value))}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -498,7 +444,7 @@ const Preference: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map(({ id, name, email, role, status }) => (
+              {paginatedUsers.map(({ id, name, email, role, status }: any) => (
                 <tr key={id} className="even:bg-gray-50">
                   <td className="px-4 py-2 border-b border-gray-200">{name}</td>
                   <td className="px-4 py-2 border-b border-gray-200">{email}</td>

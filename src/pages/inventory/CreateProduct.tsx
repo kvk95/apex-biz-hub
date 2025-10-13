@@ -1,117 +1,5 @@
-import React, { useState } from "react";
-
-const initialProducts = [
-  {
-    id: 1,
-    productCode: "P001",
-    productName: "Apple iPhone 13",
-    category: "Electronics",
-    unit: "Piece",
-    purchasePrice: 700,
-    salePrice: 900,
-    stockQty: 50,
-    status: "Active",
-  },
-  {
-    id: 2,
-    productCode: "P002",
-    productName: "Samsung Galaxy S21",
-    category: "Electronics",
-    unit: "Piece",
-    purchasePrice: 650,
-    salePrice: 850,
-    stockQty: 40,
-    status: "Active",
-  },
-  {
-    id: 3,
-    productCode: "P003",
-    productName: "Sony Headphones",
-    category: "Accessories",
-    unit: "Piece",
-    purchasePrice: 50,
-    salePrice: 80,
-    stockQty: 100,
-    status: "Active",
-  },
-  {
-    id: 4,
-    productCode: "P004",
-    productName: "Nike Running Shoes",
-    category: "Footwear",
-    unit: "Pair",
-    purchasePrice: 90,
-    salePrice: 120,
-    stockQty: 60,
-    status: "Active",
-  },
-  {
-    id: 5,
-    productCode: "P005",
-    productName: "Levi's Jeans",
-    category: "Clothing",
-    unit: "Piece",
-    purchasePrice: 40,
-    salePrice: 60,
-    stockQty: 80,
-    status: "Active",
-  },
-  {
-    id: 6,
-    productCode: "P006",
-    productName: "Dell Laptop",
-    category: "Electronics",
-    unit: "Piece",
-    purchasePrice: 800,
-    salePrice: 1100,
-    stockQty: 30,
-    status: "Active",
-  },
-  {
-    id: 7,
-    productCode: "P007",
-    productName: "Canon DSLR Camera",
-    category: "Electronics",
-    unit: "Piece",
-    purchasePrice: 500,
-    salePrice: 700,
-    stockQty: 25,
-    status: "Active",
-  },
-  {
-    id: 8,
-    productCode: "P008",
-    productName: "Adidas T-Shirt",
-    category: "Clothing",
-    unit: "Piece",
-    purchasePrice: 20,
-    salePrice: 35,
-    stockQty: 120,
-    status: "Active",
-  },
-  {
-    id: 9,
-    productCode: "P009",
-    productName: "Logitech Mouse",
-    category: "Accessories",
-    unit: "Piece",
-    purchasePrice: 15,
-    salePrice: 25,
-    stockQty: 150,
-    status: "Active",
-  },
-  {
-    id: 10,
-    productCode: "P010",
-    productName: "HP Printer",
-    category: "Electronics",
-    unit: "Piece",
-    purchasePrice: 120,
-    salePrice: 160,
-    stockQty: 45,
-    status: "Active",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "Electronics",
@@ -124,7 +12,11 @@ const categories = [
 const units = ["Piece", "Pair", "Box", "Packet"];
 
 export default function CreateProduct() {
-  const [products, setProducts] = useState(initialProducts);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(5);
   const [formData, setFormData] = useState({
@@ -138,6 +30,23 @@ export default function CreateProduct() {
     status: "Active",
   });
   const [editId, setEditId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("CreateProduct");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setProducts(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const indexOfLastProduct = currentPage * productsPerPage;

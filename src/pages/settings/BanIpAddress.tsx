@@ -1,107 +1,28 @@
-import React, { useState, useEffect } from "react";
-
-const initialData = [
-  {
-    id: 1,
-    ipAddress: "192.168.0.1",
-    reason: "Multiple login attempts",
-    addedBy: "Admin",
-    addedOn: "2023-08-01",
-    status: "Active",
-  },
-  {
-    id: 2,
-    ipAddress: "10.0.0.2",
-    reason: "Suspicious activity",
-    addedBy: "Moderator",
-    addedOn: "2023-08-05",
-    status: "Active",
-  },
-  {
-    id: 3,
-    ipAddress: "172.16.5.4",
-    reason: "Spam detected",
-    addedBy: "Admin",
-    addedOn: "2023-08-10",
-    status: "Active",
-  },
-  {
-    id: 4,
-    ipAddress: "203.0.113.7",
-    reason: "Brute force attack",
-    addedBy: "Security",
-    addedOn: "2023-08-15",
-    status: "Active",
-  },
-  {
-    id: 5,
-    ipAddress: "198.51.100.9",
-    reason: "Malware distribution",
-    addedBy: "Admin",
-    addedOn: "2023-08-20",
-    status: "Active",
-  },
-  {
-    id: 6,
-    ipAddress: "192.0.2.11",
-    reason: "Phishing attempts",
-    addedBy: "Moderator",
-    addedOn: "2023-08-25",
-    status: "Active",
-  },
-  {
-    id: 7,
-    ipAddress: "203.0.113.14",
-    reason: "Unauthorized access",
-    addedBy: "Security",
-    addedOn: "2023-08-30",
-    status: "Active",
-  },
-  {
-    id: 8,
-    ipAddress: "198.51.100.15",
-    reason: "Botnet activity",
-    addedBy: "Admin",
-    addedOn: "2023-09-01",
-    status: "Active",
-  },
-  {
-    id: 9,
-    ipAddress: "192.168.1.16",
-    reason: "DDoS attack",
-    addedBy: "Moderator",
-    addedOn: "2023-09-05",
-    status: "Active",
-  },
-  {
-    id: 10,
-    ipAddress: "10.0.0.17",
-    reason: "Credential stuffing",
-    addedBy: "Security",
-    addedOn: "2023-09-10",
-    status: "Active",
-  },
-  {
-    id: 11,
-    ipAddress: "172.16.5.18",
-    reason: "Spam detected",
-    addedBy: "Admin",
-    addedOn: "2023-09-15",
-    status: "Active",
-  },
-  {
-    id: 12,
-    ipAddress: "203.0.113.19",
-    reason: "Brute force attack",
-    addedBy: "Moderator",
-    addedOn: "2023-09-20",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
 
 export default function BanIpAddress() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("BanIpAddress");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state
-  const [data, setData] = useState(initialData);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -186,14 +107,12 @@ export default function BanIpAddress() {
   };
 
   const handleRefresh = () => {
-    // Reset data to initial data
-    setData(initialData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo, just alert JSON data
     alert("Report generated. Check console.");
     console.log("Report data:", data);
   };

@@ -1,139 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const stockAdjustmentData = [
-  {
-    id: 1,
-    productName: "Fresh Organic Mustard Leaves",
-    sku: "SKU-12345",
-    stockInHand: 20,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 20,
-    unitCost: 25,
-    totalCost: 500,
-    reason: "Damaged",
-  },
-  {
-    id: 2,
-    productName: "Fresh Organic Broccoli",
-    sku: "SKU-12346",
-    stockInHand: 15,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 15,
-    unitCost: 30,
-    totalCost: 450,
-    reason: "Expired",
-  },
-  {
-    id: 3,
-    productName: "Fresh Organic Spinach",
-    sku: "SKU-12347",
-    stockInHand: 10,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 10,
-    unitCost: 20,
-    totalCost: 200,
-    reason: "Lost",
-  },
-  {
-    id: 4,
-    productName: "Fresh Organic Kale",
-    sku: "SKU-12348",
-    stockInHand: 25,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 25,
-    unitCost: 28,
-    totalCost: 700,
-    reason: "Damaged",
-  },
-  {
-    id: 5,
-    productName: "Fresh Organic Carrots",
-    sku: "SKU-12349",
-    stockInHand: 30,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 30,
-    unitCost: 15,
-    totalCost: 450,
-    reason: "Expired",
-  },
-  {
-    id: 6,
-    productName: "Fresh Organic Tomatoes",
-    sku: "SKU-12350",
-    stockInHand: 40,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 40,
-    unitCost: 18,
-    totalCost: 720,
-    reason: "Lost",
-  },
-  {
-    id: 7,
-    productName: "Fresh Organic Potatoes",
-    sku: "SKU-12351",
-    stockInHand: 50,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 50,
-    unitCost: 12,
-    totalCost: 600,
-    reason: "Damaged",
-  },
-  {
-    id: 8,
-    productName: "Fresh Organic Onions",
-    sku: "SKU-12352",
-    stockInHand: 45,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 45,
-    unitCost: 14,
-    totalCost: 630,
-    reason: "Expired",
-  },
-  {
-    id: 9,
-    productName: "Fresh Organic Garlic",
-    sku: "SKU-12353",
-    stockInHand: 35,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 35,
-    unitCost: 22,
-    totalCost: 770,
-    reason: "Lost",
-  },
-  {
-    id: 10,
-    productName: "Fresh Organic Ginger",
-    sku: "SKU-12354",
-    stockInHand: 28,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 28,
-    unitCost: 26,
-    totalCost: 728,
-    reason: "Damaged",
-  },
-  {
-    id: 11,
-    productName: "Fresh Organic Cucumber",
-    sku: "SKU-12355",
-    stockInHand: 18,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 18,
-    unitCost: 16,
-    totalCost: 288,
-    reason: "Expired",
-  },
-  {
-    id: 12,
-    productName: "Fresh Organic Bell Pepper",
-    sku: "SKU-12356",
-    stockInHand: 22,
-    stockAdjusted: 0,
-    stockAfterAdjustment: 22,
-    unitCost: 24,
-    totalCost: 528,
-    reason: "Lost",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const reasons = [
   "Damaged",
@@ -150,7 +16,10 @@ const StockAdjustment: React.FC = () => {
   const itemsPerPage = 6;
 
   // Data state for stock adjustments
-  const [rows, setRows] = useState(stockAdjustmentData);
+  const [rows, setRows] = useState([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [adjustmentDate, setAdjustmentDate] = useState(() => {
@@ -160,6 +29,23 @@ const StockAdjustment: React.FC = () => {
   const [referenceNo, setReferenceNo] = useState("REF-123456");
   const [warehouse, setWarehouse] = useState("Main Warehouse");
   const [note, setNote] = useState("");
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("StockAdjustment");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setRows(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(rows.length / itemsPerPage);
@@ -193,7 +79,7 @@ const StockAdjustment: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setRows(stockAdjustmentData);
+    setRows(data);
     setAdjustmentDate(new Date().toISOString().slice(0, 10));
     setReferenceNo("REF-123456");
     setWarehouse("Main Warehouse");

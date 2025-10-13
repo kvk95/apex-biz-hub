@@ -1,127 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const stockTransferData = [
-  {
-    id: 1,
-    date: "2023-08-01",
-    referenceNo: "ST-001",
-    fromStore: "Main Store",
-    toStore: "Outlet 1",
-    product: "Product A",
-    quantity: 10,
-    status: "Completed",
-  },
-  {
-    id: 2,
-    date: "2023-08-02",
-    referenceNo: "ST-002",
-    fromStore: "Main Store",
-    toStore: "Outlet 2",
-    product: "Product B",
-    quantity: 5,
-    status: "Pending",
-  },
-  {
-    id: 3,
-    date: "2023-08-03",
-    referenceNo: "ST-003",
-    fromStore: "Outlet 1",
-    toStore: "Outlet 3",
-    product: "Product C",
-    quantity: 7,
-    status: "Completed",
-  },
-  {
-    id: 4,
-    date: "2023-08-04",
-    referenceNo: "ST-004",
-    fromStore: "Outlet 2",
-    toStore: "Main Store",
-    product: "Product D",
-    quantity: 12,
-    status: "Pending",
-  },
-  {
-    id: 5,
-    date: "2023-08-05",
-    referenceNo: "ST-005",
-    fromStore: "Main Store",
-    toStore: "Outlet 1",
-    product: "Product E",
-    quantity: 9,
-    status: "Completed",
-  },
-  {
-    id: 6,
-    date: "2023-08-06",
-    referenceNo: "ST-006",
-    fromStore: "Outlet 3",
-    toStore: "Outlet 2",
-    product: "Product F",
-    quantity: 4,
-    status: "Pending",
-  },
-  {
-    id: 7,
-    date: "2023-08-07",
-    referenceNo: "ST-007",
-    fromStore: "Outlet 1",
-    toStore: "Main Store",
-    product: "Product G",
-    quantity: 15,
-    status: "Completed",
-  },
-  {
-    id: 8,
-    date: "2023-08-08",
-    referenceNo: "ST-008",
-    fromStore: "Outlet 2",
-    toStore: "Outlet 3",
-    product: "Product H",
-    quantity: 6,
-    status: "Pending",
-  },
-  {
-    id: 9,
-    date: "2023-08-09",
-    referenceNo: "ST-009",
-    fromStore: "Main Store",
-    toStore: "Outlet 2",
-    product: "Product I",
-    quantity: 11,
-    status: "Completed",
-  },
-  {
-    id: 10,
-    date: "2023-08-10",
-    referenceNo: "ST-010",
-    fromStore: "Outlet 3",
-    toStore: "Main Store",
-    product: "Product J",
-    quantity: 8,
-    status: "Pending",
-  },
-  {
-    id: 11,
-    date: "2023-08-11",
-    referenceNo: "ST-011",
-    fromStore: "Outlet 1",
-    toStore: "Outlet 2",
-    product: "Product K",
-    quantity: 14,
-    status: "Completed",
-  },
-  {
-    id: 12,
-    date: "2023-08-12",
-    referenceNo: "ST-012",
-    fromStore: "Main Store",
-    toStore: "Outlet 3",
-    product: "Product L",
-    quantity: 3,
-    status: "Pending",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import { useEffect, useMemo, useState } from "react";
 
 const stores = ["Main Store", "Outlet 1", "Outlet 2", "Outlet 3"];
 const statuses = ["All", "Completed", "Pending"];
@@ -146,8 +24,25 @@ export default function StockTransfer() {
   const [formQuantity, setFormQuantity] = useState("");
   const [formStatus, setFormStatus] = useState("Pending");
 
-  // Data state
-  const [data, setData] = useState(stockTransferData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("StockTransfer");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Filtered and searched data memoized
   const filteredData = useMemo(() => {

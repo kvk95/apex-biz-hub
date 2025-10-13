@@ -1,112 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const lowStockData = [
-  {
-    product: "Apple iPhone 12",
-    category: "Mobile",
-    quantity: 5,
-    price: 799,
-    supplier: "Apple Inc.",
-  },
-  {
-    product: "Samsung Galaxy S21",
-    category: "Mobile",
-    quantity: 3,
-    price: 699,
-    supplier: "Samsung",
-  },
-  {
-    product: "Sony WH-1000XM4",
-    category: "Headphones",
-    quantity: 2,
-    price: 349,
-    supplier: "Sony",
-  },
-  {
-    product: "Dell XPS 13",
-    category: "Laptop",
-    quantity: 4,
-    price: 999,
-    supplier: "Dell",
-  },
-  {
-    product: "Logitech MX Master 3",
-    category: "Accessories",
-    quantity: 6,
-    price: 99,
-    supplier: "Logitech",
-  },
-  {
-    product: "Apple MacBook Pro",
-    category: "Laptop",
-    quantity: 1,
-    price: 1299,
-    supplier: "Apple Inc.",
-  },
-  {
-    product: "Google Pixel 5",
-    category: "Mobile",
-    quantity: 7,
-    price: 699,
-    supplier: "Google",
-  },
-  {
-    product: "Bose QuietComfort 35 II",
-    category: "Headphones",
-    quantity: 3,
-    price: 299,
-    supplier: "Bose",
-  },
-  {
-    product: "HP Spectre x360",
-    category: "Laptop",
-    quantity: 2,
-    price: 1099,
-    supplier: "HP",
-  },
-  {
-    product: "Amazon Echo Dot",
-    category: "Smart Home",
-    quantity: 8,
-    price: 49,
-    supplier: "Amazon",
-  },
-  {
-    product: "Microsoft Surface Pro 7",
-    category: "Tablet",
-    quantity: 4,
-    price: 749,
-    supplier: "Microsoft",
-  },
-  {
-    product: "JBL Flip 5",
-    category: "Speaker",
-    quantity: 5,
-    price: 119,
-    supplier: "JBL",
-  },
-  {
-    product: "Canon EOS M50",
-    category: "Camera",
-    quantity: 3,
-    price: 579,
-    supplier: "Canon",
-  },
-  {
-    product: "Nikon D3500",
-    category: "Camera",
-    quantity: 2,
-    price: 499,
-    supplier: "Nikon",
-  },
-  {
-    product: "Apple AirPods Pro",
-    category: "Accessories",
-    quantity: 6,
-    price: 249,
-    supplier: "Apple Inc.",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const categories = [
   "All Categories",
@@ -129,9 +22,29 @@ export default function LowStocks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("LowStocks");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched data
   const filteredData = useMemo(() => {
-    return lowStockData.filter((item) => {
+    return data.filter((item: any) => {
       const matchesCategory =
         selectedCategory === "All Categories" ||
         item.category === selectedCategory;
@@ -140,7 +53,7 @@ export default function LowStocks() {
         item.supplier.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [data, searchTerm, selectedCategory]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

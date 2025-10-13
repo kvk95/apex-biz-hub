@@ -1,97 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const domainData = [
-  {
-    id: 1,
-    domainName: "dreamspos.com",
-    domainUrl: "https://dreamspos.com",
-    domainType: "Primary",
-    domainStatus: "Active",
-    domainExpireDate: "2025-12-31",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 2,
-    domainName: "dreamspos.net",
-    domainUrl: "https://dreamspos.net",
-    domainType: "Secondary",
-    domainStatus: "Active",
-    domainExpireDate: "2024-11-15",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 3,
-    domainName: "dreamspos.org",
-    domainUrl: "https://dreamspos.org",
-    domainType: "Secondary",
-    domainStatus: "Inactive",
-    domainExpireDate: "2023-08-20",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 4,
-    domainName: "dreamspos.co",
-    domainUrl: "https://dreamspos.co",
-    domainType: "Primary",
-    domainStatus: "Active",
-    domainExpireDate: "2026-01-10",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 5,
-    domainName: "dreamspos.info",
-    domainUrl: "https://dreamspos.info",
-    domainType: "Secondary",
-    domainStatus: "Active",
-    domainExpireDate: "2025-05-30",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 6,
-    domainName: "dreamspos.biz",
-    domainUrl: "https://dreamspos.biz",
-    domainType: "Secondary",
-    domainStatus: "Inactive",
-    domainExpireDate: "2023-12-01",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 7,
-    domainName: "dreamspos.store",
-    domainUrl: "https://dreamspos.store",
-    domainType: "Primary",
-    domainStatus: "Active",
-    domainExpireDate: "2026-06-15",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 8,
-    domainName: "dreamspos.tech",
-    domainUrl: "https://dreamspos.tech",
-    domainType: "Secondary",
-    domainStatus: "Active",
-    domainExpireDate: "2025-09-05",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 9,
-    domainName: "dreamspos.app",
-    domainUrl: "https://dreamspos.app",
-    domainType: "Secondary",
-    domainStatus: "Inactive",
-    domainExpireDate: "2024-03-22",
-    domainOwner: "Dreams Technologies",
-  },
-  {
-    id: 10,
-    domainName: "dreamspos.cloud",
-    domainUrl: "https://dreamspos.cloud",
-    domainType: "Primary",
-    domainStatus: "Active",
-    domainExpireDate: "2026-12-31",
-    domainOwner: "Dreams Technologies",
-  },
-];
+import React, { useEffect, useState, useMemo } from "react";
+import { apiService } from "@/services/ApiService";
 
 const domainTypes = ["Primary", "Secondary"];
 const domainStatuses = ["Active", "Inactive"];
@@ -116,7 +24,27 @@ export default function Domain() {
   const [editId, setEditId] = useState<number | null>(null);
 
   // Data state
-  const [domains, setDomains] = useState(domainData);
+  const [domains, setDomains] = useState([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Domain");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setDomains(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(domains.length / itemsPerPage);
@@ -197,7 +125,7 @@ export default function Domain() {
   };
 
   const handleRefresh = () => {
-    setDomains(domainData);
+    setDomains(data);
     setCurrentPage(1);
     setForm({
       domainName: "",

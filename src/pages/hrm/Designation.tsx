@@ -1,19 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const designationData = [
-  { id: 1, designation: "Manager", description: "Manages team and projects" },
-  { id: 2, designation: "Sales Executive", description: "Handles sales activities" },
-  { id: 3, designation: "Developer", description: "Develops software solutions" },
-  { id: 4, designation: "Designer", description: "Creates UI/UX designs" },
-  { id: 5, designation: "HR", description: "Manages human resources" },
-  { id: 6, designation: "Accountant", description: "Handles accounts and finance" },
-  { id: 7, designation: "Support", description: "Customer support and helpdesk" },
-  { id: 8, designation: "Intern", description: "Assists teams with tasks" },
-  { id: 9, designation: "Consultant", description: "Provides expert advice" },
-  { id: 10, designation: "Marketing", description: "Manages marketing campaigns" },
-  { id: 11, designation: "Quality Analyst", description: "Ensures product quality" },
-  { id: 12, designation: "Operations", description: "Oversees daily operations" },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -28,8 +14,25 @@ const Designation: React.FC = () => {
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Data state (simulate data from JSON)
-  const [data, setData] = useState(designationData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Designation");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,7 +101,7 @@ const Designation: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setData(designationData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };

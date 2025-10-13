@@ -1,87 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const smsSettingsData = [
-  {
-    id: 1,
-    smsGateway: "Twilio",
-    username: "twilio_user",
-    password: "********",
-    senderId: "TWILIO123",
-    status: "Active",
-  },
-  {
-    id: 2,
-    smsGateway: "Nexmo",
-    username: "nexmo_user",
-    password: "********",
-    senderId: "NEXMO456",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    smsGateway: "Plivo",
-    username: "plivo_user",
-    password: "********",
-    senderId: "PLIVO789",
-    status: "Active",
-  },
-  {
-    id: 4,
-    smsGateway: "Clickatell",
-    username: "click_user",
-    password: "********",
-    senderId: "CLICK101",
-    status: "Active",
-  },
-  {
-    id: 5,
-    smsGateway: "MSG91",
-    username: "msg91_user",
-    password: "********",
-    senderId: "MSG91111",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    smsGateway: "Textlocal",
-    username: "textlocal_user",
-    password: "********",
-    senderId: "TEXT222",
-    status: "Active",
-  },
-  {
-    id: 7,
-    smsGateway: "Infobip",
-    username: "infobip_user",
-    password: "********",
-    senderId: "INFO333",
-    status: "Active",
-  },
-  {
-    id: 8,
-    smsGateway: "Routee",
-    username: "routee_user",
-    password: "********",
-    senderId: "ROUTE444",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    smsGateway: "Telesign",
-    username: "telesign_user",
-    password: "********",
-    senderId: "TELE555",
-    status: "Active",
-  },
-  {
-    id: 10,
-    smsGateway: "Sinch",
-    username: "sinch_user",
-    password: "********",
-    senderId: "SINCH666",
-    status: "Active",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -94,10 +12,28 @@ export default function SmsSettings() {
     status: "Active",
   });
 
-  const [data, setData] = useState(smsSettingsData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SmsSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const pageCount = Math.ceil(data.length / pageSize);
@@ -191,7 +127,7 @@ export default function SmsSettings() {
   };
 
   const handleRefresh = () => {
-    setData(smsSettingsData);
+    loadData();
     setCurrentPage(1);
     setEditingId(null);
     setForm({

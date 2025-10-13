@@ -1,91 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const printerSettingsData = [
-  {
-    id: 1,
-    printerName: "Printer 1",
-    printerType: "Thermal",
-    printerPath: "USB001",
-    status: "Active",
-  },
-  {
-    id: 2,
-    printerName: "Printer 2",
-    printerType: "Inkjet",
-    printerPath: "COM3",
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    printerName: "Printer 3",
-    printerType: "Laser",
-    printerPath: "LPT1",
-    status: "Active",
-  },
-  {
-    id: 4,
-    printerName: "Printer 4",
-    printerType: "Thermal",
-    printerPath: "USB002",
-    status: "Active",
-  },
-  {
-    id: 5,
-    printerName: "Printer 5",
-    printerType: "Inkjet",
-    printerPath: "COM4",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    printerName: "Printer 6",
-    printerType: "Laser",
-    printerPath: "LPT2",
-    status: "Active",
-  },
-  {
-    id: 7,
-    printerName: "Printer 7",
-    printerType: "Thermal",
-    printerPath: "USB003",
-    status: "Active",
-  },
-  {
-    id: 8,
-    printerName: "Printer 8",
-    printerType: "Inkjet",
-    printerPath: "COM5",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    printerName: "Printer 9",
-    printerType: "Laser",
-    printerPath: "LPT3",
-    status: "Active",
-  },
-  {
-    id: 10,
-    printerName: "Printer 10",
-    printerType: "Thermal",
-    printerPath: "USB004",
-    status: "Active",
-  },
-  {
-    id: 11,
-    printerName: "Printer 11",
-    printerType: "Inkjet",
-    printerPath: "COM6",
-    status: "Inactive",
-  },
-  {
-    id: 12,
-    printerName: "Printer 12",
-    printerType: "Laser",
-    printerPath: "LPT4",
-    status: "Active",
-  },
-];
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
 
 const printerTypes = ["Thermal", "Inkjet", "Laser"];
 const printerStatuses = ["Active", "Inactive"];
@@ -102,7 +16,29 @@ export default function PrinterSettings() {
   const [status, setStatus] = useState(printerStatuses[0]);
 
   // Data state
-  const [printers, setPrinters] = useState(printerSettingsData);
+  const [printers, setPrinters] = useState([]);
+
+  // Loading and error states for API
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PrinterSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+      setPrinters(response.result);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Editing state
   const [editId, setEditId] = useState<number | null>(null);
@@ -168,7 +104,7 @@ export default function PrinterSettings() {
   };
 
   const handleRefresh = () => {
-    setPrinters(printerSettingsData);
+    setPrinters(data);
     resetForm();
     setCurrentPage(1);
   };

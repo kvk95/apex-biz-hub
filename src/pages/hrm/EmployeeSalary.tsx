@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 type EmployeeSalaryRecord = {
   id: number;
@@ -12,153 +13,6 @@ type EmployeeSalaryRecord = {
   netSalary: number;
   paymentStatus: "Paid" | "Unpaid";
 };
-
-const employeeSalaryData: EmployeeSalaryRecord[] = [
-  {
-    id: 1,
-    employeeName: "John Smith",
-    employeeId: "EMP001",
-    month: "January",
-    year: "2023",
-    salary: 5000,
-    advance: 500,
-    deduction: 200,
-    netSalary: 4300,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 2,
-    employeeName: "Jane Doe",
-    employeeId: "EMP002",
-    month: "January",
-    year: "2023",
-    salary: 4500,
-    advance: 0,
-    deduction: 100,
-    netSalary: 4400,
-    paymentStatus: "Unpaid",
-  },
-  {
-    id: 3,
-    employeeName: "Michael Johnson",
-    employeeId: "EMP003",
-    month: "January",
-    year: "2023",
-    salary: 6000,
-    advance: 1000,
-    deduction: 300,
-    netSalary: 4700,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 4,
-    employeeName: "Emily Davis",
-    employeeId: "EMP004",
-    month: "January",
-    year: "2023",
-    salary: 5200,
-    advance: 200,
-    deduction: 150,
-    netSalary: 4850,
-    paymentStatus: "Unpaid",
-  },
-  {
-    id: 5,
-    employeeName: "William Brown",
-    employeeId: "EMP005",
-    month: "January",
-    year: "2023",
-    salary: 4800,
-    advance: 0,
-    deduction: 0,
-    netSalary: 4800,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 6,
-    employeeName: "Olivia Wilson",
-    employeeId: "EMP006",
-    month: "January",
-    year: "2023",
-    salary: 5300,
-    advance: 300,
-    deduction: 100,
-    netSalary: 4900,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 7,
-    employeeName: "James Taylor",
-    employeeId: "EMP007",
-    month: "January",
-    year: "2023",
-    salary: 4700,
-    advance: 0,
-    deduction: 50,
-    netSalary: 4650,
-    paymentStatus: "Unpaid",
-  },
-  {
-    id: 8,
-    employeeName: "Sophia Martinez",
-    employeeId: "EMP008",
-    month: "January",
-    year: "2023",
-    salary: 5100,
-    advance: 400,
-    deduction: 200,
-    netSalary: 4500,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 9,
-    employeeName: "Daniel Anderson",
-    employeeId: "EMP009",
-    month: "January",
-    year: "2023",
-    salary: 4900,
-    advance: 0,
-    deduction: 0,
-    netSalary: 4900,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 10,
-    employeeName: "Isabella Thomas",
-    employeeId: "EMP010",
-    month: "January",
-    year: "2023",
-    salary: 5200,
-    advance: 600,
-    deduction: 100,
-    netSalary: 4500,
-    paymentStatus: "Unpaid",
-  },
-  {
-    id: 11,
-    employeeName: "David Jackson",
-    employeeId: "EMP011",
-    month: "January",
-    year: "2023",
-    salary: 5000,
-    advance: 0,
-    deduction: 0,
-    netSalary: 5000,
-    paymentStatus: "Paid",
-  },
-  {
-    id: 12,
-    employeeName: "Mia White",
-    employeeId: "EMP012",
-    month: "January",
-    year: "2023",
-    salary: 4800,
-    advance: 200,
-    deduction: 150,
-    netSalary: 4450,
-    paymentStatus: "Unpaid",
-  },
-];
 
 const months = [
   "January",
@@ -194,18 +48,40 @@ export default function EmployeeSalary() {
   const [netSalary, setNetSalary] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("Paid");
 
+  // Data state and API loading state
+  const [data, setData] = useState<EmployeeSalaryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load data from API
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<EmployeeSalaryRecord[]>("EmployeeSalary");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Table pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
   // Calculate total pages
-  const totalPages = Math.ceil(employeeSalaryData.length / recordsPerPage);
+  const totalPages = Math.ceil(data.length / recordsPerPage);
 
   // Paginated data slice
   const currentRecords = useMemo(() => {
     const start = (currentPage - 1) * recordsPerPage;
-    return employeeSalaryData.slice(start, start + recordsPerPage);
-  }, [currentPage]);
+    return data.slice(start, start + recordsPerPage);
+  }, [currentPage, data]);
 
   // Handlers
   const handleReset = () => {
@@ -593,9 +469,9 @@ export default function EmployeeSalary() {
                 </span>{" "}
                 to{" "}
                 <span className="font-medium">
-                  {Math.min(currentPage * recordsPerPage, employeeSalaryData.length)}
+                  {Math.min(currentPage * recordsPerPage, data.length)}
                 </span>{" "}
-                of <span className="font-medium">{employeeSalaryData.length}</span>{" "}
+                of <span className="font-medium">{data.length}</span>{" "}
                 results
               </p>
             </div>

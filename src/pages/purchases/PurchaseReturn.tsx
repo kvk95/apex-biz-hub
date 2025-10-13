@@ -1,118 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const purchaseReturnData = {
-  suppliers: [
-    { id: 1, name: "Supplier 1" },
-    { id: 2, name: "Supplier 2" },
-    { id: 3, name: "Supplier 3" },
-  ],
-  warehouses: [
-    { id: 1, name: "Warehouse 1" },
-    { id: 2, name: "Warehouse 2" },
-  ],
-  purchaseReturns: [
-    {
-      id: 1,
-      date: "2023-10-01",
-      referenceNo: "PR-001",
-      supplier: "Supplier 1",
-      warehouse: "Warehouse 1",
-      productQty: 5,
-      grandTotal: 150.0,
-      status: "Completed",
-    },
-    {
-      id: 2,
-      date: "2023-10-05",
-      referenceNo: "PR-002",
-      supplier: "Supplier 2",
-      warehouse: "Warehouse 2",
-      productQty: 3,
-      grandTotal: 90.0,
-      status: "Pending",
-    },
-    {
-      id: 3,
-      date: "2023-10-10",
-      referenceNo: "PR-003",
-      supplier: "Supplier 3",
-      warehouse: "Warehouse 1",
-      productQty: 7,
-      grandTotal: 210.0,
-      status: "Completed",
-    },
-    {
-      id: 4,
-      date: "2023-10-12",
-      referenceNo: "PR-004",
-      supplier: "Supplier 1",
-      warehouse: "Warehouse 2",
-      productQty: 2,
-      grandTotal: 60.0,
-      status: "Pending",
-    },
-    {
-      id: 5,
-      date: "2023-10-15",
-      referenceNo: "PR-005",
-      supplier: "Supplier 2",
-      warehouse: "Warehouse 1",
-      productQty: 4,
-      grandTotal: 120.0,
-      status: "Completed",
-    },
-    {
-      id: 6,
-      date: "2023-10-18",
-      referenceNo: "PR-006",
-      supplier: "Supplier 3",
-      warehouse: "Warehouse 2",
-      productQty: 6,
-      grandTotal: 180.0,
-      status: "Completed",
-    },
-    {
-      id: 7,
-      date: "2023-10-20",
-      referenceNo: "PR-007",
-      supplier: "Supplier 1",
-      warehouse: "Warehouse 1",
-      productQty: 1,
-      grandTotal: 30.0,
-      status: "Pending",
-    },
-    {
-      id: 8,
-      date: "2023-10-22",
-      referenceNo: "PR-008",
-      supplier: "Supplier 2",
-      warehouse: "Warehouse 2",
-      productQty: 8,
-      grandTotal: 240.0,
-      status: "Completed",
-    },
-    {
-      id: 9,
-      date: "2023-10-25",
-      referenceNo: "PR-009",
-      supplier: "Supplier 3",
-      warehouse: "Warehouse 1",
-      productQty: 5,
-      grandTotal: 150.0,
-      status: "Pending",
-    },
-    {
-      id: 10,
-      date: "2023-10-28",
-      referenceNo: "PR-010",
-      supplier: "Supplier 1",
-      warehouse: "Warehouse 2",
-      productQty: 3,
-      grandTotal: 90.0,
-      status: "Completed",
-    },
-  ],
-};
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const PAGE_SIZE = 5;
 
@@ -149,8 +36,26 @@ export default function PurchaseReturn() {
     }[]
   >([]);
 
-  // State for purchase returns list pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  // State for purchase returns list pagination and data
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PurchaseReturn");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Calculate total for product line
   React.useEffect(() => {
@@ -204,12 +109,15 @@ export default function PurchaseReturn() {
   }
 
   // Pagination logic for purchase returns table
-  const totalPages = Math.ceil(purchaseReturnData.purchaseReturns.length / PAGE_SIZE);
+  const totalPages = Math.ceil(data.length / PAGE_SIZE);
 
   const paginatedReturns = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return purchaseReturnData.purchaseReturns.slice(start, start + PAGE_SIZE);
-  }, [currentPage]);
+    return data.slice(start, start + PAGE_SIZE);
+  }, [currentPage, data]);
+
+  // State for current page
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Handler for page change
   function goToPage(page: number) {
@@ -319,11 +227,12 @@ export default function PurchaseReturn() {
                 className="block w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select Supplier</option>
-                {purchaseReturnData.suppliers.map((s) => (
-                  <option key={s.id} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
+                {data.length > 0 &&
+                  data[0].suppliers?.map((s: any) => (
+                    <option key={s.id} value={s.name}>
+                      {s.name}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -339,11 +248,12 @@ export default function PurchaseReturn() {
                 className="block w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select Warehouse</option>
-                {purchaseReturnData.warehouses.map((w) => (
-                  <option key={w.id} value={w.name}>
-                    {w.name}
-                  </option>
-                ))}
+                {data.length > 0 &&
+                  data[0].warehouses?.map((w: any) => (
+                    <option key={w.id} value={w.name}>
+                      {w.name}
+                    </option>
+                  ))}
               </select>
             </div>
           </form>
@@ -555,7 +465,7 @@ export default function PurchaseReturn() {
                   </td>
                 </tr>
               )}
-              {paginatedReturns.map((pr) => (
+              {paginatedReturns.map((pr: any) => (
                 <tr key={pr.id} className="hover:bg-gray-50">
                   <td className="border border-gray-300 px-3 py-2">{pr.date}</td>
                   <td className="border border-gray-300 px-3 py-2">{pr.referenceNo}</td>

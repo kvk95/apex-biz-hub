@@ -1,57 +1,67 @@
-import React, { useState, useEffect } from "react";
-
-const systemSettingsData = {
-  generalSettings: {
-    companyName: "Dreams POS",
-    companyEmail: "info@dreamspos.com",
-    phoneNumber: "+1 234 567 890",
-    address: "123 Dreams Street, Dream City, DC 12345",
-    currency: "USD",
-    timezone: "(GMT-05:00) Eastern Time (US & Canada)",
-  },
-  invoiceSettings: {
-    invoicePrefix: "INV-",
-    invoiceStartNumber: 1001,
-    invoiceFooterNote: "Thank you for your business!",
-  },
-  userPermissions: [
-    { id: 1, role: "Admin", canEdit: true, canDelete: true, canViewReports: true },
-    { id: 2, role: "Manager", canEdit: true, canDelete: false, canViewReports: true },
-    { id: 3, role: "Cashier", canEdit: false, canDelete: false, canViewReports: false },
-    { id: 4, role: "Guest", canEdit: false, canDelete: false, canViewReports: false },
-    { id: 5, role: "Support", canEdit: true, canDelete: false, canViewReports: true },
-    { id: 6, role: "Accountant", canEdit: true, canDelete: false, canViewReports: true },
-    { id: 7, role: "Warehouse", canEdit: false, canDelete: false, canViewReports: false },
-    { id: 8, role: "Sales", canEdit: true, canDelete: false, canViewReports: true },
-    { id: 9, role: "HR", canEdit: false, canDelete: false, canViewReports: false },
-    { id: 10, role: "Marketing", canEdit: true, canDelete: false, canViewReports: true },
-    { id: 11, role: "IT", canEdit: true, canDelete: true, canViewReports: true },
-    { id: 12, role: "Developer", canEdit: true, canDelete: true, canViewReports: true },
-  ],
-};
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function SystemSettings() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("SystemSettings");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Pagination state for User Permissions table
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(systemSettingsData.userPermissions.length / ITEMS_PER_PAGE);
 
   // Controlled form states for General Settings
-  const [companyName, setCompanyName] = useState(systemSettingsData.generalSettings.companyName);
-  const [companyEmail, setCompanyEmail] = useState(systemSettingsData.generalSettings.companyEmail);
-  const [phoneNumber, setPhoneNumber] = useState(systemSettingsData.generalSettings.phoneNumber);
-  const [address, setAddress] = useState(systemSettingsData.generalSettings.address);
-  const [currency, setCurrency] = useState(systemSettingsData.generalSettings.currency);
-  const [timezone, setTimezone] = useState(systemSettingsData.generalSettings.timezone);
+  const [companyName, setCompanyName] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [timezone, setTimezone] = useState("");
 
   // Controlled form states for Invoice Settings
-  const [invoicePrefix, setInvoicePrefix] = useState(systemSettingsData.invoiceSettings.invoicePrefix);
-  const [invoiceStartNumber, setInvoiceStartNumber] = useState(systemSettingsData.invoiceSettings.invoiceStartNumber);
-  const [invoiceFooterNote, setInvoiceFooterNote] = useState(systemSettingsData.invoiceSettings.invoiceFooterNote);
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [invoiceStartNumber, setInvoiceStartNumber] = useState(0);
+  const [invoiceFooterNote, setInvoiceFooterNote] = useState("");
 
   // User Permissions state (editable)
-  const [userPermissions, setUserPermissions] = useState(systemSettingsData.userPermissions);
+  const [userPermissions, setUserPermissions] = useState([]);
+
+  useEffect(() => {
+    if (data && Object.keys(data).length > 0) {
+      setCompanyName(data.generalSettings?.companyName || "");
+      setCompanyEmail(data.generalSettings?.companyEmail || "");
+      setPhoneNumber(data.generalSettings?.phoneNumber || "");
+      setAddress(data.generalSettings?.address || "");
+      setCurrency(data.generalSettings?.currency || "");
+      setTimezone(data.generalSettings?.timezone || "");
+
+      setInvoicePrefix(data.invoiceSettings?.invoicePrefix || "");
+      setInvoiceStartNumber(data.invoiceSettings?.invoiceStartNumber || 0);
+      setInvoiceFooterNote(data.invoiceSettings?.invoiceFooterNote || "");
+
+      setUserPermissions(data.userPermissions || []);
+      setCurrentPage(1);
+    }
+  }, [data]);
+
+  const totalPages = Math.ceil(userPermissions.length / ITEMS_PER_PAGE);
 
   // Handlers for pagination
   const handlePageChange = (page: number) => {
@@ -74,21 +84,21 @@ export default function SystemSettings() {
   };
 
   const handleRefresh = () => {
-    // Reset all fields to initial data
-    setCompanyName(systemSettingsData.generalSettings.companyName);
-    setCompanyEmail(systemSettingsData.generalSettings.companyEmail);
-    setPhoneNumber(systemSettingsData.generalSettings.phoneNumber);
-    setAddress(systemSettingsData.generalSettings.address);
-    setCurrency(systemSettingsData.generalSettings.currency);
-    setTimezone(systemSettingsData.generalSettings.timezone);
+    if (data && Object.keys(data).length > 0) {
+      setCompanyName(data.generalSettings?.companyName || "");
+      setCompanyEmail(data.generalSettings?.companyEmail || "");
+      setPhoneNumber(data.generalSettings?.phoneNumber || "");
+      setAddress(data.generalSettings?.address || "");
+      setCurrency(data.generalSettings?.currency || "");
+      setTimezone(data.generalSettings?.timezone || "");
 
-    setInvoicePrefix(systemSettingsData.invoiceSettings.invoicePrefix);
-    setInvoiceStartNumber(systemSettingsData.invoiceSettings.invoiceStartNumber);
-    setInvoiceFooterNote(systemSettingsData.invoiceSettings.invoiceFooterNote);
+      setInvoicePrefix(data.invoiceSettings?.invoicePrefix || "");
+      setInvoiceStartNumber(data.invoiceSettings?.invoiceStartNumber || 0);
+      setInvoiceFooterNote(data.invoiceSettings?.invoiceFooterNote || "");
 
-    setUserPermissions(systemSettingsData.userPermissions);
-
-    setCurrentPage(1);
+      setUserPermissions(data.userPermissions || []);
+      setCurrentPage(1);
+    }
   };
 
   const handleReport = () => {

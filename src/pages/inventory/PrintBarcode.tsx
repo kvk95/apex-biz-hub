@@ -1,112 +1,5 @@
-import React, { useState, useEffect } from "react";
-
-const barcodeData = [
-  {
-    id: 1,
-    productName: "Apple iPhone 14 Pro Max",
-    productCode: "IP14PM256GB",
-    price: 1299.99,
-    barcode: "123456789012",
-  },
-  {
-    id: 2,
-    productName: "Samsung Galaxy S23 Ultra",
-    productCode: "SGS23U512GB",
-    price: 1199.99,
-    barcode: "234567890123",
-  },
-  {
-    id: 3,
-    productName: "Sony WH-1000XM5 Headphones",
-    productCode: "SONYWH1000XM5",
-    price: 399.99,
-    barcode: "345678901234",
-  },
-  {
-    id: 4,
-    productName: "Dell XPS 15 Laptop",
-    productCode: "DELLXPS15",
-    price: 1499.99,
-    barcode: "456789012345",
-  },
-  {
-    id: 5,
-    productName: "Apple MacBook Air M2",
-    productCode: "MBAIRM2",
-    price: 999.99,
-    barcode: "567890123456",
-  },
-  {
-    id: 6,
-    productName: "Canon EOS R6 Camera",
-    productCode: "CANONEOSR6",
-    price: 2499.99,
-    barcode: "678901234567",
-  },
-  {
-    id: 7,
-    productName: "Nintendo Switch OLED",
-    productCode: "NINTSWITCHOLED",
-    price: 349.99,
-    barcode: "789012345678",
-  },
-  {
-    id: 8,
-    productName: "Google Pixel 7 Pro",
-    productCode: "PIXEL7PRO",
-    price: 899.99,
-    barcode: "890123456789",
-  },
-  {
-    id: 9,
-    productName: "Bose QuietComfort Earbuds",
-    productCode: "BOSEQC",
-    price: 279.99,
-    barcode: "901234567890",
-  },
-  {
-    id: 10,
-    productName: "Fitbit Charge 5",
-    productCode: "FITBITC5",
-    price: 179.99,
-    barcode: "012345678901",
-  },
-  {
-    id: 11,
-    productName: "Amazon Echo Dot 5th Gen",
-    productCode: "ECHODOT5",
-    price: 49.99,
-    barcode: "112233445566",
-  },
-  {
-    id: 12,
-    productName: "Logitech MX Master 3 Mouse",
-    productCode: "LOGIMX3",
-    price: 99.99,
-    barcode: "223344556677",
-  },
-  {
-    id: 13,
-    productName: "HP Envy 13 Laptop",
-    productCode: "HPENVY13",
-    price: 1099.99,
-    barcode: "334455667788",
-  },
-  {
-    id: 14,
-    productName: "JBL Flip 6 Speaker",
-    productCode: "JBLFLIP6",
-    price: 129.99,
-    barcode: "445566778899",
-  },
-  {
-    id: 15,
-    productName: "Microsoft Surface Pro 9",
-    productCode: "SURFACEPRO9",
-    price: 1399.99,
-    barcode: "556677889900",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 15, 20];
 
@@ -114,6 +7,26 @@ function PrintBarcode() {
   // Page title
   useEffect(() => {
     document.title = "Print Barcode | Dreams POS";
+  }, []);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("PrintBarcode");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // States for filters and pagination
@@ -129,8 +42,8 @@ function PrintBarcode() {
   const [showProductCode, setShowProductCode] = useState(true);
 
   // Filtered data based on search
-  const filteredData = barcodeData.filter(
-    (item) =>
+  const filteredData = data.filter(
+    (item: any) =>
       item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.productCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -426,7 +339,7 @@ function PrintBarcode() {
                     </td>
                   </tr>
                 )}
-                {paginatedData.map((item) => (
+                {paginatedData.map((item: any) => (
                   <tr
                     key={item.id}
                     className={

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 type Role = {
   id: number;
@@ -7,87 +8,12 @@ type Role = {
   status: "Active" | "Inactive";
 };
 
-const rolesData: Role[] = [
-  {
-    id: 1,
-    roleName: "Administrator",
-    description: "Full access to all system features and settings.",
-    status: "Active",
-  },
-  {
-    id: 2,
-    roleName: "Manager",
-    description: "Manage teams and projects with limited settings access.",
-    status: "Active",
-  },
-  {
-    id: 3,
-    roleName: "Editor",
-    description: "Can edit content but has no access to system settings.",
-    status: "Active",
-  },
-  {
-    id: 4,
-    roleName: "Viewer",
-    description: "Can view content but cannot make changes.",
-    status: "Inactive",
-  },
-  {
-    id: 5,
-    roleName: "Guest",
-    description: "Limited access for guest users with minimal permissions.",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    roleName: "Support",
-    description: "Access to support tickets and customer queries.",
-    status: "Active",
-  },
-  {
-    id: 7,
-    roleName: "HR",
-    description: "Manage employee records and payroll.",
-    status: "Active",
-  },
-  {
-    id: 8,
-    roleName: "Finance",
-    description: "Access to financial reports and billing.",
-    status: "Active",
-  },
-  {
-    id: 9,
-    roleName: "Developer",
-    description: "Access to development tools and logs.",
-    status: "Active",
-  },
-  {
-    id: 10,
-    roleName: "Marketing",
-    description: "Manage campaigns and marketing content.",
-    status: "Active",
-  },
-  {
-    id: 11,
-    roleName: "Sales",
-    description: "Access to sales data and client management.",
-    status: "Active",
-  },
-  {
-    id: 12,
-    roleName: "Intern",
-    description: "Temporary access with limited permissions.",
-    status: "Inactive",
-  },
-];
-
 const pageSize = 5;
 
 export default function RolesPermissions() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [roles, setRoles] = useState<Role[]>(rolesData);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   // Form state for Add/Edit Role
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
@@ -95,6 +21,27 @@ export default function RolesPermissions() {
   const [formDescription, setFormDescription] = useState("");
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
   const [editRoleId, setEditRoleId] = useState<number | null>(null);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("RolesPermissions");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+      setRoles(response.result);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(roles.length / pageSize);
@@ -162,15 +109,13 @@ export default function RolesPermissions() {
   };
 
   const handleRefresh = () => {
-    // Reset to initial data and first page
-    setRoles(rolesData);
+    loadData();
     setCurrentPage(1);
     setFormMode(null);
     setEditRoleId(null);
   };
 
   const handleReport = () => {
-    // For demo: alert JSON of roles
     alert("Roles Report:\n\n" + JSON.stringify(roles, null, 2));
   };
 

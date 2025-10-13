@@ -1,4 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
+import { apiService } from "@/services/ApiService";
 
 type Store = {
   id: number;
@@ -12,119 +13,6 @@ type Store = {
   status: "Active" | "Inactive";
 };
 
-const STORES_DATA: Store[] = [
-  {
-    id: 1,
-    storeName: "Dreams Store 1",
-    storeCode: "DS001",
-    storeType: "Retail",
-    storeLocation: "New York",
-    contactPerson: "John Doe",
-    contactNumber: "123-456-7890",
-    email: "store1@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 2,
-    storeName: "Dreams Store 2",
-    storeCode: "DS002",
-    storeType: "Wholesale",
-    storeLocation: "Los Angeles",
-    contactPerson: "Jane Smith",
-    contactNumber: "234-567-8901",
-    email: "store2@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 3,
-    storeName: "Dreams Store 3",
-    storeCode: "DS003",
-    storeType: "Retail",
-    storeLocation: "Chicago",
-    contactPerson: "Michael Johnson",
-    contactNumber: "345-678-9012",
-    email: "store3@dreamspos.com",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    storeName: "Dreams Store 4",
-    storeCode: "DS004",
-    storeType: "Retail",
-    storeLocation: "Houston",
-    contactPerson: "Emily Davis",
-    contactNumber: "456-789-0123",
-    email: "store4@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 5,
-    storeName: "Dreams Store 5",
-    storeCode: "DS005",
-    storeType: "Wholesale",
-    storeLocation: "Phoenix",
-    contactPerson: "William Brown",
-    contactNumber: "567-890-1234",
-    email: "store5@dreamspos.com",
-    status: "Inactive",
-  },
-  {
-    id: 6,
-    storeName: "Dreams Store 6",
-    storeCode: "DS006",
-    storeType: "Retail",
-    storeLocation: "Philadelphia",
-    contactPerson: "Olivia Wilson",
-    contactNumber: "678-901-2345",
-    email: "store6@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 7,
-    storeName: "Dreams Store 7",
-    storeCode: "DS007",
-    storeType: "Wholesale",
-    storeLocation: "San Antonio",
-    contactPerson: "James Taylor",
-    contactNumber: "789-012-3456",
-    email: "store7@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 8,
-    storeName: "Dreams Store 8",
-    storeCode: "DS008",
-    storeType: "Retail",
-    storeLocation: "San Diego",
-    contactPerson: "Sophia Martinez",
-    contactNumber: "890-123-4567",
-    email: "store8@dreamspos.com",
-    status: "Inactive",
-  },
-  {
-    id: 9,
-    storeName: "Dreams Store 9",
-    storeCode: "DS009",
-    storeType: "Retail",
-    storeLocation: "Dallas",
-    contactPerson: "Benjamin Anderson",
-    contactNumber: "901-234-5678",
-    email: "store9@dreamspos.com",
-    status: "Active",
-  },
-  {
-    id: 10,
-    storeName: "Dreams Store 10",
-    storeCode: "DS010",
-    storeType: "Wholesale",
-    storeLocation: "San Jose",
-    contactPerson: "Mia Thomas",
-    contactNumber: "012-345-6789",
-    email: "store10@dreamspos.com",
-    status: "Active",
-  },
-];
-
 const STORE_TYPES = ["Retail", "Wholesale"];
 const STATUS_OPTIONS = ["Active", "Inactive"];
 
@@ -136,9 +24,34 @@ export default function Stores() {
     document.title = "Stores - Dreams POS";
   }, []);
 
+  const [data, setData] = useState<Store[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<Store[]>("Stores");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // State for the store list and pagination
-  const [stores, setStores] = useState<Store[]>(STORES_DATA);
+  const [stores, setStores] = useState<Store[]>(data);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Sync stores state with data loaded from API
+  useEffect(() => {
+    setStores(data);
+  }, [data]);
 
   // State for form inputs (Add/Edit store)
   const [form, setForm] = useState<Omit<Store, "id">>({
@@ -243,7 +156,7 @@ export default function Stores() {
   // Handle Refresh button (reset form and reload data)
   function handleRefresh() {
     resetForm();
-    setStores(STORES_DATA);
+    loadData();
     setCurrentPage(1);
   }
 

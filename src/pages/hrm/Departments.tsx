@@ -1,84 +1,10 @@
-import React, { useState, useMemo } from "react";
-
-const departmentsData = [
-  {
-    id: 1,
-    departmentName: "Sales",
-    description: "Handles all sales activities",
-    status: "Active",
-  },
-  {
-    id: 2,
-    departmentName: "Marketing",
-    description: "Responsible for marketing campaigns",
-    status: "Active",
-  },
-  {
-    id: 3,
-    departmentName: "Finance",
-    description: "Manages company finances",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    departmentName: "Human Resources",
-    description: "Manages employee relations",
-    status: "Active",
-  },
-  {
-    id: 5,
-    departmentName: "IT Support",
-    description: "Handles technical support",
-    status: "Active",
-  },
-  {
-    id: 6,
-    departmentName: "Research & Development",
-    description: "Innovates new products",
-    status: "Inactive",
-  },
-  {
-    id: 7,
-    departmentName: "Customer Service",
-    description: "Customer support and service",
-    status: "Active",
-  },
-  {
-    id: 8,
-    departmentName: "Logistics",
-    description: "Manages shipping and delivery",
-    status: "Active",
-  },
-  {
-    id: 9,
-    departmentName: "Quality Assurance",
-    description: "Ensures product quality",
-    status: "Inactive",
-  },
-  {
-    id: 10,
-    departmentName: "Administration",
-    description: "General administrative tasks",
-    status: "Active",
-  },
-  {
-    id: 11,
-    departmentName: "Legal",
-    description: "Handles legal matters",
-    status: "Active",
-  },
-  {
-    id: 12,
-    departmentName: "Procurement",
-    description: "Purchases company supplies",
-    status: "Inactive",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSizeOptions = [5, 10, 20];
 
 const Departments: React.FC = () => {
-  React.useEffect(() => {
+  useEffect(() => {
     document.title = "Departments - Dreams POS";
   }, []);
 
@@ -88,12 +14,30 @@ const Departments: React.FC = () => {
   const [status, setStatus] = useState("Active");
 
   // State for table data and pagination
-  const [data, setData] = useState(departmentsData);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
   // State for editing
   const [editId, setEditId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Departments");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(data.length / pageSize);
@@ -161,7 +105,7 @@ const Departments: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setData(departmentsData);
+    loadData();
     resetForm();
     setCurrentPage(1);
     setPageSize(5);

@@ -1,79 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const prefixesData = [
-  {
-    id: 1,
-    prefixName: "Mr.",
-    prefixCode: "MR",
-    status: "Active",
-  },
-  {
-    id: 2,
-    prefixName: "Mrs.",
-    prefixCode: "MRS",
-    status: "Active",
-  },
-  {
-    id: 3,
-    prefixName: "Miss",
-    prefixCode: "MISS",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    prefixName: "Dr.",
-    prefixCode: "DR",
-    status: "Active",
-  },
-  {
-    id: 5,
-    prefixName: "Prof.",
-    prefixCode: "PROF",
-    status: "Active",
-  },
-  {
-    id: 6,
-    prefixName: "Mx.",
-    prefixCode: "MX",
-    status: "Inactive",
-  },
-  {
-    id: 7,
-    prefixName: "Sir",
-    prefixCode: "SIR",
-    status: "Active",
-  },
-  {
-    id: 8,
-    prefixName: "Madam",
-    prefixCode: "MADAM",
-    status: "Active",
-  },
-  {
-    id: 9,
-    prefixName: "Rev.",
-    prefixCode: "REV",
-    status: "Inactive",
-  },
-  {
-    id: 10,
-    prefixName: "Lady",
-    prefixCode: "LADY",
-    status: "Active",
-  },
-  {
-    id: 11,
-    prefixName: "Lord",
-    prefixCode: "LORD",
-    status: "Active",
-  },
-  {
-    id: 12,
-    prefixName: "Hon.",
-    prefixCode: "HON",
-    status: "Inactive",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const statuses = ["Active", "Inactive"];
 
@@ -88,7 +14,11 @@ export default function Prefixes() {
   const [status, setStatus] = useState("Active");
 
   // Data state
-  const [prefixes, setPrefixes] = useState(prefixesData);
+  const [prefixes, setPrefixes] = useState([]);
+
+  // Loading and error state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Editing state
   const [editId, setEditId] = useState<number | null>(null);
@@ -100,6 +30,22 @@ export default function Prefixes() {
     const start = (currentPage - 1) * itemsPerPage;
     return prefixes.slice(start, start + itemsPerPage);
   }, [currentPage, prefixes]);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Prefixes");
+    if (response.status.code === "S") {
+      setPrefixes(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Handlers
   const resetForm = () => {
@@ -162,7 +108,7 @@ export default function Prefixes() {
   };
 
   const handleRefresh = () => {
-    setPrefixes(prefixesData);
+    loadData();
     resetForm();
     setCurrentPage(1);
   };

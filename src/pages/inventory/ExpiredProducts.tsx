@@ -1,184 +1,36 @@
-import React, { useState, useMemo } from "react";
-
-const expiredProductsData = [
-  {
-    productName: "Apple",
-    productCode: "PRD001",
-    category: "Fruits",
-    supplier: "Supplier A",
-    expiredDate: "2023-09-10",
-    quantity: 120,
-    unit: "Kg",
-    cost: 1.2,
-    price: 2.5,
-  },
-  {
-    productName: "Banana",
-    productCode: "PRD002",
-    category: "Fruits",
-    supplier: "Supplier B",
-    expiredDate: "2023-09-05",
-    quantity: 200,
-    unit: "Kg",
-    cost: 0.8,
-    price: 1.5,
-  },
-  {
-    productName: "Milk",
-    productCode: "PRD003",
-    category: "Dairy",
-    supplier: "Supplier C",
-    expiredDate: "2023-09-01",
-    quantity: 50,
-    unit: "Ltr",
-    cost: 0.5,
-    price: 1.0,
-  },
-  {
-    productName: "Cheese",
-    productCode: "PRD004",
-    category: "Dairy",
-    supplier: "Supplier C",
-    expiredDate: "2023-08-25",
-    quantity: 30,
-    unit: "Kg",
-    cost: 3.0,
-    price: 5.0,
-  },
-  {
-    productName: "Bread",
-    productCode: "PRD005",
-    category: "Bakery",
-    supplier: "Supplier D",
-    expiredDate: "2023-09-12",
-    quantity: 100,
-    unit: "Pcs",
-    cost: 0.3,
-    price: 0.8,
-  },
-  {
-    productName: "Yogurt",
-    productCode: "PRD006",
-    category: "Dairy",
-    supplier: "Supplier C",
-    expiredDate: "2023-09-03",
-    quantity: 80,
-    unit: "Pcs",
-    cost: 0.6,
-    price: 1.2,
-  },
-  {
-    productName: "Orange",
-    productCode: "PRD007",
-    category: "Fruits",
-    supplier: "Supplier A",
-    expiredDate: "2023-09-07",
-    quantity: 150,
-    unit: "Kg",
-    cost: 1.1,
-    price: 2.0,
-  },
-  {
-    productName: "Butter",
-    productCode: "PRD008",
-    category: "Dairy",
-    supplier: "Supplier C",
-    expiredDate: "2023-08-30",
-    quantity: 40,
-    unit: "Kg",
-    cost: 2.5,
-    price: 4.0,
-  },
-  {
-    productName: "Tomato",
-    productCode: "PRD009",
-    category: "Vegetables",
-    supplier: "Supplier E",
-    expiredDate: "2023-09-06",
-    quantity: 180,
-    unit: "Kg",
-    cost: 0.9,
-    price: 1.8,
-  },
-  {
-    productName: "Potato",
-    productCode: "PRD010",
-    category: "Vegetables",
-    supplier: "Supplier E",
-    expiredDate: "2023-09-08",
-    quantity: 220,
-    unit: "Kg",
-    cost: 0.7,
-    price: 1.4,
-  },
-  {
-    productName: "Cucumber",
-    productCode: "PRD011",
-    category: "Vegetables",
-    supplier: "Supplier E",
-    expiredDate: "2023-09-04",
-    quantity: 90,
-    unit: "Kg",
-    cost: 0.6,
-    price: 1.3,
-  },
-  {
-    productName: "Lettuce",
-    productCode: "PRD012",
-    category: "Vegetables",
-    supplier: "Supplier E",
-    expiredDate: "2023-09-02",
-    quantity: 70,
-    unit: "Kg",
-    cost: 0.5,
-    price: 1.0,
-  },
-  {
-    productName: "Strawberry",
-    productCode: "PRD013",
-    category: "Fruits",
-    supplier: "Supplier A",
-    expiredDate: "2023-09-09",
-    quantity: 60,
-    unit: "Kg",
-    cost: 2.0,
-    price: 3.5,
-  },
-  {
-    productName: "Blueberry",
-    productCode: "PRD014",
-    category: "Fruits",
-    supplier: "Supplier A",
-    expiredDate: "2023-09-11",
-    quantity: 55,
-    unit: "Kg",
-    cost: 2.2,
-    price: 3.8,
-  },
-  {
-    productName: "Eggs",
-    productCode: "PRD015",
-    category: "Dairy",
-    supplier: "Supplier C",
-    expiredDate: "2023-09-13",
-    quantity: 300,
-    unit: "Pcs",
-    cost: 0.1,
-    price: 0.2,
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const pageSize = 5;
 
 export default function ExpiredProducts() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(expiredProductsData.length / pageSize);
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("ExpiredProducts");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalPages = Math.ceil(data.length / pageSize);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return expiredProductsData.slice(start, start + pageSize);
-  }, [currentPage]);
+    return data.slice(start, start + pageSize);
+  }, [currentPage, data]);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -186,23 +38,19 @@ export default function ExpiredProducts() {
   };
 
   const handleRefresh = () => {
-    // In real app, refresh data here
-    // For this static example, just reset page to 1
+    loadData();
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // Placeholder for report generation
     alert("Report generated for expired products.");
   };
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-700">
-      {/* Title */}
       <title>Expired Products - Dreams POS</title>
 
       <div className="container mx-auto p-6">
-        {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <h1 className="text-2xl font-semibold text-gray-900 mb-4 md:mb-0">
             Expired Products
@@ -225,7 +73,6 @@ export default function ExpiredProducts() {
           </div>
         </div>
 
-        {/* Filters Section */}
         <section className="bg-white rounded shadow p-4 mb-6">
           <form className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -305,7 +152,6 @@ export default function ExpiredProducts() {
           </form>
         </section>
 
-        {/* Table Section */}
         <section className="bg-white rounded shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
@@ -370,7 +216,6 @@ export default function ExpiredProducts() {
           </table>
         </section>
 
-        {/* Pagination */}
         <nav
           className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 mt-4 rounded shadow"
           aria-label="Pagination"
@@ -450,9 +295,9 @@ export default function ExpiredProducts() {
               </span>{" "}
               to{" "}
               <span className="font-medium">
-                {Math.min(currentPage * pageSize, expiredProductsData.length)}
+                {Math.min(currentPage * pageSize, data.length)}
               </span>{" "}
-              of <span className="font-medium">{expiredProductsData.length}</span>{" "}
+              of <span className="font-medium">{data.length}</span>{" "}
               results
             </p>
           </div>

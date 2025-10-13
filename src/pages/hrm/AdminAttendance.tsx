@@ -1,139 +1,5 @@
-import React, { useState, useMemo } from "react";
-
-const attendanceData = [
-  {
-    id: 1,
-    employeeId: "EMP001",
-    employeeName: "John Doe",
-    department: "Sales",
-    designation: "Manager",
-    date: "2025-10-01",
-    inTime: "09:00 AM",
-    outTime: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 2,
-    employeeId: "EMP002",
-    employeeName: "Jane Smith",
-    department: "Marketing",
-    designation: "Executive",
-    date: "2025-10-01",
-    inTime: "09:15 AM",
-    outTime: "06:15 PM",
-    status: "Present",
-  },
-  {
-    id: 3,
-    employeeId: "EMP003",
-    employeeName: "Michael Johnson",
-    department: "IT",
-    designation: "Developer",
-    date: "2025-10-01",
-    inTime: "09:05 AM",
-    outTime: "06:05 PM",
-    status: "Present",
-  },
-  {
-    id: 4,
-    employeeId: "EMP004",
-    employeeName: "Emily Davis",
-    department: "HR",
-    designation: "HR Manager",
-    date: "2025-10-01",
-    inTime: "09:00 AM",
-    outTime: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 5,
-    employeeId: "EMP005",
-    employeeName: "William Brown",
-    department: "Finance",
-    designation: "Accountant",
-    date: "2025-10-01",
-    inTime: "09:10 AM",
-    outTime: "06:10 PM",
-    status: "Present",
-  },
-  {
-    id: 6,
-    employeeId: "EMP006",
-    employeeName: "Olivia Wilson",
-    department: "Sales",
-    designation: "Sales Executive",
-    date: "2025-10-01",
-    inTime: "09:20 AM",
-    outTime: "06:20 PM",
-    status: "Present",
-  },
-  {
-    id: 7,
-    employeeId: "EMP007",
-    employeeName: "James Taylor",
-    department: "Marketing",
-    designation: "Marketing Manager",
-    date: "2025-10-01",
-    inTime: "09:00 AM",
-    outTime: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 8,
-    employeeId: "EMP008",
-    employeeName: "Sophia Martinez",
-    department: "IT",
-    designation: "Support Engineer",
-    date: "2025-10-01",
-    inTime: "09:30 AM",
-    outTime: "06:30 PM",
-    status: "Present",
-  },
-  {
-    id: 9,
-    employeeId: "EMP009",
-    employeeName: "Benjamin Anderson",
-    department: "HR",
-    designation: "Recruiter",
-    date: "2025-10-01",
-    inTime: "09:00 AM",
-    outTime: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 10,
-    employeeId: "EMP010",
-    employeeName: "Mia Thomas",
-    department: "Finance",
-    designation: "Financial Analyst",
-    date: "2025-10-01",
-    inTime: "09:05 AM",
-    outTime: "06:05 PM",
-    status: "Present",
-  },
-  {
-    id: 11,
-    employeeId: "EMP011",
-    employeeName: "Alexander Lee",
-    department: "Sales",
-    designation: "Sales Manager",
-    date: "2025-10-01",
-    inTime: "09:00 AM",
-    outTime: "06:00 PM",
-    status: "Present",
-  },
-  {
-    id: 12,
-    employeeId: "EMP012",
-    employeeName: "Charlotte Harris",
-    department: "Marketing",
-    designation: "Content Writer",
-    date: "2025-10-01",
-    inTime: "09:10 AM",
-    outTime: "06:10 PM",
-    status: "Present",
-  },
-];
+import React, { useState, useMemo, useEffect } from "react";
+import { apiService } from "@/services/ApiService";
 
 const departments = [
   "All Departments",
@@ -162,9 +28,30 @@ export default function AdminAttendance() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
 
+  // API state
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("AdminAttendance");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Filtered and searched data
   const filteredData = useMemo(() => {
-    return attendanceData.filter((item) => {
+    return data.filter((item) => {
       const matchesDepartment =
         selectedDepartment === "All Departments" ||
         item.department === selectedDepartment;
@@ -180,7 +67,7 @@ export default function AdminAttendance() {
         matchesDepartment && matchesStatus && matchesEmployee && matchesDate
       );
     });
-  }, [selectedDepartment, selectedStatus, searchEmployee, searchDate]);
+  }, [data, selectedDepartment, selectedStatus, searchEmployee, searchDate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -199,8 +86,7 @@ export default function AdminAttendance() {
   };
 
   const handleRefresh = () => {
-    // In real app, would fetch data again
-    alert("Data refreshed");
+    loadData();
   };
 
   const handleReport = () => {

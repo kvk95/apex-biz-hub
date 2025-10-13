@@ -1,22 +1,5 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-
-const unitsData = [
-  { id: 1, unitName: "Kilogram", shortName: "Kg", description: "Weight measurement" },
-  { id: 2, unitName: "Gram", shortName: "Gm", description: "Weight measurement" },
-  { id: 3, unitName: "Liter", shortName: "Ltr", description: "Volume measurement" },
-  { id: 4, unitName: "Meter", shortName: "Mtr", description: "Length measurement" },
-  { id: 5, unitName: "Piece", shortName: "Pcs", description: "Count measurement" },
-  { id: 6, unitName: "Box", shortName: "Box", description: "Packaging unit" },
-  { id: 7, unitName: "Packet", shortName: "Pkt", description: "Packaging unit" },
-  { id: 8, unitName: "Dozen", shortName: "Doz", description: "Count measurement" },
-  { id: 9, unitName: "Inch", shortName: "In", description: "Length measurement" },
-  { id: 10, unitName: "Feet", shortName: "Ft", description: "Length measurement" },
-  { id: 11, unitName: "Yard", shortName: "Yd", description: "Length measurement" },
-  { id: 12, unitName: "Milliliter", shortName: "Ml", description: "Volume measurement" },
-  { id: 13, unitName: "Centimeter", shortName: "Cm", description: "Length measurement" },
-  { id: 14, unitName: "Ounce", shortName: "Oz", description: "Weight measurement" },
-  { id: 15, unitName: "Pound", shortName: "Lb", description: "Weight measurement" },
-];
+import { apiService } from "@/services/ApiService";
 
 type Unit = {
   id: number;
@@ -31,7 +14,25 @@ export default function Units() {
   const itemsPerPage = 5;
 
   // Units state
-  const [units, setUnits] = useState<Unit[]>(unitsData);
+  const [data, setData] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("Units");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Form state for add/edit
   const [unitName, setUnitName] = useState("");
@@ -43,7 +44,7 @@ export default function Units() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filtered units based on search term
-  const filteredUnits = units.filter(
+  const filteredUnits = data.filter(
     (u) =>
       u.unitName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,7 +75,7 @@ export default function Units() {
 
     if (editId !== null) {
       // Edit existing
-      setUnits((prev) =>
+      setData((prev) =>
         prev.map((u) =>
           u.id === editId ? { ...u, unitName: unitName.trim(), shortName: shortName.trim(), description: description.trim() } : u
         )
@@ -82,12 +83,12 @@ export default function Units() {
     } else {
       // Add new
       const newUnit: Unit = {
-        id: units.length > 0 ? Math.max(...units.map((u) => u.id)) + 1 : 1,
+        id: data.length > 0 ? Math.max(...data.map((u) => u.id)) + 1 : 1,
         unitName: unitName.trim(),
         shortName: shortName.trim(),
         description: description.trim(),
       };
-      setUnits((prev) => [...prev, newUnit]);
+      setData((prev) => [...prev, newUnit]);
     }
 
     // Reset form
@@ -108,7 +109,7 @@ export default function Units() {
   // Handle delete button click
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this unit?")) {
-      setUnits((prev) => prev.filter((u) => u.id !== id));
+      setData((prev) => prev.filter((u) => u.id !== id));
       if ((currentPage - 1) * itemsPerPage >= filteredUnits.length - 1) {
         setCurrentPage((p) => (p > 1 ? p - 1 : 1));
       }
@@ -127,7 +128,7 @@ export default function Units() {
 
   // Handle report button click - for demo, alert with JSON data
   const handleReport = () => {
-    alert("Units Report:\n\n" + JSON.stringify(units, null, 2));
+    alert("Units Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
   // Pagination controls
