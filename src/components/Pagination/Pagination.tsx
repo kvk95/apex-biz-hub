@@ -5,47 +5,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import React, { useState, useEffect } from "react";
 
 interface PaginationProps {
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  totalItems: number;
+  itemsPerPage?: number;
   pageSizes?: number[];
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function Pagination({
-  page,
-  pageSize,
-  total,
+  currentPage = 1,
+  totalItems,
+  itemsPerPage = 10,
+  pageSizes = [5, 10, 20, 50],
   onPageChange,
   onPageSizeChange,
-  pageSizes = [10, 20, 50, 100],
 }: PaginationProps) {
-  const totalPages = Math.ceil(total / pageSize);
-  const startItem = (page - 1) * pageSize + 1;
-  const endItem = Math.min(page * pageSize, total);
+  const [page, setPage] = useState(currentPage);
+  const [pageSize, setPageSize] = useState(itemsPerPage);
 
-  // Generate page numbers to display
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalItems);
+
+  useEffect(() => {
+    setPage(currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    setPageSize(itemsPerPage);
+  }, [itemsPerPage]);
+
+  useEffect(() => {
+    if (onPageChange) onPageChange(page);
+  }, [page, onPageChange]);
+
+  useEffect(() => {
+    if (onPageSizeChange) onPageSizeChange(pageSize);
+    // Reset to first page when page size changes
+    setPage(1);
+  }, [pageSize, onPageSizeChange]);
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisible = 5;
 
     if (totalPages <= maxVisible) {
-      // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always show first page
       pages.push(1);
 
       if (page > 3) {
         pages.push("...");
       }
 
-      // Show pages around current page
       const start = Math.max(2, page - 1);
       const end = Math.min(totalPages - 1, page + 1);
 
@@ -57,7 +75,6 @@ export function Pagination({
         pages.push("...");
       }
 
-      // Always show last page
       if (totalPages > 1) {
         pages.push(totalPages);
       }
@@ -70,18 +87,17 @@ export function Pagination({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4">
-      {/* Left: Showing info */}
       <div className="text-sm text-muted-foreground">
-        Showing {startItem} to {endItem} of {total} results
+        Showing {startItem} to {endItem} of {totalItems} results
       </div>
 
-      {/* Center: Navigation */}
       <div className="flex items-center gap-1">
         <button
-          onClick={() => onPageChange(page - 1)}
+          onClick={() => setPage(page - 1)}
           disabled={page === 1}
           className="px-3 py-1.5 rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
+          type="button"
         >
           <i className="fa fa-chevron-left text-xs" />
         </button>
@@ -97,7 +113,7 @@ export function Pagination({
           ) : (
             <button
               key={pageNum}
-              onClick={() => onPageChange(pageNum as number)}
+              onClick={() => setPage(pageNum as number)}
               className={`px-3 py-1.5 rounded border transition-colors ${
                 page === pageNum
                   ? "bg-[#FF902F] text-white border-[#FF902F] font-medium"
@@ -105,6 +121,7 @@ export function Pagination({
               }`}
               aria-label={`Go to page ${pageNum}`}
               aria-current={page === pageNum ? "page" : undefined}
+              type="button"
             >
               {pageNum}
             </button>
@@ -112,22 +129,22 @@ export function Pagination({
         )}
 
         <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages || totalPages === 0}
           className="px-3 py-1.5 rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
+          type="button"
         >
           <i className="fa fa-chevron-right text-xs" />
         </button>
       </div>
 
-      {/* Right: Row per page */}
       {onPageSizeChange && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Row Per Page</span>
+          <span className="text-muted-foreground">Rows Per Page</span>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
+            onValueChange={(value) => setPageSize(Number(value))}
           >
             <SelectTrigger className="h-9 w-20">
               <SelectValue />
