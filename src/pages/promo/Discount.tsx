@@ -350,7 +350,7 @@ export default function Discount() {
       </section>
 
       {/* Table Section */}
-      <section className="bg-card rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
@@ -420,8 +420,8 @@ export default function Discount() {
                   <td className="px-4 py-3 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                     >
                       {item.status}

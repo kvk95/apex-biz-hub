@@ -410,7 +410,7 @@ export default function Coupons() {
       </section>
 
       {/* Coupons List Section */}
-      <section className="bg-card rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
           <h2 className="text-xl font-semibold mb-3 md:mb-0">Coupons List</h2>
           <input
@@ -505,11 +505,10 @@ export default function Coupons() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                          coupon.status === "Active"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${coupon.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
                       >
                         {coupon.status}
                       </span>

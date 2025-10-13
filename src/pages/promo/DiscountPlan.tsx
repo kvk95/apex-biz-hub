@@ -137,14 +137,14 @@ export default function DiscountPlan() {
         prev.map((plan) =>
           plan.id === editId
             ? {
-                ...plan,
-                discountPlanName: editForm.discountPlanName.trim(),
-                discountType: editForm.discountType,
-                discountValue: Number(editForm.discountValue),
-                startDate: editForm.startDate,
-                endDate: editForm.endDate,
-                status: editForm.status,
-              }
+              ...plan,
+              discountPlanName: editForm.discountPlanName.trim(),
+              discountType: editForm.discountType,
+              discountValue: Number(editForm.discountValue),
+              startDate: editForm.startDate,
+              endDate: editForm.endDate,
+              status: editForm.status,
+            }
             : plan
         )
       );
@@ -345,7 +345,7 @@ export default function DiscountPlan() {
       </section>
 
       {/* Table Section */}
-      <section className="bg-card rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
@@ -414,11 +414,10 @@ export default function DiscountPlan() {
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        plan.status === "Active"
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${plan.status === "Active"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
+                        }`}
                     >
                       {plan.status}
                     </span>

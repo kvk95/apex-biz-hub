@@ -152,14 +152,14 @@ export default function GiftCards() {
         d.map((card) =>
           card.id === editId
             ? {
-                ...card,
-                cardNumber: editForm.cardNumber,
-                cardHolder: editForm.cardHolder,
-                issueDate: editForm.issueDate,
-                expiryDate: editForm.expiryDate,
-                balance: Number(editForm.balance),
-                status: editForm.status,
-              }
+              ...card,
+              cardNumber: editForm.cardNumber,
+              cardHolder: editForm.cardHolder,
+              issueDate: editForm.issueDate,
+              expiryDate: editForm.expiryDate,
+              balance: Number(editForm.balance),
+              status: editForm.status,
+            }
             : card
         )
       );
@@ -383,7 +383,7 @@ export default function GiftCards() {
       </section>
 
       {/* Gift Cards Table */}
-      <section className="bg-card rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
@@ -444,11 +444,10 @@ export default function GiftCards() {
                   </td>
                   <td className="px-4 py-3 text-sm text-center">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        card.status === "Active"
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${card.status === "Active"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
+                        }`}
                     >
                       {card.status}
                     </span>
@@ -509,9 +508,8 @@ export default function GiftCards() {
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
+              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                }`}
               aria-label="First Page"
               type="button"
             >
@@ -520,9 +518,8 @@ export default function GiftCards() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
+              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
+                }`}
               aria-label="Previous Page"
               type="button"
             >
@@ -557,11 +554,10 @@ export default function GiftCards() {
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   aria-current={page === currentPage ? "page" : undefined}
-                  className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
-                    page === currentPage
+                  className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${page === currentPage
                       ? "z-10 bg-primary border-primary text-primary-foreground"
                       : "bg-background border-border text-muted-foreground hover:bg-muted/50"
-                  }`}
+                    }`}
                   type="button"
                 >
                   {page}
@@ -572,11 +568,10 @@ export default function GiftCards() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
-                currentPage === totalPages || totalPages === 0
+              className={`relative inline-flex items-center px-2 py-2 border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === totalPages || totalPages === 0
                   ? "cursor-not-allowed opacity-50"
                   : ""
-              }`}
+                }`}
               aria-label="Next Page"
               type="button"
             >
@@ -585,11 +580,10 @@ export default function GiftCards() {
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${
-                currentPage === totalPages || totalPages === 0
+              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-ring ${currentPage === totalPages || totalPages === 0
                   ? "cursor-not-allowed opacity-50"
                   : ""
-              }`}
+                }`}
               aria-label="Last Page"
               type="button"
             >
