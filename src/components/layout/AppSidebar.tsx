@@ -54,17 +54,23 @@ function MenuItemComponent({
         <SidebarMenuItem>
           <SidebarMenuButton
             className={cn(
-              "w-full transition-colors hover:bg-gray-100",
-              isOpen && "bg-gray-100",
-              `pl-${2 + level * 2}`
-            )}
+                "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
+                hasActiveChild(item.items) && [
+                  "border-l-4",
+                  `border-[hsl(${theme.primary || "220 98% 61%"})]`,
+                  "bg-[hsl(var(--primary)/0.05)]",
+                  "text-[hsl(var(--primary))]",
+                ],
+                `pl-${4 + level * 2}`
+              )}
             onClick={() => toggleMenu(item.title)}
             style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}
           >
-            <i className={`${IconClass} mr-2`} aria-hidden="true" />
+            <i className={`${IconClass} fa-light mr-2`} aria-hidden="true" />
             <span>{item.title}</span>
             <i
-              className={`fa ${isOpen ? "fa-chevron-down" : "fa-chevron-right"} ml-auto`}
+              className={`fa fa-light ${isOpen ? "fa-chevron-down" : "fa-chevron-right"} ml-auto`}
+              style={{ fontSize:"10px"}}
               aria-hidden="true"
             />
           </SidebarMenuButton>
@@ -93,13 +99,13 @@ function MenuItemComponent({
       <SidebarMenuButton
         asChild
         className={cn(
-          "w-full transition-colors hover:bg-gray-100",
+          "w-full transition-colors hover:bg-gray-100 ",
           `pl-${2 + level * 2}`
         )}
-        style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}
+        style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}                
       >
         <NavLink to={item.url || "#"} className="flex items-center">
-          <i className={`${IconClass} mr-2`} aria-hidden="true" />
+          <i className={`${IconClass} fa-light mr-2`} aria-hidden="true" />
           <span>{item.title}</span>
           {item.badge && (
             <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
@@ -171,14 +177,14 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-gray-200"
+      className="border-r border-gray-200 "
       style={sidebarStyle}
     >
       <SidebarContent className="bg-white">
         <div className="h-16 flex items-center justify-center sticky top-0 bg-white border-b border-gray-200 z-10 px-4">
           <h1 className="font-bold text-xl text-gray-800">NyaBuy POS</h1>
         </div>
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 custom-scroll1 ">
           <SidebarMenu>
             {menuItems.map((item) => (
               <MenuItemComponent

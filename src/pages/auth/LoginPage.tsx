@@ -53,7 +53,7 @@ function LoginPage({ onLoginSuccess }) {
       await fakeLogin({ email, password });
       setPending(false);
       onLoginSuccess(); // Notify App that login succeeded
-      navigate("/"); // Redirect to the main layout after successful login
+      navigate("/dashboard/admin-1"); // Redirect to the main layout after successful login
     } catch (error) {
       setErrorMessage(typeof error === "string" ? error : "Login failed");
       setPending(false);

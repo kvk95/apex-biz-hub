@@ -123,17 +123,16 @@ export function AppNavbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </div>
-              <div className="hidden text-left lg:block">
-                <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-muted-foreground">admin@pos.com</p>
-              </div>
+              <img src="/assets/images/avathar1.png" alt="Img" className="rounded-pill" style={{width:"2rem", height:"2rem"}}></img> 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-popover">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>              
+              <div className="hidden text-left lg:block">
+                 <img src="/assets/images/avathar1.png" alt="Img" className="rounded-pill" style={{width:"3rem", height:"3rem"}}></img> 
+                <p className="text-sm font-medium">Admin User</p>
+                <p className="text-xs text-muted-foreground">admin@pos.com</p>
+              </div></DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
