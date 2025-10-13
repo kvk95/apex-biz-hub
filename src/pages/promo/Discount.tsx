@@ -137,14 +137,14 @@ export default function Discount() {
         prev.map((item) =>
           item.id === editId
             ? {
-                ...item,
-                discountName: editForm.discountName.trim(),
-                discountType: editForm.discountType,
-                discountValue: Number(editForm.discountValue),
-                startDate: editForm.startDate,
-                endDate: editForm.endDate,
-                status: editForm.status,
-              }
+              ...item,
+              discountName: editForm.discountName.trim(),
+              discountType: editForm.discountType,
+              discountValue: Number(editForm.discountValue),
+              startDate: editForm.startDate,
+              endDate: editForm.endDate,
+              status: editForm.status,
+            }
             : item
         )
       );
@@ -419,11 +419,10 @@ export default function Discount() {
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.status === "Active"
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.status === "Active"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
+                        }`}
                     >
                       {item.status}
                     </span>
@@ -454,9 +453,9 @@ export default function Discount() {
 
         {/* Pagination */}
         <Pagination
-          page={currentPage}
-          pageSize={itemsPerPage}
-          total={data.length}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
           onPageChange={setCurrentPage}
           onPageSizeChange={setItemsPerPage}
           pageSizes={[5, 10, 20, 50]}
