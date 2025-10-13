@@ -1,31 +1,17 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const pageSize = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function MoneyTransfer() {
   const [customersData, setCustomersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("MoneyTransfer");
-    if (response.status.code === "S") {
-      setCustomersData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
     customerName: "",
     customerPhone: "",
@@ -41,13 +27,41 @@ export default function MoneyTransfer() {
     description: "",
   });
 
-  const paginatedCustomers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return customersData.slice(start, start + pageSize);
-  }, [currentPage, customersData]);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    customerAccountNo: "",
+    customerBalance: "",
+    transferFrom: "",
+    transferTo: "",
+    bankName: "",
+    accountNo: "",
+    amount: "",
+    currency: "USD",
+    description: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
-  const totalPages = Math.ceil(customersData.length / pageSize);
+  useEffect(() => {
+    loadData();
+  }, []);
 
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<[]>("MoneyTransfer");
+    if (response.status.code === "S") {
+      setCustomersData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
+
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -55,6 +69,75 @@ export default function MoneyTransfer() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const customer = customersData.find((c) => c.id === id);
+    if (customer) {
+      setEditForm({
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        customerEmail: customer.email,
+        customerAccountNo: customer.accountNo,
+        customerBalance: customer.balance.toString(),
+        transferFrom: "",
+        transferTo: "",
+        bankName: "",
+        accountNo: "",
+        amount: "",
+        currency: "USD",
+        description: "",
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.customerName.trim() ||
+      !editForm.customerPhone.trim() ||
+      !editForm.customerEmail.trim() ||
+      !editForm.customerAccountNo.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setCustomersData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                name: editForm.customerName.trim(),
+                phone: editForm.customerPhone.trim(),
+                email: editForm.customerEmail.trim(),
+                accountNo: editForm.customerAccountNo.trim(),
+                balance: Number(editForm.customerBalance) || item.balance,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Select customer from list to populate Add Section form
   const handleCustomerSelect = (customer: typeof customersData[0]) => {
     setForm((prev) => ({
       ...prev,
@@ -66,7 +149,8 @@ export default function MoneyTransfer() {
     }));
   };
 
-  const handleReset = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setForm({
       customerName: "",
       customerPhone: "",
@@ -81,398 +165,344 @@ export default function MoneyTransfer() {
       currency: "USD",
       description: "",
     });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleSave = () => {
     alert("Save functionality triggered (not implemented).");
   };
 
-  const handleRefresh = () => {
-    alert("Refresh functionality triggered (not implemented).");
-  };
-
   const handleReport = () => {
     alert("Report functionality triggered (not implemented).");
   };
 
+  // Calculate paginated data using Pagination component props
+  const paginatedCustomers = customersData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <>
       <title>Money Transfer - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-semibold mb-6">Money Transfer</h1>
+      <div className="min-h-screen bg-background font-sans p-6">
+        <h1 className="text-2xl font-semibold mb-6">Money Transfer</h1>
 
-          <section className="bg-white rounded shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Customer Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label htmlFor="customerName" className="block text-sm font-medium mb-1">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  id="customerName"
-                  name="customerName"
-                  value={form.customerName}
-                  onChange={handleInputChange}
-                  placeholder="Customer Name"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">
-                  Phone
-                </label>
-                <input
-                  type="text"
-                  id="customerPhone"
-                  name="customerPhone"
-                  value={form.customerPhone}
-                  onChange={handleInputChange}
-                  placeholder="Phone"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="customerEmail" className="block text-sm font-medium mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="customerEmail"
-                  name="customerEmail"
-                  value={form.customerEmail}
-                  onChange={handleInputChange}
-                  placeholder="Email"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="customerAccountNo" className="block text-sm font-medium mb-1">
-                  Account No
-                </label>
-                <input
-                  type="text"
-                  id="customerAccountNo"
-                  name="customerAccountNo"
-                  value={form.customerAccountNo}
-                  onChange={handleInputChange}
-                  placeholder="Account No"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="customerBalance" className="block text-sm font-medium mb-1">
-                  Balance
-                </label>
-                <input
-                  type="text"
-                  id="customerBalance"
-                  name="customerBalance"
-                  value={form.customerBalance}
-                  readOnly
-                  className="w-full border border-gray-300 rounded bg-gray-100 px-3 py-2 cursor-not-allowed"
-                />
-              </div>
+        {/* Form Section (Add Section) - preserved exactly */}
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Customer Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div>
+              <label htmlFor="customerName" className="block text-sm font-medium mb-1">
+                Customer Name
+              </label>
+              <input
+                type="text"
+                id="customerName"
+                name="customerName"
+                value={form.customerName}
+                onChange={handleInputChange}
+                placeholder="Customer Name"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
-          </section>
-
-          <section className="bg-white rounded shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Transfer Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label htmlFor="transferFrom" className="block text-sm font-medium mb-1">
-                  Transfer From
-                </label>
-                <select
-                  id="transferFrom"
-                  name="transferFrom"
-                  value={form.transferFrom}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">Select Account</option>
-                  {customersData.map((c) => (
-                    <option key={c.id} value={c.accountNo}>
-                      {c.name} - {c.accountNo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="transferTo" className="block text-sm font-medium mb-1">
-                  Transfer To
-                </label>
-                <input
-                  type="text"
-                  id="transferTo"
-                  name="transferTo"
-                  value={form.transferTo}
-                  onChange={handleInputChange}
-                  placeholder="Beneficiary Name"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="bankName" className="block text-sm font-medium mb-1">
-                  Bank Name
-                </label>
-                <select
-                  id="bankName"
-                  name="bankName"
-                  value={form.bankName}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">Select Bank</option>
-                  <option value="Bank of America">Bank of America</option>
-                  <option value="Chase Bank">Chase Bank</option>
-                  <option value="Wells Fargo">Wells Fargo</option>
-                  <option value="Citibank">Citibank</option>
-                  <option value="HSBC">HSBC</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="accountNo" className="block text-sm font-medium mb-1">
-                  Account No
-                </label>
-                <input
-                  type="text"
-                  id="accountNo"
-                  name="accountNo"
-                  value={form.accountNo}
-                  onChange={handleInputChange}
-                  placeholder="Account Number"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label htmlFor="amount" className="block text-sm font-medium mb-1">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  id="amount"
-                  name="amount"
-                  value={form.amount}
-                  onChange={handleInputChange}
-                  placeholder="Amount"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  min={0}
-                />
-              </div>
-              <div>
-                <label htmlFor="currency" className="block text-sm font-medium mb-1">
-                  Currency
-                </label>
-                <select
-                  id="currency"
-                  name="currency"
-                  value={form.currency}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="USD">US Dollar</option>
-                  <option value="EUR">Euro</option>
-                  <option value="GBP">British Pound</option>
-                  <option value="INR">Indian Rupee</option>
-                  <option value="JPY">Japanese Yen</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label htmlFor="description" className="block text-sm font-medium mb-1">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={form.description}
-                  onChange={handleInputChange}
-                  placeholder="Description"
-                  rows={3}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
-                />
-              </div>
+            <div>
+              <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">
+                Phone
+              </label>
+              <input
+                type="text"
+                id="customerPhone"
+                name="customerPhone"
+                value={form.customerPhone}
+                onChange={handleInputChange}
+                placeholder="Phone"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
-          </section>
+            <div>
+              <label htmlFor="customerEmail" className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="customerEmail"
+                name="customerEmail"
+                value={form.customerEmail}
+                onChange={handleInputChange}
+                placeholder="Email"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label htmlFor="customerAccountNo" className="block text-sm font-medium mb-1">
+                Account No
+              </label>
+              <input
+                type="text"
+                id="customerAccountNo"
+                name="customerAccountNo"
+                value={form.customerAccountNo}
+                onChange={handleInputChange}
+                placeholder="Account No"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label htmlFor="customerBalance" className="block text-sm font-medium mb-1">
+                Balance
+              </label>
+              <input
+                type="text"
+                id="customerBalance"
+                name="customerBalance"
+                value={form.customerBalance}
+                readOnly
+                className="w-full border border-input rounded bg-muted px-3 py-2 cursor-not-allowed"
+              />
+            </div>
+          </div>
 
-          <section className="flex flex-wrap gap-3 mb-6">
+          <section className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleSave}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-save"></i> Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-green-600"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-sync-alt"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-purple-600"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-file-alt"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </section>
+        </section>
 
-          <section className="bg-white rounded shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Customer List</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300">
-                <thead className="bg-gray-50">
+        {/* Table Section */}
+        <section className="bg-card rounded shadow py-6">
+          <h2 className="text-xl font-semibold mb-4">Customer List</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-border">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    #
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Customer Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Phone
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Account No
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Balance
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedCustomers.length === 0 && (
                   <tr>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      #
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Customer Name
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Phone
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Email
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Account No
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Balance
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedCustomers.map((customer, idx) => (
-                    <tr
-                      key={customer.id}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    <td
+                      colSpan={7}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        {(currentPage - 1) * pageSize + idx + 1}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        {customer.name}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        {customer.phone}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        {customer.email}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        {customer.accountNo}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
-                        ${customer.balance.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        <button
-                          type="button"
-                          title="Select Customer"
-                          onClick={() => handleCustomerSelect(customer)}
-                          className="text-blue-600 hover:text-blue-800 focus:outline-none"
-                        >
-                          <i className="fas fa-check-circle text-lg"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {paginatedCustomers.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="text-center py-4 text-gray-500 text-sm"
-                      >
-                        No customers found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <nav
-              className="flex justify-end items-center mt-4 space-x-2"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === 1
-                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                    : "border-gray-400 text-gray-700 hover:bg-gray-200"
-                }`}
-                aria-label="First Page"
-              >
-                <i className="fas fa-angle-double-left"></i>
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === 1
-                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                    : "border-gray-400 text-gray-700 hover:bg-gray-200"
-                }`}
-                aria-label="Previous Page"
-              >
-                <i className="fas fa-angle-left"></i>
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={`px-3 py-1 rounded border ${
-                      currentPage === page
-                        ? "bg-blue-600 border-blue-600 text-white"
-                        : "border-gray-400 text-gray-700 hover:bg-gray-200"
-                    }`}
+                      No customers found.
+                    </td>
+                  </tr>
+                )}
+                {paginatedCustomers.map((customer, idx) => (
+                  <tr
+                    key={customer.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    {page}
-                  </button>
-                );
-              })}
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">{customer.name}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{customer.phone}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{customer.email}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{customer.accountNo}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      ${customer.balance.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        type="button"
+                        title={`Edit customer ${customer.name}`}
+                        onClick={() => handleEdit(customer.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        title={`Select customer ${customer.name}`}
+                        onClick={() => handleCustomerSelect(customer)}
+                        className="text-blue-600 hover:text-blue-800 focus:outline-none"
+                      >
+                        <i className="fa fa-check-circle fa-light text-lg"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === totalPages
-                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                    : "border-gray-400 text-gray-700 hover:bg-gray-200"
-                }`}
-                aria-label="Next Page"
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={customersData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                <i className="fas fa-angle-right"></i>
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === totalPages
-                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                    : "border-gray-400 text-gray-700 hover:bg-gray-200"
-                }`}
-                aria-label="Last Page"
-              >
-                <i className="fas fa-angle-double-right"></i>
-              </button>
-            </nav>
-          </section>
-        </div>
+                Edit Customer
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label
+                    htmlFor="editCustomerName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editCustomerName"
+                    name="customerName"
+                    value={editForm.customerName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Customer Name"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editCustomerPhone"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Phone
+                  </label>
+                  <input
+                    type="text"
+                    id="editCustomerPhone"
+                    name="customerPhone"
+                    value={editForm.customerPhone}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Phone"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editCustomerEmail"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="editCustomerEmail"
+                    name="customerEmail"
+                    value={editForm.customerEmail}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Email"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editCustomerAccountNo"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Account No
+                  </label>
+                  <input
+                    type="text"
+                    id="editCustomerAccountNo"
+                    name="customerAccountNo"
+                    value={editForm.customerAccountNo}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Account No"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editCustomerBalance"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Balance
+                  </label>
+                  <input
+                    type="number"
+                    id="editCustomerBalance"
+                    name="customerBalance"
+                    value={editForm.customerBalance}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Balance"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const pageSize = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function CashFlow() {
   const [data, setData] = useState([]);
@@ -10,7 +9,21 @@ export default function CashFlow() {
 
   const [searchDate, setSearchDate] = useState("");
   const [searchDescription, setSearchDescription] = useState("");
+
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    date: "",
+    description: "",
+    income: "",
+    expense: "",
+    balance: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -31,27 +44,22 @@ export default function CashFlow() {
   // Filter data by search inputs
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchesDate = searchDate
-        ? item.date === searchDate
-        : true;
+      const matchesDate = searchDate ? item.date === searchDate : true;
       const matchesDesc = searchDescription
-        ? item.description
-            .toLowerCase()
-            .includes(searchDescription.toLowerCase())
+        ? item.description.toLowerCase().includes(searchDescription.toLowerCase())
         : true;
       return matchesDate && matchesDesc;
     });
   }, [data, searchDate, searchDescription]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  // Calculate paginated data using Pagination component props
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   // Handlers
-  const handleRefresh = () => {
+  const handleClear = () => {
     setSearchDate("");
     setSearchDescription("");
     setCurrentPage(1);
@@ -61,28 +69,88 @@ export default function CashFlow() {
     alert("Report generated for current filtered data.");
   };
 
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        date: item.date,
+        description: item.description,
+        income: item.income?.toString() ?? "",
+        expense: item.expense?.toString() ?? "",
+        balance: item.balance?.toString() ?? "",
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.date ||
+      !editForm.description.trim() ||
+      editForm.income === "" ||
+      editForm.expense === "" ||
+      editForm.balance === ""
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                date: editForm.date,
+                description: editForm.description.trim(),
+                income: Number(editForm.income),
+                expense: Number(editForm.expense),
+                balance: Number(editForm.balance),
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       <div className="container mx-auto px-4 py-6">
         {/* Title */}
-        <h1 className="text-3xl font-semibold mb-6 text-gray-900">
-          Cash Flow
-        </h1>
+        <h1 className="text-2xl font-semibold mb-6 text-foreground">Cash Flow</h1>
 
         {/* Search & Action Section */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <section className="bg-card rounded shadow p-6 mb-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               setCurrentPage(1);
             }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+            className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
           >
             {/* Date Filter */}
             <div>
               <label
                 htmlFor="date"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Date
               </label>
@@ -91,7 +159,7 @@ export default function CashFlow() {
                 id="date"
                 value={searchDate}
                 onChange={(e) => setSearchDate(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -99,7 +167,7 @@ export default function CashFlow() {
             <div>
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Description
               </label>
@@ -109,151 +177,253 @@ export default function CashFlow() {
                 placeholder="Search description"
                 value={searchDescription}
                 onChange={(e) => setSearchDescription(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
             {/* Buttons */}
-            <div className="flex space-x-3 md:col-span-2 justify-start md:justify-end">
+            <div className="flex flex-wrap gap-3 md:col-span-2 justify-start md:justify-end">
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-search mr-2" aria-hidden="true"></i>
-                Search
+                <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
               </button>
               <button
                 type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-                Refresh
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
               <button
                 type="button"
                 onClick={handleReport}
-                className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-file-pdf-o mr-2" aria-hidden="true"></i>
-                Report
+                <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
               </button>
             </div>
           </form>
-        </div>
+        </section>
 
         {/* Table Section */}
-        <div className="bg-white shadow rounded-lg overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-right font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
-                  Income
-                </th>
-                <th className="px-6 py-3 text-right font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
-                  Expense
-                </th>
-                <th className="px-6 py-3 text-right font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
-                  Balance
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No records found.
-                  </td>
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Income
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Expense
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Balance
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                paginatedData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 whitespace-nowrap text-gray-700">
-                      {item.date}
-                    </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-gray-700">
-                      {item.description}
-                    </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-right text-green-600 font-semibold">
-                      {item.income > 0 ? item.income.toLocaleString() : "-"}
-                    </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-right text-red-600 font-semibold">
-                      {item.expense > 0 ? item.expense.toLocaleString() : "-"}
-                    </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-right font-semibold text-gray-900">
-                      {item.balance.toLocaleString()}
+              </thead>
+              <tbody>
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
+                    >
+                      No records found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-semibold">{paginatedData.length}</span> of{" "}
-            <span className="font-semibold">{filteredData.length}</span> entries
+                ) : (
+                  paginatedData.map((item, idx) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                        {item.date}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                        {item.description}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right text-foreground font-semibold whitespace-nowrap">
+                        {item.income > 0 ? item.income.toLocaleString() : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right text-foreground font-semibold whitespace-nowrap">
+                        {item.expense > 0 ? item.expense.toLocaleString() : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right font-semibold text-foreground whitespace-nowrap">
+                        {item.balance.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm space-x-3 whitespace-nowrap">
+                        <button
+                          onClick={() => handleEdit(item.id)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit cash flow record ${item.description}`}
+                          type="button"
+                        >
+                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-          <nav
-            className="inline-flex -space-x-px rounded-md shadow-sm"
-            aria-label="Pagination"
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
           >
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous"
-            >
-              <i className="fa fa-chevron-left" aria-hidden="true"></i>
-            </button>
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center text-foreground"
+              >
+                Edit Cash Flow
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Date */}
+                <div>
+                  <label
+                    htmlFor="editDate"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editDate"
+                    name="date"
+                    value={editForm.date}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
 
-            {[...Array(totalPages)].map((_, i) => {
-              const page = i + 1;
-              const isCurrent = page === currentPage;
-              return (
+                {/* Description */}
+                <div>
+                  <label
+                    htmlFor="editDescription"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    id="editDescription"
+                    name="description"
+                    value={editForm.description}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter description"
+                  />
+                </div>
+
+                {/* Income */}
+                <div>
+                  <label
+                    htmlFor="editIncome"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Income
+                  </label>
+                  <input
+                    type="number"
+                    id="editIncome"
+                    name="income"
+                    value={editForm.income}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter income"
+                  />
+                </div>
+
+                {/* Expense */}
+                <div>
+                  <label
+                    htmlFor="editExpense"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Expense
+                  </label>
+                  <input
+                    type="number"
+                    id="editExpense"
+                    name="expense"
+                    value={editForm.expense}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter expense"
+                  />
+                </div>
+
+                {/* Balance */}
+                <div>
+                  <label
+                    htmlFor="editBalance"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Balance
+                  </label>
+                  <input
+                    type="number"
+                    id="editBalance"
+                    name="balance"
+                    value={editForm.balance}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter balance"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
                 <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  aria-current={isCurrent ? "page" : undefined}
-                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                    isCurrent
-                      ? "z-10 bg-indigo-600 border-indigo-600 text-white"
-                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  {page}
+                  Cancel
                 </button>
-              );
-            })}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                currentPage === totalPages || totalPages === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Next"
-            >
-              <i className="fa fa-chevron-right" aria-hidden="true"></i>
-            </button>
-          </nav>
-        </div>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

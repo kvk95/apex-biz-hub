@@ -1,5 +1,6 @@
 import { apiService } from "@/services/ApiService";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 type ExpenseCategory = {
   id: number;
@@ -9,18 +10,33 @@ type ExpenseCategory = {
 };
 
 export default function ExpenseCategory() {
-  // Page title as per reference page
-  useEffect(() => {
-    
-  }, []);
-
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    id: 0,
+    name: "",
+    description: "",
+    status: "Active" as "Active" | "Inactive",
+  });
+
+  // Form state for Add Section
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    status: "Active" as "Active" | "Inactive",
+  });
+
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("ExpenseCategory");
+    const response = await apiService.get<ExpenseCategory[]>("ExpenseCategory");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -34,160 +50,132 @@ export default function ExpenseCategory() {
     loadData();
   }, []);
 
-  // State for expense categories data
-  const [categories, setCategories] = useState<ExpenseCategory[]>(data);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
-
-  // Form state for add/edit
-  const [form, setForm] = useState({
-    id: 0,
-    name: "",
-    description: "",
-    status: "Active" as "Active" | "Inactive",
-  });
-
-  // Editing mode flag
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Pagination slice of data
-  const paginatedCategories = categories.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Handlers
-  function handleInputChange(
+  // Handlers for Add Section form inputs
+  const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
+  ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  function handleSubmit(e: FormEvent) {
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new category)
+  const handleSave = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
       alert("Expense Category Name is required.");
       return;
     }
-    if (isEditing) {
-      // Update existing category
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === form.id
-            ? {
-                id: form.id,
-                name: form.name.trim(),
-                description: form.description.trim(),
-                status: form.status,
-              }
-            : cat
-        )
-      );
-      alert("Expense Category updated successfully.");
-    } else {
-      // Add new category
-      const newId =
-        categories.length > 0
-          ? Math.max(...categories.map((c) => c.id)) + 1
-          : 1;
-      setCategories((prev) => [
-        ...prev,
-        {
-          id: newId,
-          name: form.name.trim(),
-          description: form.description.trim(),
-          status: form.status,
-        },
-      ]);
-      alert("Expense Category added successfully.");
-    }
-    resetForm();
-  }
-
-  function resetForm() {
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [
+      ...prev,
+      {
+        id: newId,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        status: form.status,
+      },
+    ]);
     setForm({
-      id: 0,
       name: "",
       description: "",
       status: "Active",
     });
-    setIsEditing(false);
-  }
+  };
 
-  function handleEdit(id: number) {
-    const cat = categories.find((c) => c.id === id);
-    if (!cat) return;
-    setForm({
-      id: cat.id,
-      name: cat.name,
-      description: cat.description,
-      status: cat.status,
-    });
-    setIsEditing(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        status: item.status,
+      });
+      setIsEditModalOpen(true);
+    }
+  };
 
-  function handleDelete(id: number) {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this Expense Category?"
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.name.trim()) {
+      alert("Expense Category Name is required.");
+      return;
+    }
+    setData((prev) =>
+      prev.map((item) =>
+        item.id === editForm.id
+          ? {
+              ...item,
+              name: editForm.name.trim(),
+              description: editForm.description.trim(),
+              status: editForm.status,
+            }
+          : item
       )
-    ) {
-      setCategories((prev) => prev.filter((c) => c.id !== id));
-      // If deleting last item on page, go back a page if possible
-      if (
-        (categories.length - 1) % itemsPerPage === 0 &&
-        currentPage > 1
-      ) {
+    );
+    setIsEditModalOpen(false);
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this Expense Category?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
-      alert("Expense Category deleted successfully.");
     }
-  }
+  };
 
-  function handleRefresh() {
-    // Reset data to initial state
-    setCategories(data);
-    resetForm();
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      name: "",
+      description: "",
+      status: "Active",
+    });
     setCurrentPage(1);
-  }
+  };
 
-  function handleReport() {
-    // For demonstration, just alert
-    alert("Report generated successfully.");
-  }
+  const handleReport = () => {
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+  };
 
-  // Pagination controls
-  function goToPage(page: number) {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  }
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      {/* Page Title */}
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">
-        Expense Category
-      </h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Expense Category</h1>
 
-      {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <form onSubmit={handleSave} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             {/* Expense Category Name */}
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
-                Expense Category Name <span className="text-red-600">*</span>
+                Expense Category Name <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
@@ -196,7 +184,7 @@ export default function ExpenseCategory() {
                 value={form.name}
                 onChange={handleInputChange}
                 placeholder="Enter Expense Category Name"
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               />
             </div>
@@ -205,7 +193,7 @@ export default function ExpenseCategory() {
             <div>
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Description
               </label>
@@ -216,7 +204,7 @@ export default function ExpenseCategory() {
                 onChange={handleInputChange}
                 placeholder="Enter Description"
                 rows={1}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm resize-none"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               />
             </div>
 
@@ -224,7 +212,7 @@ export default function ExpenseCategory() {
             <div>
               <label
                 htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Status
               </label>
@@ -233,7 +221,7 @@ export default function ExpenseCategory() {
                 name="status"
                 value={form.status}
                 onChange={handleInputChange}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -242,205 +230,220 @@ export default function ExpenseCategory() {
           </div>
 
           {/* Buttons */}
-          <div className="flex space-x-4">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className={`fa fa-save mr-2`} aria-hidden="true"></i>
-              {isEditing ? "Update" : "Save"}
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
             <button
               type="button"
-              onClick={resetForm}
-              className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-              Reset
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-green-600 ml-auto"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i>
-              Report
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-              Refresh
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm text-gray-700">
-            <thead className="bg-gray-100 text-gray-900 font-semibold">
-              <tr>
-                <th className="px-4 py-3 border-r border-gray-300 w-16 text-center">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-16 text-center">
                   SL
                 </th>
-                <th className="px-4 py-3 border-r border-gray-300 w-48">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-48">
                   Expense Category Name
                 </th>
-                <th className="px-4 py-3 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Description
                 </th>
-                <th className="px-4 py-3 border-r border-gray-300 w-28 text-center">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-28 text-center">
                   Status
                 </th>
-                <th className="px-4 py-3 w-36 text-center">Action</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground w-36">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {paginatedCategories.length === 0 ? (
+              {paginatedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-6 text-center text-gray-500"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No Expense Categories found.
                   </td>
                 </tr>
-              ) : (
-                paginatedCategories.map((cat, idx) => (
-                  <tr
-                    key={cat.id}
-                    className="border-t border-gray-300 hover:bg-gray-50"
-                  >
-                    <td className="px-4 py-3 border-r border-gray-300 text-center">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 border-r border-gray-300">
-                      {cat.name}
-                    </td>
-                    <td className="px-4 py-3 border-r border-gray-300">
-                      {cat.description}
-                    </td>
-                    <td className="px-4 py-3 border-r border-gray-300 text-center">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          cat.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {cat.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(cat.id)}
-                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        title="Edit"
-                        type="button"
-                      >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cat.id)}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-red-600"
-                        title="Delete"
-                        type="button"
-                      >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
               )}
+              {paginatedData.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground text-center">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.description}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit category ${item.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete category ${item.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex items-center justify-between border-t border-gray-300 px-4 py-3 mt-4"
-          aria-label="Table pagination"
-        >
-          <div className="flex flex-1 justify-between sm:hidden">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-medium">
-                  {(currentPage - 1) * itemsPerPage + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium">
-                  {Math.min(currentPage * itemsPerPage, categories.length)}
-                </span>{" "}
-                of <span className="font-medium">{categories.length}</span>{" "}
-                results
-              </p>
-            </div>
-            <div>
-              <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-                <li>
-                  <button
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Previous"
-                  >
-                    <i className="fa fa-chevron-left" aria-hidden="true"></i>
-                  </button>
-                </li>
-                {[...Array(totalPages)].map((_, i) => {
-                  const page = i + 1;
-                  return (
-                    <li key={page}>
-                      <button
-                        onClick={() => goToPage(page)}
-                        aria-current={page === currentPage ? "page" : undefined}
-                        className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium focus:z-20 ${
-                          page === currentPage
-                            ? "z-10 bg-blue-600 text-white shadow"
-                            : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    </li>
-                  );
-                })}
-                <li>
-                  <button
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Next"
-                  >
-                    <i className="fa fa-chevron-right" aria-hidden="true"></i>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Expense Category
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Expense Category Name */}
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Expense Category Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Expense Category Name"
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label
+                  htmlFor="editDescription"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="editDescription"
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter Description"
+                  rows={1}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

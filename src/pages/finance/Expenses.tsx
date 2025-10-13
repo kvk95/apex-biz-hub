@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const expenseHeads = [
   "Office Rent",
@@ -21,7 +22,7 @@ const paymentTypes = ["Cash", "Cheque"];
 export default function Expenses() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state
   const [form, setForm] = useState({
@@ -40,16 +41,16 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Editing state
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(expenses.length / itemsPerPage);
-
-  const paginatedExpenses = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return expenses.slice(start, start + itemsPerPage);
-  }, [currentPage, expenses]);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    date: "",
+    expenseHead: "",
+    amount: "",
+    paymentType: "",
+    note: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -68,7 +69,7 @@ export default function Expenses() {
     loadData();
   }, []);
 
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -76,7 +77,32 @@ export default function Expenses() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const resetForm = () => {
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new expense)
+  const handleSave = () => {
+    if (!form.date || !form.expenseHead || !form.amount || !form.paymentType) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    const newId = expenses.length ? Math.max(...expenses.map((e) => e.id)) + 1 : 1;
+    setExpenses((prev) => [
+      ...prev,
+      {
+        id: newId,
+        date: form.date,
+        expenseHead: form.expenseHead,
+        amount: Number(form.amount),
+        paymentType: form.paymentType,
+        note: form.note,
+      },
+    ]);
     setForm({
       date: "",
       expenseHead: "",
@@ -84,355 +110,450 @@ export default function Expenses() {
       paymentType: "",
       note: "",
     });
-    setEditingId(null);
   };
 
-  const handleSave = () => {
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = expenses.find((e) => e.id === id);
+    if (item) {
+      setEditForm({
+        date: item.date,
+        expenseHead: item.expenseHead,
+        amount: item.amount.toString(),
+        paymentType: item.paymentType,
+        note: item.note,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
     if (
-      !form.date ||
-      !form.expenseHead ||
-      !form.amount ||
-      !form.paymentType
+      !editForm.date ||
+      !editForm.expenseHead ||
+      !editForm.amount ||
+      !editForm.paymentType
     ) {
       alert("Please fill all required fields.");
       return;
     }
-
-    if (editingId !== null) {
-      // Update existing
+    if (editId !== null) {
       setExpenses((prev) =>
         prev.map((item) =>
-          item.id === editingId
+          item.id === editId
             ? {
                 ...item,
-                date: form.date,
-                expenseHead: form.expenseHead,
-                amount: Number(form.amount),
-                paymentType: form.paymentType,
-                note: form.note,
+                date: editForm.date,
+                expenseHead: editForm.expenseHead,
+                amount: Number(editForm.amount),
+                paymentType: editForm.paymentType,
+                note: editForm.note,
               }
             : item
         )
       );
-    } else {
-      // Add new
-      const newExpense = {
-        id: expenses.length ? expenses[expenses.length - 1].id + 1 : 1,
-        date: form.date,
-        expenseHead: form.expenseHead,
-        amount: Number(form.amount),
-        paymentType: form.paymentType,
-        note: form.note,
-      };
-      setExpenses((prev) => [...prev, newExpense]);
-      // If adding new item increases total pages, move to last page
-      if ((expenses.length + 1) > itemsPerPage * totalPages) {
-        setCurrentPage(totalPages + 1);
-      }
+      setEditId(null);
+      setIsEditModalOpen(false);
     }
-    resetForm();
   };
 
-  const handleEdit = (id: number) => {
-    const expense = expenses.find((e) => e.id === id);
-    if (!expense) return;
-    setForm({
-      date: expense.date,
-      expenseHead: expense.expenseHead,
-      amount: expense.amount.toString(),
-      paymentType: expense.paymentType,
-      note: expense.note,
-    });
-    setEditingId(id);
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       setExpenses((prev) => prev.filter((e) => e.id !== id));
-      // Adjust current page if needed
+      // If deleting last item on page, go to previous page if needed
       if (
-        (expenses.length - 1) <= (currentPage - 1) * itemsPerPage &&
+        (currentPage - 1) * itemsPerPage >= expenses.length - 1 &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
       }
-      if (editingId === id) {
-        resetForm();
-      }
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    resetForm();
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      date: "",
+      expenseHead: "",
+      amount: "",
+      paymentType: "",
+      note: "",
+    });
+    setEditId(null);
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo, just alert total expenses and count
     const total = expenses.reduce((acc, cur) => acc + cur.amount, 0);
     alert(`Report:\nTotal Expenses: ${expenses.length}\nTotal Amount: $${total.toFixed(2)}`);
   };
 
+  // Calculate paginated data using Pagination component props
+  const paginatedExpenses = expenses.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
-      <title>Expenses - Dreams POS</title>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Expenses</h1>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Page Title */}
-        <h1 className="text-3xl font-semibold mb-6 text-gray-900">Expenses</h1>
-
-        {/* Form Section */}
-        <section className="bg-white shadow rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Add Expense</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="grid grid-cols-1 md:grid-cols-6 gap-4"
-          >
-            {/* Date */}
-            <div className="flex flex-col">
-              <label htmlFor="date" className="mb-1 font-medium text-gray-700">
-                Date <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={form.date}
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
-            </div>
-
-            {/* Expense Head */}
-            <div className="flex flex-col">
-              <label
-                htmlFor="expenseHead"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Expense Head <span className="text-red-600">*</span>
-              </label>
-              <select
-                id="expenseHead"
-                name="expenseHead"
-                value={form.expenseHead}
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              >
-                <option value="">Select Expense Head</option>
-                {expenseHeads.map((head) => (
-                  <option key={head} value={head}>
-                    {head}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Amount */}
-            <div className="flex flex-col">
-              <label htmlFor="amount" className="mb-1 font-medium text-gray-700">
-                Amount <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="number"
-                id="amount"
-                name="amount"
-                min="0"
-                step="0.01"
-                value={form.amount}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
-            </div>
-
-            {/* Payment Type */}
-            <div className="flex flex-col">
-              <label
-                htmlFor="paymentType"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Payment Type <span className="text-red-600">*</span>
-              </label>
-              <select
-                id="paymentType"
-                name="paymentType"
-                value={form.paymentType}
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              >
-                <option value="">Select Payment Type</option>
-                {paymentTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Note */}
-            <div className="flex flex-col md:col-span-2">
-              <label htmlFor="note" className="mb-1 font-medium text-gray-700">
-                Note
-              </label>
-              <textarea
-                id="note"
-                name="note"
-                rows={1}
-                value={form.note}
-                onChange={handleInputChange}
-                placeholder="Optional note"
-                className="border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex items-end space-x-3 md:col-span-6">
-              <button
-                type="submit"
-                className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <i className="fas fa-save mr-2"></i>
-                {editingId !== null ? "Update" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="inline-flex items-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
-              >
-                <i className="fas fa-times mr-2"></i> Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              >
-                <i className="fas fa-sync-alt mr-2"></i> Refresh
-              </button>
-              <button
-                type="button"
-                onClick={handleReport}
-                className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <i className="fas fa-file-alt mr-2"></i> Report
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* Expenses Table Section */}
-        <section className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Expenses List</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 rounded-md">
-              <thead className="bg-indigo-600 text-white text-left">
-                <tr>
-                  <th className="px-4 py-3 border-r border-indigo-500 w-24">#</th>
-                  <th className="px-4 py-3 border-r border-indigo-500 w-32">Date</th>
-                  <th className="px-4 py-3 border-r border-indigo-500">Expense Head</th>
-                  <th className="px-4 py-3 border-r border-indigo-500 w-28 text-right">Amount</th>
-                  <th className="px-4 py-3 border-r border-indigo-500 w-32">Payment Type</th>
-                  <th className="px-4 py-3 border-r border-indigo-500">Note</th>
-                  <th className="px-4 py-3 w-28 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedExpenses.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-6 text-gray-500">
-                      No expenses found.
-                    </td>
-                  </tr>
-                )}
-                {paginatedExpenses.map((expense, idx) => (
-                  <tr
-                    key={expense.id}
-                    className={
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }
-                  >
-                    <td className="px-4 py-3 border-b border-gray-200">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                    <td className="px-4 py-3 border-b border-gray-200">{expense.date}</td>
-                    <td className="px-4 py-3 border-b border-gray-200">{expense.expenseHead}</td>
-                    <td className="px-4 py-3 border-b border-gray-200 text-right">${expense.amount.toFixed(2)}</td>
-                    <td className="px-4 py-3 border-b border-gray-200">{expense.paymentType}</td>
-                    <td className="px-4 py-3 border-b border-gray-200">{expense.note}</td>
-                    <td className="px-4 py-3 border-b border-gray-200 text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(expense.id)}
-                        title="Edit"
-                        className="text-indigo-600 hover:text-indigo-800 focus:outline-none"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        title="Delete"
-                        className="text-red-600 hover:text-red-800 focus:outline-none"
-                      >
-                        <i className="fas fa-trash-alt"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Expense</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+          className="grid grid-cols-1 md:grid-cols-6 gap-6"
+        >
+          {/* Date */}
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium mb-1">
+              Date <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={form.date}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+            />
           </div>
 
-          {/* Pagination Controls */}
-          <nav
-            className="mt-4 flex justify-between items-center"
-            aria-label="Table navigation"
-          >
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none ${
-                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              aria-label="Previous page"
+          {/* Expense Head */}
+          <div>
+            <label htmlFor="expenseHead" className="block text-sm font-medium mb-1">
+              Expense Head <span className="text-destructive">*</span>
+            </label>
+            <select
+              id="expenseHead"
+              name="expenseHead"
+              value={form.expenseHead}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              required
             >
-              <i className="fas fa-chevron-left mr-2"></i> Prev
-            </button>
-
-            <ul className="inline-flex -space-x-px text-sm font-medium">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <li key={page}>
-                  <button
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`px-3 py-1 border border-gray-300 ${
-                      page === currentPage
-                        ? "bg-indigo-600 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    } focus:outline-none`}
-                  >
-                    {page}
-                  </button>
-                </li>
+              <option value="">Select Expense Head</option>
+              {expenseHeads.map((head) => (
+                <option key={head} value={head}>
+                  {head}
+                </option>
               ))}
-            </ul>
+            </select>
+          </div>
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none ${
-                currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              aria-label="Next page"
+          {/* Amount */}
+          <div>
+            <label htmlFor="amount" className="block text-sm font-medium mb-1">
+              Amount <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              min="0"
+              step="0.01"
+              value={form.amount}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+            />
+          </div>
+
+          {/* Payment Type */}
+          <div>
+            <label htmlFor="paymentType" className="block text-sm font-medium mb-1">
+              Payment Type <span className="text-destructive">*</span>
+            </label>
+            <select
+              id="paymentType"
+              name="paymentType"
+              value={form.paymentType}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              required
             >
-              Next <i className="fas fa-chevron-right ml-2"></i>
+              <option value="">Select Payment Type</option>
+              {paymentTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Note */}
+          <div className="md:col-span-2">
+            <label htmlFor="note" className="block text-sm font-medium mb-1">
+              Note
+            </label>
+            <textarea
+              id="note"
+              name="note"
+              rows={1}
+              value={form.note}
+              onChange={handleInputChange}
+              placeholder="Optional note"
+              className="w-full border border-input rounded px-3 py-2 bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="md:col-span-6 mt-6 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
-          </nav>
-        </section>
-      </div>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleReport}
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <h2 className="text-xl font-semibold mb-4 px-6">Expenses List</h2>
+        <div className="overflow-x-auto px-6">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-24">#</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-32">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Expense Head</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-28">Amount</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-32">Payment Type</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Note</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground w-28">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedExpenses.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="text-center px-4 py-6 text-muted-foreground italic">
+                    No expenses found.
+                  </td>
+                </tr>
+              )}
+              {paginatedExpenses.map((expense, idx) => (
+                <tr
+                  key={expense.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{expense.date}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{expense.expenseHead}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">${expense.amount.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{expense.paymentType}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{expense.note}</td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(expense.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit expense ${expense.expenseHead}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(expense.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete expense ${expense.expenseHead}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={expenses.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Expense
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+              {/* Date */}
+              <div>
+                <label
+                  htmlFor="editDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Date <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="editDate"
+                  name="date"
+                  value={editForm.date}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Expense Head */}
+              <div>
+                <label
+                  htmlFor="editExpenseHead"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Expense Head <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="editExpenseHead"
+                  name="expenseHead"
+                  value={editForm.expenseHead}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                >
+                  <option value="">Select Expense Head</option>
+                  {expenseHeads.map((head) => (
+                    <option key={head} value={head}>
+                      {head}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label
+                  htmlFor="editAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Amount <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="editAmount"
+                  name="amount"
+                  min="0"
+                  step="0.01"
+                  value={editForm.amount}
+                  onChange={handleEditInputChange}
+                  placeholder="0.00"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Payment Type */}
+              <div>
+                <label
+                  htmlFor="editPaymentType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Payment Type <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="editPaymentType"
+                  name="paymentType"
+                  value={editForm.paymentType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                >
+                  <option value="">Select Payment Type</option>
+                  {paymentTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Note */}
+              <div className="md:col-span-2">
+                <label
+                  htmlFor="editNote"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Note
+                </label>
+                <textarea
+                  id="editNote"
+                  name="note"
+                  rows={1}
+                  value={editForm.note}
+                  onChange={handleEditInputChange}
+                  placeholder="Optional note"
+                  className="w-full border border-input rounded px-3 py-2 bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
