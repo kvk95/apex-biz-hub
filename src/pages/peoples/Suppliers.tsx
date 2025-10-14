@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 interface Supplier {
   id: number;
@@ -13,16 +14,44 @@ interface Supplier {
   status: "Active" | "Inactive";
 }
 
-const pageSize = 5;
-
 const Suppliers: React.FC = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Form state for Add Section
+  const [formData, setFormData] = useState<Omit<Supplier, "id">>({
+    supplierName: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    country: "",
+    status: "Active",
+  });
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Omit<Supplier, "id">>({
+    supplierName: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    country: "",
+    status: "Active",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Suppliers");
+    const response = await apiService.get<Supplier[]>("Suppliers");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -36,73 +65,23 @@ const Suppliers: React.FC = () => {
     loadData();
   }, []);
 
-  // State for suppliers list and pagination
-  const [suppliers, setSuppliers] = useState<Supplier[]>(data);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState<Omit<Supplier, "id">>({
-    supplierName: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    status: "Active",
-  });
-
-  // Pagination calculations
-  const totalPages = Math.ceil(suppliers.length / pageSize);
-  const paginatedSuppliers = suppliers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  // Handlers
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEditClick = (supplier: Supplier) => {
-    setEditingSupplier(supplier);
-    setFormData({
-      supplierName: supplier.supplierName,
-      contactPerson: supplier.contactPerson,
-      phone: supplier.phone,
-      email: supplier.email,
-      address: supplier.address,
-      city: supplier.city,
-      country: supplier.country,
-      status: supplier.status,
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCancel = () => {
-    setEditingSupplier(null);
-    setFormData({
-      supplierName: "",
-      contactPerson: "",
-      phone: "",
-      email: "",
-      address: "",
-      city: "",
-      country: "",
-      status: "Active",
-    });
-  };
-
+  // Save handler for Add Section (Add new supplier)
   const handleSave = () => {
     if (
       !formData.supplierName.trim() ||
@@ -113,23 +92,14 @@ const Suppliers: React.FC = () => {
       alert("Please fill in all required fields (Supplier Name, Contact Person, Phone, Email).");
       return;
     }
-    if (editingSupplier) {
-      // Update existing supplier
-      setSuppliers((prev) =>
-        prev.map((s) =>
-          s.id === editingSupplier.id ? { ...editingSupplier, ...formData } : s
-        )
-      );
-      setEditingSupplier(null);
-    } else {
-      // Add new supplier
-      const newSupplier: Supplier = {
-        id: suppliers.length ? Math.max(...suppliers.map((s) => s.id)) + 1 : 1,
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [
+      ...prev,
+      {
+        id: newId,
         ...formData,
-      };
-      setSuppliers((prev) => [...prev, newSupplier]);
-      setCurrentPage(totalPages); // Go to last page where new item is added
-    }
+      },
+    ]);
     setFormData({
       supplierName: "",
       contactPerson: "",
@@ -142,20 +112,70 @@ const Suppliers: React.FC = () => {
     });
   };
 
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        supplierName: item.supplierName,
+        contactPerson: item.contactPerson,
+        phone: item.phone,
+        email: item.email,
+        address: item.address,
+        city: item.city,
+        country: item.country,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.supplierName.trim() ||
+      !editForm.contactPerson.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.email.trim()
+    ) {
+      alert("Please fill in all required fields (Supplier Name, Contact Person, Phone, Email).");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                ...editForm,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this supplier?")) {
-      setSuppliers((prev) => prev.filter((s) => s.id !== id));
-      // Adjust current page if needed
-      if ((suppliers.length - 1) % pageSize === 0 && currentPage > 1) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
     }
   };
 
-  const handleRefresh = () => {
-    setSuppliers(data);
-    setCurrentPage(1);
-    setEditingSupplier(null);
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setFormData({
       supplierName: "",
       contactPerson: "",
@@ -166,48 +186,46 @@ const Suppliers: React.FC = () => {
       country: "",
       status: "Active",
     });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo, just alert with JSON data of suppliers
-    alert("Supplier Report:\n\n" + JSON.stringify(suppliers, null, 2));
+    alert("Supplier Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
-      {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Suppliers</h1>
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-      {/* Supplier Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          {editingSupplier ? "Edit Supplier" : "Add Supplier"}
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          noValidate
-        >
+  return (
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Suppliers</h1>
+
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Supplier</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Supplier Name */}
           <div>
             <label
               htmlFor="supplierName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Supplier Name <span className="text-red-600">*</span>
+              Supplier Name <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
-              name="supplierName"
               id="supplierName"
+              name="supplierName"
               value={formData.supplierName}
               onChange={handleInputChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Supplier Name"
+              required
             />
           </div>
 
@@ -215,19 +233,19 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="contactPerson"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Contact Person <span className="text-red-600">*</span>
+              Contact Person <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
-              name="contactPerson"
               id="contactPerson"
+              name="contactPerson"
               value={formData.contactPerson}
               onChange={handleInputChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Contact Person"
+              required
             />
           </div>
 
@@ -235,19 +253,19 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Phone <span className="text-red-600">*</span>
+              Phone <span className="text-destructive">*</span>
             </label>
             <input
               type="tel"
-              name="phone"
               id="phone"
+              name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Phone"
+              required
             />
           </div>
 
@@ -255,19 +273,19 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Email <span className="text-red-600">*</span>
+              Email <span className="text-destructive">*</span>
             </label>
             <input
               type="email"
-              name="email"
               id="email"
+              name="email"
               value={formData.email}
               onChange={handleInputChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Email"
+              required
             />
           </div>
 
@@ -275,17 +293,17 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="address"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Address
             </label>
             <textarea
-              name="address"
               id="address"
+              name="address"
               value={formData.address}
               onChange={handleInputChange}
               rows={2}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Address"
             />
           </div>
@@ -294,17 +312,17 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               City
             </label>
             <input
               type="text"
-              name="city"
               id="city"
+              name="city"
               value={formData.city}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="City"
             />
           </div>
@@ -313,17 +331,17 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="country"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Country
             </label>
             <input
               type="text"
-              name="country"
               id="country"
+              name="country"
               value={formData.country}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Country"
             />
           </div>
@@ -332,215 +350,368 @@ const Suppliers: React.FC = () => {
           <div>
             <label
               htmlFor="status"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Status
             </label>
             <select
-              name="status"
               id="status"
+              name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex items-center space-x-4 md:col-span-3 lg:col-span-3 pt-2">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded shadow transition"
-            >
-              {editingSupplier ? "Update" : "Save"}
-            </button>
-            {editingSupplier && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded shadow transition"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
-      {/* Suppliers Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Suppliers List</h2>
-          <div className="flex space-x-2">
-            <button
-              onClick={handleReport}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow transition text-sm"
-              title="Generate Report"
-              type="button"
-            >
-              Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition text-sm"
-              title="Refresh Data"
-              type="button"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200 divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Supplier Name
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Contact Person
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Phone
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Email
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Address
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   City
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Country
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedSuppliers.length === 0 ? (
+            <tbody>
+              {paginatedData.length === 0 && (
                 <tr>
                   <td
-                    colSpan={9}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    colSpan={10}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No suppliers found.
                   </td>
                 </tr>
-              ) : (
-                paginatedSuppliers.map((supplier) => (
-                  <tr key={supplier.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.supplierName}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.contactPerson}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.phone}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.email}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 max-w-xs truncate">
-                      {supplier.address}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.city}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      {supplier.country}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
-                      <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                          supplier.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {supplier.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center space-x-2">
-                      <button
-                        onClick={() => handleEditClick(supplier)}
-                        className="text-indigo-600 hover:text-indigo-900 font-semibold text-sm"
-                        title="Edit Supplier"
-                        type="button"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(supplier.id)}
-                        className="text-red-600 hover:text-red-900 font-semibold text-sm"
-                        title="Delete Supplier"
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
               )}
+              {paginatedData.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.supplierName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.contactPerson}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.phone}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.email}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground max-w-xs truncate">
+                    {item.address}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.city}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.country}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit supplier ${item.supplierName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete supplier ${item.supplierName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <nav
-          className="mt-4 flex justify-between items-center"
-          aria-label="Table navigation"
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
         >
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ${
-              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            aria-label="Previous Page"
-            type="button"
-          >
-            &laquo; Prev
-          </button>
-          <div className="space-x-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Supplier
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Supplier Name */}
+              <div>
+                <label
+                  htmlFor="editSupplierName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Supplier Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editSupplierName"
+                  name="supplierName"
+                  value={editForm.supplierName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Supplier Name"
+                  required
+                />
+              </div>
+
+              {/* Contact Person */}
+              <div>
+                <label
+                  htmlFor="editContactPerson"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Contact Person <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editContactPerson"
+                  name="contactPerson"
+                  value={editForm.contactPerson}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Contact Person"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Phone <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="editPhone"
+                  name="phone"
+                  value={editForm.phone}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Phone"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Email"
+                  required
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label
+                  htmlFor="editAddress"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Address
+                </label>
+                <textarea
+                  id="editAddress"
+                  name="address"
+                  value={editForm.address}
+                  onChange={handleEditInputChange}
+                  rows={2}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  placeholder="Address"
+                />
+              </div>
+
+              {/* City */}
+              <div>
+                <label
+                  htmlFor="editCity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  City
+                </label>
+                <input
+                  type="text"
+                  id="editCity"
+                  name="city"
+                  value={editForm.city}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="City"
+                />
+              </div>
+
+              {/* Country */}
+              <div>
+                <label
+                  htmlFor="editCountry"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Country
+                </label>
+                <input
+                  type="text"
+                  id="editCountry"
+                  name="country"
+                  value={editForm.country}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Country"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded border ${
-                  page === currentPage
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                }`}
-                aria-current={page === currentPage ? "page" : undefined}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
-                {page}
+                Cancel
               </button>
-            ))}
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 ${
-              currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            aria-label="Next Page"
-            type="button"
-          >
-            Next &raquo;
-          </button>
-        </nav>
-      </section>
+        </div>
+      )}
     </div>
   );
 };

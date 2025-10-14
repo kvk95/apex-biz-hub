@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 interface Biller {
   id: number;
@@ -14,35 +15,49 @@ interface Biller {
   createdAt: string;
 }
 
-const ITEMS_PER_PAGE = 5;
-
 const Billers: React.FC = () => {
-  // State for form fields
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [gstNo, setGstNo] = useState("");
-  const [createdAt, setCreatedAt] = useState("");
+  // Form state for Add Section
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "",
+    postalCode: "",
+    gstNo: "",
+    createdAt: "",
+  });
 
-  // State for billers list and pagination
-  const [billers, setBillers] = useState<Biller[]>([]);
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // State for API data handling
-  const [data, setData] = useState([]);
+  // Data state
+  const [billers, setBillers] = useState<Biller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // API call logic
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "",
+    postalCode: "",
+    gstNo: "",
+    createdAt: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Load data from API
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<[]>("Billers");
     if (response.status.code === "S") {
-      setData(response.result);
       setBillers(response.result);
       setError(null);
     } else {
@@ -55,109 +70,136 @@ const Billers: React.FC = () => {
     loadData();
   }, []);
 
-  // State for editing
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(billers.length / ITEMS_PER_PAGE);
-  const paginatedBillers = billers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  // Reset form fields
-  const resetForm = () => {
-    setName("");
-    setEmail("");
-    setPhone("");
-    setAddress("");
-    setCity("");
-    setCountry("");
-    setPostalCode("");
-    setGstNo("");
-    setCreatedAt("");
-    setEditingId(null);
+  // Handlers for Add Section form inputs
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle Save (Add or Update)
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section
   const handleSave = () => {
     if (
-      !name.trim() ||
-      !email.trim() ||
-      !phone.trim() ||
-      !address.trim() ||
-      !city.trim() ||
-      !country.trim() ||
-      !postalCode.trim() ||
-      !gstNo.trim()
+      !form.name.trim() ||
+      !form.email.trim() ||
+      !form.phone.trim() ||
+      !form.address.trim() ||
+      !form.city.trim() ||
+      !form.country.trim() ||
+      !form.postalCode.trim() ||
+      !form.gstNo.trim()
     ) {
       alert("Please fill all required fields.");
       return;
     }
 
-    if (editingId !== null) {
-      // Update existing biller
+    const newBiller: Biller = {
+      id: billers.length ? Math.max(...billers.map((b) => b.id)) + 1 : 1,
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+      city: form.city.trim(),
+      country: form.country.trim(),
+      postalCode: form.postalCode.trim(),
+      gstNo: form.gstNo.trim(),
+      createdAt: form.createdAt || new Date().toISOString().split("T")[0],
+    };
+    setBillers((prev) => [...prev, newBiller]);
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      country: "",
+      postalCode: "",
+      gstNo: "",
+      createdAt: "",
+    });
+  };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const biller = billers.find((b) => b.id === id);
+    if (biller) {
+      setEditForm({
+        name: biller.name,
+        email: biller.email,
+        phone: biller.phone,
+        address: biller.address,
+        city: biller.city,
+        country: biller.country,
+        postalCode: biller.postalCode,
+        gstNo: biller.gstNo,
+        createdAt: biller.createdAt,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.name.trim() ||
+      !editForm.email.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.address.trim() ||
+      !editForm.city.trim() ||
+      !editForm.country.trim() ||
+      !editForm.postalCode.trim() ||
+      !editForm.gstNo.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
       setBillers((prev) =>
         prev.map((b) =>
-          b.id === editingId
+          b.id === editId
             ? {
                 ...b,
-                name,
-                email,
-                phone,
-                address,
-                city,
-                country,
-                postalCode,
-                gstNo,
-                createdAt: createdAt || b.createdAt,
+                name: editForm.name.trim(),
+                email: editForm.email.trim(),
+                phone: editForm.phone.trim(),
+                address: editForm.address.trim(),
+                city: editForm.city.trim(),
+                country: editForm.country.trim(),
+                postalCode: editForm.postalCode.trim(),
+                gstNo: editForm.gstNo.trim(),
+                createdAt: editForm.createdAt || b.createdAt,
               }
             : b
         )
       );
-    } else {
-      // Add new biller
-      const newBiller: Biller = {
-        id: billers.length ? billers[billers.length - 1].id + 1 : 1,
-        name,
-        email,
-        phone,
-        address,
-        city,
-        country,
-        postalCode,
-        gstNo,
-        createdAt: createdAt || new Date().toISOString().split("T")[0],
-      };
-      setBillers((prev) => [...prev, newBiller]);
-      setCurrentPage(totalPages); // Go to last page if new added
+      setEditId(null);
+      setIsEditModalOpen(false);
     }
-    resetForm();
   };
 
-  // Handle Edit
-  const handleEdit = (biller: Biller) => {
-    setEditingId(biller.id);
-    setName(biller.name);
-    setEmail(biller.email);
-    setPhone(biller.phone);
-    setAddress(biller.address);
-    setCity(biller.city);
-    setCountry(biller.country);
-    setPostalCode(biller.postalCode);
-    setGstNo(biller.gstNo);
-    setCreatedAt(biller.createdAt);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
-  // Handle Delete
+  // Delete handler
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this biller?")) {
       setBillers((prev) => prev.filter((b) => b.id !== id));
       // Adjust page if needed
       if (
-        (billers.length - 1) % ITEMS_PER_PAGE === 0 &&
-        currentPage === totalPages &&
+        (currentPage - 1) * itemsPerPage >= billers.length - 1 &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -165,257 +207,268 @@ const Billers: React.FC = () => {
     }
   };
 
-  // Handle Refresh (reset form)
-  const handleRefresh = () => {
-    resetForm();
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      country: "",
+      postalCode: "",
+      gstNo: "",
+      createdAt: "",
+    });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
-  // Handle Report (dummy alert)
+  // Report handler
   const handleReport = () => {
-    alert("Report generated (dummy action).");
+    alert("Report Data:\n" + JSON.stringify(billers, null, 2));
   };
 
-  // Pagination controls
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
+  // Calculate paginated data using Pagination component props
+  const paginatedBillers = billers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
-      <title>Billers - Dreams POS</title>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Billers</h1>
 
-      {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6">Billers</h1>
-
-      {/* Form Section */}
-      <section className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Biller</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          noValidate
-        >
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Biller</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Name */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">
               Name <span className="text-red-600">*</span>
             </label>
             <input
-              id="name"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="name"
+              name="name"
+              value={form.name}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter name"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Email */}
-          <div className="flex flex-col">
-            <label htmlFor="email" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email <span className="text-red-600">*</span>
             </label>
             <input
-              id="email"
               type="email"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="email"
+              name="email"
+              value={form.email}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter email"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Phone */}
-          <div className="flex flex-col">
-            <label htmlFor="phone" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium mb-1">
               Phone <span className="text-red-600">*</span>
             </label>
             <input
-              id="phone"
               type="tel"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              id="phone"
+              name="phone"
+              value={form.phone}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter phone"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Address */}
-          <div className="flex flex-col">
-            <label htmlFor="address" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium mb-1">
               Address <span className="text-red-600">*</span>
             </label>
             <input
-              id="address"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              id="address"
+              name="address"
+              value={form.address}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter address"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* City */}
-          <div className="flex flex-col">
-            <label htmlFor="city" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium mb-1">
               City <span className="text-red-600">*</span>
             </label>
             <input
-              id="city"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
+              id="city"
+              name="city"
+              value={form.city}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter city"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Country */}
-          <div className="flex flex-col">
-            <label htmlFor="country" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium mb-1">
               Country <span className="text-red-600">*</span>
             </label>
             <input
-              id="country"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              id="country"
+              name="country"
+              value={form.country}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter country"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Postal Code */}
-          <div className="flex flex-col">
-            <label htmlFor="postalCode" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="postalCode" className="block text-sm font-medium mb-1">
               Postal Code <span className="text-red-600">*</span>
             </label>
             <input
-              id="postalCode"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
+              id="postalCode"
+              name="postalCode"
+              value={form.postalCode}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter postal code"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* GST No */}
-          <div className="flex flex-col">
-            <label htmlFor="gstNo" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="gstNo" className="block text-sm font-medium mb-1">
               GST No <span className="text-red-600">*</span>
             </label>
             <input
-              id="gstNo"
               type="text"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={gstNo}
-              onChange={(e) => setGstNo(e.target.value)}
+              id="gstNo"
+              name="gstNo"
+              value={form.gstNo}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter GST No"
               required
-              autoComplete="off"
             />
           </div>
 
           {/* Created At */}
-          <div className="flex flex-col">
-            <label htmlFor="createdAt" className="mb-1 font-medium">
+          <div>
+            <label htmlFor="createdAt" className="block text-sm font-medium mb-1">
               Created At
             </label>
             <input
-              id="createdAt"
               type="date"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={createdAt}
-              onChange={(e) => setCreatedAt(e.target.value)}
-              autoComplete="off"
+              id="createdAt"
+              name="createdAt"
+              value={form.createdAt}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex items-end space-x-4 md:col-span-3">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded transition"
-            >
-              {editingId !== null ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded transition"
-            >
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded transition"
-            >
-              Report
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
-      {/* Billers Table Section */}
-      <section className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Billers List</h2>
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Name
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Email
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Phone
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Address
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   City
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Country
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Postal Code
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   GST No
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Created At
                 </th>
-                <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {loading ? (
                 <tr>
                   <td
                     colSpan={11}
-                    className="text-center py-4 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     Loading...
                   </td>
@@ -424,58 +477,63 @@ const Billers: React.FC = () => {
                 <tr>
                   <td
                     colSpan={11}
-                    className="text-center py-4 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No billers found.
                   </td>
                 </tr>
               ) : (
                 paginatedBillers.map((biller, idx) => (
-                  <tr key={biller.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                      {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
+                  <tr
+                    key={biller.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.name}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.email}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.phone}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.address}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.city}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.country}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.postalCode}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.gstNo}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {biller.createdAt}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
-                        onClick={() => handleEdit(biller)}
-                        className="text-indigo-600 hover:text-indigo-900 font-semibold"
+                        onClick={() => handleEdit(biller.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
                         aria-label={`Edit biller ${biller.name}`}
+                        type="button"
                       >
-                        Edit
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(biller.id)}
-                        className="text-red-600 hover:text-red-900 font-semibold"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
                         aria-label={`Delete biller ${biller.name}`}
+                        type="button"
                       >
-                        Delete
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -486,51 +544,230 @@ const Billers: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <nav
-          className="mt-6 flex justify-center items-center space-x-2"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous page"
-          >
-            &laquo;
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => goToPage(page)}
-              className={`px-3 py-1 rounded border border-gray-300 ${
-                page === currentPage
-                  ? "bg-indigo-600 text-white"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-current={page === currentPage ? "page" : undefined}
-              aria-label={`Page ${page}`}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next page"
-          >
-            &raquo;
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={billers.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Biller
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter name"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter email"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Phone <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="editPhone"
+                  name="phone"
+                  value={editForm.phone}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter phone"
+                  required
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label
+                  htmlFor="editAddress"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Address <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editAddress"
+                  name="address"
+                  value={editForm.address}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter address"
+                  required
+                />
+              </div>
+
+              {/* City */}
+              <div>
+                <label
+                  htmlFor="editCity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  City <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editCity"
+                  name="city"
+                  value={editForm.city}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter city"
+                  required
+                />
+              </div>
+
+              {/* Country */}
+              <div>
+                <label
+                  htmlFor="editCountry"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Country <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editCountry"
+                  name="country"
+                  value={editForm.country}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter country"
+                  required
+                />
+              </div>
+
+              {/* Postal Code */}
+              <div>
+                <label
+                  htmlFor="editPostalCode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Postal Code <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editPostalCode"
+                  name="postalCode"
+                  value={editForm.postalCode}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter postal code"
+                  required
+                />
+              </div>
+
+              {/* GST No */}
+              <div>
+                <label
+                  htmlFor="editGstNo"
+                  className="block text-sm font-medium mb-1"
+                >
+                  GST No <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editGstNo"
+                  name="gstNo"
+                  value={editForm.gstNo}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter GST No"
+                  required
+                />
+              </div>
+
+              {/* Created At */}
+              <div>
+                <label
+                  htmlFor="editCreatedAt"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Created At
+                </label>
+                <input
+                  type="date"
+                  id="editCreatedAt"
+                  name="createdAt"
+                  value={editForm.createdAt}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
