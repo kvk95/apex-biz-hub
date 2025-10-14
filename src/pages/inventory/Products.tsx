@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const categories = [
   "All Categories",
@@ -20,7 +21,19 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    productName: "",
+    category: categories[1],
+    price: "",
+    stock: "",
+    status: statuses[1],
+    image: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -54,8 +67,7 @@ export default function Products() {
       );
   }, [data, searchTerm, selectedCategory, selectedStatus]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  // Paginated products using Pagination component props
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -77,11 +89,6 @@ export default function Products() {
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
   const handleRefresh = () => {
     setSearchTerm("");
     setSelectedCategory("All Categories");
@@ -89,153 +96,205 @@ export default function Products() {
     setCurrentPage(1);
   };
 
-  const handleReport = () => {
-    alert("Report functionality is not implemented in this demo.");
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        productName: item.productName,
+        category: item.category,
+        price: item.price.toString(),
+        stock: item.stock.toString(),
+        status: item.status,
+        image: item.image,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.productName.trim() ||
+      !editForm.price ||
+      !editForm.stock ||
+      !editForm.category ||
+      !editForm.status
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                productName: editForm.productName.trim(),
+                category: editForm.category,
+                price: Number(editForm.price),
+                stock: Number(editForm.stock),
+                status: editForm.status,
+                image: editForm.image,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Delete handler
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredProducts.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
   };
 
   return (
     <>
       <title>Products - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-        <div className="container mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-3xl font-semibold text-gray-900 mb-4 md:mb-0">
-              Products
-            </h1>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleReport}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow"
-                title="Generate Report"
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6">Products</h1>
+
+        {/* Filters Section */}
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="grid grid-cols-1 md:grid-cols-4 gap-6"
+          >
+            <div>
+              <label
+                htmlFor="search"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
-                <i className="fas fa-file-alt mr-2" aria-hidden="true"></i>
-                Report
-              </button>
+                Search Product
+              </label>
+              <input
+                id="search"
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search by product name"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
+              >
+                Category
+              </label>
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statuses.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-end">
               <button
+                type="button"
                 onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium rounded shadow"
-                title="Refresh"
+                className="w-full inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                title="Clear Filters"
               >
-                <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i>
-                Refresh
+                <i className="fa fa-times fa-light" aria-hidden="true"></i>
+                Clear Filters
               </button>
             </div>
-          </div>
+          </form>
+        </section>
 
-          {/* Filters */}
-          <div className="bg-white rounded shadow p-4 mb-6">
-            <form
-              onSubmit={(e) => e.preventDefault()}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4"
-            >
-              <div>
-                <label
-                  htmlFor="search"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Search Product
-                </label>
-                <input
-                  id="search"
-                  type="text"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  placeholder="Search by product name"
-                  className="block w-full rounded border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="category"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  value={selectedCategory}
-                  onChange={handleCategoryChange}
-                  className="block w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  value={selectedStatus}
-                  onChange={handleStatusChange}
-                  className="block w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50"
-                >
-                  {statuses.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium rounded shadow"
-                  title="Clear Filters"
-                >
-                  <i className="fas fa-times mr-2" aria-hidden="true"></i>
-                  Clear Filters
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Products Table */}
-          <div className="bg-white rounded shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left font-medium text-gray-700 uppercase tracking-wider">
+        {/* Products Table */}
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     #
                   </th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-right font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                     Price ($)
                   </th>
-                  <th className="px-6 py-3 text-right font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                     Stock
                   </th>
-                  <th className="px-6 py-3 text-center font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-center font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {loading ? (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-4 text-center text-gray-500"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       Loading...
                     </td>
@@ -244,7 +303,7 @@ export default function Products() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-4 text-center text-gray-500"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No products found.
                     </td>
@@ -253,63 +312,63 @@ export default function Products() {
                   paginatedProducts.map((product, idx) => (
                     <tr
                       key={product.id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {(currentPage - 1) * itemsPerPage + idx + 1}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap flex items-center space-x-3">
+                      <td className="px-4 py-3 text-sm text-foreground flex items-center space-x-3">
                         <img
                           src={product.image}
                           alt={product.productName}
                           className="w-12 h-12 rounded object-contain"
                         />
-                        <span className="font-medium text-gray-900">
-                          {product.productName}
-                        </span>
+                        <span>{product.productName}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {product.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-700 font-semibold">
+                      <td className="px-4 py-3 text-sm text-foreground text-right font-semibold">
                         {product.price.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-700">
+                      <td className="px-4 py-3 text-sm text-foreground text-right">
                         {product.stock}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 text-sm text-foreground text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             product.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                         >
                           {product.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
+                      <td className="px-4 py-3 text-center text-sm space-x-3">
                         <button
+                          onClick={() => handleEdit(product.id)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit product ${product.productName}`}
+                          type="button"
                           title="Edit"
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() =>
-                            alert(
-                              `Edit functionality is not implemented. Product: ${product.productName}`
-                            )
-                          }
                         >
-                          <i className="fas fa-edit"></i>
+                          <i
+                            className="fa fa-pencil fa-light"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                         <button
+                          onClick={() => handleDelete(product.id)}
+                          className="text-destructive hover:text-destructive/80 transition-colors"
+                          aria-label={`Delete product ${product.productName}`}
+                          type="button"
                           title="Delete"
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() =>
-                            alert(
-                              `Delete functionality is not implemented. Product: ${product.productName}`
-                            )
-                          }
                         >
-                          <i className="fas fa-trash-alt"></i>
+                          <i
+                            className="fa fa-trash fa-light"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                       </td>
                     </tr>
@@ -320,90 +379,176 @@ export default function Products() {
           </div>
 
           {/* Pagination */}
-          <nav
-            className="flex items-center justify-between py-3"
-            aria-label="Table navigation"
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredProducts.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
           >
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 ${
-                  currentPage === 1
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                }`}
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
+                Edit Product
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Product Name */}
+                <div>
+                  <label
+                    htmlFor="editProductName"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editProductName"
+                    name="productName"
+                    value={editForm.productName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label
+                    htmlFor="editCategory"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="editCategory"
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {categories.slice(1).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label
+                    htmlFor="editPrice"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Price
+                  </label>
+                  <input
+                    type="number"
+                    id="editPrice"
+                    name="price"
+                    value={editForm.price}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter price"
+                  />
+                </div>
+
+                {/* Stock */}
+                <div>
+                  <label
+                    htmlFor="editStock"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Stock
+                  </label>
+                  <input
+                    type="number"
+                    id="editStock"
+                    name="stock"
+                    value={editForm.stock}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter stock quantity"
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {statuses.slice(1).map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Image URL */}
+                <div>
+                  <label
+                    htmlFor="editImage"
+                    className="block text-sm font-medium mb-1 text-muted-foreground"
+                  >
+                    Image URL
+                  </label>
+                  <input
+                    type="text"
+                    id="editImage"
+                    name="image"
+                    value={editForm.image}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter image URL"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === 1
-                        ? "cursor-not-allowed opacity-50"
-                        : "cursor-pointer"
-                    }`}
-                    aria-label="Previous"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-
-                  {/* Page numbers */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        aria-current={page === currentPage ? "page" : undefined}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === currentPage
-                            ? "z-10 bg-blue-600 border-blue-600 text-white"
-                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === totalPages || totalPages === 0
-                        ? "cursor-not-allowed opacity-50"
-                        : "cursor-pointer"
-                    }`}
-                    aria-label="Next"
-                  >
-                    <span className="sr-only">Next</span>
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </nav>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
               </div>
             </div>
-          </nav>
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

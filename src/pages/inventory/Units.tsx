@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 type Unit = {
   id: number;
@@ -11,7 +12,7 @@ type Unit = {
 export default function Units() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Units state
   const [data, setData] = useState<Unit[]>([]);
@@ -34,7 +35,7 @@ export default function Units() {
     loadData();
   }, []);
 
-  // Form state for add/edit
+  // Form state for add section (preserved exactly)
   const [unitName, setUnitName] = useState("");
   const [shortName, setShortName] = useState("");
   const [description, setDescription] = useState("");
@@ -51,73 +52,107 @@ export default function Units() {
       u.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
-  const paginatedUnits = filteredUnits.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   // Reset page if filteredUnits length changes and currentPage is out of range
   useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(1);
-  }, [filteredUnits, currentPage, totalPages]);
+    if (currentPage > Math.ceil(filteredUnits.length / itemsPerPage)) setCurrentPage(1);
+  }, [filteredUnits, currentPage, itemsPerPage]);
 
-  // Handlers for form inputs
+  // Handlers for form inputs (Add Section)
   const handleUnitNameChange = (e: ChangeEvent<HTMLInputElement>) => setUnitName(e.target.value);
   const handleShortNameChange = (e: ChangeEvent<HTMLInputElement>) => setShortName(e.target.value);
   const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => setDescription(e.target.value);
 
-  // Handle form submit for add/edit
+  // Handle form submit for add section (Add new unit)
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!unitName.trim() || !shortName.trim()) return; // Required fields
-
-    if (editId !== null) {
-      // Edit existing
-      setData((prev) =>
-        prev.map((u) =>
-          u.id === editId ? { ...u, unitName: unitName.trim(), shortName: shortName.trim(), description: description.trim() } : u
-        )
-      );
-    } else {
-      // Add new
-      const newUnit: Unit = {
-        id: data.length > 0 ? Math.max(...data.map((u) => u.id)) + 1 : 1,
-        unitName: unitName.trim(),
-        shortName: shortName.trim(),
-        description: description.trim(),
-      };
-      setData((prev) => [...prev, newUnit]);
+    if (!unitName.trim() || !shortName.trim()) {
+      alert("Please fill all required fields.");
+      return;
     }
+
+    const newUnit: Unit = {
+      id: data.length > 0 ? Math.max(...data.map((u) => u.id)) + 1 : 1,
+      unitName: unitName.trim(),
+      shortName: shortName.trim(),
+      description: description.trim(),
+    };
+    setData((prev) => [...prev, newUnit]);
 
     // Reset form
     setUnitName("");
     setShortName("");
     setDescription("");
-    setEditId(null);
   };
 
-  // Handle edit button click
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    unitName: "",
+    shortName: "",
+    description: "",
+  });
+
+  // Open edit modal and populate edit form
   const handleEdit = (unit: Unit) => {
+    setEditForm({
+      unitName: unit.unitName,
+      shortName: unit.shortName,
+      description: unit.description,
+    });
     setEditId(unit.id);
-    setUnitName(unit.unitName);
-    setShortName(unit.shortName);
-    setDescription(unit.description);
+    setIsEditModalOpen(true);
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.unitName.trim() || !editForm.shortName.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                unitName: editForm.unitName.trim(),
+                shortName: editForm.shortName.trim(),
+                description: editForm.description.trim(),
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   // Handle delete button click
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this unit?")) {
       setData((prev) => prev.filter((u) => u.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredUnits.length - 1) {
-        setCurrentPage((p) => (p > 1 ? p - 1 : 1));
+      if ((currentPage - 1) * itemsPerPage >= filteredUnits.length - 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
       }
     }
   };
 
-  // Handle refresh button click - resets form and search
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setUnitName("");
     setShortName("");
     setDescription("");
@@ -131,158 +166,141 @@ export default function Units() {
     alert("Units Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  // Pagination controls
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
+  // Paginated units using Pagination component props
+  const paginatedUnits = filteredUnits.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      {/* Page Title */}
-      <title>DreamsPOS - Units</title>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Units</h1>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Units</h1>
-          <div className="flex gap-2">
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div>
+            <label htmlFor="unitName" className="block text-sm font-medium mb-1">
+              Unit Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              id="unitName"
+              type="text"
+              name="unitName"
+              value={unitName}
+              onChange={handleUnitNameChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter Unit Name"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="shortName" className="block text-sm font-medium mb-1">
+              Short Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              id="shortName"
+              type="text"
+              name="shortName"
+              value={shortName}
+              onChange={handleShortNameChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter Short Name"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium mb-1">
+              Description
+            </label>
+            <input
+              id="description"
+              type="text"
+              name="description"
+              value={description}
+              onChange={handleDescriptionChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter Description"
+            />
+          </div>
+          <div className="flex gap-3">
             <button
-              onClick={handleReport}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition"
-              title="Report"
-              type="button"
+              type="submit"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-file-alt"></i> Report
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
             <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow transition"
-              title="Refresh"
               type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-sync-alt"></i> Refresh
+              <i className="fa fa-times fa-light" aria-hidden="true"></i> Clear
             </button>
           </div>
-        </div>
+        </form>
+      </section>
 
-        {/* Form Section */}
-        <div className="bg-white rounded shadow p-6 mb-6">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div>
-              <label htmlFor="unitName" className="block text-sm font-medium text-gray-700 mb-1">
-                Unit Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="unitName"
-                type="text"
-                value={unitName}
-                onChange={handleUnitNameChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter Unit Name"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 mb-1">
-                Short Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="shortName"
-                type="text"
-                value={shortName}
-                onChange={handleShortNameChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter Short Name"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <input
-                id="description"
-                type="text"
-                value={description}
-                onChange={handleDescriptionChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter Description"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded shadow flex items-center gap-2 transition"
-                title={editId !== null ? "Update Unit" : "Save Unit"}
-              >
-                <i className="fas fa-save"></i> {editId !== null ? "Update" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2 rounded shadow flex items-center gap-2 transition"
-                title="Clear Form"
-              >
-                <i className="fas fa-times"></i> Clear
-              </button>
-            </div>
-          </form>
-        </div>
+      {/* Search Section */}
+      <div className="mb-4 flex justify-end">
+        <input
+          type="text"
+          placeholder="Search Units..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border border-input rounded px-3 py-2 w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
 
-        {/* Search Section */}
-        <div className="mb-4 flex justify-end">
-          <input
-            type="text"
-            placeholder="Search Units..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Table Section */}
-        <div className="overflow-x-auto bg-white rounded shadow">
-          <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">#</th>
-                <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Unit Name</th>
-                <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Short Name</th>
-                <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider text-center">Actions</th>
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">#</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Unit Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Short Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Description</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {paginatedUnits.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={5} className="text-center px-4 py-6 text-muted-foreground italic">
                     No units found.
                   </td>
                 </tr>
               ) : (
                 paginatedUnits.map((unit, idx) => (
-                  <tr key={unit.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{unit.unitName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{unit.shortName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{unit.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
+                  <tr
+                    key={unit.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">{unit.unitName}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{unit.shortName}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{unit.description}</td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(unit)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit Unit"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit unit ${unit.unitName}`}
                         type="button"
                       >
-                        <i className="fas fa-edit"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(unit.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete Unit"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete unit ${unit.unitName}`}
                         type="button"
                       >
-                        <i className="fas fa-trash-alt"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -292,143 +310,95 @@ export default function Units() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 mt-4"
-          aria-label="Pagination"
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredUnits.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
         >
-          <div className="flex flex-1 justify-between sm:hidden">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              aria-label="Previous"
-              type="button"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                currentPage === totalPages || totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              aria-label="Next"
-              type="button"
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-medium">
-                  {(currentPage - 1) * itemsPerPage + 1 > filteredUnits.length
-                    ? 0
-                    : (currentPage - 1) * itemsPerPage + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium">
-                  {currentPage * itemsPerPage > filteredUnits.length
-                    ? filteredUnits.length
-                    : currentPage * itemsPerPage}
-                </span>{" "}
-                of <span className="font-medium">{filteredUnits.length}</span> results
-              </p>
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2 id="edit-modal-title" className="text-xl font-semibold mb-4 text-center">
+              Edit Unit
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label htmlFor="editUnitName" className="block text-sm font-medium mb-1">
+                  Unit Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editUnitName"
+                  name="unitName"
+                  value={editForm.unitName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Unit Name"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="editShortName" className="block text-sm font-medium mb-1">
+                  Short Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editShortName"
+                  name="shortName"
+                  value={editForm.shortName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Short Name"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="editDescription" className="block text-sm font-medium mb-1">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  id="editDescription"
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Description"
+                />
+              </div>
             </div>
-            <div>
-              <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-                <li>
-                  <button
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    aria-label="Previous"
-                    type="button"
-                  >
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-                </li>
 
-                {/* Show page numbers with ellipsis if many pages */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    if (totalPages <= 7) return true;
-                    if (page === 1 || page === totalPages) return true;
-                    if (page >= currentPage - 1 && page <= currentPage + 1) return true;
-                    if (currentPage <= 3 && page <= 4) return true;
-                    if (currentPage >= totalPages - 2 && page >= totalPages - 3) return true;
-                    return false;
-                  })
-                  .map((page, idx, arr) => {
-                    // Add ellipsis if gap between pages
-                    if (
-                      idx > 0 &&
-                      page - arr[idx - 1] > 1
-                    ) {
-                      return (
-                        <React.Fragment key={"ellipsis-" + page}>
-                          <li className="relative inline-flex items-center border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 select-none cursor-default">
-                            &hellip;
-                          </li>
-                          <li key={page}>
-                            <button
-                              onClick={() => goToPage(page)}
-                              aria-current={page === currentPage ? "page" : undefined}
-                              className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium ${
-                                page === currentPage
-                                  ? "z-10 bg-blue-600 text-white"
-                                  : "bg-white text-gray-700 hover:bg-gray-50"
-                              }`}
-                              type="button"
-                            >
-                              {page}
-                            </button>
-                          </li>
-                        </React.Fragment>
-                      );
-                    }
-                    return (
-                      <li key={page}>
-                        <button
-                          onClick={() => goToPage(page)}
-                          aria-current={page === currentPage ? "page" : undefined}
-                          className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium ${
-                            page === currentPage
-                              ? "z-10 bg-blue-600 text-white"
-                              : "bg-white text-gray-700 hover:bg-gray-50"
-                          }`}
-                          type="button"
-                        >
-                          {page}
-                        </button>
-                      </li>
-                    );
-                  })}
-
-                <li>
-                  <button
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === totalPages || totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    aria-label="Next"
-                    type="button"
-                  >
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </li>
-              </ul>
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
             </div>
           </div>
-        </nav>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

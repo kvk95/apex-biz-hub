@@ -1,7 +1,8 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const pageSize = 5;
+const statusOptions = ["Active", "Inactive"];
 
 const VariantAttributes: React.FC = () => {
   const [data, setData] = useState([]);
@@ -24,14 +25,28 @@ const VariantAttributes: React.FC = () => {
     loadData();
   }, []);
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Form state for Add Section (preserved exactly)
   const [variantName, setVariantName] = useState("");
   const [variantValue, setVariantValue] = useState("");
-  const [status, setStatus] = useState("Active");
+  const [status, setStatus] = useState(statusOptions[0]);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    variantName: "",
+    variantValue: "",
+    status: statusOptions[0],
+  });
   const [editId, setEditId] = useState<number | null>(null);
+
+  // Search term
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filtered and paginated data
+  // Filtered data based on search
   const filteredData = data.filter(
     (item) =>
       item.variantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,66 +54,112 @@ const VariantAttributes: React.FC = () => {
       item.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const pageCount = Math.ceil(filteredData.length / pageSize);
+  // Paginated data using Pagination component props
   const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  // Reset form fields
+  // Reset Add Section form fields
   const resetForm = () => {
     setVariantName("");
     setVariantValue("");
-    setStatus("Active");
+    setStatus(statusOptions[0]);
     setEditId(null);
   };
 
-  // Handle save (add or update)
+  // Handlers for Add Section form inputs
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    if (name === "variantName") setVariantName(value);
+    else if (name === "variantValue") setVariantValue(value);
+    else if (name === "status") setStatus(value);
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new variant)
   const handleSave = () => {
     if (!variantName.trim() || !variantValue.trim()) {
       alert("Please fill all fields.");
       return;
     }
-    if (editId !== null) {
-      // Update existing
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? { ...item, variantName, variantValue, status }
-            : item
-        )
-      );
-    } else {
-      // Add new
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [
-        ...prev,
-        { id: newId, variantName, variantValue, status },
-      ]);
-    }
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [
+      ...prev,
+      { id: newId, variantName: variantName.trim(), variantValue: variantValue.trim(), status },
+    ]);
     resetForm();
   };
 
-  // Handle edit
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const item = data.find((d) => d.id === id);
-    if (!item) return;
-    setVariantName(item.variantName);
-    setVariantValue(item.variantValue);
-    setStatus(item.status);
-    setEditId(id);
+    if (item) {
+      setEditForm({
+        variantName: item.variantName,
+        variantValue: item.variantValue,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.variantName.trim() ||
+      !editForm.variantValue.trim()
+    ) {
+      alert("Please fill all fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                variantName: editForm.variantName.trim(),
+                variantValue: editForm.variantValue.trim(),
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   // Handle delete
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this variant?")) {
       setData((prev) => prev.filter((item) => item.id !== id));
-      if (editId === id) resetForm();
+      if (editId === id) {
+        setEditId(null);
+        setIsEditModalOpen(false);
+      }
     }
   };
 
-  // Handle refresh (reset filters and form)
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setSearchTerm("");
     resetForm();
     setCurrentPage(1);
@@ -106,229 +167,203 @@ const VariantAttributes: React.FC = () => {
 
   // Handle report (simulate export)
   const handleReport = () => {
-    // For demo, just alert JSON string of current filtered data
-    alert(
-      "Report Data:\n" + JSON.stringify(filteredData, null, 2)
-    );
-  };
-
-  // Pagination controls
-  const goToPage = (page: number) => {
-    if (page < 1 || page > pageCount) return;
-    setCurrentPage(page);
+    alert("Report Data:\n" + JSON.stringify(filteredData, null, 2));
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      <title>Variant Attributes</title>
-      <div className="container mx-auto px-4 py-6">
-        {/* Page Title */}
-        <h1 className="text-2xl font-semibold mb-6">Variant Attributes</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Variant Attributes</h1>
 
-        {/* Form Section */}
-        <div className="bg-white rounded shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Add / Edit Variant</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
-            noValidate
-          >
-            {/* Variant Name */}
-            <div>
-              <label
-                htmlFor="variantName"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Variant Name
-              </label>
-              <input
-                id="variantName"
-                type="text"
-                value={variantName}
-                onChange={(e) => setVariantName(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                placeholder="Enter Variant Name"
-                required
-              />
-            </div>
-
-            {/* Variant Value */}
-            <div>
-              <label
-                htmlFor="variantValue"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Variant Value
-              </label>
-              <input
-                id="variantValue"
-                type="text"
-                value={variantValue}
-                onChange={(e) => setVariantValue(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                placeholder="Enter Variant Value"
-                required
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <i className="fa fa-save mr-2" aria-hidden="true"></i> Save
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
-              >
-                <i className="fa fa-times mr-2" aria-hidden="true"></i> Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Search and Action Buttons */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white rounded shadow p-4 mb-6 space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              placeholder="Search Variant Attributes..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
-              title="Refresh"
-              type="button"
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Variant Name */}
+          <div>
+            <label
+              htmlFor="variantName"
+              className="block text-sm font-medium mb-1"
             >
-              <i className="fa fa-refresh" aria-hidden="true"></i>
+              Variant Name
+            </label>
+            <input
+              id="variantName"
+              name="variantName"
+              type="text"
+              value={variantName}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter Variant Name"
+            />
+          </div>
+
+          {/* Variant Value */}
+          <div>
+            <label
+              htmlFor="variantValue"
+              className="block text-sm font-medium mb-1"
+            >
+              Variant Value
+            </label>
+            <input
+              id="variantValue"
+              name="variantValue"
+              type="text"
+              value={variantValue}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter Variant Value"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium mb-1"
+            >
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={status}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {statusOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-end space-x-3">
+            <button
+              onClick={handleSave}
+              type="button"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+            </button>
+            <button
+              onClick={resetForm}
+              type="button"
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-times fa-light" aria-hidden="true"></i> Cancel
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Search and Action Buttons */}
+      <section className="bg-card rounded shadow p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Search Variant Attributes..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          />
           <button
-            onClick={handleReport}
-            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
+            title="Clear"
           >
-            <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i> Report
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
         </div>
+        <button
+          onClick={handleReport}
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+          type="button"
+        >
+          <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+        </button>
+      </section>
 
-        {/* Table Section */}
-        <div className="bg-white rounded shadow overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Variant Name
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Variant Value
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-4 whitespace-nowrap text-center text-gray-500"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No variant attributes found.
                   </td>
                 </tr>
               ) : (
                 paginatedData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {(currentPage - 1) * pageSize + idx + 1}
+                  <tr
+                    key={item.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.variantName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.variantValue}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           item.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(item.id)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Edit"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit variant ${item.variantName}`}
                         type="button"
                       >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete variant ${item.variantName}`}
                         type="button"
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -339,54 +374,113 @@ const VariantAttributes: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <nav
-          className="flex justify-between items-center mt-4"
-          aria-label="Table navigation"
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
         >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            aria-label="Previous page"
-            type="button"
-          >
-            <i className="fa fa-chevron-left mr-1" aria-hidden="true"></i> Prev
-          </button>
-          <ul className="inline-flex items-center space-x-1">
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => goToPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1 rounded border ${
-                    page === currentPage
-                      ? "bg-indigo-600 text-white border-indigo-600"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-200"
-                  } focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                  type="button"
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Variant
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Variant Name */}
+              <div>
+                <label
+                  htmlFor="editVariantName"
+                  className="block text-sm font-medium mb-1"
                 >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === pageCount || pageCount === 0}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              currentPage === pageCount || pageCount === 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-            aria-label="Next page"
-            type="button"
-          >
-            Next <i className="fa fa-chevron-right ml-1" aria-hidden="true"></i>
-          </button>
-        </nav>
-      </div>
+                  Variant Name
+                </label>
+                <input
+                  type="text"
+                  id="editVariantName"
+                  name="variantName"
+                  value={editForm.variantName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Variant Name"
+                />
+              </div>
+
+              {/* Variant Value */}
+              <div>
+                <label
+                  htmlFor="editVariantValue"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Variant Value
+                </label>
+                <input
+                  type="text"
+                  id="editVariantValue"
+                  name="variantValue"
+                  value={editForm.variantValue}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Variant Value"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

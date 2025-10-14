@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const categories = [
   "All Categories",
@@ -16,11 +17,22 @@ const categories = [
 export default function LowStocks() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Filters states
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    product: "",
+    category: "",
+    quantity: "",
+    price: "",
+    supplier: "",
+  });
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,12 +67,11 @@ export default function LowStocks() {
     });
   }, [data, searchTerm, selectedCategory]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Pagination logic handled by Pagination component, so just slice data accordingly
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
-  }, [currentPage, filteredData]);
+  }, [currentPage, itemsPerPage, filteredData]);
 
   // Handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,53 +84,95 @@ export default function LowStocks() {
     setCurrentPage(1);
   };
 
-  const handleRefresh = () => {
+  const handleClear = () => {
     setSearchTerm("");
     setSelectedCategory("All Categories");
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demonstration, just alert. In real app, implement report generation.
     alert("Report generated for low stock items.");
+  };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (index: number) => {
+    const item = paginatedData[index];
+    if (item) {
+      setEditForm({
+        product: item.product,
+        category: item.category,
+        quantity: item.quantity.toString(),
+        price: item.price.toString(),
+        supplier: item.supplier,
+      });
+      setEditIndex((currentPage - 1) * itemsPerPage + index);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.product.trim() ||
+      !editForm.category.trim() ||
+      !editForm.quantity ||
+      !editForm.price ||
+      !editForm.supplier.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editIndex !== null) {
+      setData((prev) =>
+        prev.map((item, idx) =>
+          idx === editIndex
+            ? {
+                ...item,
+                product: editForm.product.trim(),
+                category: editForm.category.trim(),
+                quantity: Number(editForm.quantity),
+                price: Number(editForm.price),
+                supplier: editForm.supplier.trim(),
+              }
+            : item
+        )
+      );
+      setEditIndex(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditIndex(null);
+    setIsEditModalOpen(false);
   };
 
   return (
     <>
       <title>Low Stocks - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
-        {/* Header */}
-        <div className="bg-white shadow p-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Low Stocks</h1>
-          <div className="flex space-x-2">
-            <button
-              onClick={handleReport}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition"
-              type="button"
-            >
-              <i className="fas fa-file-alt"></i> Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded text-sm font-medium transition"
-              type="button"
-              aria-label="Refresh"
-            >
-              <i className="fas fa-sync-alt"></i> Refresh
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6">Low Stocks</h1>
 
         {/* Filters Section */}
-        <div className="bg-white shadow mt-6 p-4 rounded">
+        <section className="bg-card rounded shadow p-6 mb-6">
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="flex flex-col md:flex-row md:items-end md:space-x-6 space-y-4 md:space-y-0"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            <div className="flex flex-col w-full md:w-1/3">
+            <div>
               <label
                 htmlFor="search"
-                className="mb-1 text-gray-700 font-semibold text-sm"
+                className="block text-sm font-medium mb-1"
               >
                 Search Product or Supplier
               </label>
@@ -129,13 +182,13 @@ export default function LowStocks() {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="Search by product or supplier"
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-            <div className="flex flex-col w-full md:w-1/4">
+            <div>
               <label
                 htmlFor="category"
-                className="mb-1 text-gray-700 font-semibold text-sm"
+                className="block text-sm font-medium mb-1"
               >
                 Category
               </label>
@@ -143,7 +196,7 @@ export default function LowStocks() {
                 id="category"
                 value={selectedCategory}
                 onChange={handleCategoryChange}
-                className="border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -152,119 +205,251 @@ export default function LowStocks() {
                 ))}
               </select>
             </div>
+            <div className="flex items-end space-x-3">
+              <button
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+                aria-label="Clear"
+              >
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+              </button>
+              <button
+                onClick={handleReport}
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+              </button>
+            </div>
           </form>
-        </div>
+        </section>
 
         {/* Table Section */}
-        <div className="bg-white shadow mt-6 rounded overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                  Product Name
-                </th>
-                <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                  Category
-                </th>
-                <th className="border border-gray-300 px-4 py-2 text-right text-sm font-semibold text-gray-700">
-                  Quantity
-                </th>
-                <th className="border border-gray-300 px-4 py-2 text-right text-sm font-semibold text-gray-700">
-                  Price ($)
-                </th>
-                <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                  Supplier
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center py-6 text-gray-500 text-sm"
-                  >
-                    No low stock items found.
-                  </td>
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Product Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                    Quantity
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                    Price ($)
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Supplier
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                paginatedData.map((item, idx) => (
-                  <tr
-                    key={`${item.product}-${idx}`}
-                    className="even:bg-gray-50 hover:bg-gray-100 transition"
-                  >
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {item.product}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {item.category}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm text-right">
-                      {item.quantity}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm text-right">
-                      {item.price.toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {item.supplier}
+              </thead>
+              <tbody>
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
+                    >
+                      No low stock items found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <nav
-          className="flex justify-between items-center bg-white shadow mt-4 rounded px-4 py-3"
-          aria-label="Table navigation"
-        >
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-semibold">{paginatedData.length}</span> of{" "}
-              <span className="font-semibold">{filteredData.length}</span> results
-            </p>
+                ) : (
+                  paginatedData.map((item, idx) => (
+                    <tr
+                      key={`${item.product}-${idx}`}
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-foreground">
+                        {item.product}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground">
+                        {item.category}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground text-right">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground text-right">
+                        {Number(item.price).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground">
+                        {item.supplier}
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm space-x-3">
+                        <button
+                          onClick={() => handleEdit(idx)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit low stock item ${item.product}`}
+                          type="button"
+                        >
+                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-          <ul className="inline-flex items-center -space-x-px">
-            <li>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className={`block px-3 py-1.5 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white`}
-                aria-label="Previous"
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                <i className="fas fa-angle-left"></i>
-              </button>
-            </li>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
+                Edit Low Stock Item
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Product */}
+                <div>
+                  <label
+                    htmlFor="editProduct"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editProduct"
+                    name="product"
+                    value={editForm.product}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label
+                    htmlFor="editCategory"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="editCategory"
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {categories
+                      .filter((cat) => cat !== "All Categories")
+                      .map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Quantity */}
+                <div>
+                  <label
+                    htmlFor="editQuantity"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    id="editQuantity"
+                    name="quantity"
+                    value={editForm.quantity}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter quantity"
+                  />
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label
+                    htmlFor="editPrice"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Price ($)
+                  </label>
+                  <input
+                    type="number"
+                    id="editPrice"
+                    name="price"
+                    value={editForm.price}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    step="0.01"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter price"
+                  />
+                </div>
+
+                {/* Supplier */}
+                <div>
+                  <label
+                    htmlFor="editSupplier"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Supplier
+                  </label>
+                  <input
+                    type="text"
+                    id="editSupplier"
+                    name="supplier"
+                    value={editForm.supplier}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter supplier name"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
                 <button
-                  onClick={() => setCurrentPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1.5 border border-gray-300 text-sm font-medium ${
-                    page === currentPage
-                      ? "z-10 text-blue-600 bg-blue-50 border-blue-300"
-                      : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
-                  }`}
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  {page}
+                  Cancel
                 </button>
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`block px-3 py-1.5 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white`}
-                aria-label="Next"
-              >
-                <i className="fas fa-angle-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

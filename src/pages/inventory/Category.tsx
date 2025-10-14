@@ -1,91 +1,123 @@
 import React, { useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const itemsPerPage = 5;
+const statusOptions = ["Active", "Inactive"];
 
 export default function Category() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  // Form state
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Form state for Add Section (preserved exactly)
   const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("Active");
+  const [status, setStatus] = useState(statusOptions[0]);
+
   // Data state
   const [categories, setCategories] = useState([]);
-  // Editing state
-  const [editId, setEditId] = useState<number | null>(null);
-
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    categoryName: "",
+    description: "",
+    status: statusOptions[0],
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<[]>("Category");
     if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
       setCategories(response.result);
+      setError(null);
     } else {
       setError(response.status.description);
     }
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
-  const paginatedCategories = categories.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   // Reset form fields
   const resetForm = () => {
     setCategoryName("");
     setDescription("");
-    setStatus("Active");
+    setStatus(statusOptions[0]);
     setEditId(null);
   };
 
-  // Handle Save (Add or Update)
+  // Handle Save (Add new category)
   const handleSave = () => {
-    if (!categoryName.trim()) return; // Require category name
-
-    if (editId !== null) {
-      // Update existing
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === editId
-            ? { ...cat, categoryName, description, status }
-            : cat
-        )
-      );
-    } else {
-      // Add new
-      const newId =
-        categories.length > 0
-          ? Math.max(...categories.map((c) => c.id)) + 1
-          : 1;
-      setCategories((prev) => [
-        ...prev,
-        { id: newId, categoryName, description, status },
-      ]);
+    if (!categoryName.trim()) {
+      alert("Please enter category name.");
+      return;
     }
+    const newId =
+      categories.length > 0
+        ? Math.max(...categories.map((c) => c.id)) + 1
+        : 1;
+    setCategories((prev) => [
+      ...prev,
+      { id: newId, categoryName: categoryName.trim(), description, status },
+    ]);
     resetForm();
   };
 
-  // Handle Edit click
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const cat = categories.find((c) => c.id === id);
     if (!cat) return;
-    setCategoryName(cat.categoryName);
-    setDescription(cat.description);
-    setStatus(cat.status);
+    setEditForm({
+      categoryName: cat.categoryName,
+      description: cat.description,
+      status: cat.status,
+    });
     setEditId(id);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.categoryName.trim()) {
+      alert("Please enter category name.");
+      return;
+    }
+    if (editId !== null) {
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === editId
+            ? {
+                ...cat,
+                categoryName: editForm.categoryName.trim(),
+                description: editForm.description,
+                status: editForm.status,
+              }
+            : cat
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   // Handle Delete click
@@ -98,7 +130,7 @@ export default function Category() {
       setCategories((prev) => prev.filter((c) => c.id !== id));
       // If deleting last item on page, go back a page if possible
       if (
-        (categories.length - 1) % itemsPerPage === 0 &&
+        (currentPage - 1) * itemsPerPage >= categories.length - 1 &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -107,10 +139,9 @@ export default function Category() {
     }
   };
 
-  // Handle Refresh (reset form and reload data)
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     resetForm();
-    loadData();
     setCurrentPage(1);
   };
 
@@ -119,146 +150,137 @@ export default function Category() {
     alert("Report generated for categories.");
   };
 
-  // Handle page change
-  const onPageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
-  // Page numbers for pagination
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+  // Calculate paginated data using Pagination component props
+  const paginatedCategories = categories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <>
       <title>Category - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-        <div className="container mx-auto p-4">
-          {/* Page Title */}
-          <h1 className="text-3xl font-semibold mb-6">Category</h1>
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6">Category</h1>
 
-          {/* Form Section */}
-          <div className="bg-white rounded shadow p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-              {/* Category Name */}
-              <div>
-                <label
-                  htmlFor="categoryName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Category Name
-                </label>
-                <input
-                  id="categoryName"
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="Category Name"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+        {/* Form Section (Add Section) - preserved exactly */}
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            {/* Category Name */}
+            <div>
+              <label
+                htmlFor="categoryName"
+                className="block text-sm font-medium mb-1"
+              >
+                Category Name
+              </label>
+              <input
+                id="categoryName"
+                type="text"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder="Category Name"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Description
-                </label>
-                <input
-                  id="description"
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium mb-1"
+              >
+                Description
+              </label>
+              <input
+                id="description"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+            {/* Status */}
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statusOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Buttons */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleSave}
-                  className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-                  title="Save"
-                >
-                  <i className="fa fa-save mr-2" aria-hidden="true"></i>
-                  Save
-                </button>
-                <button
-                  onClick={resetForm}
-                  className="flex items-center bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded transition"
-                  title="Clear"
-                >
-                  <i
-                    className="fa fa-eraser mr-2"
-                    aria-hidden="true"
-                  ></i>
-                  Clear
-                </button>
-              </div>
+            {/* Buttons */}
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+                title="Save"
+              >
+                <i className="fa fa-save fa-light" aria-hidden="true"></i>
+                Save
+              </button>
+              <button
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+                title="Clear"
+              >
+                <i className="fa fa-eraser fa-light" aria-hidden="true"></i>
+                Clear
+              </button>
             </div>
           </div>
+        </section>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 mb-4">
-            <button
-              onClick={handleReport}
-              className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
-              title="Report"
-            >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i>
-              Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition"
-              title="Refresh"
-            >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-              Refresh
-            </button>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-4 mb-4">
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+            title="Report"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>
+            Report
+          </button>
+        </div>
 
-          {/* Table Section */}
-          <div className="bg-white rounded shadow overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">
+        {/* Table Section */}
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     #
                   </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Category Name
                   </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Description
                   </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Status
                   </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center text-sm font-semibold">
-                    Action
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -267,7 +289,7 @@ export default function Category() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="text-center py-4 text-gray-500"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No categories found.
                     </td>
@@ -276,46 +298,46 @@ export default function Category() {
                 {paginatedCategories.map((cat, idx) => (
                   <tr
                     key={cat.id}
-                    className={
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {cat.categoryName}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {cat.description}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           cat.status === "Active"
-                            ? "bg-green-200 text-green-800"
-                            : "bg-red-200 text-red-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
                         {cat.status}
                       </span>
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(cat.id)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
+                        className="text-primary hover:text-primary/80 transition-colors"
                         aria-label={`Edit category ${cat.categoryName}`}
+                        type="button"
+                        title="Edit"
                       >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
                         aria-label={`Delete category ${cat.categoryName}`}
+                        type="button"
+                        title="Delete"
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -325,45 +347,113 @@ export default function Category() {
           </div>
 
           {/* Pagination */}
-          <nav
-            className="flex justify-end items-center space-x-1 mt-4 select-none"
-            aria-label="Pagination"
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={categories.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
           >
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`flex items-center px-3 py-1 rounded border border-gray-300 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Previous page"
-              title="Previous"
-            >
-              <i className="fa fa-chevron-left" aria-hidden="true"></i>
-            </button>
-            {pageNumbers.map((page) => (
-              <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                className={`px-3 py-1 rounded border border-gray-300 hover:bg-gray-200 transition ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700"
-                }`}
-                aria-current={page === currentPage ? "page" : undefined}
-                title={`Page ${page}`}
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`flex items-center px-3 py-1 rounded border border-gray-300 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Next page"
-              title="Next"
-            >
-              <i className="fa fa-chevron-right" aria-hidden="true"></i>
-            </button>
-          </nav>
-        </div>
+                Edit Category
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Category Name */}
+                <div>
+                  <label
+                    htmlFor="editCategoryName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Category Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editCategoryName"
+                    name="categoryName"
+                    value={editForm.categoryName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Category Name"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label
+                    htmlFor="editDescription"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    id="editDescription"
+                    name="description"
+                    value={editForm.description}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Description"
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {statusOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -1,14 +1,32 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const categories = ["All", "Category A", "Category B", "Category C"];
-
-const pageSizeOptions = [10, 25, 50, 100];
 
 const PrintQrCode: React.FC = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    productName: "",
+    productCode: "",
+    category: categories[1],
+    price: "",
+    quantity: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
   const loadData = async () => {
     setLoading(true);
@@ -26,15 +44,6 @@ const PrintQrCode: React.FC = () => {
     loadData();
   }, []);
 
-  React.useEffect(() => {
-    
-  }, []);
-
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesCategory =
@@ -46,12 +55,10 @@ const PrintQrCode: React.FC = () => {
     });
   }, [search, categoryFilter, data]);
 
-  const totalPages = Math.ceil(filteredData.length / pageSize);
-
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [currentPage, pageSize, filteredData]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [currentPage, itemsPerPage, filteredData]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -63,37 +70,83 @@ const PrintQrCode: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
-  const handleRefresh = () => {
+  const handleClear = () => {
     setSearch("");
     setCategoryFilter("All");
-    setPageSize(10);
     setCurrentPage(1);
   };
 
   const handleReport = () => alert("Report generated.");
-  const handleSave = () => alert("Save action triggered.");
   const handlePrint = () => window.print();
 
+  // Edit Modal Handlers
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        productName: item.productName,
+        productCode: item.productCode,
+        category: item.category,
+        price: item.price.toString(),
+        quantity: item.quantity.toString(),
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.productName.trim() ||
+      !editForm.productCode.trim() ||
+      !editForm.price ||
+      !editForm.quantity
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                productName: editForm.productName.trim(),
+                productCode: editForm.productCode.trim(),
+                category: editForm.category,
+                price: Number(editForm.price),
+                quantity: Number(editForm.quantity),
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
+    <div className="min-h-screen bg-background font-sans p-6">
       <h1 className="text-2xl font-semibold mb-6 text-center">Print QR Code</h1>
 
-      <section className="bg-white rounded shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <form className="flex flex-wrap gap-4 items-center justify-between">
           <div className="flex flex-col w-full sm:w-1/3">
             <label
               htmlFor="search"
-              className="mb-1 text-sm font-medium text-gray-700"
+              className="mb-1 text-sm font-medium text-muted-foreground"
             >
               Search Product
             </label>
@@ -103,14 +156,14 @@ const PrintQrCode: React.FC = () => {
               value={search}
               onChange={handleSearchChange}
               placeholder="Search by name or code"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           <div className="flex flex-col w-full sm:w-1/4">
             <label
               htmlFor="category"
-              className="mb-1 text-sm font-medium text-gray-700"
+              className="mb-1 text-sm font-medium text-muted-foreground"
             >
               Category
             </label>
@@ -118,7 +171,7 @@ const PrintQrCode: React.FC = () => {
               id="category"
               value={categoryFilter}
               onChange={handleCategoryChange}
-              className="border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -128,95 +181,69 @@ const PrintQrCode: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex flex-col w-full sm:w-1/5">
-            <label
-              htmlFor="pageSize"
-              className="mb-1 text-sm font-medium text-gray-700"
-            >
-              Show Entries
-            </label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={handlePageSizeChange}
-              className="border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="flex space-x-3 mt-4 sm:mt-0">
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded shadow-sm transition"
-              title="Refresh"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Clear"
             >
-              <i className="fas fa-sync-alt mr-2"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Generate Report"
             >
-              <i className="fas fa-file-alt mr-2"></i> Report
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm transition"
-              title="Save"
-            >
-              <i className="fas fa-save mr-2"></i> Save
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow-sm transition"
+              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Print"
             >
-              <i className="fas fa-print mr-2"></i> Print
+              <i className="fa fa-print fa-light" aria-hidden="true"></i> Print
             </button>
           </div>
         </form>
       </section>
 
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase border-r border-gray-300">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Product Name
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Product Code
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Category
                 </th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase border-r border-gray-300">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Price
                 </th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Quantity
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
-                    className="text-center py-4 text-gray-500 italic text-sm"
+                    colSpan={7}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No products found.
                   </td>
@@ -225,24 +252,36 @@ const PrintQrCode: React.FC = () => {
                 paginatedData.map((item, idx) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-gray-50 transition-colors cursor-default"
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-4 py-2 border-r border-gray-300">
-                      {(currentPage - 1) * pageSize + idx + 1}
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="px-4 py-2 border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.productName}
                     </td>
-                    <td className="px-4 py-2 border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.productCode}
                     </td>
-                    <td className="px-4 py-2 border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.category}
                     </td>
-                    <td className="px-4 py-2 border-r border-gray-300 text-right">
+                    <td className="px-4 py-3 text-sm text-foreground text-right">
                       ${item.price.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 text-right">{item.quantity}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">
+                      {item.quantity}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(item.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit product ${item.productName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -250,64 +289,144 @@ const PrintQrCode: React.FC = () => {
           </table>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-2 sm:space-y-0">
-          <div className="text-sm text-gray-600">
-            Showing{" "}
-            <span className="font-semibold">
-              {(currentPage - 1) * pageSize + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold">
-              {Math.min(currentPage * pageSize, filteredData.length)}
-            </span>{" "}
-            of <span className="font-semibold">{filteredData.length}</span> entries
-          </div>
-
-          <nav
-            className="inline-flex -space-x-px rounded-md shadow-sm"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous"
-            >
-              <i className="fas fa-chevron-left"></i>
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                  page === currentPage
-                    ? "z-10 bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                currentPage === totalPages || totalPages === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Next"
-            >
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </nav>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Product
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="editProductName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  id="editProductName"
+                  name="productName"
+                  value={editForm.productName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editProductCode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Product Code
+                </label>
+                <input
+                  type="text"
+                  id="editProductCode"
+                  name="productCode"
+                  value={editForm.productCode}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter product code"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editCategory"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Category
+                </label>
+                <select
+                  id="editCategory"
+                  name="category"
+                  value={editForm.category}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {categories.slice(1).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="editPrice"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Price
+                </label>
+                <input
+                  type="number"
+                  id="editPrice"
+                  name="price"
+                  value={editForm.price}
+                  onChange={handleEditInputChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter price"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editQuantity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  id="editQuantity"
+                  name="quantity"
+                  value={editForm.quantity}
+                  onChange={handleEditInputChange}
+                  min="0"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter quantity"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
