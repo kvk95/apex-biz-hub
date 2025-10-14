@@ -78,8 +78,13 @@
     "items": [
       { "title": "Coupons", "url": "/promo/coupons", "icon": "fa fa-gift" },
       { "title": "Gift Cards", "url": "/promo/gift-cards", "icon": "fa fa-credit-card" },
-      { "title": "Discount Plan", "url": "/promo/discount/plan", "icon": "fa fa-percent" },
-      { "title": "Discount", "url": "/promo/discount/single", "icon": "fa fa-percent" }
+      { "title": "Discount", 
+        "icon": "fa fa-percent", 
+        "items": [
+          { "title": "Discount Plan", "url": "/promo/discount/plan", "icon": "fa fa-percent" },
+          { "title": "Discount", "url": "/promo/discount/single", "icon": "fa fa-percent" }
+        ]
+      }
     ]
   },
   {
