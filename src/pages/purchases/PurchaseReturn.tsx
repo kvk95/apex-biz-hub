@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const PAGE_SIZE = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function PurchaseReturn() {
   // Page title as per reference page
@@ -55,8 +54,9 @@ export default function PurchaseReturn() {
     loadData();
   }, []);
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calculate total for product line
   React.useEffect(() => {
@@ -109,24 +109,100 @@ export default function PurchaseReturn() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   }
 
-  // Pagination logic for purchase returns table
-  const totalPages = Math.ceil(data.length / PAGE_SIZE);
+  // Edit modal state and form
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    date: "",
+    referenceNo: "",
+    supplier: "",
+    warehouse: "",
+    productQty: 0,
+    grandTotal: 0,
+    status: "Pending",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
-  const paginatedReturns = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return data.slice(start, start + PAGE_SIZE);
-  }, [currentPage, data]);
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d: any) => d.id === id);
+    if (item) {
+      setEditForm({
+        date: item.date,
+        referenceNo: item.referenceNo,
+        supplier: item.supplier,
+        warehouse: item.warehouse,
+        productQty: item.productQty,
+        grandTotal: item.grandTotal,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
 
+  // Handle edit form input changes
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  // Handler for page change
-  function goToPage(page: number) {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  }
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.date ||
+      !editForm.referenceNo.trim() ||
+      !editForm.supplier.trim() ||
+      !editForm.warehouse.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item: any) =>
+          item.id === editId
+            ? {
+                ...item,
+                date: editForm.date,
+                referenceNo: editForm.referenceNo.trim(),
+                supplier: editForm.supplier,
+                warehouse: editForm.warehouse,
+                productQty: Number(editForm.productQty),
+                grandTotal: Number(editForm.grandTotal),
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
 
-  // Dummy handlers for buttons (Refresh, Save, Report)
-  function onRefresh() {
-    // For demo, just reset form and products
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Delete handler for purchase returns
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this purchase return?")) {
+      setData((prev) => prev.filter((d: any) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setDate("");
     setReferenceNo("");
     setSupplier("");
@@ -139,59 +215,66 @@ export default function PurchaseReturn() {
     setTax("");
     setTotal(0);
     setProducts([]);
-  }
+    setCurrentPage(1);
+  };
 
+  // Dummy handlers for Save and Report buttons
   function onSave() {
-    // For demo, alert saved data
     alert("Purchase Return saved (demo).");
   }
 
   function onReport() {
-    // For demo, alert report generation
     alert("Report generated (demo).");
   }
 
+  // Calculate paginated data using Pagination component props
+  const paginatedReturns = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return data.slice(start, start + itemsPerPage);
+  }, [currentPage, itemsPerPage, data]);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Header */}
-      <header className="bg-white shadow px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Purchase Return
-        </h1>
-        <div className="space-x-2">
+      <header className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Purchase Return</h1>
+        <div className="flex space-x-3">
           <button
             onClick={onReport}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             title="Report"
+            type="button"
           >
-            <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
           <button
-            onClick={onRefresh}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none"
-            title="Refresh"
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            title="Clear"
+            type="button"
           >
-            <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
           <button
             onClick={onSave}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             title="Save"
+            type="button"
           >
-            <i className="fas fa-save mr-2" aria-hidden="true"></i> Save
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
           </button>
         </div>
       </header>
 
-      <main className="px-6 py-6 max-w-7xl mx-auto">
+      <main>
         {/* Form Section */}
-        <section className="bg-white rounded shadow p-6 mb-8">
+        <section className="bg-card rounded shadow p-6 mb-6">
           <form className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Date */}
             <div>
               <label
                 htmlFor="date"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Date
               </label>
@@ -200,7 +283,7 @@ export default function PurchaseReturn() {
                 id="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -208,7 +291,7 @@ export default function PurchaseReturn() {
             <div>
               <label
                 htmlFor="referenceNo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Reference No
               </label>
@@ -218,7 +301,7 @@ export default function PurchaseReturn() {
                 value={referenceNo}
                 onChange={(e) => setReferenceNo(e.target.value)}
                 placeholder="Reference No"
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -226,7 +309,7 @@ export default function PurchaseReturn() {
             <div>
               <label
                 htmlFor="supplier"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Supplier
               </label>
@@ -234,7 +317,7 @@ export default function PurchaseReturn() {
                 id="supplier"
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Select Supplier</option>
                 {data.length > 0 &&
@@ -250,7 +333,7 @@ export default function PurchaseReturn() {
             <div>
               <label
                 htmlFor="warehouse"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Warehouse
               </label>
@@ -258,7 +341,7 @@ export default function PurchaseReturn() {
                 id="warehouse"
                 value={warehouse}
                 onChange={(e) => setWarehouse(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Select Warehouse</option>
                 {data.length > 0 &&
@@ -273,8 +356,8 @@ export default function PurchaseReturn() {
         </section>
 
         {/* Product Entry Section */}
-        <section className="bg-white rounded shadow p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
             Add Product
           </h2>
           <form
@@ -282,13 +365,13 @@ export default function PurchaseReturn() {
               e.preventDefault();
               addProduct();
             }}
-            className="grid grid-cols-1 md:grid-cols-8 gap-4 items-end"
+            className="grid grid-cols-1 md:grid-cols-8 gap-6 items-end"
           >
             {/* Product Code */}
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="productCode"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Product Code
               </label>
@@ -297,7 +380,7 @@ export default function PurchaseReturn() {
                 id="productCode"
                 value={productCode}
                 onChange={(e) => setProductCode(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Code"
               />
             </div>
@@ -306,7 +389,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-2">
               <label
                 htmlFor="productName"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Product Name
               </label>
@@ -315,7 +398,7 @@ export default function PurchaseReturn() {
                 id="productName"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Name"
               />
             </div>
@@ -324,7 +407,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="quantity"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Quantity
               </label>
@@ -334,7 +417,7 @@ export default function PurchaseReturn() {
                 min="0"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Qty"
               />
             </div>
@@ -343,7 +426,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="unitCost"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Unit Cost
               </label>
@@ -354,7 +437,7 @@ export default function PurchaseReturn() {
                 step="0.01"
                 value={unitCost}
                 onChange={(e) => setUnitCost(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Cost"
               />
             </div>
@@ -363,7 +446,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="discount"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Discount
               </label>
@@ -374,7 +457,7 @@ export default function PurchaseReturn() {
                 step="0.01"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Discount"
               />
             </div>
@@ -383,7 +466,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="tax"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Tax
               </label>
@@ -394,7 +477,7 @@ export default function PurchaseReturn() {
                 step="0.01"
                 value={tax}
                 onChange={(e) => setTax(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Tax"
               />
             </div>
@@ -403,7 +486,7 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <label
                 htmlFor="total"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Total
               </label>
@@ -412,7 +495,7 @@ export default function PurchaseReturn() {
                 id="total"
                 value={total.toFixed(2)}
                 readOnly
-                className="block w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 cursor-not-allowed"
+                className="w-full border border-input rounded px-3 py-2 bg-muted cursor-not-allowed"
               />
             </div>
 
@@ -420,39 +503,41 @@ export default function PurchaseReturn() {
             <div className="col-span-1 md:col-span-1">
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-4 py-2 mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow focus:outline-none"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 title="Add Product"
               >
-                <i className="fas fa-plus mr-2" aria-hidden="true"></i> Add
+                <i className="fa fa-plus fa-light" aria-hidden="true"></i> Add
               </button>
             </div>
           </form>
         </section>
 
         {/* Products Table */}
-        <section className="bg-white rounded shadow p-6 mb-8 overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Products</h2>
-          <table className="min-w-full table-auto border-collapse border border-gray-300">
+        <section className="bg-card rounded shadow p-6 mb-6 overflow-x-auto">
+          <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
+            Products
+          </h2>
+          <table className="min-w-full table-auto border-collapse border border-border">
             <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left text-sm font-semibold">
-                <th className="border border-gray-300 px-3 py-2">Code</th>
-                <th className="border border-gray-300 px-3 py-2">Name</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
+              <tr className="bg-muted text-muted-foreground text-left text-sm font-semibold">
+                <th className="border border-border px-4 py-3">Code</th>
+                <th className="border border-border px-4 py-3">Name</th>
+                <th className="border border-border px-4 py-3 text-right">
                   Quantity
                 </th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
+                <th className="border border-border px-4 py-3 text-right">
                   Unit Cost
                 </th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
+                <th className="border border-border px-4 py-3 text-right">
                   Discount
                 </th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
+                <th className="border border-border px-4 py-3 text-right">
                   Tax
                 </th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
+                <th className="border border-border px-4 py-3 text-right">
                   Total
                 </th>
-                <th className="border border-gray-300 px-3 py-2 text-center">
+                <th className="border border-border px-4 py-3 text-center">
                   Action
                 </th>
               </tr>
@@ -460,37 +545,45 @@ export default function PurchaseReturn() {
             <tbody>
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-4 text-gray-500">
+                  <td colSpan={8} className="text-center px-4 py-6 text-muted-foreground italic">
                     No products added.
                   </td>
                 </tr>
               )}
               {products.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-3 py-2">{p.code}</td>
-                  <td className="border border-gray-300 px-3 py-2">{p.name}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
+                <tr
+                  key={p.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="border border-border px-4 py-3 text-sm text-foreground">
+                    {p.code}
+                  </td>
+                  <td className="border border-border px-4 py-3 text-sm text-foreground">
+                    {p.name}
+                  </td>
+                  <td className="border border-border px-4 py-3 text-sm text-foreground text-right">
                     {p.quantity}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
+                  <td className="border border-border px-4 py-3 text-sm text-foreground text-right">
                     {p.unitCost.toFixed(2)}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
+                  <td className="border border-border px-4 py-3 text-sm text-foreground text-right">
                     {p.discount.toFixed(2)}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
+                  <td className="border border-border px-4 py-3 text-sm text-foreground text-right">
                     {p.tax.toFixed(2)}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
+                  <td className="border border-border px-4 py-3 text-sm text-foreground text-right">
                     {p.total.toFixed(2)}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-center">
+                  <td className="border border-border px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => removeProduct(p.id)}
-                      className="text-red-600 hover:text-red-800 focus:outline-none"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
                       title="Remove Product"
+                      type="button"
                     >
-                      <i className="fas fa-trash-alt" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -500,144 +593,259 @@ export default function PurchaseReturn() {
         </section>
 
         {/* Purchase Returns List Section */}
-        <section className="bg-white rounded shadow p-6 overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <section className="bg-card rounded shadow py-6">
+          <h2 className="text-lg font-semibold mb-6 text-muted-foreground">
             Purchase Return List
           </h2>
-          <table className="min-w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left text-sm font-semibold">
-                <th className="border border-gray-300 px-3 py-2">Date</th>
-                <th className="border border-gray-300 px-3 py-2">
-                  Reference No
-                </th>
-                <th className="border border-gray-300 px-3 py-2">Supplier</th>
-                <th className="border border-gray-300 px-3 py-2">Warehouse</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
-                  Product Qty
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-right">
-                  Grand Total
-                </th>
-                <th className="border border-gray-300 px-3 py-2">Status</th>
-                <th className="border border-gray-300 px-3 py-2 text-center">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedReturns.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="text-center py-4 text-gray-500">
-                    No purchase returns found.
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto border-collapse border border-border">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground text-left text-sm font-semibold">
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Reference No</th>
+                  <th className="px-4 py-3">Supplier</th>
+                  <th className="px-4 py-3">Warehouse</th>
+                  <th className="px-4 py-3 text-right">Product Qty</th>
+                  <th className="px-4 py-3 text-right">Grand Total</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
-              )}
-              {paginatedReturns.map((pr: any) => (
-                <tr key={pr.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-3 py-2">
-                    {pr.date}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2">
-                    {pr.referenceNo}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2">
-                    {pr.supplier}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2">
-                    {pr.warehouse}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
-                    {pr.productQty}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">
-                    {pr.grandTotal.toFixed(2)}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        pr.status === "Completed"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {pr.status}
-                    </span>
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-center space-x-2">
-                    <button
-                      title="Edit"
-                      className="text-indigo-600 hover:text-indigo-800 focus:outline-none"
-                      aria-label={`Edit purchase return ${pr.referenceNo}`}
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button
-                      title="Delete"
-                      className="text-red-600 hover:text-red-800 focus:outline-none"
-                      aria-label={`Delete purchase return ${pr.referenceNo}`}
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedReturns.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center px-4 py-6 text-muted-foreground italic">
+                      No purchase returns found.
+                    </td>
+                  </tr>
+                )}
+                {paginatedReturns.map((pr: any) => (
+                  <tr
+                    key={pr.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">{pr.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{pr.referenceNo}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{pr.supplier}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{pr.warehouse}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">{pr.productQty}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">{pr.grandTotal.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                          pr.status === "Completed"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                        }`}
+                      >
+                        {pr.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(pr.id)}
+                        title="Edit"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit purchase return ${pr.referenceNo}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(pr.id)}
+                        title="Delete"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete purchase return ${pr.referenceNo}`}
+                        type="button"
+                      >
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {/* Pagination Controls */}
-          <nav
-            className="flex items-center justify-between mt-4"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`inline-flex items-center px-3 py-1 border border-gray-300 rounded text-sm font-medium ${
-                currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Previous page"
-            >
-              <i className="fas fa-chevron-left mr-1"></i> Prev
-            </button>
-
-            <ul className="inline-flex space-x-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <li key={page}>
-                    <button
-                      onClick={() => goToPage(page)}
-                      aria-current={page === currentPage ? "page" : undefined}
-                      className={`px-3 py-1 border rounded text-sm font-medium ${
-                        page === currentPage
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "text-gray-700 border-gray-300 hover:bg-gray-200"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                )
-              )}
-            </ul>
-
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`inline-flex items-center px-3 py-1 border border-gray-300 rounded text-sm font-medium ${
-                currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Next page"
-            >
-              Next <i className="fas fa-chevron-right ml-1"></i>
-            </button>
-          </nav>
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={data.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
         </section>
       </main>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Purchase Return
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Date */}
+              <div>
+                <label
+                  htmlFor="editDate"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  id="editDate"
+                  name="date"
+                  value={editForm.date}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Reference No */}
+              <div>
+                <label
+                  htmlFor="editReferenceNo"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Reference No
+                </label>
+                <input
+                  type="text"
+                  id="editReferenceNo"
+                  name="referenceNo"
+                  value={editForm.referenceNo}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Supplier */}
+              <div>
+                <label
+                  htmlFor="editSupplier"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Supplier
+                </label>
+                <input
+                  type="text"
+                  id="editSupplier"
+                  name="supplier"
+                  value={editForm.supplier}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Warehouse */}
+              <div>
+                <label
+                  htmlFor="editWarehouse"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Warehouse
+                </label>
+                <input
+                  type="text"
+                  id="editWarehouse"
+                  name="warehouse"
+                  value={editForm.warehouse}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Product Qty */}
+              <div>
+                <label
+                  htmlFor="editProductQty"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Product Qty
+                </label>
+                <input
+                  type="number"
+                  id="editProductQty"
+                  name="productQty"
+                  value={editForm.productQty}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Grand Total */}
+              <div>
+                <label
+                  htmlFor="editGrandTotal"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Grand Total
+                </label>
+                <input
+                  type="number"
+                  id="editGrandTotal"
+                  name="grandTotal"
+                  value={editForm.grandTotal}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  step="0.01"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1 text-muted-foreground"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
