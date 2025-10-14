@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const leaveTypes = [
   "Casual Leave",
@@ -34,7 +35,7 @@ export default function AdminLeaves() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filter and form state
   const [filterStatus, setFilterStatus] = useState("All");
@@ -52,8 +53,18 @@ export default function AdminLeaves() {
     status: "Pending",
   });
 
-  // Handle pagination change
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    employeeName: "",
+    leaveType: "",
+    fromDate: "",
+    toDate: "",
+    noOfDays: "",
+    reason: "",
+    status: "Pending",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Filtered and searched data
   const filteredLeaves = useMemo(() => {
@@ -69,11 +80,11 @@ export default function AdminLeaves() {
     });
   }, [filterStatus, filterLeaveType, searchName, data]);
 
-  // Paginated data
+  // Paginated data using Pagination component props
   const paginatedLeaves = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredLeaves.slice(start, start + itemsPerPage);
-  }, [filteredLeaves, currentPage]);
+  }, [filteredLeaves, currentPage, itemsPerPage]);
 
   // Handlers
   const handlePageChange = (page: number) => {
@@ -105,7 +116,77 @@ export default function AdminLeaves() {
     });
   };
 
-  const handleRefresh = () => {
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        employeeName: item.employeeName,
+        leaveType: item.leaveType,
+        fromDate: item.fromDate,
+        toDate: item.toDate,
+        noOfDays: item.noOfDays,
+        reason: item.reason,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.employeeName.trim() ||
+      !editForm.leaveType ||
+      !editForm.fromDate ||
+      !editForm.toDate ||
+      !editForm.noOfDays ||
+      !editForm.reason
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                employeeName: editForm.employeeName.trim(),
+                leaveType: editForm.leaveType,
+                fromDate: editForm.fromDate,
+                toDate: editForm.toDate,
+                noOfDays: editForm.noOfDays,
+                reason: editForm.reason,
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setFilterStatus("All");
     setFilterLeaveType("All");
     setSearchName("");
@@ -119,210 +200,199 @@ export default function AdminLeaves() {
   return (
     <>
       <title>Admin Leaves - DreamsPOS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-        <div className="container mx-auto px-4 py-6">
-          {/* Page Header */}
-          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-3 md:mb-0">
-              Admin Leaves
-            </h1>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleReport}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-2 rounded transition"
-                title="Generate Report"
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Title */}
+        <h1 className="text-2xl font-semibold mb-6">Admin Leaves</h1>
+
+        {/* Filters Section */}
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <form className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div>
+              <label
+                htmlFor="filterStatus"
+                className="block text-sm font-medium mb-1"
               >
-                <i className="fa fa-file-pdf-o mr-2" aria-hidden="true"></i> Report
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="flex items-center bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold px-3 py-2 rounded transition"
-                title="Refresh"
+                Leave Status
+              </label>
+              <select
+                id="filterStatus"
+                name="filterStatus"
+                value={filterStatus}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="filterLeaveType"
+                className="block text-sm font-medium mb-1"
+              >
+                Leave Type
+              </label>
+              <select
+                id="filterLeaveType"
+                name="filterLeaveType"
+                value={filterLeaveType}
+                onChange={(e) => {
+                  setFilterLeaveType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="All">All</option>
+                {leaveTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="searchName"
+                className="block text-sm font-medium mb-1"
+              >
+                Employee Name
+              </label>
+              <input
+                type="text"
+                id="searchName"
+                name="searchName"
+                value={searchName}
+                onChange={(e) => {
+                  setSearchName(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search by name"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
             </div>
-          </div>
+          </form>
+        </section>
 
-          {/* Filters Section */}
-          <div className="bg-white rounded shadow p-4 mb-6">
-            <form className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-              <div>
-                <label
-                  htmlFor="filterStatus"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Leave Status
-                </label>
-                <select
-                  id="filterStatus"
-                  name="filterStatus"
-                  value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="filterLeaveType"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Leave Type
-                </label>
-                <select
-                  id="filterLeaveType"
-                  name="filterLeaveType"
-                  value={filterLeaveType}
-                  onChange={(e) => {
-                    setFilterLeaveType(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="All">All</option>
-                  {leaveTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="searchName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Employee Name
-                </label>
-                <input
-                  type="text"
-                  id="searchName"
-                  name="searchName"
-                  value={searchName}
-                  onChange={(e) => {
-                    setSearchName(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Search by name"
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  className="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-3 py-2 rounded transition"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Leaves Table */}
-          <div className="bg-white rounded shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+        {/* Leaves Table */}
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Employee Name
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Leave Type
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     From Date
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     To Date
                   </th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
                     No. of Days
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Reason
                   </th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-700 whitespace-nowrap">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {paginatedLeaves.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-6 text-center text-gray-500"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No leaves found.
                     </td>
                   </tr>
                 ) : (
                   paginatedLeaves.map((leave: any) => (
-                    <tr key={leave.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap">
+                    <tr
+                      key={leave.id}
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
                         {leave.employeeName}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
                         {leave.leaveType}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
                         {leave.fromDate}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
                         {leave.toDate}
                       </td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <td className="px-4 py-3 text-center text-sm text-foreground whitespace-nowrap">
                         {leave.noOfDays}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">{leave.reason}</td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                        {leave.reason}
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             leave.status === "Approved"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                               : leave.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                         >
                           {leave.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap space-x-2">
+                      <td className="px-4 py-3 text-center text-sm space-x-3 whitespace-nowrap">
                         <button
                           title="Edit"
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() =>
-                            alert(
-                              `Edit leave for ${leave.employeeName} (mock action)`
-                            )
-                          }
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          onClick={() => handleEdit(leave.id)}
+                          type="button"
                         >
-                          <i className="fa fa-pencil" aria-hidden="true"></i>
+                          <i
+                            className="fa fa-pencil fa-light"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                         <button
                           title="Delete"
-                          className="text-red-600 hover:text-red-800"
+                          className="text-destructive hover:text-destructive/80 transition-colors"
                           onClick={() =>
                             alert(
                               `Delete leave for ${leave.employeeName} (mock action)`
                             )
                           }
+                          type="button"
                         >
-                          <i className="fa fa-trash" aria-hidden="true"></i>
+                          <i
+                            className="fa fa-trash fa-light"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                       </td>
                     </tr>
@@ -332,241 +402,354 @@ export default function AdminLeaves() {
             </table>
           </div>
 
-          {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-semibold">
-                {(currentPage - 1) * itemsPerPage + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-semibold">
-                {Math.min(currentPage * itemsPerPage, filteredLeaves.length)}
-              </span>{" "}
-              of <span className="font-semibold">{filteredLeaves.length}</span>{" "}
-              entries
-            </div>
-            <nav
-              className="inline-flex -space-x-px rounded-md shadow-sm"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                aria-label="Previous"
-              >
-                <i className="fa fa-chevron-left" aria-hidden="true"></i>
-              </button>
-              {Array.from(
-                {
-                  length: Math.ceil(filteredLeaves.length / itemsPerPage),
-                },
-                (_, i) => i + 1
-              ).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                    page === currentPage
-                      ? "z-10 bg-blue-600 border-blue-600 text-white"
-                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-                aria-label="Next"
-              >
-                <i className="fa fa-chevron-right" aria-hidden="true"></i>
-              </button>
-            </nav>
-          </div>
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredLeaves.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
 
-          {/* Add Leave Form */}
-          <div className="mt-10 bg-white rounded shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Add Leave
-            </h2>
-            <form
-              onSubmit={handleAddLeave}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            >
-              <div>
-                <label
-                  htmlFor="employeeName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Employee Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="employeeName"
-                  name="employeeName"
-                  value={formData.employeeName}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter employee name"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="leaveType"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Leave Type <span className="text-red-600">*</span>
-                </label>
-                <select
-                  id="leaveType"
-                  name="leaveType"
-                  value={formData.leaveType}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select leave type</option>
-                  {leaveTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
+        {/* Add Leave Form - preserved exactly */}
+        <section className="mt-10 bg-card rounded shadow p-6">
+          <h2 className="text-xl font-semibold mb-6">Add Leave</h2>
+          <form
+            onSubmit={handleAddLeave}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <div>
+              <label
+                htmlFor="employeeName"
+                className="block text-sm font-medium mb-1"
+              >
+                Employee Name <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                id="employeeName"
+                name="employeeName"
+                value={formData.employeeName}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter employee name"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="leaveType"
+                className="block text-sm font-medium mb-1"
+              >
+                Leave Type <span className="text-red-600">*</span>
+              </label>
+              <select
+                id="leaveType"
+                name="leaveType"
+                value={formData.leaveType}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select leave type</option>
+                {leaveTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="fromDate"
+                className="block text-sm font-medium mb-1"
+              >
+                From Date <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="date"
+                id="fromDate"
+                name="fromDate"
+                value={formData.fromDate}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="toDate"
+                className="block text-sm font-medium mb-1"
+              >
+                To Date <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="date"
+                id="toDate"
+                name="toDate"
+                value={formData.toDate}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="noOfDays"
+                className="block text-sm font-medium mb-1"
+              >
+                No. of Days <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="number"
+                id="noOfDays"
+                name="noOfDays"
+                min={1}
+                value={formData.noOfDays}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter number of days"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <label
+                htmlFor="reason"
+                className="block text-sm font-medium mb-1"
+              >
+                Reason <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                required
+                rows={3}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                placeholder="Enter reason for leave"
+              ></textarea>
+            </div>
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1"
+              >
+                Status <span className="text-red-600">*</span>
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statuses
+                  .filter((s) => s !== "All")
+                  .map((status) => (
+                    <option key={status} value={status}>
+                      {status}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="fromDate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  From Date <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="fromDate"
-                  name="fromDate"
-                  value={formData.fromDate}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="toDate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  To Date <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="toDate"
-                  name="toDate"
-                  value={formData.toDate}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="noOfDays"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  No. of Days <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="noOfDays"
-                  name="noOfDays"
-                  min={1}
-                  value={formData.noOfDays}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter number of days"
-                />
-              </div>
-              <div className="md:col-span-3">
-                <label
-                  htmlFor="reason"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Reason <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  id="reason"
-                  name="reason"
-                  value={formData.reason}
-                  onChange={handleInputChange}
-                  required
-                  rows={3}
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  placeholder="Enter reason for leave"
-                ></textarea>
-              </div>
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Status <span className="text-red-600">*</span>
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  required
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {statuses
-                    .filter((s) => s !== "All")
-                    .map((status) => (
-                      <option key={status} value={status}>
-                        {status}
+              </select>
+            </div>
+            <div className="md:col-span-3 flex justify-end space-x-3 pt-4">
+              <button
+                type="reset"
+                onClick={() =>
+                  setFormData({
+                    employeeName: "",
+                    leaveType: "",
+                    fromDate: "",
+                    toDate: "",
+                    noOfDays: "",
+                    reason: "",
+                    status: "Pending",
+                  })
+                }
+                className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                Reset
+              </button>
+              <button
+                type="submit"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
+              >
+                Edit Leave
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="editEmployeeName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Employee Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editEmployeeName"
+                    name="employeeName"
+                    value={editForm.employeeName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter employee name"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editLeaveType"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Leave Type
+                  </label>
+                  <select
+                    id="editLeaveType"
+                    name="leaveType"
+                    value={editForm.leaveType}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select leave type</option>
+                    {leaveTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
                       </option>
                     ))}
-                </select>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editFromDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    From Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editFromDate"
+                    name="fromDate"
+                    value={editForm.fromDate}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editToDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    To Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editToDate"
+                    name="toDate"
+                    value={editForm.toDate}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editNoOfDays"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    No. of Days
+                  </label>
+                  <input
+                    type="number"
+                    id="editNoOfDays"
+                    name="noOfDays"
+                    min={1}
+                    value={editForm.noOfDays}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter number of days"
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <label
+                    htmlFor="editReason"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Reason
+                  </label>
+                  <textarea
+                    id="editReason"
+                    name="reason"
+                    value={editForm.reason}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                    placeholder="Enter reason for leave"
+                  ></textarea>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {statuses
+                      .filter((s) => s !== "All")
+                      .map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               </div>
-              <div className="md:col-span-3 flex justify-end space-x-3 pt-4">
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
                 <button
-                  type="reset"
-                  onClick={() =>
-                    setFormData({
-                      employeeName: "",
-                      leaveType: "",
-                      fromDate: "",
-                      toDate: "",
-                      noOfDays: "",
-                      reason: "",
-                      status: "Pending",
-                    })
-                  }
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded transition"
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  Reset
+                  Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded transition"
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
                   Save
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

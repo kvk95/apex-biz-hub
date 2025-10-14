@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-// Uncomment and install these if you use them in your reference page
-// import { FiSearch, FiRefreshCw, FiFileText, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-
-const roles = ["Admin", "Manager", "Staff"]; // Replace with actual roles from reference
-const statuses = ["Active", "Inactive"]; // Replace with actual statuses from reference
+const roles = ["Admin", "Manager", "Staff"];
+const statuses = ["Active", "Inactive"];
 
 const formFields = [
   { id: "name", label: "Name", type: "text" },
@@ -16,13 +14,20 @@ const formFields = [
 ];
 
 const Employees = () => {
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({});
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 10; // Adjust based on reference pagination
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -41,47 +46,130 @@ const Employees = () => {
   }, []);
 
   // Filter employees based on search
-  const filteredEmployees = data.filter(emp =>
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredEmployees = data.filter(
+    (emp) =>
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
-  const currentEmployees = filteredEmployees.slice(
+  // Calculate paginated data using Pagination component props
+  const paginatedData = filteredEmployees.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
+  // Handle form input changes for Add Section
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission (replace with actual API call)
-  const handleSubmit = (e) => {
+  // Handle form submission (Add Section)
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add logic to save/update employee
+    // Validate required fields (e.g., name, email)
+    if (!formData.name?.trim() || !formData.email?.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [
+      ...prev,
+      {
+        id: newId,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        role: formData.role || roles[0],
+        status: formData.status || statuses[0],
+        joinDate: formData.joinDate || "",
+      },
+    ]);
+    setFormData({});
+    setCurrentPage(1);
   };
 
-  // Handle edit (replace with actual logic)
-  const handleEdit = (id) => {
-    const employee = data.find(emp => emp.id === id);
-    setFormData(employee);
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const employee = data.find((emp) => emp.id === id);
+    if (employee) {
+      setEditForm({
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        status: employee.status,
+        joinDate: employee.joinDate || "",
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
   };
 
-  // Handle delete (replace with actual logic)
-  const handleDelete = (id) => {
-    console.log("Delete employee:", id);
-    // Add logic to delete employee
+  // Handle edit modal input changes
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // =============================================
-  // REPLACE THIS WITH ACTUAL PAGE TITLE FROM REFERENCE
-  // =============================================
-  const pageTitle = "Employees";
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.name?.trim() || !editForm.email?.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                name: editForm.name.trim(),
+                email: editForm.email.trim(),
+                role: editForm.role || roles[0],
+                status: editForm.status || statuses[0],
+                joinDate: editForm.joinDate || "",
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Handle delete
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setFormData({});
+    setEditId(null);
+    setCurrentPage(1);
+    setSearchTerm("");
+  };
+
+  // Report handler
+  const handleReport = () => {
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -92,9 +180,9 @@ const Employees = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">{pageTitle}</h1>
+      <h1 className="text-2xl font-semibold mb-6">Employees</h1>
 
       {/* Search and Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -102,113 +190,165 @@ const Employees = () => {
           <input
             type="text"
             placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          {/* <FiSearch className="absolute left-3 top-3 text-gray-400" /> */}
+          <i className="fa fa-search fa-light absolute left-3 top-2.5 text-muted-foreground pointer-events-none"></i>
         </div>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            {/* <FiRefreshCw className="mr-2" /> */} Refresh
+        <div className="flex gap-3">
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-            {/* <FiFileText className="mr-2" /> */} Report
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
         </div>
       </div>
 
-      {/* Form Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Add/Edit Employee</h2>
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Add Employee</h2>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {formFields.map((field) => (
               <div key={field.id}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                <label
+                  htmlFor={field.id}
+                  className="block text-sm font-medium mb-1"
+                >
+                  {field.label}
+                </label>
                 {field.type === "select" ? (
                   <select
+                    id={field.id}
                     name={field.id}
                     value={formData[field.id] || ""}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <option value="">Select {field.label}</option>
                     {field.options.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
                     ))}
                   </select>
                 ) : (
                   <input
                     type={field.type}
+                    id={field.id}
                     name={field.id}
                     value={formData[field.id] || ""}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder={field.label}
                   />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Cancel
-            </button>
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
           </div>
         </form>
-      </div>
+      </section>
 
       {/* Table Section */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Role
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Join Date
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentEmployees.map((employee) => (
-                <tr key={employee.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.role}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`px-2 py-1 rounded-full text-xs ${employee.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No employees found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((employee, idx) => (
+                <tr
+                  key={employee.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {employee.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {employee.email}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {employee.role}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        employee.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
                       {employee.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.joinDate}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(employee.id)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {/* <FiEdit2 /> */} Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(employee.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        {/* <FiTrash2 /> */} Delete
-                      </button>
-                    </div>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {employee.joinDate || "-"}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(employee.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit employee ${employee.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(employee.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete employee ${employee.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -217,39 +357,89 @@ const Employees = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-            <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}</span> of{" "}
-            <span className="font-medium">{filteredEmployees.length}</span> employees
-          </div>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-md ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredEmployees.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
             >
-              {/* <FiChevronLeft /> */} Prev
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
+              Edit Employee
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {formFields.map((field) => (
+                <div key={field.id}>
+                  <label
+                    htmlFor={"edit" + field.id}
+                    className="block text-sm font-medium mb-1"
+                  >
+                    {field.label}
+                  </label>
+                  {field.type === "select" ? (
+                    <select
+                      id={"edit" + field.id}
+                      name={field.id}
+                      value={editForm[field.id] || ""}
+                      onChange={handleEditInputChange}
+                      className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Select {field.label}</option>
+                      {field.options.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      id={"edit" + field.id}
+                      name={field.id}
+                      value={editForm[field.id] || ""}
+                      onChange={handleEditInputChange}
+                      className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                      placeholder={field.label}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-md ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                {i + 1}
+                Cancel
               </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-md ${currentPage === totalPages ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-            >
-              {/* <FiChevronRight /> */} Next
-            </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

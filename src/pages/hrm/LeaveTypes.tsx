@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 interface LeaveType {
   id: number;
@@ -8,16 +9,15 @@ interface LeaveType {
   status: "Active" | "Inactive";
 }
 
-const PAGE_SIZE = 5;
-
 const LeaveTypes: React.FC = () => {
   // Page title as per reference page
   useEffect(() => {
-    
+    // No action needed
   }, []);
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // State for form inputs
   const [leaveType, setLeaveType] = useState("");
@@ -34,6 +34,14 @@ const LeaveTypes: React.FC = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // State for modal editing
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    leaveType: "",
+    days: "",
+    status: "Active",
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -55,10 +63,9 @@ const LeaveTypes: React.FC = () => {
   }, []);
 
   // Pagination calculations
-  const totalPages = Math.ceil(leaveTypes.length / PAGE_SIZE);
   const paginatedData = leaveTypes.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Handlers
@@ -99,8 +106,8 @@ const LeaveTypes: React.FC = () => {
         { id: newId, leaveType: leaveType.trim(), days: Number(days), status: status as "Active" | "Inactive" },
       ]);
       // If new page needed, move to last page
-      if ((leaveTypes.length + 1) > PAGE_SIZE * totalPages) {
-        setCurrentPage(totalPages + 1);
+      if ((leaveTypes.length + 1) > itemsPerPage * Math.ceil(leaveTypes.length / itemsPerPage)) {
+        setCurrentPage(Math.ceil((leaveTypes.length + 1) / itemsPerPage));
       }
     }
     resetForm();
@@ -109,10 +116,13 @@ const LeaveTypes: React.FC = () => {
   const handleEdit = (id: number) => {
     const lt = leaveTypes.find((l) => l.id === id);
     if (lt) {
-      setLeaveType(lt.leaveType);
-      setDays(String(lt.days));
-      setStatus(lt.status);
+      setEditForm({
+        leaveType: lt.leaveType,
+        days: String(lt.days),
+        status: lt.status,
+      });
       setEditingId(id);
+      setIsEditModalOpen(true);
     }
   };
 
@@ -122,7 +132,7 @@ const LeaveTypes: React.FC = () => {
       // Adjust page if needed
       if (
         currentPage > 1 &&
-        (leaveTypes.length - 1) <= PAGE_SIZE * (currentPage - 1)
+        (leaveTypes.length - 1) <= itemsPerPage * (currentPage - 1)
       ) {
         setCurrentPage(currentPage - 1);
       }
@@ -130,9 +140,9 @@ const LeaveTypes: React.FC = () => {
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
+  const handleClear = () => {
     resetForm();
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -140,257 +150,314 @@ const LeaveTypes: React.FC = () => {
     alert("Leave Types Report:\n" + JSON.stringify(leaveTypes, null, 2));
   };
 
+  const handleEditSave = () => {
+    if (!editForm.leaveType.trim()) {
+      alert("Please enter Leave Type");
+      return;
+    }
+    if (!editForm.days.trim() || isNaN(Number(editForm.days)) || Number(editForm.days) < 0) {
+      alert("Please enter valid Days");
+      return;
+    }
+
+    if (editingId !== null) {
+      // Update existing
+      setLeaveTypes((prev) =>
+        prev.map((lt) =>
+          lt.id === editingId
+            ? { ...lt, leaveType: editForm.leaveType.trim(), days: Number(editForm.days), status: editForm.status as "Active" | "Inactive" }
+            : lt
+        )
+      );
+      setEditingId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">
-        Leave Types
-      </h1>
+      <h1 className="text-2xl font-semibold mb-6">Leave Types</h1>
 
       {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          Add / Edit Leave Type
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-6"
-          noValidate
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Leave Type */}
+          <div>
             <label
               htmlFor="leaveType"
-              className="block text-gray-700 font-medium"
+              className="block text-sm font-medium mb-1"
             >
               Leave Type
             </label>
             <input
-              id="leaveType"
               type="text"
+              id="leaveType"
+              name="leaveType"
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
-              className="sm:col-span-2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter leave type"
-              required
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-            <label htmlFor="days" className="block text-gray-700 font-medium">
+          {/* Days */}
+          <div>
+            <label htmlFor="days" className="block text-sm font-medium mb-1">
               Days
             </label>
             <input
-              id="days"
               type="number"
-              min={0}
+              id="days"
+              name="days"
               value={days}
               onChange={(e) => setDays(e.target.value)}
-              className="sm:col-span-2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              min={0}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter number of days"
-              required
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-            <label htmlFor="status" className="block text-gray-700 font-medium">
+          {/* Status */}
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
               Status
             </label>
             <select
               id="status"
+              name="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="sm:col-span-2 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
           </div>
+        </div>
 
-          <div className="flex space-x-4 justify-end">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="px-5 py-2 rounded border border-gray-400 text-gray-700 hover:bg-gray-100 transition"
-            >
-              Clear
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
-            >
-              {editingId !== null ? "Update" : "Save"}
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Leave Types List</h2>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleReport}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              title="Generate Report"
-              type="button"
-            >
-              Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              title="Refresh Data"
-              type="button"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
-
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 border-b border-gray-300 font-medium text-gray-700 w-16">#</th>
-                <th className="px-4 py-3 border-b border-gray-300 font-medium text-gray-700">Leave Type</th>
-                <th className="px-4 py-3 border-b border-gray-300 font-medium text-gray-700 w-24">Days</th>
-                <th className="px-4 py-3 border-b border-gray-300 font-medium text-gray-700 w-28">Status</th>
-                <th className="px-4 py-3 border-b border-gray-300 font-medium text-gray-700 w-36">Actions</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Leave Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Days
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.length === 0 ? (
+              {paginatedData.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td
+                    colSpan={5}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
                     No leave types found.
                   </td>
                 </tr>
-              ) : (
-                paginatedData.map(({ id, leaveType, days, status }, idx) => (
-                  <tr
-                    key={id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-4 py-3 border-b border-gray-300">{(currentPage - 1) * PAGE_SIZE + idx + 1}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">{leaveType}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">{days}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 border-b border-gray-300 space-x-2">
-                      <button
-                        onClick={() => handleEdit(id)}
-                        className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition text-sm"
-                        title="Edit"
-                        type="button"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                        title="Delete"
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
               )}
+              {paginatedData.map(({ id, leaveType, days, status }, idx) => (
+                <tr
+                  key={id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{leaveType}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{days}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${status === "Active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                    >
+                      {status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit leave type ${leaveType}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete leave type ${leaveType}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <nav
-          className="flex justify-end items-center space-x-2 mt-4"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border ${
-              currentPage === 1
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="First Page"
-            type="button"
-          >
-            &laquo;
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border ${
-              currentPage === 1
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous Page"
-            type="button"
-          >
-            &lsaquo;
-          </button>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded border ${
-                page === currentPage
-                  ? "bg-indigo-600 border-indigo-600 text-white"
-                  : "border-gray-400 text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-current={page === currentPage ? "page" : undefined}
-              type="button"
-            >
-              {page}
-            </button>
-          ))}
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border ${
-              currentPage === totalPages
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next Page"
-            type="button"
-          >
-            &rsaquo;
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border ${
-              currentPage === totalPages
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Last Page"
-            type="button"
-          >
-            &raquo;
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={leaveTypes.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Leave Type
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Leave Type */}
+              <div>
+                <label
+                  htmlFor="editLeaveType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Leave Type
+                </label>
+                <input
+                  type="text"
+                  id="editLeaveType"
+                  name="leaveType"
+                  value={editForm.leaveType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter leave type"
+                />
+              </div>
+
+              {/* Days */}
+              <div>
+                <label
+                  htmlFor="editDays"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Days
+                </label>
+                <input
+                  type="number"
+                  id="editDays"
+                  name="days"
+                  value={editForm.days}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter number of days"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

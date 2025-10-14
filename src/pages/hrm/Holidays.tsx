@@ -1,18 +1,39 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
-
-const pageSizeOptions = [5, 10, 15];
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function Holidays() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [holidays, setHolidays] = useState(data);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [form, setForm] = useState({
+    holidayName: "",
+    holidayDate: "",
+    day: "",
+    description: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    holidayName: "",
+    holidayDate: "",
+    day: "",
+    description: "",
+  });
+
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<[]>("Holidays");
     if (response.status.code === "S") {
       setData(response.result);
+      setHolidays(response.result);
       setError(null);
     } else {
       setError(response.status.description);
@@ -24,22 +45,10 @@ export default function Holidays() {
     loadData();
   }, []);
 
-  const [holidays, setHolidays] = useState(data);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [form, setForm] = useState({
-    holidayName: "",
-    holidayDate: "",
-    day: "",
-    description: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(holidays.length / pageSize);
+  // Calculate paginated data using Pagination component props
   const paginatedHolidays = holidays.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Update day automatically when holidayDate changes
@@ -47,7 +56,6 @@ export default function Holidays() {
     if (form.holidayDate) {
       const dateParts = form.holidayDate.split("-");
       if (dateParts.length === 3) {
-        // Expecting yyyy-mm-dd format from input type=date
         const dateObj = new Date(form.holidayDate);
         if (!isNaN(dateObj.getTime())) {
           const dayName = dateObj.toLocaleDateString("en-US", {
@@ -67,6 +75,13 @@ export default function Holidays() {
   ) {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+  }
+
+  function handleEditInputChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    const { name, value } = e.target;
+    setEditForm((f) => ({ ...f, [name]: value }));
   }
 
   function handleSave() {
@@ -115,15 +130,48 @@ export default function Holidays() {
   function handleEdit(id: number) {
     const holiday = holidays.find((h) => h.id === id);
     if (holiday) {
-      setForm({
+      setEditForm({
         holidayName: holiday.holidayName,
         holidayDate: holiday.holidayDate,
         day: holiday.day,
         description: holiday.description,
       });
       setEditId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsEditModalOpen(true);
     }
+  }
+
+  function handleEditSave() {
+    if (
+      !editForm.holidayName.trim() ||
+      !editForm.holidayDate.trim() ||
+      !editForm.day.trim()
+    ) {
+      alert("Please fill in Holiday Name, Date and Day.");
+      return;
+    }
+    if (editId !== null) {
+      setHolidays((prev) =>
+        prev.map((h) =>
+          h.id === editId
+            ? {
+                ...h,
+                holidayName: editForm.holidayName,
+                holidayDate: editForm.holidayDate,
+                day: editForm.day,
+                description: editForm.description,
+              }
+            : h
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  }
+
+  function handleEditCancel() {
+    setEditId(null);
+    setIsEditModalOpen(false);
   }
 
   function handleDelete(id: number) {
@@ -133,10 +181,17 @@ export default function Holidays() {
         setEditId(null);
         setForm({ holidayName: "", holidayDate: "", day: "", description: "" });
       }
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= holidays.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   }
 
-  function handleRefresh() {
+  function handleClear() {
     setHolidays(data);
     setCurrentPage(1);
     setForm({ holidayName: "", holidayDate: "", day: "", description: "" });
@@ -144,297 +199,322 @@ export default function Holidays() {
   }
 
   function handleReport() {
-    // For demonstration, just alert JSON data
     alert(JSON.stringify(holidays, null, 2));
   }
 
-  function changePage(newPage: number) {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      <title>Holidays - Dreams POS</title>
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-semibold mb-6 text-gray-900">Holidays</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Holidays</h1>
 
-        {/* Form Section */}
-        <section className="bg-white rounded shadow p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">
-            Holiday Details
-          </h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          >
-            <div className="flex flex-col">
-              <label
-                htmlFor="holidayName"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Holiday Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                id="holidayName"
-                name="holidayName"
-                value={form.holidayName}
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter holiday name"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="holidayDate"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Holiday Date <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="date"
-                id="holidayDate"
-                name="holidayDate"
-                value={form.holidayDate}
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="day"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Day <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                id="day"
-                name="day"
-                value={form.day}
-                readOnly
-                className="border border-gray-300 rounded bg-gray-100 px-3 py-2 cursor-not-allowed"
-                placeholder="Day auto-filled"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="description"
-                className="mb-1 font-medium text-gray-700"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={form.description}
-                onChange={handleInputChange}
-                rows={1}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                placeholder="Enter description"
-              />
-            </div>
-
-            <div className="md:col-span-4 flex justify-end space-x-3 mt-4">
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="flex items-center space-x-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-4 py-2 rounded shadow"
-                title="Refresh"
-              >
-                <i className="fas fa-sync-alt"></i>
-                <span>Refresh</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleReport}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow"
-                title="Report"
-              >
-                <i className="fas fa-file-alt"></i>
-                <span>Report</span>
-              </button>
-              <button
-                type="submit"
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow"
-                title={editId !== null ? "Update Holiday" : "Save Holiday"}
-              >
-                <i className="fas fa-save"></i>
-                <span>{editId !== null ? "Update" : "Save"}</span>
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* Holidays Table Section */}
-        <section className="bg-white rounded shadow p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Holiday List</h2>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                    #
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                    Holiday Name
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                    Holiday Date
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                    Day
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                    Description
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center text-gray-700 font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedHolidays.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="text-center py-4 text-gray-500 italic"
-                    >
-                      No holidays found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedHolidays.map((holiday, idx) => (
-                    <tr
-                      key={holiday.id}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="border border-gray-300 px-4 py-2">
-                        {(currentPage - 1) * pageSize + idx + 1}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {holiday.holidayName}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {holiday.holidayDate}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {holiday.day}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {holiday.description}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(holiday.id)}
-                          title="Edit"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(holiday.id)}
-                          title="Delete"
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex flex-col md:flex-row items-center justify-between mt-4 space-y-3 md:space-y-0">
-            <div className="flex items-center space-x-2">
-              <label
-                htmlFor="pageSize"
-                className="text-gray-700 font-medium select-none"
-              >
-                Rows per page:
-              </label>
-              <select
-                id="pageSize"
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {pageSizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <nav
-              className="inline-flex -space-x-px rounded-md shadow-sm"
-              aria-label="Pagination"
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Holiday Details</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+          className="grid grid-cols-1 md:grid-cols-4 gap-6"
+        >
+          <div>
+            <label
+              htmlFor="holidayName"
+              className="block text-sm font-medium mb-1"
             >
-              <button
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                aria-label="Previous"
-              >
-                <i className="fas fa-chevron-left"></i>
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                const isActive = page === currentPage;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => changePage(page)}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      isActive
-                        ? "z-10 bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-                aria-label="Next"
-              >
-                <i className="fas fa-chevron-right"></i>
-              </button>
-            </nav>
+              Holiday Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              id="holidayName"
+              name="holidayName"
+              value={form.holidayName}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter holiday name"
+              required
+            />
           </div>
-        </section>
-      </div>
+
+          <div>
+            <label
+              htmlFor="holidayDate"
+              className="block text-sm font-medium mb-1"
+            >
+              Holiday Date <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              id="holidayDate"
+              name="holidayDate"
+              value={form.holidayDate}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="day" className="block text-sm font-medium mb-1">
+              Day <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              id="day"
+              name="day"
+              value={form.day}
+              readOnly
+              className="w-full border border-input rounded bg-muted px-3 py-2 cursor-not-allowed"
+              placeholder="Day auto-filled"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium mb-1"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={form.description}
+              onChange={handleInputChange}
+              rows={1}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              placeholder="Enter description"
+            />
+          </div>
+
+          <div className="md:col-span-4 flex justify-end gap-3 mt-4">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleReport}
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Holidays Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <h2 className="text-lg font-semibold mb-4 px-6">Holiday List</h2>
+        <div className="overflow-x-auto px-6">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Holiday Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Holiday Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Day
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Description
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedHolidays.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No holidays found.
+                  </td>
+                </tr>
+              )}
+              {paginatedHolidays.map((holiday, idx) => (
+                <tr
+                  key={holiday.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {holiday.holidayName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {holiday.holidayDate}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {holiday.day}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {holiday.description}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(holiday.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit holiday ${holiday.holidayName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(holiday.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete holiday ${holiday.holidayName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={holidays.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Holiday
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="editHolidayName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Holiday Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editHolidayName"
+                  name="holidayName"
+                  value={editForm.holidayName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter holiday name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editHolidayDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Holiday Date <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="editHolidayDate"
+                  name="holidayDate"
+                  value={editForm.holidayDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editDay"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Day <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editDay"
+                  name="day"
+                  value={editForm.day}
+                  readOnly
+                  className="w-full border border-input rounded bg-muted px-3 py-2 cursor-not-allowed"
+                  placeholder="Day auto-filled"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editDescription"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="editDescription"
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditInputChange}
+                  rows={1}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  placeholder="Enter description"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

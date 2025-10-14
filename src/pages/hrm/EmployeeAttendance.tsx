@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const departments = [
   { label: "All Departments", value: "" },
@@ -17,8 +18,6 @@ const statuses = [
   { label: "Late", value: "Late" },
 ];
 
-const pageSizeOptions = [5, 10, 20];
-
 export default function EmployeeAttendance() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,9 +26,22 @@ export default function EmployeeAttendance() {
   const [searchText, setSearchText] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [pageSize, setPageSize] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState("");
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    employeeId: "",
+    name: "",
+    department: "",
+    date: "",
+    checkIn: "",
+    checkOut: "",
+    status: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -61,11 +73,10 @@ export default function EmployeeAttendance() {
       .filter((emp) => (dateFilter ? emp.date === dateFilter : true));
   }, [data, searchText, selectedDepartment, selectedStatus, dateFilter]);
 
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  // Paginated data using Pagination component props
   const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Handlers
@@ -89,23 +100,90 @@ export default function EmployeeAttendance() {
     setCurrentPage(1);
   };
 
-  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(parseInt(e.target.value));
-    setCurrentPage(1);
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        employeeId: item.employeeId,
+        name: item.name,
+        department: item.department,
+        date: item.date,
+        checkIn: item.checkIn,
+        checkOut: item.checkOut,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
   };
 
-  const handleRefresh = () => {
+  const handleEditSave = () => {
+    if (
+      !editForm.employeeId.trim() ||
+      !editForm.name.trim() ||
+      !editForm.department.trim() ||
+      !editForm.date ||
+      !editForm.checkIn ||
+      !editForm.checkOut ||
+      !editForm.status.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                employeeId: editForm.employeeId.trim(),
+                name: editForm.name.trim(),
+                department: editForm.department,
+                date: editForm.date,
+                checkIn: editForm.checkIn,
+                checkOut: editForm.checkOut,
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this record?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setSearchText("");
     setSelectedDepartment("");
     setSelectedStatus("");
     setDateFilter("");
     setCurrentPage(1);
-    setPageSize(5);
+    setItemsPerPage(5);
   };
 
   const handleReport = () => {
@@ -113,21 +191,19 @@ export default function EmployeeAttendance() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <title>Employee Attendance</title>
-
+    <div className="min-h-screen bg-background font-sans p-6">
       <h1 className="text-2xl font-semibold mb-6">Employee Attendance</h1>
 
       {/* Filters Section */}
-      <section className="bg-white rounded shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <form
           onSubmit={(e) => e.preventDefault()}
-          className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end"
         >
           <div>
             <label
               htmlFor="search"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1 text-muted-foreground"
             >
               Search
             </label>
@@ -137,14 +213,14 @@ export default function EmployeeAttendance() {
               placeholder="Search by Name or ID"
               value={searchText}
               onChange={handleSearchChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           <div>
             <label
               htmlFor="department"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1 text-muted-foreground"
             >
               Department
             </label>
@@ -152,7 +228,7 @@ export default function EmployeeAttendance() {
               id="department"
               value={selectedDepartment}
               onChange={handleDepartmentChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {departments.map((dept) => (
                 <option key={dept.value} value={dept.value}>
@@ -165,7 +241,7 @@ export default function EmployeeAttendance() {
           <div>
             <label
               htmlFor="status"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1 text-muted-foreground"
             >
               Status
             </label>
@@ -173,7 +249,7 @@ export default function EmployeeAttendance() {
               id="status"
               value={selectedStatus}
               onChange={handleStatusChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {statuses.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -186,7 +262,7 @@ export default function EmployeeAttendance() {
           <div>
             <label
               htmlFor="date"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1 text-muted-foreground"
             >
               Date
             </label>
@@ -195,121 +271,120 @@ export default function EmployeeAttendance() {
               type="date"
               value={dateFilter}
               onChange={handleDateChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              title="Refresh"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Clear"
             >
-              <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Generate Report"
             >
-              <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Employee ID
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Department
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Check In
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Check Out
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {paginatedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={8}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No records found.
                   </td>
                 </tr>
               )}
               {paginatedData.map((emp) => (
-                <tr key={emp.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{emp.employeeId}</td>
-                  <td className="px-4 py-3">{emp.name}</td>
-                  <td className="px-4 py-3">{emp.department}</td>
-                  <td className="px-4 py-3">{emp.date}</td>
-                  <td className="px-4 py-3">{emp.checkIn}</td>
-                  <td className="px-4 py-3">{emp.checkOut}</td>
-                  <td className="px-4 py-3">
+                <tr
+                  key={emp.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {emp.employeeId}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{emp.name}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {emp.department}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{emp.date}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{emp.checkIn}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{emp.checkOut}</td>
+                  <td className="px-4 py-3 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         emp.status === "Present"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : emp.status === "Absent"
-                          ? "bg-red-100 text-red-800"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           : emp.status === "Late"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                       }`}
                     >
                       {emp.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center space-x-2">
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
+                      onClick={() => handleEdit(emp.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit employee ${emp.name}`}
                       type="button"
-                      title="Edit"
-                      className="text-indigo-600 hover:text-indigo-900"
-                      onClick={() =>
-                        alert(
-                          `Edit functionality not implemented. Employee: ${emp.name}`
-                        )
-                      }
                     >
-                      <i className="fas fa-edit" aria-hidden="true"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
+                      onClick={() => handleDelete(emp.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete employee ${emp.name}`}
                       type="button"
-                      title="Delete"
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() =>
-                        alert(
-                          `Delete functionality not implemented. Employee: ${emp.name}`
-                        )
-                      }
                     >
-                      <i className="fas fa-trash-alt" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -318,70 +393,195 @@ export default function EmployeeAttendance() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="mt-4 flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0">
-          <div className="flex items-center space-x-2 text-sm text-gray-700">
-            <span>Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={handlePageSizeChange}
-              className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <nav
-            className="inline-flex -space-x-px rounded-md shadow-sm"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous"
-            >
-              <i className="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    page === currentPage
-                      ? "z-10 bg-indigo-600 text-white border-indigo-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              )
-            )}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                currentPage === totalPages || totalPages === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Next"
-            >
-              <i className="fas fa-chevron-right" aria-hidden="true"></i>
-            </button>
-          </nav>
-        </div>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Employee Attendance
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Employee ID */}
+              <div>
+                <label
+                  htmlFor="editEmployeeId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Employee ID
+                </label>
+                <input
+                  type="text"
+                  id="editEmployeeId"
+                  name="employeeId"
+                  value={editForm.employeeId}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter employee ID"
+                />
+              </div>
+
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter name"
+                />
+              </div>
+
+              {/* Department */}
+              <div>
+                <label
+                  htmlFor="editDepartment"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Department
+                </label>
+                <select
+                  id="editDepartment"
+                  name="department"
+                  value={editForm.department}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {departments
+                    .filter((d) => d.value !== "")
+                    .map((dept) => (
+                      <option key={dept.value} value={dept.value}>
+                        {dept.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Date */}
+              <div>
+                <label
+                  htmlFor="editDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  id="editDate"
+                  name="date"
+                  value={editForm.date}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Check In */}
+              <div>
+                <label
+                  htmlFor="editCheckIn"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Check In
+                </label>
+                <input
+                  type="time"
+                  id="editCheckIn"
+                  name="checkIn"
+                  value={editForm.checkIn}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Check Out */}
+              <div>
+                <label
+                  htmlFor="editCheckOut"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Check Out
+                </label>
+                <input
+                  type="time"
+                  id="editCheckOut"
+                  name="checkOut"
+                  value={editForm.checkOut}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statuses
+                    .filter((s) => s.value !== "")
+                    .map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,30 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const pageSize = 5;
+const statusOptions = ["Active", "Inactive"];
 
 export default function Shifts() {
-  // Page title as in reference page
-  useEffect(() => {
-    
-  }, []);
-
-  // States for form fields
-  const [shiftName, setShiftName] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [status, setStatus] = useState("Active");
-
-  // Edit mode states
-  const [editId, setEditId] = useState<number | null>(null);
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Data state and API loading states
+  // Form state for Add Section
+  const [form, setForm] = useState({
+    shiftName: "",
+    startTime: "",
+    endTime: "",
+    status: statusOptions[0],
+  });
+
+  // Data state
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    shiftName: "",
+    startTime: "",
+    endTime: "",
+    status: statusOptions[0],
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -38,81 +48,99 @@ export default function Shifts() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(shifts.length / pageSize);
-  const paginatedShifts = shifts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  // Handlers
-  const resetForm = () => {
-    setShiftName("");
-    setStartTime("");
-    setEndTime("");
-    setStatus("Active");
-    setEditId(null);
+  // Handlers for Add Section form inputs
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new shift)
   const handleSave = () => {
-    if (!shiftName.trim() || !startTime || !endTime) {
-      alert("Please fill all fields.");
+    if (!form.shiftName.trim() || !form.startTime || !form.endTime) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    const newId = shifts.length ? Math.max(...shifts.map((s) => s.id)) + 1 : 1;
+    setShifts((prev) => [
+      ...prev,
+      {
+        id: newId,
+        shiftName: form.shiftName.trim(),
+        startTime: form.startTime,
+        endTime: form.endTime,
+        status: form.status,
+      },
+    ]);
+    setForm({
+      shiftName: "",
+      startTime: "",
+      endTime: "",
+      status: statusOptions[0],
+    });
+  };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = shifts.find((s) => s.id === id);
+    if (item) {
+      setEditForm({
+        shiftName: item.shiftName,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.shiftName.trim() || !editForm.startTime || !editForm.endTime) {
+      alert("Please fill all required fields.");
       return;
     }
     if (editId !== null) {
-      // Update existing shift
       setShifts((prev) =>
-        prev.map((s) =>
-          s.id === editId
-            ? { ...s, shiftName, startTime, endTime, status }
-            : s
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                shiftName: editForm.shiftName.trim(),
+                startTime: editForm.startTime,
+                endTime: editForm.endTime,
+                status: editForm.status,
+              }
+            : item
         )
       );
-    } else {
-      // Add new shift
-      const newShift = {
-        id: shifts.length ? Math.max(...shifts.map((s) => s.id)) + 1 : 1,
-        shiftName,
-        startTime,
-        endTime,
-        status,
-      };
-      setShifts((prev) => [...prev, newShift]);
-      // If new shift added on last page, move to last page
-      if (Math.ceil((shifts.length + 1) / pageSize) > totalPages) {
-        setCurrentPage(totalPages + 1);
-      }
+      setEditId(null);
+      setIsEditModalOpen(false);
     }
-    resetForm();
   };
 
-  const handleEdit = (id: number) => {
-    const shift = shifts.find((s) => s.id === id);
-    if (shift) {
-      setShiftName(shift.shiftName);
-      setStartTime(shift.startTime);
-      setEndTime(shift.endTime);
-      setStatus(shift.status);
-      setEditId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this shift? This action cannot be undone."
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this shift?")) {
       setShifts((prev) => prev.filter((s) => s.id !== id));
-      // Adjust page if last item on page deleted
+      // If deleting last item on page, go to previous page if needed
       if (
-        (shifts.length - 1) % pageSize === 0 &&
-        currentPage === totalPages &&
+        (currentPage - 1) * itemsPerPage >= shifts.length - 1 &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -120,170 +148,166 @@ export default function Shifts() {
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    resetForm();
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      shiftName: "",
+      startTime: "",
+      endTime: "",
+      status: statusOptions[0],
+    });
+    setEditId(null);
     setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demonstration, just alert JSON of current shifts
+    // For demo, just alert JSON data
     alert("Report Data:\n" + JSON.stringify(shifts, null, 2));
   };
 
-  // Pagination controls
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
+  // Calculate paginated data using Pagination component props
+  const paginatedShifts = shifts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6">Shifts</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Shifts</h1>
 
-      {/* Shift Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Shift</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-6"
-          noValidate
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-            <div>
-              <label
-                htmlFor="shiftName"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Shift Name
-              </label>
-              <input
-                id="shiftName"
-                type="text"
-                value={shiftName}
-                onChange={(e) => setShiftName(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter Shift Name"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="startTime"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Start Time
-              </label>
-              <input
-                id="startTime"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="endTime"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                End Time
-              </label>
-              <input
-                id="endTime"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="status"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
-            </div>
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Shift Name */}
+          <div>
+            <label
+              htmlFor="shiftName"
+              className="block text-sm font-medium mb-1"
+            >
+              Shift Name
+            </label>
+            <input
+              type="text"
+              id="shiftName"
+              name="shiftName"
+              value={form.shiftName}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter shift name"
+            />
           </div>
 
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded transition"
+          {/* Start Time */}
+          <div>
+            <label
+              htmlFor="startTime"
+              className="block text-sm font-medium mb-1"
             >
-              <i className="fa fa-save" aria-hidden="true"></i>
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded transition"
-            >
-              <i className="fa fa-times" aria-hidden="true"></i>
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded transition ml-auto"
-            >
-              <i className="fa fa-refresh" aria-hidden="true"></i>
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded transition"
-            >
-              <i className="fa fa-file-text" aria-hidden="true"></i>
-              Report
-            </button>
+              Start Time
+            </label>
+            <input
+              type="time"
+              id="startTime"
+              name="startTime"
+              value={form.startTime}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
-        </form>
+
+          {/* End Time */}
+          <div>
+            <label
+              htmlFor="endTime"
+              className="block text-sm font-medium mb-1"
+            >
+              End Time
+            </label>
+            <input
+              type="time"
+              id="endTime"
+              name="endTime"
+              value={form.endTime}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium mb-1"
+            >
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={form.status}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
-      {/* Shifts Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Shifts List</h2>
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="text-left px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="text-left px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Shift Name
                 </th>
-                <th className="text-left px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Start Time
                 </th>
-                <th className="text-left px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   End Time
                 </th>
-                <th className="text-left px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="text-center px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
@@ -293,7 +317,7 @@ export default function Shifts() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="text-center py-6 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No shifts found.
                   </td>
@@ -302,47 +326,47 @@ export default function Shifts() {
               {paginatedShifts.map((shift, idx) => (
                 <tr
                   key={shift.id}
-                  className={
-                    idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm">
-                    {(currentPage - 1) * pageSize + idx + 1}
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {shift.shiftName}
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {shift.startTime}
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {shift.endTime}
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm">
+                  <td className="px-4 py-3 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         shift.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {shift.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-200 text-sm text-center space-x-2">
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => handleEdit(shift.id)}
-                      title="Edit"
-                      className="text-blue-600 hover:text-blue-800 transition"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit shift ${shift.shiftName}`}
+                      type="button"
                     >
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
                       onClick={() => handleDelete(shift.id)}
-                      title="Delete"
-                      className="text-red-600 hover:text-red-800 transition"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete shift ${shift.shiftName}`}
+                      type="button"
                     >
-                      <i className="fa fa-trash" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -351,64 +375,131 @@ export default function Shifts() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          aria-label="Pagination"
-          className="flex justify-between items-center mt-6"
-        >
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-semibold text-gray-900">
-              {(currentPage - 1) * pageSize + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold text-gray-900">
-              {Math.min(currentPage * pageSize, shifts.length)}
-            </span>{" "}
-            of <span className="font-semibold text-gray-900">{shifts.length}</span>{" "}
-            results
-          </div>
-          <ul className="inline-flex items-center -space-x-px">
-            <li>
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`block px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-                aria-label="Previous"
-              >
-                <i className="fa fa-chevron-left"></i>
-              </button>
-            </li>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (page) => (
-                <li key={page}>
-                  <button
-                    onClick={() => goToPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`px-3 py-2 leading-tight border border-gray-300 ${
-                      page === currentPage
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`block px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-                aria-label="Next"
-              >
-                <i className="fa fa-chevron-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={shifts.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Shift
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Shift Name */}
+              <div>
+                <label
+                  htmlFor="editShiftName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Shift Name
+                </label>
+                <input
+                  type="text"
+                  id="editShiftName"
+                  name="shiftName"
+                  value={editForm.shiftName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter shift name"
+                />
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label
+                  htmlFor="editStartTime"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Start Time
+                </label>
+                <input
+                  type="time"
+                  id="editStartTime"
+                  name="startTime"
+                  value={editForm.startTime}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label
+                  htmlFor="editEndTime"
+                  className="block text-sm font-medium mb-1"
+                >
+                  End Time
+                </label>
+                <input
+                  type="time"
+                  id="editEndTime"
+                  name="endTime"
+                  value={editForm.endTime}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
