@@ -5,9 +5,7 @@ const PAGE_SIZE = 5;
 
 export default function PurchaseReturn() {
   // Page title as per reference page
-  React.useEffect(() => {
-    
-  }, []);
+  React.useEffect(() => {}, []);
 
   // State for form inputs
   const [date, setDate] = useState("");
@@ -56,6 +54,9 @@ export default function PurchaseReturn() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Calculate total for product line
   React.useEffect(() => {
@@ -116,8 +117,6 @@ export default function PurchaseReturn() {
     return data.slice(start, start + PAGE_SIZE);
   }, [currentPage, data]);
 
-  // State for current page
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Handler for page change
   function goToPage(page: number) {
@@ -156,7 +155,9 @@ export default function PurchaseReturn() {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
       {/* Page Header */}
       <header className="bg-white shadow px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Purchase Return</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Purchase Return
+        </h1>
         <div className="space-x-2">
           <button
             onClick={onReport}
@@ -188,7 +189,10 @@ export default function PurchaseReturn() {
           <form className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Date */}
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="date"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Date
               </label>
               <input
@@ -202,7 +206,10 @@ export default function PurchaseReturn() {
 
             {/* Reference No */}
             <div>
-              <label htmlFor="referenceNo" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="referenceNo"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reference No
               </label>
               <input
@@ -217,7 +224,10 @@ export default function PurchaseReturn() {
 
             {/* Supplier */}
             <div>
-              <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="supplier"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Supplier
               </label>
               <select
@@ -238,7 +248,10 @@ export default function PurchaseReturn() {
 
             {/* Warehouse */}
             <div>
-              <label htmlFor="warehouse" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="warehouse"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Warehouse
               </label>
               <select
@@ -261,7 +274,9 @@ export default function PurchaseReturn() {
 
         {/* Product Entry Section */}
         <section className="bg-white rounded shadow p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Product</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Add Product
+          </h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -271,7 +286,10 @@ export default function PurchaseReturn() {
           >
             {/* Product Code */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="productCode" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="productCode"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Product Code
               </label>
               <input
@@ -286,7 +304,10 @@ export default function PurchaseReturn() {
 
             {/* Product Name */}
             <div className="col-span-1 md:col-span-2">
-              <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="productName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Product Name
               </label>
               <input
@@ -301,7 +322,10 @@ export default function PurchaseReturn() {
 
             {/* Quantity */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="quantity"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Quantity
               </label>
               <input
@@ -317,7 +341,10 @@ export default function PurchaseReturn() {
 
             {/* Unit Cost */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="unitCost" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="unitCost"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Unit Cost
               </label>
               <input
@@ -334,7 +361,10 @@ export default function PurchaseReturn() {
 
             {/* Discount */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="discount"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Discount
               </label>
               <input
@@ -351,7 +381,10 @@ export default function PurchaseReturn() {
 
             {/* Tax */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="tax" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="tax"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Tax
               </label>
               <input
@@ -368,7 +401,10 @@ export default function PurchaseReturn() {
 
             {/* Total (read-only) */}
             <div className="col-span-1 md:col-span-1">
-              <label htmlFor="total" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="total"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Total
               </label>
               <input
@@ -401,12 +437,24 @@ export default function PurchaseReturn() {
               <tr className="bg-gray-100 text-gray-700 text-left text-sm font-semibold">
                 <th className="border border-gray-300 px-3 py-2">Code</th>
                 <th className="border border-gray-300 px-3 py-2">Name</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Quantity</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Unit Cost</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Discount</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Tax</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Total</th>
-                <th className="border border-gray-300 px-3 py-2 text-center">Action</th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Quantity
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Unit Cost
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Discount
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Tax
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Total
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-center">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -421,11 +469,21 @@ export default function PurchaseReturn() {
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="border border-gray-300 px-3 py-2">{p.code}</td>
                   <td className="border border-gray-300 px-3 py-2">{p.name}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{p.quantity}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{p.unitCost.toFixed(2)}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{p.discount.toFixed(2)}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{p.tax.toFixed(2)}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{p.total.toFixed(2)}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {p.quantity}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {p.unitCost.toFixed(2)}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {p.discount.toFixed(2)}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {p.tax.toFixed(2)}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {p.total.toFixed(2)}
+                  </td>
                   <td className="border border-gray-300 px-3 py-2 text-center">
                     <button
                       onClick={() => removeProduct(p.id)}
@@ -443,18 +501,28 @@ export default function PurchaseReturn() {
 
         {/* Purchase Returns List Section */}
         <section className="bg-white rounded shadow p-6 overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase Return List</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Purchase Return List
+          </h2>
           <table className="min-w-full table-auto border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left text-sm font-semibold">
                 <th className="border border-gray-300 px-3 py-2">Date</th>
-                <th className="border border-gray-300 px-3 py-2">Reference No</th>
+                <th className="border border-gray-300 px-3 py-2">
+                  Reference No
+                </th>
                 <th className="border border-gray-300 px-3 py-2">Supplier</th>
                 <th className="border border-gray-300 px-3 py-2">Warehouse</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Product Qty</th>
-                <th className="border border-gray-300 px-3 py-2 text-right">Grand Total</th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Product Qty
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right">
+                  Grand Total
+                </th>
                 <th className="border border-gray-300 px-3 py-2">Status</th>
-                <th className="border border-gray-300 px-3 py-2 text-center">Actions</th>
+                <th className="border border-gray-300 px-3 py-2 text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -467,12 +535,24 @@ export default function PurchaseReturn() {
               )}
               {paginatedReturns.map((pr: any) => (
                 <tr key={pr.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-3 py-2">{pr.date}</td>
-                  <td className="border border-gray-300 px-3 py-2">{pr.referenceNo}</td>
-                  <td className="border border-gray-300 px-3 py-2">{pr.supplier}</td>
-                  <td className="border border-gray-300 px-3 py-2">{pr.warehouse}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{pr.productQty}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-right">{pr.grandTotal.toFixed(2)}</td>
+                  <td className="border border-gray-300 px-3 py-2">
+                    {pr.date}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2">
+                    {pr.referenceNo}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2">
+                    {pr.supplier}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2">
+                    {pr.warehouse}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {pr.productQty}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {pr.grandTotal.toFixed(2)}
+                  </td>
                   <td className="border border-gray-300 px-3 py-2">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
@@ -524,21 +604,23 @@ export default function PurchaseReturn() {
             </button>
 
             <ul className="inline-flex space-x-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <li key={page}>
-                  <button
-                    onClick={() => goToPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`px-3 py-1 border rounded text-sm font-medium ${
-                      page === currentPage
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-200"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                </li>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <li key={page}>
+                    <button
+                      onClick={() => goToPage(page)}
+                      aria-current={page === currentPage ? "page" : undefined}
+                      className={`px-3 py-1 border rounded text-sm font-medium ${
+                        page === currentPage
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "text-gray-700 border-gray-300 hover:bg-gray-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </li>
+                )
+              )}
             </ul>
 
             <button

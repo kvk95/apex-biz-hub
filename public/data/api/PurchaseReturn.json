@@ -3,12 +3,7 @@
     "code": "S",
     "description": ""
   },
-  "result": [
-    { "id": 1, "name": "Supplier 1" },
-    { "id": 2, "name": "Supplier 2" },
-    { "id": 3, "name": "Supplier 3" },
-    { "id": 1, "name": "Warehouse 1" },
-    { "id": 2, "name": "Warehouse 2" },
+  "result": [ 
     {
       "id": 1,
       "date": "2023-10-01",
