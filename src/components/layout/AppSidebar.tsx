@@ -44,7 +44,7 @@ function MenuItemComponent({
   const IconClass = item.icon;
 
   const { theme } = useTheme();
-  const primaryHsl = "220 98% 61%";
+  const primaryHsl = theme.primaryColor ?? "220 98% 61%";
   const selectionBg = `hsl(${primaryHsl})`;
   const selectionText = "white";
 
@@ -54,23 +54,37 @@ function MenuItemComponent({
         <SidebarMenuItem>
           <SidebarMenuButton
             className={cn(
-                "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
-                hasActiveChild(item.items) && [
-                  "border-l-4",
-                  "border-primary",
-                  "bg-[hsl(var(--primary)/0.05)]",
-                  "text-primary",
-                ],
-                `pl-${4 + level * 2}`
-              )}
+              "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
+              hasActiveChild(item.items) && [
+                "border-l-4",
+                `border-[hsl(${theme.primaryColor || "220 98% 61%"})]`,
+                "bg-[hsl(var(--primary)/0.05)]",
+                "text-[hsl(var(--primary))]",
+              ],
+              `pl-${4 + level * 2}`
+            )}
             onClick={() => toggleMenu(item.title)}
-            style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}
+            style={
+              isSelected
+                ? {
+                    backgroundColor: selectionBg,
+                    color: selectionText,
+                    borderColor: " `hsl(${theme.primaryColor})`",
+                  }
+                : undefined
+            }
           >
-            <i className={`${IconClass} fa-light mr-2`} aria-hidden="true" />
+            <i
+              className={`${IconClass} fa-light mr-2`}
+              aria-hidden="true"
+              style={isSelected ? { color: selectionText } : undefined}
+            />
             <span>{item.title}</span>
             <i
-              className={`fa fa-light ${isOpen ? "fa-chevron-down" : "fa-chevron-right"} ml-auto`}
-              style={{ fontSize:"10px"}}
+              className={`fa fa-light ${
+                isOpen ? "fa-chevron-down" : "fa-chevron-right"
+              } ml-auto`}
+              style={{ fontSize: "10px" }}
               aria-hidden="true"
             />
           </SidebarMenuButton>
@@ -102,7 +116,11 @@ function MenuItemComponent({
           "w-full transition-colors hover:bg-gray-100 ",
           `pl-${2 + level * 2}`
         )}
-        style={isSelected ? { backgroundColor: selectionBg, color: selectionText } : undefined}                
+        style={
+          isSelected
+            ? { backgroundColor: selectionBg, color: selectionText }
+            : undefined
+        }
       >
         <NavLink to={item.url || "#"} className="flex items-center">
           <i className={`${IconClass} fa-light mr-2`} aria-hidden="true" />
@@ -131,7 +149,10 @@ export function AppSidebar() {
       .then((data) => {
         setMenuItems(data);
 
-        const findActivePath = (items: MenuItem[], path: string[] = []): string[] => {
+        const findActivePath = (
+          items: MenuItem[],
+          path: string[] = []
+        ): string[] => {
           for (const item of items) {
             if (item.url && location.pathname === item.url) {
               return [...path, item.title];
@@ -163,7 +184,9 @@ export function AppSidebar() {
 
   const hasActiveChild = (items?: MenuItem[]) => {
     if (!items) return false;
-    return items.some((item) => isActive(item.url) || hasActiveChild(item.items));
+    return items.some(
+      (item) => isActive(item.url) || hasActiveChild(item.items)
+    );
   };
 
   const sidebarStyle = {

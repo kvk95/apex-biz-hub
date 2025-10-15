@@ -41,11 +41,6 @@ const colors = {
   ],
 };
 
-const modes = [
-  { name: "Light", value: "light" },
-  { name: "Dark", value: "dark" },
-];
-
 function ColorSwatch({
   color,
   isActive,
@@ -69,18 +64,13 @@ function ColorSwatch({
 export function ThemeCustomizer() {
   const { theme, setTheme } = useTheme();
 
-  const toggleMode = () => {
-    const newMode = theme.mode === "dark" ? "light" : "dark";
-    setTheme({ mode: newMode });
-  };
-
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <i className="fa fa-cog h-5 w-5" aria-hidden="true" />
+        <Button variant="ghost"  size="icon" className="hover:bg-primary hover:text-primary-foreground">
+          <i className="fa fa-palette fa-light h-5 w-5 mt-2" aria-hidden="true" />
           <span className="sr-only">Customize Theme</span>
-        </Button>
+        </Button> 
       </SheetTrigger>
       <SheetContent className="bg-white">
         <SheetHeader>
@@ -124,15 +114,6 @@ export function ThemeCustomizer() {
                   onClick={() => setTheme({ primaryColor: c.value })}
                 />
               ))}
-            </div>
-          </div>
-          <div className="space-y-3 border border-muted rounded-md p-4">
-            <Label>Theme Mode</Label>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={toggleMode}>
-                {theme.mode === "dark" ? <i className="fa fa-moon h-4 w-4" aria-hidden="true" /> : <i className="fa fa-sun h-4 w-4" aria-hidden="true" />}
-              </Button>
-              <span className="text-sm">{theme.mode === "dark" ? "Dark" : "Light"} Mode</span>
             </div>
           </div>
         </div>

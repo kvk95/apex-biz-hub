@@ -4,7 +4,7 @@
     "icon": "fa fa-tachometer-alt",
     "items": [
       { "title": "Admin Dashboard", "url": "/dashboard/admin-1", "icon": "fa fa-tachometer-alt" },
-      { "title": "Admin Dashboard 2", "url": "/dashboard/admin-2", "icon": "fa fa-tachometer-alt" },
+      { "title": "Admin Dashboard 2", "url": "/dashboard/admin-2", "icon": "fa fa-grip" },
       { "title": "Sales Dashboard", "url": "/dashboard/sales", "icon": "fa fa-chart-line" }
     ]
   },
@@ -25,17 +25,17 @@
     "icon": "fa fa-box",
     "items": [
       { "title": "Products", "url": "/inventory/products", "icon": "fa fa-box" },
-      { "title": "Create Product", "url": "/inventory/products/create", "icon": "fa fa-box" },
+      { "title": "Create Product", "url": "/inventory/products/create", "icon": "fa fa-plus-circle" },
       { "title": "Expired Products", "url": "/inventory/expired-products", "icon": "fa fa-exclamation-circle" },
       { "title": "Low Stocks", "url": "/inventory/low-stocks", "icon": "fa fa-exclamation-circle", "badge": "5" },
       { "title": "Category", "url": "/inventory/categories", "icon": "fa fa-tags" },
       { "title": "Sub Category", "url": "/inventory/sub-categories", "icon": "fa fa-tags" },
       { "title": "Brands", "url": "/inventory/brands", "icon": "fa fa-tags" },
-      { "title": "Units", "url": "/inventory/units", "icon": "fa fa-box" },
+      { "title": "Units", "url": "/inventory/units", "icon": "fa fa-balance-scale" },
       { "title": "Variant Attributes", "url": "/inventory/variant-attributes", "icon": "fa fa-cogs" },
       { "title": "Warranties", "url": "/inventory/warranties", "icon": "fa fa-shield-alt" },
       { "title": "Print Barcode", "url": "/inventory/barcode", "icon": "fa fa-barcode" },
-      { "title": "Print QR Code", "url": "/inventory/qr-code", "icon": "fa fa-barcode" }
+      { "title": "Print QR Code", "url": "/inventory/qr-code", "icon": "fa fa-qrcode" }
     ]
   },
   {
