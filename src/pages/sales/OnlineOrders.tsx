@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const paymentMethods = ["All", "Credit Card", "Paypal", "Cash"];
 const statuses = ["All", "Pending", "Completed", "Cancelled"];
@@ -27,7 +28,7 @@ export default function OnlineOrders() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filters state
   const [filterStatus, setFilterStatus] = useState("All");
@@ -38,6 +39,18 @@ export default function OnlineOrders() {
   // Sorting state
   const [sortField, setSortField] = useState<keyof (typeof data)[0] | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    orderId: "",
+    customer: "",
+    date: "",
+    status: "",
+    paymentMethod: "",
+    total: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Filtered and sorted data memoized
   const filteredData = useMemo(() => {
@@ -76,8 +89,7 @@ export default function OnlineOrders() {
     return filtered;
   }, [data, filterStatus, filterPayment, searchOrderId, searchCustomer, sortField, sortDirection]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Calculate paginated data using Pagination component props
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -93,7 +105,7 @@ export default function OnlineOrders() {
     }
   };
 
-  const handleRefresh = () => {
+  const handleClear = () => {
     setFilterStatus("All");
     setFilterPayment("All");
     setSearchOrderId("");
@@ -107,32 +119,97 @@ export default function OnlineOrders() {
     alert("Report generated for current filtered orders.");
   };
 
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        orderId: item.orderId,
+        customer: item.customer,
+        date: item.date.slice(0, 10),
+        status: item.status,
+        paymentMethod: item.paymentMethod,
+        total: item.total.toString(),
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.orderId.trim() ||
+      !editForm.customer.trim() ||
+      !editForm.date ||
+      !editForm.status ||
+      !editForm.paymentMethod ||
+      !editForm.total
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                orderId: editForm.orderId.trim(),
+                customer: editForm.customer.trim(),
+                date: editForm.date,
+                status: editForm.status,
+                paymentMethod: editForm.paymentMethod,
+                total: Number(editForm.total),
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   return (
     <>
       <title>Online Orders - Dreams POS</title>
-      <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
-        <div className="max-w-7xl mx-auto bg-white rounded shadow p-6">
+      <div className="min-h-screen bg-background font-sans p-6">
+        <div className="max-w-7xl mx-auto bg-card rounded shadow p-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">
+            <h1 className="text-2xl font-semibold mb-4 md:mb-0 text-foreground">
               Online Orders
             </h1>
             <div className="flex space-x-3">
               <button
                 onClick={handleReport}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
                 aria-label="Generate Report"
               >
-                <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+                <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
               </button>
               <button
-                onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium rounded shadow"
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
-                aria-label="Refresh"
+                aria-label="Clear"
               >
-                <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
             </div>
           </div>
@@ -140,13 +217,13 @@ export default function OnlineOrders() {
           {/* Filters Section */}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6"
             aria-label="Filter Orders Form"
           >
             <div>
               <label
                 htmlFor="orderId"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Order ID
               </label>
@@ -156,13 +233,13 @@ export default function OnlineOrders() {
                 value={searchOrderId}
                 onChange={(e) => setSearchOrderId(e.target.value)}
                 placeholder="Search Order ID"
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
               <label
                 htmlFor="customer"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Customer
               </label>
@@ -172,13 +249,13 @@ export default function OnlineOrders() {
                 value={searchCustomer}
                 onChange={(e) => setSearchCustomer(e.target.value)}
                 placeholder="Search Customer"
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
               <label
                 htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Status
               </label>
@@ -186,7 +263,7 @@ export default function OnlineOrders() {
                 id="status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>
@@ -198,7 +275,7 @@ export default function OnlineOrders() {
             <div>
               <label
                 htmlFor="paymentMethod"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Payment Method
               </label>
@@ -206,7 +283,7 @@ export default function OnlineOrders() {
                 id="paymentMethod"
                 value={filterPayment}
                 onChange={(e) => setFilterPayment(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentMethods.map((method) => (
                   <option key={method} value={method}>
@@ -219,12 +296,12 @@ export default function OnlineOrders() {
 
           {/* Orders Table */}
           <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 rounded-md">
-              <thead className="bg-gray-100">
-                <tr>
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("orderId")}
                     aria-sort={
                       sortField === "orderId"
@@ -240,16 +317,14 @@ export default function OnlineOrders() {
                     Order ID{" "}
                     {sortField === "orderId" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("customer")}
                     aria-sort={
                       sortField === "customer"
@@ -265,16 +340,14 @@ export default function OnlineOrders() {
                     Customer{" "}
                     {sortField === "customer" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("date")}
                     aria-sort={
                       sortField === "date"
@@ -290,16 +363,14 @@ export default function OnlineOrders() {
                     Date{" "}
                     {sortField === "date" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("status")}
                     aria-sort={
                       sortField === "status"
@@ -315,16 +386,14 @@ export default function OnlineOrders() {
                     Status{" "}
                     {sortField === "status" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("paymentMethod")}
                     aria-sort={
                       sortField === "paymentMethod"
@@ -340,16 +409,14 @@ export default function OnlineOrders() {
                     Payment Method{" "}
                     {sortField === "paymentMethod" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider select-none"
+                    className="cursor-pointer px-4 py-3 text-right text-sm font-medium text-muted-foreground select-none"
                     onClick={() => handleSort("total")}
                     aria-sort={
                       sortField === "total"
@@ -365,14 +432,12 @@ export default function OnlineOrders() {
                     Total{" "}
                     {sortField === "total" && (
                       <i
-                        className={`fas fa-sort-${
-                          sortDirection === "asc" ? "up" : "down"
-                        } ml-1`}
+                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
                         aria-hidden="true"
                       ></i>
                     )}
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                     Actions
                   </th>
                 </tr>
@@ -382,56 +447,64 @@ export default function OnlineOrders() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="text-center py-6 text-gray-500 text-sm"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No orders found.
                     </td>
                   </tr>
                 ) : (
-                  paginatedData.map((order) => (
+                  paginatedData.map((order, idx) => (
                     <tr
                       key={order.id}
-                      className="border-t border-gray-200 hover:bg-gray-50"
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-600 font-medium">
+                      <td className="px-4 py-3 text-sm text-primary">
                         {order.orderId}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {order.customer}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {new Date(order.date).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-4 py-3 text-sm">
                         <span
-                          className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             order.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                               : order.status === "Completed"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                           aria-label={`Status: ${order.status}`}
                         >
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {order.paymentMethod}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                      <td className="px-4 py-3 text-sm text-right font-semibold text-foreground">
                         ${order.total.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 text-center text-sm space-x-3">
                         <button
                           type="button"
-                          className="text-blue-600 hover:text-blue-800 focus:outline-none"
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit order ${order.orderId}`}
+                          onClick={() => handleEdit(order.id)}
+                        >
+                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          className="text-primary hover:text-primary/80 transition-colors"
                           aria-label={`View details for order ${order.orderId}`}
                           onClick={() =>
                             alert(`Viewing details for order ${order.orderId}`)
                           }
                         >
-                          <i className="fas fa-eye" aria-hidden="true"></i>
+                          <i className="fa fa-eye fa-light" aria-hidden="true"></i>
                         </button>
                       </td>
                     </tr>
@@ -442,112 +515,168 @@ export default function OnlineOrders() {
           </div>
 
           {/* Pagination */}
-          <nav
-            className="mt-6 flex justify-center items-center space-x-2"
-            role="navigation"
-            aria-label="Pagination Navigation"
-          >
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Go to first page"
-            >
-              <i className="fas fa-angle-double-left" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Go to previous page"
-            >
-              <i className="fas fa-angle-left" aria-hidden="true"></i>
-            </button>
-
-            {/* Show page numbers with max 5 pages visible */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(
-                (page) =>
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-              )
-              .map((page, idx, arr) => {
-                // Add ellipsis if gap between pages > 1
-                if (
-                  idx > 0 &&
-                  page - arr[idx - 1] > 1
-                ) {
-                  return (
-                    <React.Fragment key={`ellipsis-${page}`}>
-                      <span className="px-2 text-gray-500 select-none">...</span>
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        aria-current={page === currentPage ? "page" : undefined}
-                        className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                          page === currentPage
-                            ? "bg-blue-600 text-white cursor-default"
-                            : "text-gray-700 hover:bg-gray-200"
-                        }`}
-                        aria-label={`Go to page ${page}`}
-                      >
-                        {page}
-                      </button>
-                    </React.Fragment>
-                  );
-                }
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                      page === currentPage
-                        ? "bg-blue-600 text-white cursor-default"
-                        : "text-gray-700 hover:bg-gray-200"
-                    }`}
-                    aria-label={`Go to page ${page}`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Go to next page"
-            >
-              <i className="fas fa-angle-right" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-              aria-label="Go to last page"
-            >
-              <i className="fas fa-angle-double-right" aria-hidden="true"></i>
-            </button>
-          </nav>
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
         </div>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
+              >
+                Edit Order
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="editOrderId"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Order ID
+                  </label>
+                  <input
+                    type="text"
+                    id="editOrderId"
+                    name="orderId"
+                    value={editForm.orderId}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter order ID"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editCustomer"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Customer
+                  </label>
+                  <input
+                    type="text"
+                    id="editCustomer"
+                    name="customer"
+                    value={editForm.customer}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter customer name"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editDate"
+                    name="date"
+                    value={editForm.date}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {statuses
+                      .filter((s) => s !== "All")
+                      .map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editPaymentMethod"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Payment Method
+                  </label>
+                  <select
+                    id="editPaymentMethod"
+                    name="paymentMethod"
+                    value={editForm.paymentMethod}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {paymentMethods
+                      .filter((m) => m !== "All")
+                      .map((method) => (
+                        <option key={method} value={method}>
+                          {method}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editTotal"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Total
+                  </label>
+                  <input
+                    type="number"
+                    id="editTotal"
+                    name="total"
+                    value={editForm.total}
+                    onChange={handleEditInputChange}
+                    min={0}
+                    step="0.01"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter total amount"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
