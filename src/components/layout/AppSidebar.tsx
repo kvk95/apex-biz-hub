@@ -44,9 +44,23 @@ function MenuItemComponent({
   const IconClass = item.icon;
 
   const { theme } = useTheme();
+  // Get primary color for selection background
   const primaryHsl = theme.primaryColor ?? "220 98% 61%";
   const selectionBg = `hsl(${primaryHsl})`;
   const selectionText = "white";
+
+  // Get sidebar color for hover state if sidebar is dark
+  const sidebarHsl = theme.sidebarColor ?? "0 0% 100%";
+  const sidebarLightness = parseFloat(sidebarHsl.split(" ")[2]);
+  // Use a different hover color if the sidebar is dark
+  const hoverBgClass = sidebarLightness < 50 
+    ? "hover:bg-white/10" // Lighter hover for dark backgrounds
+    : "hover:bg-[hsl(var(--primary)/0.1)]"; // Default for light backgrounds
+  
+  // Determine if the item text should be light (if sidebar is dark)
+  const isSidebarDark = sidebarLightness < 50;
+  const defaultTextColor = isSidebarDark ? 'text-white' : 'text-gray-800';
+
 
   if (item.items && item.items.length > 0) {
     return (
@@ -54,12 +68,14 @@ function MenuItemComponent({
         <SidebarMenuItem>
           <SidebarMenuButton
             className={cn(
-              "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
+              "w-full transition-colors",
+              hoverBgClass, // Use dynamic hover background
+              defaultTextColor, // Use dynamic text color
               hasActiveChild(item.items) && [
                 "border-l-4",
                 `border-[hsl(${theme.primaryColor || "220 98% 61%"})]`,
                 "bg-[hsl(var(--primary)/0.05)]",
-                "text-[hsl(var(--primary))]",
+                "text-[hsl(var(--primary))]", // Active child link text color
               ],
               `pl-${4 + level * 2}`
             )}
@@ -67,9 +83,11 @@ function MenuItemComponent({
             style={
               isSelected
                 ? {
+                    // Selected state: use primary color background and white text
                     backgroundColor: selectionBg,
                     color: selectionText,
-                    borderColor: " `hsl(${theme.primaryColor})`",
+                    // Note: borderColor is handled by class names, but the color is correctly set via theme
+                    borderColor: `hsl(${theme.primaryColor || "220 98% 61%"})`,
                   }
                 : undefined
             }
@@ -113,7 +131,9 @@ function MenuItemComponent({
       <SidebarMenuButton
         asChild
         className={cn(
-          "w-full transition-colors hover:bg-gray-100 ",
+          "w-full transition-colors",
+          hoverBgClass, // Use dynamic hover background
+          defaultTextColor, // Use dynamic text color
           `pl-${2 + level * 2}`
         )}
         style={
@@ -135,6 +155,10 @@ function MenuItemComponent({
     </SidebarMenuItem>
   );
 }
+
+// ------------------------------------------------------------------
+// Main Sidebar Component
+// ------------------------------------------------------------------
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -189,25 +213,47 @@ export function AppSidebar() {
     );
   };
 
+  // 1. Calculate theme-based styles for the sidebar
+  const sidebarHsl = theme.sidebarColor ?? "0 0% 100%";
   const sidebarStyle = {
-    backgroundColor: `hsl(${theme.sidebarColor})`,
-    color:
-      parseFloat(theme.sidebarColor.split(" ")[2]) < 50
-        ? "hsl(0 0% 98%)"
-        : "hsl(240 10% 3.9%)",
+    backgroundColor: `hsl(${sidebarHsl})`,
   };
+
+  // Determine text color for the sidebar content (logo, etc.)
+  const sidebarLightness = parseFloat(sidebarHsl.split(" ")[2]);
+  const contentTextColor =
+    sidebarLightness < 50
+      ? "hsl(0 0% 98%)" // Light text for dark sidebar
+      : "hsl(240 10% 3.9%)"; // Dark text for light sidebar
+
 
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-gray-200 "
-      style={sidebarStyle}
+      className="border-r border-gray-200"
+      // Apply primary sidebar color and border from theme to the main wrapper
+      style={sidebarStyle} 
     >
-      <SidebarContent className="bg-white">
-        <div className="h-16 flex items-center justify-center sticky top-0 bg-white border-b border-gray-200 z-10 px-4">
-          <h1 className="font-bold text-xl text-gray-800">NyaBuy POS</h1>
+      {/* 2. Apply theme-based background and remove fixed 'bg-white' from SidebarContent */}
+      <SidebarContent 
+        className="flex flex-col"
+        style={sidebarStyle} 
+      >
+        {/* 3. Apply theme-based background and text color to the sticky header */}
+        <div
+          className="h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 px-4"
+          style={{ 
+            backgroundColor: `hsl(${sidebarHsl})`,
+            color: contentTextColor,
+            // Ensure border is visible against the sidebar color
+            borderColor: sidebarLightness < 50 ? 'hsl(0 0% 30%)' : 'hsl(240 5% 90%)' 
+          }}
+        >
+          <h1 className="font-bold text-xl" style={{ color: contentTextColor }}>
+            NyaBuy POS
+          </h1>
         </div>
-        <div className="overflow-y-auto flex-1 custom-scroll1 ">
+        <div className="overflow-y-auto flex-1 custom-scroll1">
           <SidebarMenu>
             {menuItems.map((item) => (
               <MenuItemComponent

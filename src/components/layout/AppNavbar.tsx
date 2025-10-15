@@ -81,8 +81,8 @@ export function AppNavbar() {
         style={headerStyle}
       >
         <SidebarTrigger
-          className="h-8 w-8 absolute bg-primary text-primary-foreground hover:bg-primary-dark"
-          style={{ left: "-15px" }}
+          className="h-8 w-8 absolute bg-primary text-white hover:bg-primary-dark"
+          style={{ left: "-13px", width: "25px", height: "25px", fontSize: "11px" }}
         />
 
         <div className="flex flex-1 items-center gap-4">
