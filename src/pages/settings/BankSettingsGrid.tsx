@@ -1,14 +1,13 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const pageSizeOptions = [5, 10, 15];
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function BankSettingsGrid() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state for adding/editing bank settings
+  // Form state for Add Section
   const [formData, setFormData] = useState({
     bankName: "",
     branchName: "",
@@ -18,9 +17,19 @@ export default function BankSettingsGrid() {
     status: "Active",
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    bankName: "",
+    branchName: "",
+    accountNumber: "",
+    accountHolder: "",
+    ifscCode: "",
+    status: "Active",
+  });
   const [editId, setEditId] = useState<number | null>(null);
 
+  // Data state
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,15 +50,7 @@ export default function BankSettingsGrid() {
     loadData();
   }, []);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(data.length / pageSize);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return data.slice(start, start + pageSize);
-  }, [currentPage, pageSize, data]);
-
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -57,6 +58,15 @@ export default function BankSettingsGrid() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new bank setting)
   const handleSave = () => {
     if (
       !formData.bankName.trim() ||
@@ -65,22 +75,11 @@ export default function BankSettingsGrid() {
       !formData.accountHolder.trim() ||
       !formData.ifscCode.trim()
     ) {
-      alert("Please fill all fields.");
+      alert("Please fill all required fields.");
       return;
     }
-
-    if (isEditing && editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId ? { id: editId, ...formData } : item
-        )
-      );
-      setIsEditing(false);
-      setEditId(null);
-    } else {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { id: newId, ...formData }]);
-    }
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [...prev, { id: newId, ...formData }]);
     setFormData({
       bankName: "",
       branchName: "",
@@ -91,35 +90,77 @@ export default function BankSettingsGrid() {
     });
   };
 
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const item = data.find((d) => d.id === id);
-    if (!item) return;
-    setFormData({
-      bankName: item.bankName,
-      branchName: item.branchName,
-      accountNumber: item.accountNumber,
-      accountHolder: item.accountHolder,
-      ifscCode: item.ifscCode,
-      status: item.status,
-    });
-    setIsEditing(true);
-    setEditId(id);
+    if (item) {
+      setEditForm({
+        bankName: item.bankName,
+        branchName: item.branchName,
+        accountNumber: item.accountNumber,
+        accountHolder: item.accountHolder,
+        ifscCode: item.ifscCode,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.bankName.trim() ||
+      !editForm.branchName.trim() ||
+      !editForm.accountNumber.trim() ||
+      !editForm.accountHolder.trim() ||
+      !editForm.ifscCode.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                bankName: editForm.bankName.trim(),
+                branchName: editForm.branchName.trim(),
+                accountNumber: editForm.accountNumber.trim(),
+                accountHolder: editForm.accountHolder.trim(),
+                ifscCode: editForm.ifscCode.trim(),
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * pageSize >= data.length - 1 && currentPage > 1) {
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    setCurrentPage(1);
-    setIsEditing(false);
-    setEditId(null);
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setFormData({
       bankName: "",
       branchName: "",
@@ -128,45 +169,47 @@ export default function BankSettingsGrid() {
       ifscCode: "",
       status: "Active",
     });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
-    // For demo: just alert JSON data
-    alert("Report generated for current bank settings.");
+    // For demo, just alert JSON data
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      {/* Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">
-        Bank Settings Grid
-      </h1>
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-      {/* Controls: Report & Refresh */}
-      <div className="flex justify-end space-x-3 mb-4">
+  return (
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Bank Settings Grid</h1>
+
+      {/* Controls: Report & Clear */}
+      <div className="flex justify-end gap-3 mb-4">
         <button
           onClick={handleReport}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition"
-          title="Generate Report"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
           type="button"
         >
-          <i className="fas fa-file-alt"></i> Report
+          <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
         </button>
         <button
-          onClick={handleRefresh}
-          className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition"
-          title="Refresh Data"
+          onClick={handleClear}
+          className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
           type="button"
         >
-          <i className="fas fa-sync-alt"></i> Refresh
+          <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
         </button>
       </div>
 
-      {/* Form Section */}
-      <section className="bg-white rounded-md shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          {isEditing ? "Edit Bank Setting" : "Add Bank Setting"}
-        </h2>
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Bank Setting</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -178,7 +221,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="bankName"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Bank Name
             </label>
@@ -188,7 +231,7 @@ export default function BankSettingsGrid() {
               name="bankName"
               value={formData.bankName}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
               autoComplete="off"
             />
@@ -196,7 +239,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="branchName"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Branch Name
             </label>
@@ -206,7 +249,7 @@ export default function BankSettingsGrid() {
               name="branchName"
               value={formData.branchName}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
               autoComplete="off"
             />
@@ -214,7 +257,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="accountNumber"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Account Number
             </label>
@@ -224,7 +267,7 @@ export default function BankSettingsGrid() {
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
               autoComplete="off"
             />
@@ -232,7 +275,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="accountHolder"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Account Holder
             </label>
@@ -242,7 +285,7 @@ export default function BankSettingsGrid() {
               name="accountHolder"
               value={formData.accountHolder}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
               autoComplete="off"
             />
@@ -250,7 +293,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="ifscCode"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               IFSC Code
             </label>
@@ -260,7 +303,7 @@ export default function BankSettingsGrid() {
               name="ifscCode"
               value={formData.ifscCode}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
               autoComplete="off"
             />
@@ -268,7 +311,7 @@ export default function BankSettingsGrid() {
           <div>
             <label
               htmlFor="status"
-              className="block text-sm font-medium mb-1 text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Status
             </label>
@@ -277,61 +320,51 @@ export default function BankSettingsGrid() {
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
           </div>
-          <div className="md:col-span-3 flex justify-end items-end space-x-3">
-            {isEditing && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditId(null);
-                  setFormData({
-                    bankName: "",
-                    branchName: "",
-                    accountNumber: "",
-                    accountHolder: "",
-                    ifscCode: "",
-                    status: "Active",
-                  });
-                }}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2 rounded-md text-sm font-medium transition flex items-center gap-2"
-              >
-                <i className="fas fa-times"></i> Cancel
-              </button>
-            )}
+          <div className="md:col-span-3 flex justify-end items-end gap-3">
             <button
               type="submit"
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md text-sm font-medium transition flex items-center gap-2"
-              title={isEditing ? "Update Bank Setting" : "Save Bank Setting"}
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Save Bank Setting"
             >
-              <i className="fas fa-save"></i> {isEditing ? "Update" : "Save"}
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
           </div>
         </form>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded-md shadow p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          Bank Settings List
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100 text-gray-700 font-semibold">
-              <tr>
-                <th className="px-4 py-3 border-b border-gray-300">Bank Name</th>
-                <th className="px-4 py-3 border-b border-gray-300">Branch Name</th>
-                <th className="px-4 py-3 border-b border-gray-300">Account Number</th>
-                <th className="px-4 py-3 border-b border-gray-300">Account Holder</th>
-                <th className="px-4 py-3 border-b border-gray-300">IFSC Code</th>
-                <th className="px-4 py-3 border-b border-gray-300">Status</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-center">
+      <section className="bg-card rounded shadow py-6">
+        <h2 className="text-xl font-semibold mb-4 px-6">Bank Settings List</h2>
+        <div className="overflow-x-auto px-6">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Bank Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Branch Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Account Number
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Account Holder
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  IFSC Code
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
@@ -341,49 +374,59 @@ export default function BankSettingsGrid() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="text-center py-6 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No bank settings found.
                   </td>
                 </tr>
               )}
-              {paginatedData.map((item) => (
+              {paginatedData.map((item, idx) => (
                 <tr
                   key={item.id}
-                  className="hover:bg-gray-50 even:bg-gray-50 odd:bg-white"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-4 py-3 border-b border-gray-300">{item.bankName}</td>
-                  <td className="px-4 py-3 border-b border-gray-300">{item.branchName}</td>
-                  <td className="px-4 py-3 border-b border-gray-300">{item.accountNumber}</td>
-                  <td className="px-4 py-3 border-b border-gray-300">{item.accountHolder}</td>
-                  <td className="px-4 py-3 border-b border-gray-300">{item.ifscCode}</td>
-                  <td className="px-4 py-3 border-b border-gray-300">
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.bankName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.branchName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.accountNumber}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.accountHolder}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.ifscCode}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
                     <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         item.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 border-b border-gray-300 text-center space-x-2">
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => handleEdit(item.id)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit bank setting ${item.bankName}`}
                       type="button"
                     >
-                      <i className="fas fa-edit"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Delete"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete bank setting ${item.bankName}`}
                       type="button"
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -392,90 +435,163 @@ export default function BankSettingsGrid() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="flex flex-col md:flex-row items-center justify-between mt-6 space-y-3 md:space-y-0">
-          <div className="flex items-center space-x-2 text-gray-700 text-sm">
-            <span>Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <nav
-            className="inline-flex rounded-md shadow-sm -space-x-px"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="First Page"
-              type="button"
-            >
-              <i className="fas fa-angle-double-left"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Previous Page"
-              type="button"
-            >
-              <i className="fas fa-angle-left"></i>
-            </button>
-
-            {/* Page numbers */}
-            {[...Array(totalPages)].map((_, i) => {
-              const pageNum = i + 1;
-              const isActive = pageNum === currentPage;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium ${
-                    isActive
-                      ? "z-10 bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-                  type="button"
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Next Page"
-              type="button"
-            >
-              <i className="fas fa-angle-right"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Last Page"
-              type="button"
-            >
-              <i className="fas fa-angle-double-right"></i>
-            </button>
-          </nav>
-        </div>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Bank Setting
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="editBankName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  id="editBankName"
+                  name="bankName"
+                  value={editForm.bankName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editBranchName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Branch Name
+                </label>
+                <input
+                  type="text"
+                  id="editBranchName"
+                  name="branchName"
+                  value={editForm.branchName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editAccountNumber"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Account Number
+                </label>
+                <input
+                  type="text"
+                  id="editAccountNumber"
+                  name="accountNumber"
+                  value={editForm.accountNumber}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editAccountHolder"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Account Holder
+                </label>
+                <input
+                  type="text"
+                  id="editAccountHolder"
+                  name="accountHolder"
+                  value={editForm.accountHolder}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editIfscCode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  IFSC Code
+                </label>
+                <input
+                  type="text"
+                  id="editIfscCode"
+                  name="ifscCode"
+                  value={editForm.ifscCode}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

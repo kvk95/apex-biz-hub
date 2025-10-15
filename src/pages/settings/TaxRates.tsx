@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const TAX_TYPES = ["Percentage", "Fixed"];
 
 export default function TaxRates() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state
   const [form, setForm] = useState({
@@ -21,6 +22,20 @@ export default function TaxRates() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    taxName: "",
+    taxRate: "",
+    taxType: "Percentage",
+    taxDescription: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<[]>("TaxRates");
@@ -33,22 +48,7 @@ export default function TaxRates() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Editing state
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(taxRates.length / itemsPerPage);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return taxRates.slice(start, start + itemsPerPage);
-  }, [currentPage, taxRates]);
-
-  // Handlers
+  // Handlers for Add Section form inputs
   function handleInputChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
@@ -56,27 +56,29 @@ export default function TaxRates() {
     setForm((f) => ({ ...f, [name]: value }));
   }
 
+  // Handlers for Edit Modal form inputs
+  function handleEditInputChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) {
+    const { name, value } = e.target;
+    setEditForm((f) => ({ ...f, [name]: value }));
+  }
+
+  // Open edit modal and populate edit form
   function handleEdit(id: number) {
     const tax = taxRates.find((t) => t.id === id);
     if (!tax) return;
-    setForm({
+    setEditForm({
       taxName: tax.taxName,
       taxRate: tax.taxRate.replace("%", ""),
       taxType: tax.taxType,
       taxDescription: tax.taxDescription,
     });
-    setEditingId(id);
+    setEditId(id);
+    setIsEditModalOpen(true);
   }
 
-  function handleDelete(id: number) {
-    if (!window.confirm("Are you sure you want to delete this tax rate?")) return;
-    setTaxRates((prev) => prev.filter((t) => t.id !== id));
-    // Adjust page if needed
-    if ((taxRates.length - 1) % itemsPerPage === 0 && currentPage > 1) {
-      setCurrentPage((p) => p - 1);
-    }
-  }
-
+  // Save handler for Add Section (Add new tax rate)
   function handleSave() {
     if (!form.taxName.trim()) {
       alert("Tax Name is required");
@@ -90,11 +92,11 @@ export default function TaxRates() {
       alert("Tax Type is invalid");
       return;
     }
-    if (editingId !== null) {
+    if (editId !== null) {
       // Update existing
       setTaxRates((prev) =>
         prev.map((t) =>
-          t.id === editingId
+          t.id === editId
             ? {
                 ...t,
                 taxName: form.taxName.trim(),
@@ -105,6 +107,8 @@ export default function TaxRates() {
             : t
         )
       );
+      setEditId(null);
+      setIsEditModalOpen(false);
     } else {
       // Add new
       const newId = taxRates.length ? Math.max(...taxRates.map((t) => t.id)) + 1 : 1;
@@ -119,27 +123,45 @@ export default function TaxRates() {
         },
       ]);
       // If new item added to last page, move to last page
-      if ((taxRates.length + 1) > itemsPerPage * totalPages) {
-        setCurrentPage(totalPages + 1);
+      const totalItems = taxRates.length + 1;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      if (totalItems > itemsPerPage * (totalPages - 1)) {
+        setCurrentPage(totalPages);
       }
     }
-    handleReset();
-  }
-
-  function handleReset() {
     setForm({
       taxName: "",
       taxRate: "",
       taxType: "Percentage",
       taxDescription: "",
     });
-    setEditingId(null);
   }
 
-  function handleRefresh() {
-    loadData();
+  // Cancel editing modal
+  function handleEditCancel() {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  }
+
+  function handleDelete(id: number) {
+    if (!window.confirm("Are you sure you want to delete this tax rate?")) return;
+    setTaxRates((prev) => prev.filter((t) => t.id !== id));
+    // Adjust page if needed
+    if ((taxRates.length - 1) % itemsPerPage === 0 && currentPage > 1) {
+      setCurrentPage((p) => p - 1);
+    }
+  }
+
+  // Clear button handler (replaces Refresh)
+  function handleClear() {
+    setForm({
+      taxName: "",
+      taxRate: "",
+      taxType: "Percentage",
+      taxDescription: "",
+    });
+    setEditId(null);
     setCurrentPage(1);
-    handleReset();
   }
 
   function handleReport() {
@@ -147,72 +169,245 @@ export default function TaxRates() {
     alert(JSON.stringify(taxRates, null, 2));
   }
 
-  function changePage(page: number) {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  }
+  // Calculate paginated data using Pagination component props
+  const paginatedData = taxRates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 font-sans">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Title */}
-        <h1 className="text-3xl font-bold mb-6 text-gray-900">Tax Rates</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Tax Rates</h1>
 
-        {/* Form Section */}
-        <section className="bg-white rounded shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Add / Edit Tax Rate</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="space-y-6"
-            noValidate
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+          <label htmlFor="taxName" className="block text-sm font-medium mb-1">
+            Tax Name <span className="text-destructive">*</span>
+          </label>
+          <input
+            id="taxName"
+            name="taxName"
+            type="text"
+            value={form.taxName}
+            onChange={handleInputChange}
+            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter tax name"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
+          <label htmlFor="taxRate" className="block text-sm font-medium mb-1">
+            Tax Rate <span className="text-destructive">*</span>
+          </label>
+          <input
+            id="taxRate"
+            name="taxRate"
+            type="number"
+            min="0"
+            step="any"
+            value={form.taxRate}
+            onChange={handleInputChange}
+            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter tax rate"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
+          <label htmlFor="taxType" className="block text-sm font-medium mb-1">
+            Tax Type <span className="text-destructive">*</span>
+          </label>
+          <select
+            id="taxType"
+            name="taxType"
+            value={form.taxType}
+            onChange={handleInputChange}
+            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            required
           >
+            {TAX_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mt-4">
+          <label htmlFor="taxDescription" className="block text-sm font-medium mb-1 pt-2">
+            Tax Description
+          </label>
+          <textarea
+            id="taxDescription"
+            name="taxDescription"
+            value={form.taxDescription}
+            onChange={handleInputChange}
+            rows={3}
+            className="col-span-3 w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter tax description"
+          />
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Tax Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Tax Rate
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Tax Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Tax Description
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center px-4 py-6 text-muted-foreground italic">
+                    No tax rates found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map(({ id, taxName, taxRate, taxType, taxDescription }) => (
+                  <tr
+                    key={id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">{taxName}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{taxRate}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{taxType}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{taxDescription}</td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit tax rate ${taxName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(id)}
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete tax rate ${taxName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={taxRates.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2 id="edit-modal-title" className="text-xl font-semibold mb-4 text-center">
+              Edit Tax Rate
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-              <label htmlFor="taxName" className="font-medium text-gray-700">
-                Tax Name <span className="text-red-600">*</span>
+              <label htmlFor="editTaxName" className="block text-sm font-medium mb-1">
+                Tax Name <span className="text-destructive">*</span>
               </label>
               <input
-                id="taxName"
+                id="editTaxName"
                 name="taxName"
                 type="text"
-                value={form.taxName}
-                onChange={handleInputChange}
-                className="col-span-3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={editForm.taxName}
+                onChange={handleEditInputChange}
+                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter tax name"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-              <label htmlFor="taxRate" className="font-medium text-gray-700">
-                Tax Rate <span className="text-red-600">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
+              <label htmlFor="editTaxRate" className="block text-sm font-medium mb-1">
+                Tax Rate <span className="text-destructive">*</span>
               </label>
               <input
-                id="taxRate"
+                id="editTaxRate"
                 name="taxRate"
                 type="number"
                 min="0"
                 step="any"
-                value={form.taxRate}
-                onChange={handleInputChange}
-                className="col-span-3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={editForm.taxRate}
+                onChange={handleEditInputChange}
+                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter tax rate"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-              <label htmlFor="taxType" className="font-medium text-gray-700">
-                Tax Type <span className="text-red-600">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
+              <label htmlFor="editTaxType" className="block text-sm font-medium mb-1">
+                Tax Type <span className="text-destructive">*</span>
               </label>
               <select
-                id="taxType"
+                id="editTaxType"
                 name="taxType"
-                value={form.taxType}
-                onChange={handleInputChange}
-                className="col-span-3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={editForm.taxType}
+                onChange={handleEditInputChange}
+                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               >
                 {TAX_TYPES.map((type) => (
@@ -223,159 +418,41 @@ export default function TaxRates() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-              <label htmlFor="taxDescription" className="font-medium text-gray-700 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mt-4">
+              <label htmlFor="editTaxDescription" className="block text-sm font-medium mb-1 pt-2">
                 Tax Description
               </label>
               <textarea
-                id="taxDescription"
+                id="editTaxDescription"
                 name="taxDescription"
-                value={form.taxDescription}
-                onChange={handleInputChange}
+                value={editForm.taxDescription}
+                onChange={handleEditInputChange}
                 rows={3}
-                className="col-span-3 border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="col-span-3 w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter tax description"
               />
             </div>
 
-            <div className="flex space-x-4 justify-start">
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                type="submit"
-                className="inline-flex items-center px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                title={editingId !== null ? "Update Tax Rate" : "Save Tax Rate"}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                <i className="fas fa-save mr-2"></i>
-                {editingId !== null ? "Update" : "Save"}
+                Cancel
               </button>
               <button
+                onClick={handleSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
-                onClick={handleReset}
-                className="inline-flex items-center px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
-                title="Reset Form"
               >
-                <i className="fas fa-undo-alt mr-2"></i> Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded focus:outline-none focus:ring-2 focus:ring-green-500 transition"
-                title="Refresh Data"
-              >
-                <i className="fas fa-sync-alt mr-2"></i> Refresh
-              </button>
-              <button
-                type="button"
-                onClick={handleReport}
-                className="inline-flex items-center px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-                title="Generate Report"
-              >
-                <i className="fas fa-file-alt mr-2"></i> Report
+                Save
               </button>
             </div>
-          </form>
-        </section>
-
-        {/* Table Section */}
-        <section className="bg-white rounded shadow p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Tax Rates List</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
-                    Tax Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
-                    Tax Rate
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
-                    Tax Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">
-                    Tax Description
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-gray-300">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-6 text-gray-500">
-                      No tax rates found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map(({ id, taxName, taxRate, taxType, taxDescription }) => (
-                    <tr key={id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{taxName}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{taxRate}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{taxType}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{taxDescription}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(id)}
-                          className="inline-flex items-center px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 transition"
-                          title="Edit"
-                          aria-label={`Edit tax rate ${taxName}`}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(id)}
-                          className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-                          title="Delete"
-                          aria-label={`Delete tax rate ${taxName}`}
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
           </div>
-
-          {/* Pagination */}
-          <nav
-            className="mt-6 flex justify-center items-center space-x-1"
-            aria-label="Pagination Navigation"
-          >
-            <button
-              onClick={() => changePage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Previous page"
-            >
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => changePage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`px-4 py-1 border-t border-b border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => changePage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label="Next page"
-            >
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </nav>
-        </section>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

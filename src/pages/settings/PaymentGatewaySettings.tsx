@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const PaymentGatewaySettings: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state
+  // Form state for Add Section
   const [form, setForm] = useState({
     gatewayName: "",
     gatewayType: "Online",
@@ -14,13 +15,24 @@ const PaymentGatewaySettings: React.FC = () => {
     description: "",
   });
 
-  // Editing state
-  const [editingId, setEditingId] = useState<number | null>(null);
-
   // Data state
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    gatewayName: "",
+    gatewayType: "Online",
+    gatewayStatus: "Active",
+    description: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -34,18 +46,7 @@ const PaymentGatewaySettings: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return data.slice(start, start + itemsPerPage);
-  }, [currentPage, data]);
-
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -53,380 +54,435 @@ const PaymentGatewaySettings: React.FC = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEditClick = (id: number) => {
-    const gateway = data.find((d) => d.id === id);
-    if (gateway) {
-      setForm({
-        gatewayName: gateway.gatewayName,
-        gatewayType: gateway.type,
-        gatewayStatus: gateway.status,
-        description: gateway.description,
-      });
-      setEditingId(id);
-    }
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCancel = () => {
+  // Save handler for Add Section (Add new gateway)
+  const handleSave = () => {
+    if (!form.gatewayName.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+    setData((prev) => [
+      ...prev,
+      {
+        id: newId,
+        gatewayName: form.gatewayName.trim(),
+        type: form.gatewayType,
+        status: form.gatewayStatus,
+        description: form.description,
+      },
+    ]);
     setForm({
       gatewayName: "",
       gatewayType: "Online",
       gatewayStatus: "Active",
       description: "",
     });
-    setEditingId(null);
   };
 
-  const handleSave = () => {
-    if (!form.gatewayName.trim()) return;
-    if (editingId !== null) {
-      // Update existing
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        gatewayName: item.gatewayName,
+        gatewayType: item.type,
+        gatewayStatus: item.status,
+        description: item.description,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.gatewayName.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
       setData((prev) =>
         prev.map((item) =>
-          item.id === editingId
+          item.id === editId
             ? {
                 ...item,
-                gatewayName: form.gatewayName,
-                type: form.gatewayType,
-                status: form.gatewayStatus,
-                description: form.description,
+                gatewayName: editForm.gatewayName.trim(),
+                type: editForm.gatewayType,
+                status: editForm.gatewayStatus,
+                description: editForm.description,
               }
             : item
         )
       );
-    } else {
-      // Add new
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [
-        ...prev,
-        {
-          id: newId,
-          gatewayName: form.gatewayName,
-          type: form.gatewayType,
-          status: form.gatewayStatus,
-          description: form.description,
-        },
-      ]);
-      setCurrentPage(totalPages); // Go to last page where new item is added
+      setEditId(null);
+      setIsEditModalOpen(false);
     }
-    handleCancel();
   };
 
-  const handleRefresh = () => {
-    loadData();
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      gatewayName: "",
+      gatewayType: "Online",
+      gatewayStatus: "Active",
+      description: "",
+    });
+    setEditId(null);
     setCurrentPage(1);
-    handleCancel();
   };
 
   const handleReport = () => {
-    alert(JSON.stringify(data, null, 2));
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
   };
 
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Payment Gateway Settings</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Payment Gateway Settings</h1>
 
-      {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">Add / Edit Payment Gateway</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-6"
-          noValidate
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label
-                htmlFor="gatewayName"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Gateway Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="gatewayName"
-                name="gatewayName"
-                type="text"
-                value={form.gatewayName}
-                onChange={handleInputChange}
-                required
-                className="block w-full rounded border border-gray-300 px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-                placeholder="Enter gateway name"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="gatewayType"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Gateway Type
-              </label>
-              <select
-                id="gatewayType"
-                name="gatewayType"
-                value={form.gatewayType}
-                onChange={handleInputChange}
-                className="block w-full rounded border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option>Online</option>
-                <option>Offline</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="gatewayStatus"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="gatewayStatus"
-                name="gatewayStatus"
-                value={form.gatewayStatus}
-                onChange={handleInputChange}
-                className="block w-full rounded border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
-            </div>
-          </div>
-
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Payment Gateway</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Gateway Name */}
           <div>
             <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="gatewayName"
+              className="block text-sm font-medium mb-1"
             >
-              Description
+              Gateway Name <span className="text-red-600">*</span>
             </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={3}
-              value={form.description}
+            <input
+              type="text"
+              id="gatewayName"
+              name="gatewayName"
+              value={form.gatewayName}
               onChange={handleInputChange}
-              className="block w-full rounded border border-gray-300 px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-              placeholder="Enter description"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter gateway name"
+              required
             />
           </div>
 
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          {/* Gateway Type */}
+          <div>
+            <label
+              htmlFor="gatewayType"
+              className="block text-sm font-medium mb-1"
             >
-              <i className="fa fa-save mr-2" aria-hidden="true"></i>
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
+              Gateway Type
+            </label>
+            <select
+              id="gatewayType"
+              name="gatewayType"
+              value={form.gatewayType}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-times mr-2" aria-hidden="true"></i>
-              Cancel
-            </button>
+              <option>Online</option>
+              <option>Offline</option>
+            </select>
           </div>
-        </form>
-      </section>
 
-      {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 md:mb-0">
-            Payment Gateway List
-          </h2>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-              title="Generate Report"
-              type="button"
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="gatewayStatus"
+              className="block text-sm font-medium mb-1"
             >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i>
-              Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              title="Refresh List"
-              type="button"
+              Status
+            </label>
+            <select
+              id="gatewayStatus"
+              name="gatewayStatus"
+              value={form.gatewayStatus}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>
-              Refresh
-            </button>
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
           </div>
         </div>
 
+        {/* Description */}
+        <div className="mt-6">
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium mb-1"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={3}
+            value={form.description}
+            onChange={handleInputChange}
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter description"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-6">
+          <h2 className="text-xl font-semibold">Payment Gateway List</h2>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300"
-                >
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Gateway Name
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Type
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Description
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                >
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedData.map((gateway, idx) => (
-                <tr key={gateway.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 text-sm text-gray-900 font-medium">
-                    {gateway.gatewayName}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 text-sm text-gray-700">
-                    {gateway.type}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 text-sm">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded text-xs font-semibold ${
-                        gateway.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {gateway.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                    {gateway.description}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
-                    <button
-                      onClick={() => handleEditClick(gateway.id)}
-                      className="inline-flex items-center px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      title="Edit"
-                      type="button"
-                    >
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            <tbody>
               {paginatedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-6 text-center text-gray-500 text-sm"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No payment gateways found.
                   </td>
                 </tr>
               )}
+              {paginatedData.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.gatewayName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.type}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.description}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit gateway ${item.gatewayName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <nav
-          className="mt-6 flex justify-center items-center space-x-2"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="First Page"
-          >
-            <i className="fa fa-angle-double-left" aria-hidden="true"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous Page"
-          >
-            <i className="fa fa-angle-left" aria-hidden="true"></i>
-          </button>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              aria-current={page === currentPage ? "page" : undefined}
-              className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-                page === currentPage
-                  ? "bg-indigo-600 text-white"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next Page"
-          >
-            <i className="fa fa-angle-right" aria-hidden="true"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 text-sm font-medium ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Last Page"
-          >
-            <i className="fa fa-angle-double-right" aria-hidden="true"></i>
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Payment Gateway
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Gateway Name */}
+              <div>
+                <label
+                  htmlFor="editGatewayName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Gateway Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editGatewayName"
+                  name="gatewayName"
+                  value={editForm.gatewayName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter gateway name"
+                  required
+                />
+              </div>
+
+              {/* Gateway Type */}
+              <div>
+                <label
+                  htmlFor="editGatewayType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Gateway Type
+                </label>
+                <select
+                  id="editGatewayType"
+                  name="gatewayType"
+                  value={editForm.gatewayType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Online</option>
+                  <option>Offline</option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editGatewayStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editGatewayStatus"
+                  name="gatewayStatus"
+                  value={editForm.gatewayStatus}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mt-6">
+              <label
+                htmlFor="editDescription"
+                className="block text-sm font-medium mb-1"
+              >
+                Description
+              </label>
+              <textarea
+                id="editDescription"
+                name="description"
+                rows={3}
+                value={editForm.description}
+                onChange={handleEditInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter description"
+              />
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
