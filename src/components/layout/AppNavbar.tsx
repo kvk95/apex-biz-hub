@@ -53,17 +53,23 @@ export function AppNavbar() {
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      }).catch((err) => {
-        console.error("Failed to enter fullscreen:", err);
-      });
+      document.documentElement
+        .requestFullscreen()
+        .then(() => {
+          setIsFullscreen(true);
+        })
+        .catch((err) => {
+          console.error("Failed to enter fullscreen:", err);
+        });
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-      }).catch((err) => {
-        console.error("Failed to exit fullscreen:", err);
-      });
+      document
+        .exitFullscreen()
+        .then(() => {
+          setIsFullscreen(false);
+        })
+        .catch((err) => {
+          console.error("Failed to exit fullscreen:", err);
+        });
     }
   };
 
@@ -81,14 +87,13 @@ export function AppNavbar() {
 
         <div className="flex flex-1 items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <i
-              className="fa-light fa-magnifying-glass absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              style={{ left: "2px" }}
-            ></i>
-            <Input
+            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+              <i className="fa-light fa-magnifying-glass absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+            </div>
+            <input
               type="search"
               placeholder="Search products, orders, customers..."
-              className="w-full pl-10 bg-muted/50"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               style={inputBgStyle}
             />
           </div>
