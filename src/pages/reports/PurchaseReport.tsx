@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 type PurchaseRecord = {
   purchaseNo: string;
@@ -27,6 +28,9 @@ const PurchaseReport: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<PurchaseRecord[]>("PurchaseReport");
@@ -50,10 +54,6 @@ const PurchaseReport: React.FC = () => {
   const [paymentStatus, setPaymentStatus] = useState("All");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 5;
 
   // Filtered data based on inputs
   const filteredData = useMemo(() => {
@@ -79,10 +79,9 @@ const PurchaseReport: React.FC = () => {
   }, [data, purchaseNo, supplier, purchaseStatus, paymentStatus, dateFrom, dateTo]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Handlers
@@ -102,344 +101,267 @@ const PurchaseReport: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
-      <title>Purchase Report - DreamsPOS</title>
+      <h1 className="text-2xl font-semibold mb-6">Purchase Report</h1>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <h1 className="text-3xl font-semibold mb-6">Purchase Report</h1>
-
-        {/* Filter Section */}
-        <form
-          onSubmit={handleSearch}
-          className="bg-white rounded shadow p-6 mb-6"
-          aria-label="Purchase report filters"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {/* Purchase No */}
-            <div>
-              <label
-                htmlFor="purchaseNo"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Purchase No
-              </label>
-              <input
-                id="purchaseNo"
-                type="text"
-                value={purchaseNo}
-                onChange={(e) => setPurchaseNo(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Purchase No"
-              />
-            </div>
-
-            {/* Supplier */}
-            <div>
-              <label
-                htmlFor="supplier"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Supplier
-              </label>
-              <input
-                id="supplier"
-                type="text"
-                value={supplier}
-                onChange={(e) => setSupplier(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Supplier"
-              />
-            </div>
-
-            {/* Purchase Status */}
-            <div>
-              <label
-                htmlFor="purchaseStatus"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Purchase Status
-              </label>
-              <select
-                id="purchaseStatus"
-                value={purchaseStatus}
-                onChange={(e) => setPurchaseStatus(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {purchaseStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Payment Status */}
-            <div>
-              <label
-                htmlFor="paymentStatus"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Payment Status
-              </label>
-              <select
-                id="paymentStatus"
-                value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {paymentStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date From */}
-            <div>
-              <label
-                htmlFor="dateFrom"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Date From
-              </label>
-              <input
-                id="dateFrom"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* Date To */}
-            <div>
-              <label
-                htmlFor="dateTo"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Date To
-              </label>
-              <input
-                id="dateTo"
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+      {/* Filter Section */}
+      <form
+        onSubmit={handleSearch}
+        className="bg-card rounded shadow p-6 mb-6"
+        aria-label="Purchase report filters"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {/* Purchase No */}
+          <div>
+            <label
+              htmlFor="purchaseNo"
+              className="block text-sm font-medium mb-1"
+            >
+              Purchase No
+            </label>
+            <input
+              id="purchaseNo"
+              type="text"
+              value={purchaseNo}
+              onChange={(e) => setPurchaseNo(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Purchase No"
+            />
           </div>
 
-          {/* Buttons */}
-          <div className="mt-6 flex space-x-4 justify-start">
-            <button
-              type="submit"
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          {/* Supplier */}
+          <div>
+            <label
+              htmlFor="supplier"
+              className="block text-sm font-medium mb-1"
             >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Refresh
-            </button>
+              Supplier
+            </label>
+            <input
+              id="supplier"
+              type="text"
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Supplier"
+            />
           </div>
-        </form>
 
-        {/* Table Section */}
-        <div className="bg-white rounded shadow overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+          {/* Purchase Status */}
+          <div>
+            <label
+              htmlFor="purchaseStatus"
+              className="block text-sm font-medium mb-1"
+            >
+              Purchase Status
+            </label>
+            <select
+              id="purchaseStatus"
+              value={purchaseStatus}
+              onChange={(e) => setPurchaseStatus(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {purchaseStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Payment Status */}
+          <div>
+            <label
+              htmlFor="paymentStatus"
+              className="block text-sm font-medium mb-1"
+            >
+              Payment Status
+            </label>
+            <select
+              id="paymentStatus"
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {paymentStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date From */}
+          <div>
+            <label
+              htmlFor="dateFrom"
+              className="block text-sm font-medium mb-1"
+            >
+              Date From
+            </label>
+            <input
+              id="dateFrom"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Date To */}
+          <div>
+            <label
+              htmlFor="dateTo"
+              className="block text-sm font-medium mb-1"
+            >
+              Date To
+            </label>
+            <input
+              id="dateTo"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex space-x-4 justify-start">
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Reset
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <i className="fa fa-sync fa-light" aria-hidden="true"></i> Refresh
+          </button>
+        </div>
+      </form>
+
+      {/* Table Section */}
+      <div className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Purchase No
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Supplier
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Purchase Date
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Purchase Status
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Grand Total
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Paid Amount
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Due Amount
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Payment Status
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {paginatedData.length === 0 ? (
+            <tbody>
+              {paginatedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={8}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No records found.
                   </td>
                 </tr>
-              ) : (
-                paginatedData.map((item) => (
-                  <tr key={item.purchaseNo} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">{item.purchaseNo}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{item.supplier}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{item.purchaseDate}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                          item.purchaseStatus === "Received"
-                            ? "bg-green-100 text-green-800"
-                            : item.purchaseStatus === "Pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : item.purchaseStatus === "Canceled"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {item.purchaseStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      ${item.grandTotal}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      ${item.paidAmount}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      ${item.dueAmount}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                          item.paymentStatus === "Paid"
-                            ? "bg-green-100 text-green-800"
-                            : item.paymentStatus === "Partial"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : item.paymentStatus === "Due"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {item.paymentStatus}
-                      </span>
-                    </td>
-                  </tr>
-                ))
               )}
+              {paginatedData.map((item) => (
+                <tr
+                  key={item.purchaseNo}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.purchaseNo}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.supplier}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.purchaseDate}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.purchaseStatus === "Received"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : item.purchaseStatus === "Pending"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : item.purchaseStatus === "Canceled"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                      }`}
+                    >
+                      {item.purchaseStatus}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-foreground">
+                    ${item.grandTotal}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-foreground">
+                    ${item.paidAmount}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-foreground">
+                    ${item.dueAmount}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.paymentStatus === "Paid"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : item.paymentStatus === "Partial"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : item.paymentStatus === "Due"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                      }`}
+                    >
+                      {item.paymentStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex items-center justify-between py-3"
-          aria-label="Pagination"
-        >
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
-            <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-              <li>
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className={`relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                    currentPage === 1
-                      ? "z-10 bg-indigo-600 text-white"
-                      : "text-gray-500 hover:bg-gray-50"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  aria-label="Go to first page"
-                >
-                  &laquo;
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Go to previous page"
-                >
-                  &lsaquo;
-                </button>
-              </li>
-              {/* Show page numbers */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <li key={page}>
-                  <button
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={`relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium ${
-                      currentPage === page
-                        ? "z-10 bg-indigo-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                </li>
-              ))}
-              <li>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Go to next page"
-                >
-                  &rsaquo;
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className={`relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                    currentPage === totalPages
-                      ? "z-10 bg-indigo-600 text-white"
-                      : "text-gray-500 hover:bg-gray-50"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  aria-label="Go to last page"
-                >
-                  &raquo;
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </div>
     </div>
   );

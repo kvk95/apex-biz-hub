@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const suppliers = [
   { value: "", label: "Select Supplier" },
@@ -53,7 +54,10 @@ const StockHistory: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state (no edit icon/button exists, so no modal needed)
+  // (No edit modal or edit controls added as per instructions)
 
   // Filtered data memoized
   const filteredData = useMemo(() => {
@@ -70,13 +74,6 @@ const StockHistory: React.FC = () => {
     });
   }, [data, dateFrom, dateTo, selectedSupplier, selectedProduct]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
@@ -90,9 +87,10 @@ const StockHistory: React.FC = () => {
     setSelectedProduct("");
   };
 
-  const handleRefresh = () => {
-    // For demo, refresh just resets filters and page
+  // Clear button replaces Refresh button
+  const handleClear = () => {
     handleReset();
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -100,29 +98,35 @@ const StockHistory: React.FC = () => {
     alert("Report generated for current filtered data.");
   };
 
+  // Paginated data using Pagination component logic
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
       <title>Stock History - Dreams POS</title>
 
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <h1 className="text-2xl font-semibold mb-6">Stock History</h1>
 
         {/* Filters Section */}
-        <section className="bg-white rounded shadow p-6 mb-6">
+        <section className="bg-card rounded shadow p-6 mb-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               setCurrentPage(1);
             }}
-            className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+            className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end"
           >
             {/* Date From */}
             <div>
               <label
                 htmlFor="dateFrom"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Date From
               </label>
@@ -132,7 +136,7 @@ const StockHistory: React.FC = () => {
                 name="dateFrom"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -140,7 +144,7 @@ const StockHistory: React.FC = () => {
             <div>
               <label
                 htmlFor="dateTo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Date To
               </label>
@@ -150,7 +154,7 @@ const StockHistory: React.FC = () => {
                 name="dateTo"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -158,7 +162,7 @@ const StockHistory: React.FC = () => {
             <div>
               <label
                 htmlFor="supplier"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Supplier
               </label>
@@ -167,7 +171,7 @@ const StockHistory: React.FC = () => {
                 name="supplier"
                 value={selectedSupplier}
                 onChange={(e) => setSelectedSupplier(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {suppliers.map((sup) => (
                   <option key={sup.value} value={sup.value}>
@@ -181,7 +185,7 @@ const StockHistory: React.FC = () => {
             <div>
               <label
                 htmlFor="product"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Product
               </label>
@@ -190,7 +194,7 @@ const StockHistory: React.FC = () => {
                 name="product"
                 value={selectedProduct}
                 onChange={(e) => setSelectedProduct(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {products.map((prod) => (
                   <option key={prod.value} value={prod.value}>
@@ -201,85 +205,85 @@ const StockHistory: React.FC = () => {
             </div>
 
             {/* Buttons */}
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
-                className="inline-flex items-center justify-center rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa-thin fa-magnifying-glass mr-2"></i> Search
+                <i className="fa fa-magnifying-glass fa-light" aria-hidden="true"></i> Search
               </button>
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa-thin fa-rotate-left mr-2"></i> Reset
+                <i className="fa fa-rotate-left fa-light" aria-hidden="true"></i> Reset
               </button>
               <button
                 type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa-thin fa-arrows-rotate mr-2"></i> Refresh
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
               <button
                 type="button"
                 onClick={handleReport}
-                className="inline-flex items-center justify-center rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa-thin fa-file-chart-column mr-2"></i> Report
+                <i className="fa fa-file-chart-column fa-light" aria-hidden="true"></i> Report
               </button>
             </div>
           </form>
         </section>
 
         {/* Table Section */}
-        <section className="bg-white rounded shadow p-6">
+        <section className="bg-card rounded shadow py-6">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-gray-700">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Date
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Product Name
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Product Code
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Supplier Name
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Purchase Qty
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Purchase Return Qty
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Sales Qty
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Sales Return Qty
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Stock Qty
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Unit Price
                   </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Price
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {paginatedData.length === 0 ? (
                   <tr>
                     <td
                       colSpan={11}
-                      className="whitespace-nowrap px-3 py-4 text-center text-gray-500"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No records found.
                     </td>
@@ -288,31 +292,31 @@ const StockHistory: React.FC = () => {
                   paginatedData.map((item, idx) => (
                     <tr
                       key={`${item.productCode}-${item.date}-${idx}`}
-                      className="hover:bg-gray-50"
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
                     >
-                      <td className="whitespace-nowrap px-3 py-2">{item.date}</td>
-                      <td className="whitespace-nowrap px-3 py-2">{item.productName}</td>
-                      <td className="whitespace-nowrap px-3 py-2">{item.productCode}</td>
-                      <td className="whitespace-nowrap px-3 py-2">{item.supplierName}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{item.date}</td>
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{item.productName}</td>
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{item.productCode}</td>
+                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{item.supplierName}</td>
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         {item.purchaseQty}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         {item.purchaseReturnQty}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         {item.salesQty}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         {item.salesReturnQty}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         {item.stockQty}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         ${item.unitPrice.toFixed(2)}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                         ${item.totalPrice.toFixed(2)}
                       </td>
                     </tr>
@@ -322,79 +326,14 @@ const StockHistory: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination Controls */}
-          <nav
-            className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-4"
-            aria-label="Pagination"
-          >
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
-              <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-                <li>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="Previous"
-                  >
-                    <i className="fa-thin fa-chevron-left"></i>
-                  </button>
-                </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <li key={page}>
-                    <button
-                      onClick={() => setCurrentPage(page)}
-                      aria-current={page === currentPage ? "page" : undefined}
-                      className={`relative inline-flex items-center border px-4 py-2 text-sm font-medium focus:z-20 ${
-                        page === currentPage
-                          ? "border-indigo-600 bg-indigo-600 text-white"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                      currentPage === totalPages || totalPages === 0
-                        ? "cursor-not-allowed opacity-50"
-                        : ""
-                    }`}
-                    aria-label="Next"
-                  >
-                    <i className="fa-thin fa-chevron-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </nav>
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
         </section>
       </div>
     </div>

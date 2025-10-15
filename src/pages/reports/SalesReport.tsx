@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 interface SaleRecord {
   date: string;
@@ -12,8 +13,6 @@ interface SaleRecord {
   tax: number;
   total: number;
 }
-
-const pageSizeOptions = [5, 10, 15];
 
 const SalesReport: React.FC = () => {
   const [data, setData] = useState<SaleRecord[]>([]);
@@ -41,7 +40,7 @@ const SalesReport: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [customer, setCustomer] = useState<string>("");
   const [product, setProduct] = useState<string>("");
-  const [pageSize, setPageSize] = useState<number>(5);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Filtered data based on inputs
@@ -58,44 +57,41 @@ const SalesReport: React.FC = () => {
   }, [startDate, endDate, customer, product, data]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredData.slice(startIndex, startIndex + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   // Reset page when filters or pageSize change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [startDate, endDate, customer, product, pageSize]);
+  }, [startDate, endDate, customer, product, itemsPerPage]);
 
-  // Handlers for buttons (Refresh resets filters)
-  const handleRefresh = () => {
+  // Handlers for buttons
+  const handleClear = () => {
     setStartDate("");
     setEndDate("");
     setCustomer("");
     setProduct("");
-    setPageSize(5);
+    setItemsPerPage(5);
     setCurrentPage(1);
   };
 
-  // Save button placeholder (no backend, just alert)
   const handleSave = () => {
     alert("Save functionality is not implemented in this demo.");
   };
 
-  // Report button placeholder (no backend, just alert)
   const handleReport = () => {
     alert("Report generation is not implemented in this demo.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Sales Report</h1>
+      <h1 className="text-2xl font-semibold mb-6">Sales Report</h1>
 
       {/* Filters Section */}
-      <section className="bg-white rounded-lg shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -112,7 +108,7 @@ const SalesReport: React.FC = () => {
               id="startDate"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -126,7 +122,7 @@ const SalesReport: React.FC = () => {
               id="endDate"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -141,7 +137,7 @@ const SalesReport: React.FC = () => {
               placeholder="Customer Name"
               value={customer}
               onChange={(e) => setCustomer(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -156,22 +152,22 @@ const SalesReport: React.FC = () => {
               placeholder="Product Name"
               value={product}
               onChange={(e) => setProduct(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Page Size */}
           <div>
-            <label htmlFor="pageSize" className="block text-sm font-medium mb-1">
+            <label htmlFor="itemsPerPage" className="block text-sm font-medium mb-1">
               Items per page
             </label>
             <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              id="itemsPerPage"
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {pageSizeOptions.map((size) => (
+              {[5, 10, 15].map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -181,52 +177,52 @@ const SalesReport: React.FC = () => {
         </form>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex space-x-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <button
             onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
           <button
             onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            Save
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
           </button>
           <button
-            onClick={handleRefresh}
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
-            Refresh
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
         </div>
       </section>
 
       {/* Sales Table Section */}
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700">Date</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700">Invoice</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700">Customer</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700">Product</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700 text-right">Qty</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700 text-right">Price</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700 text-right">Discount</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700 text-right">Tax</th>
-                <th className="border border-gray-300 px-4 py-2 font-medium text-gray-700 text-right">Total</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Product</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Qty</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Price</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Discount</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tax</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Total</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-6 text-gray-500">
+                  <td colSpan={9} className="text-center px-4 py-6 text-muted-foreground italic">
                     No records found.
                   </td>
                 </tr>
@@ -234,25 +230,17 @@ const SalesReport: React.FC = () => {
                 paginatedData.map((record, idx) => (
                   <tr
                     key={`${record.invoice}-${idx}`}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="border border-gray-300 px-4 py-2">{record.date}</td>
-                    <td className="border border-gray-300 px-4 py-2">{record.invoice}</td>
-                    <td className="border border-gray-300 px-4 py-2">{record.customer}</td>
-                    <td className="border border-gray-300 px-4 py-2">{record.product}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{record.qty}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      ${record.price.toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      ${record.discount.toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      ${record.tax.toFixed(2)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">
-                      ${record.total.toFixed(2)}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">{record.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{record.invoice}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{record.customer}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{record.product}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">{record.qty}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.price.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.discount.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.tax.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.total.toFixed(2)}</td>
                   </tr>
                 ))
               )}
@@ -260,77 +248,14 @@ const SalesReport: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-medium">
-              {filteredData.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(currentPage * pageSize, filteredData.length)}
-            </span>{" "}
-            of <span className="font-medium">{filteredData.length}</span> results
-          </div>
-          <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous"
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* Page Numbers */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  page === currentPage
-                    ? "z-10 bg-indigo-600 border-indigo-600 text-white"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                currentPage === totalPages || totalPages === 0 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Next"
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </nav>
-        </div>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
     </div>
   );

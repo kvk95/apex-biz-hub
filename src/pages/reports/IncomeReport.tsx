@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const paymentStatusOptions = ["All", "Paid", "Unpaid"];
 const paymentMethodOptions = ["All", "Cash", "Credit Card", "Bank Transfer"];
 
-const IncomeReport: React.FC = () => { 
-
+const IncomeReport: React.FC = () => {
   // API state
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ const IncomeReport: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
 
   // Filtered data based on filters
   const filteredData = useMemo(() => {
@@ -65,7 +65,6 @@ const IncomeReport: React.FC = () => {
   }, [data, startDate, endDate, paymentStatus, paymentMethod, searchInvoice]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -81,23 +80,31 @@ const IncomeReport: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleClear = () => {
+    handleResetFilters();
+  };
+
   const handleRefresh = () => {
     loadData();
     handleResetFilters();
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || page > Math.ceil(filteredData.length / itemsPerPage))
+      return;
     setCurrentPage(page);
   };
 
+  const handlePageSizeChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <div className="max-w-7xl mx-auto bg-white shadow rounded-lg p-6">
+    <div className="min-h-screen bg-background font-sans p-6">
+      <div className="max-w-7xl mx-auto bg-card rounded shadow-lg p-6">
         {/* Title */}
-        <h1 className="text-2xl font-semibold mb-6 text-gray-900">
-          Income Report
-        </h1>
+        <h1 className="text-2xl font-semibold mb-6">Income Report</h1>
 
         {/* Filters Section */}
         <form
@@ -107,12 +114,12 @@ const IncomeReport: React.FC = () => {
           }}
           className="mb-6"
         >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
             {/* Date From */}
             <div>
               <label
                 htmlFor="startDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Date From
               </label>
@@ -121,7 +128,8 @@ const IncomeReport: React.FC = () => {
                 id="startDate"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Select start date"
               />
             </div>
 
@@ -129,7 +137,7 @@ const IncomeReport: React.FC = () => {
             <div>
               <label
                 htmlFor="endDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Date To
               </label>
@@ -138,7 +146,7 @@ const IncomeReport: React.FC = () => {
                 id="endDate"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -146,7 +154,7 @@ const IncomeReport: React.FC = () => {
             <div>
               <label
                 htmlFor="paymentStatus"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Payment Status
               </label>
@@ -154,7 +162,7 @@ const IncomeReport: React.FC = () => {
                 id="paymentStatus"
                 value={paymentStatus}
                 onChange={(e) => setPaymentStatus(e.target.value)}
-                className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentStatusOptions.map((status) => (
                   <option key={status} value={status}>
@@ -168,7 +176,7 @@ const IncomeReport: React.FC = () => {
             <div>
               <label
                 htmlFor="paymentMethod"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Payment Method
               </label>
@@ -176,7 +184,7 @@ const IncomeReport: React.FC = () => {
                 id="paymentMethod"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentMethodOptions.map((method) => (
                   <option key={method} value={method}>
@@ -190,7 +198,7 @@ const IncomeReport: React.FC = () => {
             <div>
               <label
                 htmlFor="searchInvoice"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Invoice No
               </label>
@@ -200,67 +208,78 @@ const IncomeReport: React.FC = () => {
                 placeholder="Search Invoice No"
                 value={searchInvoice}
                 onChange={(e) => setSearchInvoice(e.target.value)}
-                className="block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="mt-4 flex space-x-3">
+          <div className="mt-6 flex space-x-3">
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
             >
-              <i className="fa fa-search mr-2" aria-hidden="true"></i> Search
+              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
             </button>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
             >
-              <i className="fa fa-undo mr-2" aria-hidden="true"></i> Reset
+              <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
             </button>
             <button
               type="button"
               onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-1"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
             >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Refresh
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              <i className="fa fa-trash fa-light" aria-hidden="true"></i> Clear
             </button>
           </div>
         </form>
 
         {/* Table Section */}
-        <div className="overflow-x-auto border border-gray-300 rounded">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Invoice No
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Customer
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Payment Status
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Payment Method
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Total Amount
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No records found.
                   </td>
@@ -269,26 +288,31 @@ const IncomeReport: React.FC = () => {
                 paginatedData.map((item, idx) => (
                   <tr
                     key={item.invoiceNo}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
-                    <td className="px-4 py-3 whitespace-nowrap font-mono text-blue-600">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.date}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground font-mono text-blue-600">
                       {item.invoiceNo}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">{item.customer}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.customer}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          item.paymentStatus === "Paid"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.paymentStatus === "Paid"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
                       >
                         {item.paymentStatus}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">{item.paymentMethod}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right font-semibold">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.paymentMethod}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
                       ${item.totalAmount.toFixed(2)}
                     </td>
                   </tr>
@@ -299,49 +323,13 @@ const IncomeReport: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <nav
-          className="mt-6 flex justify-end items-center space-x-2"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
-              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            aria-label="Previous Page"
-          >
-            <i className="fa fa-chevron-left" aria-hidden="true"></i>
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              aria-current={page === currentPage ? "page" : undefined}
-              className={`inline-flex items-center px-3 py-1 rounded border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
-                page === currentPage
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 ${
-              currentPage === totalPages || totalPages === 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-            aria-label="Next Page"
-          >
-            <i className="fa fa-chevron-right" aria-hidden="true"></i>
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
     </div>
   );

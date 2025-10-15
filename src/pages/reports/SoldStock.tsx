@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const categories = [
   "All",
@@ -9,7 +10,7 @@ const categories = [
   "Accessories",
 ];
 
-const SoldStock: React.FC = () => { 
+const SoldStock: React.FC = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,22 @@ const SoldStock: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    invoiceId: "",
+    stockId: "",
+    productName: "",
+    category: "All",
+    quantity: "",
+    unitPrice: "",
+    totalPrice: "",
+    customerName: "",
+    date: "",
+  });
+  const [editKey, setEditKey] = useState<string | null>(null);
 
   // Filtered data based on filters
   const filteredData = useMemo(() => {
@@ -76,12 +92,11 @@ const SoldStock: React.FC = () => {
     dateToFilter,
   ]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Paginated data using Pagination component logic
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage]);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   // Handlers
   const handleResetFilters = () => {
@@ -94,9 +109,14 @@ const SoldStock: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleClear = () => {
+    handleResetFilters();
+    setEditKey(null);
+  };
+
   const handleRefresh = () => {
     // For demo, just reset filters and page
-    handleResetFilters();
+    handleClear();
   };
 
   const handleReport = () => {
@@ -104,32 +124,98 @@ const SoldStock: React.FC = () => {
     alert("Report generated for current filtered data.");
   };
 
-  // Pagination button handlers
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  // Edit modal handlers
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEdit = (key: string) => {
+    const item = data.find(
+      (d: any) => d.invoiceId + d.stockId === key
+    );
+    if (item) {
+      setEditForm({
+        invoiceId: item.invoiceId,
+        stockId: item.stockId,
+        productName: item.productName,
+        category: item.category,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        totalPrice: item.totalPrice.toString(),
+        customerName: item.customerName,
+        date: item.date,
+      });
+      setEditKey(key);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.invoiceId.trim() ||
+      !editForm.stockId.trim() ||
+      !editForm.productName.trim() ||
+      !editForm.category.trim() ||
+      !editForm.quantity ||
+      !editForm.unitPrice ||
+      !editForm.totalPrice ||
+      !editForm.customerName.trim() ||
+      !editForm.date
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editKey !== null) {
+      setData((prev) =>
+        prev.map((item: any) =>
+          item.invoiceId + item.stockId === editKey
+            ? {
+                invoiceId: editForm.invoiceId.trim(),
+                stockId: editForm.stockId.trim(),
+                productName: editForm.productName.trim(),
+                category: editForm.category,
+                quantity: Number(editForm.quantity),
+                unitPrice: Number(editForm.unitPrice),
+                totalPrice: Number(editForm.totalPrice),
+                customerName: editForm.customerName.trim(),
+                date: editForm.date,
+              }
+            : item
+        )
+      );
+      setEditKey(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditKey(null);
+    setIsEditModalOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6 text-gray-900">Sold Stock</h1>
+      <h1 className="text-2xl font-semibold mb-6">Sold Stock</h1>
 
       {/* Filters Section */}
-      <section className="mb-6 bg-white shadow rounded p-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             setCurrentPage(1);
           }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6"
           aria-label="Filter Sold Stock"
         >
           {/* Invoice ID */}
           <div>
             <label
               htmlFor="invoiceId"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Invoice ID
             </label>
@@ -139,7 +225,7 @@ const SoldStock: React.FC = () => {
               value={invoiceIdFilter}
               onChange={(e) => setInvoiceIdFilter(e.target.value)}
               placeholder="Invoice ID"
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -147,7 +233,7 @@ const SoldStock: React.FC = () => {
           <div>
             <label
               htmlFor="stockId"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Stock ID
             </label>
@@ -157,7 +243,7 @@ const SoldStock: React.FC = () => {
               value={stockIdFilter}
               onChange={(e) => setStockIdFilter(e.target.value)}
               placeholder="Stock ID"
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -165,7 +251,7 @@ const SoldStock: React.FC = () => {
           <div>
             <label
               htmlFor="category"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Category
             </label>
@@ -173,7 +259,7 @@ const SoldStock: React.FC = () => {
               id="category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -187,7 +273,7 @@ const SoldStock: React.FC = () => {
           <div>
             <label
               htmlFor="customerName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Customer Name
             </label>
@@ -197,7 +283,7 @@ const SoldStock: React.FC = () => {
               value={customerNameFilter}
               onChange={(e) => setCustomerNameFilter(e.target.value)}
               placeholder="Customer Name"
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -205,7 +291,7 @@ const SoldStock: React.FC = () => {
           <div>
             <label
               htmlFor="dateFrom"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Date From
             </label>
@@ -214,7 +300,7 @@ const SoldStock: React.FC = () => {
               type="date"
               value={dateFromFilter}
               onChange={(e) => setDateFromFilter(e.target.value)}
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -222,7 +308,7 @@ const SoldStock: React.FC = () => {
           <div>
             <label
               htmlFor="dateTo"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Date To
             </label>
@@ -231,88 +317,91 @@ const SoldStock: React.FC = () => {
               type="date"
               value={dateToFilter}
               onChange={(e) => setDateToFilter(e.target.value)}
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Buttons Row */}
-          <div className="md:col-span-3 lg:col-span-6 flex flex-wrap gap-3 mt-2">
+          <div className="md:col-span-3 lg:col-span-6 flex flex-wrap gap-3 mt-6">
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               aria-label="Search Sold Stock"
             >
-              Search
+              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
             </button>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               aria-label="Reset Filters"
             >
-              Reset
+              <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center justify-center rounded border border-green-600 bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-              aria-label="Refresh Data"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Clear Filters"
             >
-              Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center justify-center rounded border border-yellow-600 bg-yellow-400 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               aria-label="Generate Report"
             >
-              Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white shadow rounded p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Invoice ID
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Stock ID
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Product Name
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Category
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Quantity
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Unit Price ($)
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Total Price ($)
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Customer Name
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Date
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
+                  Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    colSpan={10}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No sold stock found.
                   </td>
@@ -321,23 +410,45 @@ const SoldStock: React.FC = () => {
                 paginatedData.map((item: any, idx: number) => (
                   <tr
                     key={item.invoiceId + item.stockId}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-4 py-2 whitespace-nowrap">{item.invoiceId}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.stockId}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.productName}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.category}</td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.invoiceId}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.stockId}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.productName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.category}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                       {item.unitPrice.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
                       {item.totalPrice.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.customerName}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                      {item.date}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(item.invoiceId + item.stockId)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit sold stock ${item.invoiceId} ${item.stockId}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -345,126 +456,232 @@ const SoldStock: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4"
-          aria-label="Pagination"
-        >
-          <div className="flex flex-1 justify-between sm:hidden">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous Page"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`relative ml-3 inline-flex items-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                currentPage === totalPages || totalPages === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Next Page"
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
-            <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-              <li>
-                <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                    currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                  }`}
-                  aria-label="Previous Page"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              </li>
-
-              {/* Page numbers */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <li key={page}>
-                  <button
-                    onClick={() => goToPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`relative inline-flex items-center border px-4 py-2 text-sm font-medium focus:z-20 ${
-                      page === currentPage
-                        ? "border-indigo-600 bg-indigo-600 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                </li>
-              ))}
-
-              <li>
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className={`relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                    currentPage === totalPages || totalPages === 0
-                      ? "cursor-not-allowed opacity-50"
-                      : ""
-                  }`}
-                  aria-label="Next Page"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </li>
-            </ul>
-          </div>
-          <div className="hidden sm:flex sm:flex-1 sm:justify-end">
-            <p className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-medium">
-                {(currentPage - 1) * itemsPerPage + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-medium">
-                {Math.min(currentPage * itemsPerPage, filteredData.length)}
-              </span>{" "}
-              of <span className="font-medium">{filteredData.length}</span> results
-            </p>
-          </div>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Sold Stock
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Invoice ID */}
+              <div>
+                <label
+                  htmlFor="editInvoiceId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Invoice ID
+                </label>
+                <input
+                  type="text"
+                  id="editInvoiceId"
+                  name="invoiceId"
+                  value={editForm.invoiceId}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Invoice ID"
+                />
+              </div>
+
+              {/* Stock ID */}
+              <div>
+                <label
+                  htmlFor="editStockId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Stock ID
+                </label>
+                <input
+                  type="text"
+                  id="editStockId"
+                  name="stockId"
+                  value={editForm.stockId}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Stock ID"
+                />
+              </div>
+
+              {/* Product Name */}
+              <div>
+                <label
+                  htmlFor="editProductName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  id="editProductName"
+                  name="productName"
+                  value={editForm.productName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Product Name"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label
+                  htmlFor="editCategory"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Category
+                </label>
+                <select
+                  id="editCategory"
+                  name="category"
+                  value={editForm.category}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <label
+                  htmlFor="editQuantity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  id="editQuantity"
+                  name="quantity"
+                  value={editForm.quantity}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Quantity"
+                />
+              </div>
+
+              {/* Unit Price */}
+              <div>
+                <label
+                  htmlFor="editUnitPrice"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Unit Price ($)
+                </label>
+                <input
+                  type="number"
+                  id="editUnitPrice"
+                  name="unitPrice"
+                  value={editForm.unitPrice}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  step="0.01"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Unit Price"
+                />
+              </div>
+
+              {/* Total Price */}
+              <div>
+                <label
+                  htmlFor="editTotalPrice"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Total Price ($)
+                </label>
+                <input
+                  type="number"
+                  id="editTotalPrice"
+                  name="totalPrice"
+                  value={editForm.totalPrice}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  step="0.01"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Total Price"
+                />
+              </div>
+
+              {/* Customer Name */}
+              <div>
+                <label
+                  htmlFor="editCustomerName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerName"
+                  name="customerName"
+                  value={editForm.customerName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Customer Name"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label
+                  htmlFor="editDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  id="editDate"
+                  name="date"
+                  value={editForm.date}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

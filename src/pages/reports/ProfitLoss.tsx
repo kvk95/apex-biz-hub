@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const pageSize = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function ProfitLoss() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,10 +36,9 @@ export default function ProfitLoss() {
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / pageSize);
   const pagedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Calculate totals for displayed page
@@ -60,179 +59,160 @@ export default function ProfitLoss() {
     setCurrentPage(1);
   };
 
-  const handleReset = () => {
+  const handleClear = () => {
     setFromDate("");
     setToDate("");
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-700">
-      <title>Profit Loss - Dreams POS</title>
-
-      <div className="container mx-auto px-4 py-6">
-        {/* Page Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4 md:mb-0">
-            Profit Loss
-          </h1>
-          <div className="flex space-x-2">
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              onClick={handleReset}
-              aria-label="Refresh"
-              title="Refresh"
-            >
-              Refresh
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-indigo-600 rounded shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label="Save"
-              title="Save"
-              onClick={() => alert("Save functionality not implemented")}
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-green-600 rounded shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-              aria-label="Report"
-              title="Report"
-              onClick={() => alert("Report functionality not implemented")}
-            >
-              Report
-            </button>
-          </div>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <h1 className="text-2xl font-semibold mb-4 md:mb-0">Profit Loss</h1>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Clear"
+            title="Clear"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Save"
+            title="Save"
+            onClick={() => alert("Save functionality not implemented")}
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Report"
+            title="Report"
+            onClick={() => alert("Report functionality not implemented")}
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
         </div>
+      </div>
 
-        {/* Filter Section */}
-        <form
-          onSubmit={handleSearch}
-          className="bg-white rounded shadow p-4 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
-          aria-label="Filter Profit Loss"
-        >
-          <div>
-            <label
-              htmlFor="fromDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              From Date
-            </label>
-            <input
-              type="date"
-              id="fromDate"
-              name="fromDate"
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              aria-required="false"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="toDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              To Date
-            </label>
-            <input
-              type="date"
-              id="toDate"
-              name="toDate"
-              className="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              aria-required="false"
-            />
-          </div>
-          <div className="md:col-span-2 flex space-x-2">
-            <button
-              type="submit"
-              className="inline-flex items-center px-4 py-2 border border-indigo-600 rounded shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label="Search"
-            >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label="Reset"
-            >
-              Reset
-            </button>
-          </div>
-        </form>
+      {/* Filter Section */}
+      <form
+        onSubmit={handleSearch}
+        className="bg-card rounded shadow p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-6 items-end"
+        aria-label="Filter Profit Loss"
+      >
+        <div>
+          <label
+            htmlFor="fromDate"
+            className="block text-sm font-medium mb-1"
+          >
+            From Date
+          </label>
+          <input
+            type="date"
+            id="fromDate"
+            name="fromDate"
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            aria-required="false"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="toDate"
+            className="block text-sm font-medium mb-1"
+          >
+            To Date
+          </label>
+          <input
+            type="date"
+            id="toDate"
+            name="toDate"
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            aria-required="false"
+          />
+        </div>
+        <div className="md:col-span-2 flex gap-3">
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Search"
+          >
+            <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Reset"
+          >
+            <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
+          </button>
+        </div>
+      </form>
 
-        {/* Table Section */}
-        <div className="overflow-x-auto bg-white rounded shadow">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left font-semibold text-gray-700"
-                >
+      {/* Table Section */}
+      <div className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Date
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right font-semibold text-gray-700"
-                >
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Total Sales
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right font-semibold text-gray-700"
-                >
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Total Purchase
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right font-semibold text-gray-700"
-                >
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Expense
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right font-semibold text-gray-700"
-                >
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Profit / Loss
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-border">
               {pagedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No data available for selected date range.
                   </td>
                 </tr>
               )}
-              {pagedData.map((item: any) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap">{item.date}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right">
+              {pagedData.map((item: any, idx) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.date}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
                     {item.totalSales.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right">
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
                     {item.totalPurchase.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right">
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
                     {item.expense.toLocaleString()}
                   </td>
                   <td
-                    className={`px-4 py-3 whitespace-nowrap text-right font-semibold ${
+                    className={`px-4 py-3 text-sm text-right font-semibold ${
                       item.profitLoss >= 0 ? "text-green-600" : "text-red-600"
                     }`}
                   >
@@ -243,7 +223,7 @@ export default function ProfitLoss() {
             </tbody>
             {/* Footer Totals */}
             {pagedData.length > 0 && (
-              <tfoot className="bg-gray-100 font-semibold text-gray-900">
+              <tfoot className="bg-muted/50 font-semibold text-foreground">
                 <tr>
                   <td className="px-4 py-3 text-left">Total</td>
                   <td className="px-4 py-3 text-right">
@@ -269,54 +249,13 @@ export default function ProfitLoss() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <nav
-            className="mt-4 flex justify-center space-x-1"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded border ${
-                currentPage === 1
-                  ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                  : "border-indigo-600 text-indigo-600 hover:bg-indigo-100"
-              } focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-              aria-label="Previous Page"
-            >
-              &lt;
-            </button>
-            {[...Array(totalPages)].map((_, i) => {
-              const page = i + 1;
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1 rounded border ${
-                    page === currentPage
-                      ? "bg-indigo-600 text-white border-indigo-600"
-                      : "border-gray-300 text-gray-700 hover:bg-indigo-100"
-                  } focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded border ${
-                currentPage === totalPages
-                  ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                  : "border-indigo-600 text-indigo-600 hover:bg-indigo-100"
-              } focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-              aria-label="Next Page"
-            >
-              &gt;
-            </button>
-          </nav>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </div>
     </div>
   );

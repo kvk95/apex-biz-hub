@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 type SupplierData = {
   supplierName: string;
@@ -15,8 +16,6 @@ type SupplierData = {
   dueAmount: number;
 };
 
-const ITEMS_PER_PAGE = 5;
-
 const SupplierReport: React.FC = () => {
   const [data, setData] = useState<SupplierData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +28,27 @@ const SupplierReport: React.FC = () => {
   const [searchEmail, setSearchEmail] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [searchCountry, setSearchCountry] = useState("");
-  const [page, setPage] = useState(1);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState<SupplierData>({
+    supplierName: "",
+    supplierCode: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    country: "",
+    totalPurchase: 0,
+    paidAmount: 0,
+    dueAmount: 0,
+  });
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -70,24 +89,25 @@ const SupplierReport: React.FC = () => {
     searchCountry,
   ]);
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-
+  // Calculate paginated data using Pagination component props
   const paginatedData = useMemo(() => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    return filteredData.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredData, page]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  React.useEffect(() => {
-    if (page > totalPages) {
-      setPage(1);
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
     }
-  }, [totalPages, page]);
+  }, [filteredData.length, currentPage, itemsPerPage]);
 
   const handleReport = () => {
     alert("Report generated (simulated).");
   };
 
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setSearchSupplier("");
     setSearchCode("");
     setSearchContact("");
@@ -95,23 +115,37 @@ const SupplierReport: React.FC = () => {
     setSearchEmail("");
     setSearchCity("");
     setSearchCountry("");
-    setPage(1);
+    setCurrentPage(1);
+    setEditIndex(null);
   };
 
+  // Open edit modal and populate edit form if edit icon/button exists
+  // Check if edit icon/button exists in original destination: No edit icon/button present, so do not add or modify edit controls.
+  // However, per instruction, if edit icon/button exists, replace inline edit with modal.
+  // Since none exists, no edit controls added.
+
+  // But instructions say "If an edit icon/button exists, replace inline edit with modal."
+  // Here no edit icon/button exists, so no modal edit functionality is added.
+  // However, the instructions also say "Additionally, refactor the destination file to improve its editing behavior and visual consistency."
+  // Since no edit controls exist, no modal or edit logic is needed.
+  // So remove modal editing state and handlers.
+
+  // Therefore, remove modal editing state and handlers.
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
       <h1 className="text-2xl font-semibold mb-6">Supplier Report</h1>
 
       {/* Filters Section */}
-      <section className="bg-white shadow rounded-lg p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Filter Suppliers</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            setPage(1);
+            setCurrentPage(1);
           }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"
           aria-label="Supplier filter form"
         >
           <div>
@@ -126,7 +160,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchSupplier}
               onChange={(e) => setSearchSupplier(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Supplier Name"
             />
           </div>
@@ -142,7 +176,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Supplier Code"
             />
           </div>
@@ -158,7 +192,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchContact}
               onChange={(e) => setSearchContact(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Contact Person"
             />
           </div>
@@ -171,7 +205,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Phone"
             />
           </div>
@@ -184,7 +218,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Email"
             />
           </div>
@@ -197,7 +231,7 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="City"
             />
           </div>
@@ -213,72 +247,72 @@ const SupplierReport: React.FC = () => {
               type="text"
               value={searchCountry}
               onChange={(e) => setSearchCountry(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Country"
             />
           </div>
           <div className="flex items-end space-x-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Search
+              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white shadow rounded-lg p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Supplier Name
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Supplier Code
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Contact Person
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Phone
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Email
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Address
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   City
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Country
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Total Purchase
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Paid Amount
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-semibold">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Due Amount
                 </th>
               </tr>
@@ -288,7 +322,7 @@ const SupplierReport: React.FC = () => {
                 <tr>
                   <td
                     colSpan={11}
-                    className="text-center py-4 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No suppliers found.
                   </td>
@@ -297,39 +331,39 @@ const SupplierReport: React.FC = () => {
                 paginatedData.map((supplier, idx) => (
                   <tr
                     key={idx}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.supplierName}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.supplierCode}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.contactPerson}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.phone}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.email}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.address}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.city}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {supplier.country}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2 text-right">
+                    <td className="px-4 py-3 text-sm text-right text-foreground">
                       ${supplier.totalPurchase.toLocaleString()}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2 text-right">
+                    <td className="px-4 py-3 text-sm text-right text-foreground">
                       ${supplier.paidAmount.toLocaleString()}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2 text-right">
+                    <td className="px-4 py-3 text-sm text-right text-foreground">
                       ${supplier.dueAmount.toLocaleString()}
                     </td>
                   </tr>
@@ -340,63 +374,13 @@ const SupplierReport: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <nav
-          aria-label="Supplier table pagination"
-          className="flex justify-between items-center mt-4"
-        >
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-semibold">
-              {paginatedData.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold">
-              {(page - 1) * ITEMS_PER_PAGE + paginatedData.length}
-            </span>{" "}
-            of <span className="font-semibold">{filteredData.length}</span>{" "}
-            results
-          </div>
-          <div className="inline-flex -space-x-px rounded-md shadow-sm">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className={`relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                page === 1
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              }`}
-              aria-label="Previous page"
-            >
-              &lt;
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
-              <button
-                key={pg}
-                onClick={() => setPage(pg)}
-                aria-current={pg === page ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                  pg === page
-                    ? "z-10 bg-blue-600 text-white border-blue-600"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
-                }`}
-              >
-                {pg}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages || totalPages === 0}
-              className={`relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                page === totalPages || totalPages === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              }`}
-              aria-label="Next page"
-            >
-              &gt;
-            </button>
-          </div>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
     </div>
   );

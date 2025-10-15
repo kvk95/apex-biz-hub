@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const PAGE_SIZE = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const InvoiceReport: React.FC = () => {
   const [data, setData] = useState([]);
@@ -36,6 +35,21 @@ const InvoiceReport: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    invoiceNo: "",
+    customer: "",
+    date: "",
+    dueDate: "",
+    status: "All",
+    paymentStatus: "All",
+    paymentMethod: "All",
+    total: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Handle filter change
   const handleFilterChange = (
@@ -99,21 +113,23 @@ const InvoiceReport: React.FC = () => {
     });
   }, [filters, data]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredInvoices.length / PAGE_SIZE);
-  const paginatedInvoices = filteredInvoices.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
-
   // Handlers for pagination
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
+  const setCurrentPageHandler = (page: number) => {
     setCurrentPage(page);
   };
+  const setItemsPerPageHandler = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
+
+  // Paginated invoices slice
+  const paginatedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Refresh button handler (reset filters)
-  const handleRefresh = () => {
+  const handleClear = () => {
     setFilters({
       fromDate: "2022-01-01",
       toDate: "2022-12-31",
@@ -130,21 +146,35 @@ const InvoiceReport: React.FC = () => {
     alert("Report generated for current filter selection.");
   };
 
+  // Edit modal handlers
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Open edit modal and populate edit form if edit icon exists
+  // Check if edit icon exists in the table row (it does not in original destination, so no edit icon)
+  // Since no edit icon exists, do not add or modify edit controls or modal
+  // But per instructions, if edit icon exists, replace inline edit with modal
+  // Here, no edit icon exists, so skip modal implementation
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
       <title>Invoice Report</title>
 
       {/* Container */}
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <h1 className="text-3xl font-semibold mb-6 text-gray-900">
+        <h1 className="text-2xl font-semibold mb-6 text-foreground">
           Invoice Report
         </h1>
 
         {/* Filters Section */}
-        <section className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
             Filter Options
           </h2>
           <form
@@ -155,7 +185,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="fromDate"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 From Date
               </label>
@@ -165,7 +195,7 @@ const InvoiceReport: React.FC = () => {
                 name="fromDate"
                 value={filters.fromDate}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -173,7 +203,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="toDate"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 To Date
               </label>
@@ -183,7 +213,7 @@ const InvoiceReport: React.FC = () => {
                 name="toDate"
                 value={filters.toDate}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -191,7 +221,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="customer"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Customer
               </label>
@@ -200,7 +230,7 @@ const InvoiceReport: React.FC = () => {
                 name="customer"
                 value={filters.customer}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {customers.map((cust) => (
                   <option key={cust} value={cust}>
@@ -214,7 +244,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="invoiceStatus"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Invoice Status
               </label>
@@ -223,7 +253,7 @@ const InvoiceReport: React.FC = () => {
                 name="invoiceStatus"
                 value={filters.invoiceStatus}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {invoiceStatuses.map((status) => (
                   <option key={status} value={status}>
@@ -237,7 +267,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="paymentStatus"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Payment Status
               </label>
@@ -246,7 +276,7 @@ const InvoiceReport: React.FC = () => {
                 name="paymentStatus"
                 value={filters.paymentStatus}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentStatuses.map((status) => (
                   <option key={status} value={status}>
@@ -260,7 +290,7 @@ const InvoiceReport: React.FC = () => {
             <div>
               <label
                 htmlFor="paymentMethod"
-                className="block mb-1 text-sm font-medium text-gray-700"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
                 Payment Method
               </label>
@@ -269,7 +299,7 @@ const InvoiceReport: React.FC = () => {
                 name="paymentMethod"
                 value={filters.paymentMethod}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentMethods.map((method) => (
                   <option key={method} value={method}>
@@ -281,119 +311,119 @@ const InvoiceReport: React.FC = () => {
           </form>
 
           {/* Buttons */}
-          <div className="mt-6 flex space-x-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleReport}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Generate Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Generate Report
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
           </div>
         </section>
 
         {/* Invoice Table Section */}
-        <section className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        <section className="bg-card rounded shadow py-6 px-6">
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
             Invoice List
           </h2>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 divide-y divide-gray-200">
-              <thead className="bg-gray-100">
+            <table className="min-w-full border border-border divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Invoice No
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Customer
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Date
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Due Date
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Invoice Status
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Payment Status
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Payment Method
                   </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                     Total ($)
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody>
                 {paginatedInvoices.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-6 text-center text-gray-500 text-sm"
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No invoices found.
                     </td>
                   </tr>
                 ) : (
-                  paginatedInvoices.map((inv: any) => (
+                  paginatedInvoices.map((inv: any, idx) => (
                     <tr
                       key={inv.id}
-                      className="hover:bg-indigo-50 cursor-pointer"
+                      className="border-b border-border hover:bg-muted/50 transition-colors cursor-default"
                       title={`Invoice ${inv.invoiceNo}`}
                     >
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 text-indigo-700 font-semibold">
+                      <td className="px-4 py-3 text-sm text-foreground border-r border-border font-semibold">
                         {inv.invoiceNo}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-foreground border-r border-border">
                         {inv.customer}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-foreground border-r border-border">
                         {inv.date}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-foreground border-r border-border">
                         {inv.dueDate}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             inv.status === "Paid"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                               : inv.status === "Unpaid"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                           }`}
                         >
                           {inv.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             inv.paymentStatus === "Paid"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                               : inv.paymentStatus === "Unpaid"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                           }`}
                         >
                           {inv.paymentStatus}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {inv.paymentMethod}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right font-semibold text-gray-900">
+                      <td className="px-4 py-3 text-sm text-right font-semibold text-foreground">
                         {inv.total.toFixed(2)}
                       </td>
                     </tr>
@@ -403,65 +433,14 @@ const InvoiceReport: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination Controls */}
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-semibold">
-                {(currentPage - 1) * PAGE_SIZE + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-semibold">
-                {Math.min(currentPage * PAGE_SIZE, filteredInvoices.length)}
-              </span>{" "}
-              of <span className="font-semibold">{filteredInvoices.length}</span>{" "}
-              invoices
-            </div>
-            <nav
-              className="inline-flex -space-x-px rounded-md shadow-sm"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-3 py-1 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                aria-label="Previous"
-              >
-                &laquo;
-              </button>
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => goToPage(page)}
-                    aria-current={page === currentPage ? "page" : undefined}
-                    className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      page === currentPage
-                        ? "z-10 bg-indigo-600 text-white border-indigo-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative inline-flex items-center px-3 py-1 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-                aria-label="Next"
-              >
-                &raquo;
-              </button>
-            </nav>
-          </div>
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredInvoices.length}
+            onPageChange={setCurrentPageHandler}
+            onPageSizeChange={setItemsPerPageHandler}
+          />
         </section>
       </div>
     </div>
