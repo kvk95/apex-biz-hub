@@ -25,7 +25,7 @@ export default function PosSettings() {
   }, []);
 
   // State for form fields
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState<any>({});
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);

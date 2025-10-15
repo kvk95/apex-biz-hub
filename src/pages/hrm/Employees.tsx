@@ -19,14 +19,14 @@ const Employees = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({});
-  const [data, setData] = useState([]);
+  const [formData, setFormData] = useState<any>({});
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Modal editing state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({});
+  const [editForm, setEditForm] = useState<any>({});
   const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
@@ -106,7 +106,7 @@ const Employees = () => {
 
   // Handle edit modal input changes
   const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: value }));

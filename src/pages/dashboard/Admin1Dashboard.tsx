@@ -2,12 +2,7 @@ import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ShoppingCart,
-  DollarSign,
-  TrendingUp,
-  AlertCircle,
-} from "lucide-react";
+// Icons replaced with Font Awesome
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KPICard } from "@/components/KPI/KPICard";
@@ -154,28 +149,28 @@ export default function Dashboard() {
           title="Total Orders"
           value="1,234"
           trend={12.5}
-          icon={<ShoppingCart className="h-6 w-6" />}
+          icon={<i className="fa fa-shopping-cart h-6 w-6" aria-hidden="true" />}
           iconBg="bg-primary/10"
         />
         <KPICard
           title="Total Sales"
           value="$67,432"
           trend={8.2}
-          icon={<DollarSign className="h-6 w-6" />}
+          icon={<i className="fa fa-dollar-sign h-6 w-6" aria-hidden="true" />}
           iconBg="bg-success/10"
         />
         <KPICard
           title="Total Profit"
           value="$25,890"
           trend={15.3}
-          icon={<TrendingUp className="h-6 w-6" />}
+          icon={<i className="fa fa-trending-up h-6 w-6" aria-hidden="true" />}
           iconBg="bg-accent/10"
         />
         <KPICard
           title="Low Stock Items"
           value="24"
           trend={-5.7}
-          icon={<AlertCircle className="h-6 w-6" />}
+          icon={<i className="fa fa-exclamation-circle h-6 w-6" aria-hidden="true" />}
           iconBg="bg-warning/10"
         />
       </div>
@@ -230,7 +225,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-warning" />
+                <i className="fa fa-exclamation-circle h-5 w-5 text-warning" aria-hidden="true" />
                 Low Stock Alert
               </CardTitle>
             </CardHeader>

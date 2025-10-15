@@ -52,7 +52,7 @@ import Billers from "./pages/peoples/Billers";
 import Customers from "./pages/peoples/Customers";
 import Stores from "./pages/peoples/Stores";
 import Suppliers from "./pages/peoples/Suppliers";
-import Warehouses from "./pages/peoples/Warehouses";
+import Warehouses from "./pages/peoples/WareHouses";
 import Coupons from "./pages/promo/Coupons";
 import Discount from "./pages/promo/Discount";
 import DiscountPlan from "./pages/promo/DiscountPlan";

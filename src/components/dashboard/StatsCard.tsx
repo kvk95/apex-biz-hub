@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown } from "lucide-react";
+// Icons replaced with Font Awesome
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
@@ -22,9 +22,9 @@ export function StatsCard({ title, value, change, icon, iconBg }: StatsCardProps
             <p className="text-3xl font-bold">{value}</p>
             <div className="flex items-center gap-1">
               {isPositive ? (
-                <TrendingUp className="h-4 w-4 text-success" />
+                <i className="fa fa-arrow-up h-4 w-4 text-success" aria-hidden="true" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-destructive" />
+                <i className="fa fa-arrow-down h-4 w-4 text-destructive" aria-hidden="true" />
               )}
               <span
                 className={cn(

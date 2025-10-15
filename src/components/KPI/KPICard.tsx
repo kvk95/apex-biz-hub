@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown } from "lucide-react";
+// Icons replaced with Font Awesome
 import { cn } from "@/lib/utils";
 
 interface KPICardProps {
@@ -41,9 +41,9 @@ export function KPICard({
                   )}
                 >
                   {isPositiveTrend ? (
-                    <TrendingUp className="h-4 w-4 mr-1" />
+                    <i className="fa fa-arrow-up h-4 w-4 mr-1" aria-hidden="true" />
                   ) : (
-                    <TrendingDown className="h-4 w-4 mr-1" />
+                    <i className="fa fa-arrow-down h-4 w-4 mr-1" aria-hidden="true" />
                   )}
                   {Math.abs(trend)}%
                 </span>

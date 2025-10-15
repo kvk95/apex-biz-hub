@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Sun, Moon } from "lucide-react";
+// Icons replaced with Font Awesome
 import { useTheme } from "./theme-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,7 +78,7 @@ export function ThemeCustomizer() {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
+          <i className="fa fa-cog h-5 w-5" aria-hidden="true" />
           <span className="sr-only">Customize Theme</span>
         </Button>
       </SheetTrigger>
@@ -130,7 +130,7 @@ export function ThemeCustomizer() {
             <Label>Theme Mode</Label>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon" onClick={toggleMode}>
-                {theme.mode === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                {theme.mode === "dark" ? <i className="fa fa-moon h-4 w-4" aria-hidden="true" /> : <i className="fa fa-sun h-4 w-4" aria-hidden="true" />}
               </Button>
               <span className="text-sm">{theme.mode === "dark" ? "Dark" : "Light"} Mode</span>
             </div>

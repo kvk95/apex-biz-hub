@@ -218,7 +218,6 @@ const IncomeReport: React.FC = () => {
             <button
               type="submit"
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
             >
               <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
             </button>
@@ -226,7 +225,6 @@ const IncomeReport: React.FC = () => {
               type="button"
               onClick={handleResetFilters}
               className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
             >
               <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
             </button>
@@ -234,7 +232,6 @@ const IncomeReport: React.FC = () => {
               type="button"
               onClick={handleRefresh}
               className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
             >
               <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Refresh
             </button>
@@ -242,7 +239,6 @@ const IncomeReport: React.FC = () => {
               type="button"
               onClick={handleClear}
               className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
             >
               <i className="fa fa-trash fa-light" aria-hidden="true"></i> Clear
             </button>

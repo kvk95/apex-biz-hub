@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+// Icons replaced with Font Awesome
 import { useState ,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -109,7 +109,7 @@ function LoginPage({ onLoginSuccess }) {
               />
             </div>
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {pending && <i className="fa fa-spinner fa-spin mr-2 h-4 w-4" aria-hidden="true" />}
               Sign In
             </Button>
             {errorMessage && (

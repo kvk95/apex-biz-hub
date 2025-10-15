@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+// Icons replaced with Font Awesome
 import { useState, useEffect } from "react";
 
 interface SearchInputProps {
@@ -27,7 +27,7 @@ export function SearchInput({
 
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <i className="fa fa-search absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
       <Input
         type="text"
         placeholder={placeholder}

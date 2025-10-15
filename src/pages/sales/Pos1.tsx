@@ -4,7 +4,7 @@ import { apiService } from "@/services/ApiService";
 const ITEMS_PER_PAGE = 5;
 
 export default function Pos1() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

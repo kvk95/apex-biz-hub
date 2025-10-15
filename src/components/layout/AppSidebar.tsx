@@ -44,7 +44,7 @@ function MenuItemComponent({
   const IconClass = item.icon;
 
   const { theme } = useTheme();
-  const primaryHsl = theme.primary ?? "220 98% 61%";
+  const primaryHsl = "220 98% 61%";
   const selectionBg = `hsl(${primaryHsl})`;
   const selectionText = "white";
 
@@ -57,9 +57,9 @@ function MenuItemComponent({
                 "w-full transition-colors hover:bg-[hsl(var(--primary)/0.1)]",
                 hasActiveChild(item.items) && [
                   "border-l-4",
-                  `border-[hsl(${theme.primary || "220 98% 61%"})]`,
+                  "border-primary",
                   "bg-[hsl(var(--primary)/0.05)]",
-                  "text-[hsl(var(--primary))]",
+                  "text-primary",
                 ],
                 `pl-${4 + level * 2}`
               )}

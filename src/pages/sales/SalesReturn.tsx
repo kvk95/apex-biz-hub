@@ -6,7 +6,7 @@ const ITEMS_PER_PAGE = 5;
 export default function SalesReturn() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);O
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);

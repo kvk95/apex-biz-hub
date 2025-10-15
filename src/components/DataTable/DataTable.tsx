@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
+// Icons replaced with Font Awesome
 import { Pagination } from "@/components/Pagination/Pagination";
 
 export interface Column {
@@ -146,9 +146,9 @@ export function DataTable({
                       {column.label}
                       {sortKey === column.key && (
                         sortDirection === "asc" ? (
-                          <ChevronUp className="ml-2 h-4 w-4" />
+                          <i className="fa fa-chevron-up ml-2 h-4 w-4" aria-hidden="true" />
                         ) : (
-                          <ChevronDown className="ml-2 h-4 w-4" />
+                          <i className="fa fa-chevron-down ml-2 h-4 w-4" aria-hidden="true" />
                         )
                       )}
                     </Button>
@@ -191,7 +191,7 @@ export function DataTable({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
+                            <i className="fa fa-ellipsis-v h-4 w-4" aria-hidden="true" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -218,9 +218,9 @@ export function DataTable({
 
       {total && onPageChange && (
         <Pagination
-          page={page}
-          pageSize={pageSize}
-          total={total}
+          currentPage={page}
+          totalItems={total}
+          itemsPerPage={pageSize}
           onPageChange={onPageChange}
           onPageSizeChange={onPageSizeChange}
         />

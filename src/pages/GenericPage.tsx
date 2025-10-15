@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+// Icons replaced with Font Awesome
 
 interface GenericPageProps {
   title: string;
@@ -16,7 +16,7 @@ export default function GenericPage({ title, description }: GenericPageProps) {
           <p className="text-muted-foreground">{description}</p>
         </div>
         <Button className="gap-2">
-          <Plus className="h-4 w-4" />
+          <i className="fa fa-plus h-4 w-4" aria-hidden="true" />
           Add New
         </Button>
       </div>

@@ -3,13 +3,13 @@ import { apiService } from "@/services/ApiService";
 import { Pagination } from "@/components/Pagination/Pagination";
 
 const InvoiceReport: React.FC = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("InvoiceReport");
+    const response = await apiService.get<any>("InvoiceReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);

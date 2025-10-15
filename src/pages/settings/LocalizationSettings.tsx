@@ -18,13 +18,13 @@ export default function LocalizationSettings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("LocalizationSettings");
+    const response = await apiService.get<any>("LocalizationSettings");
     if (response.status.code === "S") {
       setData(response.result);
       setLanguages(response.result.languages || []);

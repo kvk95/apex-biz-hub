@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 const ITEMS_PER_PAGE = 5;
 
 export default function SystemSettings() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("SystemSettings");
+    const response = await apiService.get<any>("SystemSettings");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);

@@ -11,13 +11,13 @@ export default function SuperadminDashboard() {
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("SuperadminDashboard");
+    const response = await apiService.get<any>("SuperadminDashboard");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
