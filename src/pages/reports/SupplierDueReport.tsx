@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 interface SupplierDue {
   supplierName: string;
@@ -11,20 +12,31 @@ interface SupplierDue {
   action: string;
 }
 
-const pageSizeOptions = [5, 10, 15];
-
 const SupplierDueReport: React.FC = () => {
   const [supplierName, setSupplierName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [pageSize, setPageSize] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [data, setData] = useState<SupplierDue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState<SupplierDue>({
+    supplierName: "",
+    phone: "",
+    email: "",
+    dueAmount: 0,
+    paidAmount: 0,
+    totalAmount: 0,
+    action: "",
+  });
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -58,26 +70,67 @@ const SupplierDueReport: React.FC = () => {
     });
   }, [supplierName, phone, email, data]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  // Calculate paginated data using Pagination component props
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredData.slice(startIndex, startIndex + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers for pagination buttons
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-  const handlePageClick = (page: number) => {
-    setCurrentPage(page);
+  // Handlers for modal edit inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]:
+        name === "dueAmount" ||
+        name === "paidAmount" ||
+        name === "totalAmount"
+          ? Number(value)
+          : value,
+    }));
   };
 
-  // Reset filters handler
-  const handleReset = () => {
+  // Open edit modal and populate edit form
+  const handleEdit = (index: number) => {
+    const item = paginatedData[index];
+    if (item) {
+      setEditForm({ ...item });
+      setEditIndex(index + (currentPage - 1) * itemsPerPage);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.supplierName.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.email.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editIndex !== null) {
+      setData((prev) =>
+        prev.map((item, idx) =>
+          idx === editIndex ? { ...editForm } : item
+        )
+      );
+      setEditIndex(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditIndex(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Reset filters handler (Clear button)
+  const handleClear = () => {
     setSupplierName("");
     setPhone("");
     setEmail("");
@@ -86,13 +139,9 @@ const SupplierDueReport: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Placeholder handlers for buttons (Report, Refresh)
+  // Placeholder handlers for buttons (Report)
   const handleReport = () => {
     alert("Report generation is not implemented in this demo.");
-  };
-  const handleRefresh = () => {
-    // For demo, just reset filters and page
-    handleReset();
   };
 
   // Calculate totals for footer
@@ -101,22 +150,25 @@ const SupplierDueReport: React.FC = () => {
   const totalTotalAmount = filteredData.reduce((acc, cur) => acc + cur.totalAmount, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Title */}
       <h1 className="text-2xl font-semibold mb-6">Supplier Due Report</h1>
 
       {/* Filter Section */}
-      <section className="bg-white rounded shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             setCurrentPage(1);
           }}
-          className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-6 gap-6 items-end"
         >
           {/* Supplier Name */}
-          <div className="flex flex-col">
-            <label htmlFor="supplierName" className="text-sm font-medium mb-1">
+          <div>
+            <label
+              htmlFor="supplierName"
+              className="block text-sm font-medium mb-1"
+            >
               Supplier Name
             </label>
             <input
@@ -124,14 +176,14 @@ const SupplierDueReport: React.FC = () => {
               type="text"
               value={supplierName}
               onChange={(e) => setSupplierName(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Supplier Name"
             />
           </div>
 
           {/* Phone */}
-          <div className="flex flex-col">
-            <label htmlFor="phone" className="text-sm font-medium mb-1">
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium mb-1">
               Phone
             </label>
             <input
@@ -139,14 +191,14 @@ const SupplierDueReport: React.FC = () => {
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Phone"
             />
           </div>
 
           {/* Email */}
-          <div className="flex flex-col">
-            <label htmlFor="email" className="text-sm font-medium mb-1">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email
             </label>
             <input
@@ -154,14 +206,14 @@ const SupplierDueReport: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Email"
             />
           </div>
 
           {/* Date From */}
-          <div className="flex flex-col">
-            <label htmlFor="dateFrom" className="text-sm font-medium mb-1">
+          <div>
+            <label htmlFor="dateFrom" className="block text-sm font-medium mb-1">
               Date From
             </label>
             <input
@@ -169,13 +221,13 @@ const SupplierDueReport: React.FC = () => {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Date To */}
-          <div className="flex flex-col">
-            <label htmlFor="dateTo" className="text-sm font-medium mb-1">
+          <div>
+            <label htmlFor="dateTo" className="block text-sm font-medium mb-1">
               Date To
             </label>
             <input
@@ -183,81 +235,111 @@ const SupplierDueReport: React.FC = () => {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Buttons */}
-          <div className="flex space-x-2">
+          <div className="flex space-x-3">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Search
+              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
             </button>
             <button
               type="button"
-              onClick={handleReset}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Reset
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
           </div>
         </form>
       </section>
 
       {/* Action Buttons */}
-      <section className="flex justify-end mb-4 space-x-2">
+      <section className="flex justify-end mb-6 space-x-3">
         <button
           onClick={handleReport}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
           type="button"
         >
-          Report
-        </button>
-        <button
-          onClick={handleRefresh}
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
-          type="button"
-        >
-          Refresh
+          <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
         </button>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">Supplier Name</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">Phone</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-700">Due Amount</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-700">Paid Amount</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-700">Total Amount</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+      <section className="bg-card rounded shadow py-6 overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                Supplier Name
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                Phone
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                Email
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                Due Amount
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                Paid Amount
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                Total Amount
+              </th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                Action
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                <td
+                  colSpan={7}
+                  className="text-center px-4 py-6 text-muted-foreground italic"
+                >
                   No records found.
                 </td>
               </tr>
             ) : (
               paginatedData.map((item, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{item.supplierName}</td>
-                  <td className="px-4 py-3">{item.phone}</td>
-                  <td className="px-4 py-3">{item.email}</td>
-                  <td className="px-4 py-3 text-right">{item.dueAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right">{item.paidAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right">{item.totalAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-center">
+                <tr
+                  key={idx}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.supplierName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.phone}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.email}</td>
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
+                    {item.dueAmount.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
+                    {item.paidAmount.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground text-right">
+                    {item.totalAmount.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       type="button"
-                      className="text-blue-600 hover:underline focus:outline-none"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit supplier due ${item.supplierName}`}
+                      onClick={() => handleEdit(idx)}
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`View details for ${item.supplierName}`}
                       onClick={() => alert(`Viewing details for ${item.supplierName}`)}
                     >
                       {item.action}
@@ -268,7 +350,7 @@ const SupplierDueReport: React.FC = () => {
             )}
           </tbody>
           {/* Footer totals */}
-          <tfoot className="bg-gray-100 font-semibold text-gray-700">
+          <tfoot className="bg-muted/20 font-semibold text-muted-foreground">
             <tr>
               <td className="px-4 py-3 text-right" colSpan={3}>
                 Total:
@@ -283,77 +365,171 @@ const SupplierDueReport: React.FC = () => {
       </section>
 
       {/* Pagination */}
-      <section className="flex justify-between items-center mt-4">
-        <div>
-          <label htmlFor="pageSize" className="mr-2 font-medium text-gray-700">
-            Show
-          </label>
-          <select
-            id="pageSize"
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="ml-2 font-medium text-gray-700">entries</span>
-        </div>
+      <Pagination
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredData.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setItemsPerPage(size);
+          setCurrentPage(1);
+        }}
+      />
 
-        <nav
-          className="inline-flex -space-x-px rounded-md shadow-sm"
-          aria-label="Pagination"
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
         >
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none ${
-              currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-            }`}
-            aria-label="Previous"
-          >
-            &laquo;
-          </button>
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Supplier Due
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Supplier Name */}
+              <div>
+                <label
+                  htmlFor="editSupplierName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Supplier Name
+                </label>
+                <input
+                  type="text"
+                  id="editSupplierName"
+                  name="supplierName"
+                  value={editForm.supplierName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter supplier name"
+                />
+              </div>
 
-          {[...Array(totalPages)].map((_, i) => {
-            const page = i + 1;
-            const isActive = page === currentPage;
-            return (
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  id="editPhone"
+                  name="phone"
+                  value={editForm.phone}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter email"
+                />
+              </div>
+
+              {/* Due Amount */}
+              <div>
+                <label
+                  htmlFor="editDueAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Due Amount
+                </label>
+                <input
+                  type="number"
+                  id="editDueAmount"
+                  name="dueAmount"
+                  value={editForm.dueAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter due amount"
+                />
+              </div>
+
+              {/* Paid Amount */}
+              <div>
+                <label
+                  htmlFor="editPaidAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Paid Amount
+                </label>
+                <input
+                  type="number"
+                  id="editPaidAmount"
+                  name="paidAmount"
+                  value={editForm.paidAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter paid amount"
+                />
+              </div>
+
+              {/* Total Amount */}
+              <div>
+                <label
+                  htmlFor="editTotalAmount"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Total Amount
+                </label>
+                <input
+                  type="number"
+                  id="editTotalAmount"
+                  name="totalAmount"
+                  value={editForm.totalAmount}
+                  onChange={handleEditInputChange}
+                  min={0}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter total amount"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={page}
-                onClick={() => handlePageClick(page)}
-                aria-current={isActive ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium focus:outline-none ${
-                  isActive
-                    ? "z-10 bg-blue-600 text-white border-blue-600"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                {page}
+                Cancel
               </button>
-            );
-          })}
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 focus:outline-none ${
-              currentPage === totalPages || totalPages === 0
-                ? "cursor-not-allowed opacity-50"
-                : ""
-            }`}
-            aria-label="Next"
-          >
-            &raquo;
-          </button>
-        </nav>
-      </section>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
