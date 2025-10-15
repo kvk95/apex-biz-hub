@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const pageSizeOptions = [5, 10, 15, 20];
 
@@ -11,8 +12,19 @@ export default function Notification() {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [searchText, setSearchText] = useState("");
-  const [pageSize, setPageSize] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    notificationType: "",
+    notificationTitle: "",
+    notificationDetails: "",
+    notificationDate: "",
+    status: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -47,11 +59,10 @@ export default function Notification() {
       );
   }, [data, filterType, filterStatus, searchText]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredNotifications.length / pageSize);
+  // Paginated data using Pagination component props
   const paginatedNotifications = filteredNotifications.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Handlers
@@ -70,22 +81,21 @@ export default function Notification() {
     setCurrentPage(1);
   };
 
-  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(Number(e.target.value));
+  const handlePageSizeChange = (size: number) => {
+    setItemsPerPage(size);
     setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
   const handleRefresh = () => {
-    // For demo, just reset filters and page
+    // Changed Refresh to Clear per instructions
     setFilterType("");
     setFilterStatus("");
     setSearchText("");
-    setPageSize(5);
+    setItemsPerPage(5);
     setCurrentPage(1);
   };
 
@@ -93,188 +103,257 @@ export default function Notification() {
     alert("Report generated (demo).");
   };
 
+  // Edit modal handlers
+  const handleEditOpen = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        notificationType: item.notificationType,
+        notificationTitle: item.notificationTitle,
+        notificationDetails: item.notificationDetails,
+        notificationDate: item.notificationDate,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.notificationType.trim() ||
+      !editForm.notificationTitle.trim() ||
+      !editForm.notificationDetails.trim() ||
+      !editForm.notificationDate.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                notificationType: editForm.notificationType.trim(),
+                notificationTitle: editForm.notificationTitle.trim(),
+                notificationDetails: editForm.notificationDetails.trim(),
+                notificationDate: editForm.notificationDate.trim(),
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   return (
     <>
       <title>Notification - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-        <div className="container mx-auto px-4 py-6">
-          {/* Page Header */}
-          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-            <h1 className="text-3xl font-semibold text-gray-900 mb-4 md:mb-0">
-              Notification
-            </h1>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleReport}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-                type="button"
-                aria-label="Generate Report"
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Page Header */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-semibold mb-4 md:mb-0 text-foreground">
+            Notification
+          </h1>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleReport}
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+              aria-label="Generate Report"
+            >
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            </button>
+            <button
+              onClick={handleRefresh}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+              aria-label="Clear"
+            >
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="bg-card rounded shadow p-6 mb-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+            {/* Notification Type */}
+            <div>
+              <label
+                htmlFor="notificationType"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
               >
-                <i className="fa fa-file-pdf-o mr-2" aria-hidden="true"></i> Report
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-                type="button"
-                aria-label="Refresh"
+                Notification Type
+              </label>
+              <select
+                id="notificationType"
+                name="notificationType"
+                value={filterType}
+                onChange={handleFilterTypeChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
-              </button>
+                <option value="">All Types</option>
+                <option value="Order">Order</option>
+                <option value="Payment">Payment</option>
+                <option value="Shipping">Shipping</option>
+                <option value="Promotion">Promotion</option>
+                <option value="Alert">Alert</option>
+                <option value="System">System</option>
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={filterStatus}
+                onChange={handleFilterStatusChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {/* Search */}
+            <div className="md:col-span-2">
+              <label
+                htmlFor="search"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
+              >
+                Search
+              </label>
+              <input
+                type="text"
+                id="search"
+                name="search"
+                placeholder="Search notifications..."
+                value={searchText}
+                onChange={handleSearchChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {/* Page Size */}
+            <div>
+              <label
+                htmlFor="pageSize"
+                className="block text-sm font-medium mb-1 text-muted-foreground"
+              >
+                Show Entries
+              </label>
+              <select
+                id="pageSize"
+                name="pageSize"
+                value={itemsPerPage}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
+        </form>
 
-          {/* Filters and Search */}
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="bg-white rounded shadow p-4 mb-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-              {/* Notification Type */}
-              <div>
-                <label
-                  htmlFor="notificationType"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Notification Type
-                </label>
-                <select
-                  id="notificationType"
-                  name="notificationType"
-                  value={filterType}
-                  onChange={handleFilterTypeChange}
-                  className="block w-full rounded border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                >
-                  <option value="">All Types</option>
-                  <option value="Order">Order</option>
-                  <option value="Payment">Payment</option>
-                  <option value="Shipping">Shipping</option>
-                  <option value="Promotion">Promotion</option>
-                  <option value="Alert">Alert</option>
-                  <option value="System">System</option>
-                </select>
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={filterStatus}
-                  onChange={handleFilterStatusChange}
-                  className="block w-full rounded border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                >
-                  <option value="">All Status</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-
-              {/* Search */}
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="search"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Search
-                </label>
-                <input
-                  type="text"
-                  id="search"
-                  name="search"
-                  placeholder="Search notifications..."
-                  value={searchText}
-                  onChange={handleSearchChange}
-                  className="block w-full rounded border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                />
-              </div>
-
-              {/* Page Size */}
-              <div>
-                <label
-                  htmlFor="pageSize"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Show Entries
-                </label>
-                <select
-                  id="pageSize"
-                  name="pageSize"
-                  value={pageSize}
-                  onChange={handlePageSizeChange}
-                  className="block w-full rounded border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                >
-                  {pageSizeOptions.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </form>
-
-          {/* Notification Table */}
-          <div className="overflow-x-auto bg-white rounded shadow">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 font-semibold text-gray-700 w-28">
+        {/* Notification Table */}
+        <section className="bg-card rounded shadow py-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-28">
                     Type
                   </th>
-                  <th className="px-4 py-3 font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Title
                   </th>
-                  <th className="px-4 py-3 font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Details
                   </th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 w-40">
-                    Date & Time
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-40">
+                    Date &amp; Time
                   </th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 w-24">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-24">
                     Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground w-24">
+                    Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {paginatedNotifications.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
-                      className="px-4 py-6 text-center text-gray-500"
+                      colSpan={6}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
                     >
                       No notifications found.
                     </td>
                   </tr>
                 ) : (
-                  paginatedNotifications.map((n) => (
+                  paginatedNotifications.map((n, idx) => (
                     <tr
                       key={n.id}
-                      className={
-                        n.status === "Inactive"
-                          ? "bg-gray-50 text-gray-400"
-                          : "bg-white"
-                      }
+                      className={`border-b border-border hover:bg-muted/50 transition-colors ${
+                        n.status === "Inactive" ? "text-muted-foreground" : "text-foreground"
+                      }`}
                     >
-                      <td className="px-4 py-3 font-medium">{n.notificationType}</td>
-                      <td className="px-4 py-3">{n.notificationTitle}</td>
-                      <td className="px-4 py-3">{n.notificationDetails}</td>
-                      <td className="px-4 py-3">{n.notificationDate}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-sm font-medium">{n.notificationType}</td>
+                      <td className="px-4 py-3 text-sm">{n.notificationTitle}</td>
+                      <td className="px-4 py-3 text-sm">{n.notificationDetails}</td>
+                      <td className="px-4 py-3 text-sm">{n.notificationDate}</td>
+                      <td className="px-4 py-3 text-sm">
                         <span
-                          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             n.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-300 text-gray-600"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                         >
                           {n.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm space-x-3">
+                        <button
+                          onClick={() => handleEditOpen(n.id)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit notification ${n.notificationTitle}`}
+                          type="button"
+                        >
+                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -283,98 +362,153 @@ export default function Notification() {
             </table>
           </div>
 
-          {/* Pagination Controls */}
-          <nav
-            className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 mt-4"
-            aria-label="Pagination"
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredNotifications.length}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
           >
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * pageSize + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium">
-                    {Math.min(currentPage * pageSize, filteredNotifications.length)}
-                  </span>{" "}
-                  of <span className="font-medium">{filteredNotifications.length}</span>{" "}
-                  results
-                </p>
+                Edit Notification
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Notification Type */}
+                <div>
+                  <label
+                    htmlFor="editNotificationType"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Notification Type
+                  </label>
+                  <select
+                    id="editNotificationType"
+                    name="notificationType"
+                    value={editForm.notificationType}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="Order">Order</option>
+                    <option value="Payment">Payment</option>
+                    <option value="Shipping">Shipping</option>
+                    <option value="Promotion">Promotion</option>
+                    <option value="Alert">Alert</option>
+                    <option value="System">System</option>
+                  </select>
+                </div>
+
+                {/* Notification Title */}
+                <div>
+                  <label
+                    htmlFor="editNotificationTitle"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Notification Title
+                  </label>
+                  <input
+                    type="text"
+                    id="editNotificationTitle"
+                    name="notificationTitle"
+                    value={editForm.notificationTitle}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter notification title"
+                  />
+                </div>
+
+                {/* Notification Details */}
+                <div>
+                  <label
+                    htmlFor="editNotificationDetails"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Notification Details
+                  </label>
+                  <input
+                    type="text"
+                    id="editNotificationDetails"
+                    name="notificationDetails"
+                    value={editForm.notificationDetails}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter notification details"
+                  />
+                </div>
+
+                {/* Notification Date */}
+                <div>
+                  <label
+                    htmlFor="editNotificationDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="editNotificationDate"
+                    name="notificationDate"
+                    value={editForm.notificationDate}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <nav
-                  className="isolate inline-flex -space-x-px rounded-md shadow-sm ml-6"
-                  aria-label="Pagination"
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 ${
-                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="Previous"
-                  >
-                    <i className="fa fa-chevron-left" aria-hidden="true"></i>
-                  </button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        aria-current={page === currentPage ? "page" : undefined}
-                        className={`relative z-10 inline-flex items-center border px-4 py-2 text-sm font-medium focus:z-20 ${
-                          page === currentPage
-                            ? "border-blue-600 bg-blue-600 text-white"
-                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 ${
-                      currentPage === totalPages || totalPages === 0
-                        ? "cursor-not-allowed opacity-50"
-                        : ""
-                    }`}
-                    aria-label="Next"
-                  >
-                    <i className="fa fa-chevron-right" aria-hidden="true"></i>
-                  </button>
-                </nav>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
               </div>
             </div>
-          </nav>
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

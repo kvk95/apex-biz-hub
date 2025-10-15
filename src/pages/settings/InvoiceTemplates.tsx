@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const ITEMS_PER_PAGE = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function InvoiceTemplates() {
   const [data, setData] = useState([]);
@@ -10,6 +9,16 @@ export default function InvoiceTemplates() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    invoiceTemplateName: "",
+    invoiceTemplateImage: "",
+    description: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -35,38 +44,92 @@ export default function InvoiceTemplates() {
     );
   }, [searchTerm, data]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
   // Handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  const handleRefresh = () => {
+  const handleClear = () => {
     setSearchTerm("");
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  // Edit Modal handlers
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        invoiceTemplateName: item.invoiceTemplateName,
+        invoiceTemplateImage: item.invoiceTemplateImage,
+        description: item.description,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = () => {
+    if (!editForm.invoiceTemplateName.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                invoiceTemplateName: editForm.invoiceTemplateName.trim(),
+                invoiceTemplateImage: editForm.invoiceTemplateImage,
+                description: editForm.description,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this invoice template?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  const handleReport = () => {
+    alert("Report Data:\n" + JSON.stringify(data, null, 2));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      {/* Page Title */}
-      <h1 className="text-2xl font-semibold mb-6 text-gray-900">Invoice Templates</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-semibold mb-6">Invoice Templates</h1>
 
       {/* Controls Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
         {/* Search Input */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-3">
           <label htmlFor="search" className="sr-only">
             Search Invoice Templates
           </label>
@@ -76,208 +139,207 @@ export default function InvoiceTemplates() {
             placeholder="Search Invoice Templates"
             value={searchTerm}
             onChange={handleSearchChange}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm w-64"
+            className="w-64 border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
-            onClick={handleRefresh}
-            title="Refresh"
-            className="p-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 transition"
-            aria-label="Refresh Search"
+            onClick={handleClear}
+            title="Clear"
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fas fa-sync-alt"></i>
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3">
+        <div className="flex gap-3">
           <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
-            className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <i className="fas fa-file-alt mr-2"></i> Report
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <i className="fas fa-save mr-2"></i> Save
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-indigo-50">
+      <div className="overflow-x-auto bg-card rounded shadow border border-border">
+        <table className="min-w-full">
+          <thead className="border-b border-border">
             <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider"
-              >
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 #
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider"
-              >
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 Invoice Template Name
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider"
-              >
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 Preview
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left font-semibold text-indigo-700 uppercase tracking-wider"
-              >
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 Description
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-center font-semibold text-indigo-700 uppercase tracking-wider"
-              >
+              <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {paginatedData.length === 0 ? (
+          <tbody className="divide-y divide-border">
+            {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground italic">
                   No invoice templates found.
                 </td>
               </tr>
             ) : (
-              paginatedData.map((template, idx) => (
-                <tr key={template.id} className="hover:bg-indigo-50">
-                  <td className="px-6 py-4 whitespace-nowrap">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-indigo-700">
-                    {template.invoiceTemplateName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <img
-                      src={template.invoiceTemplateImage}
-                      alt={`${template.invoiceTemplateName} preview`}
-                      className="h-16 w-auto rounded border border-gray-300"
-                      loading="lazy"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-normal">{template.description}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
-                    <button
-                      type="button"
-                      title="Edit"
-                      className="text-indigo-600 hover:text-indigo-800 focus:outline-none"
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button
-                      type="button"
-                      title="Delete"
-                      className="text-red-600 hover:text-red-800 focus:outline-none"
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredData
+                .slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage
+                )
+                .map((template, idx) => (
+                  <tr key={template.id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground font-medium">
+                      {template.invoiceTemplateName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      <img
+                        src={template.invoiceTemplateImage}
+                        alt={`${template.invoiceTemplateName} preview`}
+                        className="h-16 w-auto rounded border border-border"
+                        loading="lazy"
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {template.description}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(template.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit template ${template.invoiceTemplateName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(template.id)}
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete template ${template.invoiceTemplateName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
             )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      <nav
-        className="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-md shadow"
-        aria-label="Pagination"
-      >
-        <div className="flex flex-1 justify-between sm:hidden">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center space-x-1">
-          <button
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-            aria-label="Go to first page"
-            className={`relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium ${
-              currentPage === 1
-                ? "text-indigo-600 bg-indigo-100 cursor-default"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <i className="fas fa-angle-double-left"></i>
-          </button>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            aria-label="Go to previous page"
-            className={`relative inline-flex items-center border-t border-b border-gray-300 bg-white px-3 py-2 text-sm font-medium ${
-              currentPage === 1
-                ? "text-indigo-600 bg-indigo-100 cursor-default"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <i className="fas fa-angle-left"></i>
-          </button>
+      <Pagination
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredData.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+      />
 
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-            <button
-              key={pageNum}
-              onClick={() => handlePageChange(pageNum)}
-              aria-current={pageNum === currentPage ? "page" : undefined}
-              className={`relative inline-flex items-center border-t border-b border-gray-300 bg-white px-3 py-2 text-sm font-medium ${
-                pageNum === currentPage
-                  ? "text-indigo-600 bg-indigo-100 cursor-default"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
             >
-              {pageNum}
-            </button>
-          ))}
+              Edit Invoice Template
+            </h2>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label
+                  htmlFor="editInvoiceTemplateName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Invoice Template Name
+                </label>
+                <input
+                  type="text"
+                  id="editInvoiceTemplateName"
+                  name="invoiceTemplateName"
+                  value={editForm.invoiceTemplateName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter template name"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editInvoiceTemplateImage"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Preview Image URL
+                </label>
+                <input
+                  type="text"
+                  id="editInvoiceTemplateImage"
+                  name="invoiceTemplateImage"
+                  value={editForm.invoiceTemplateImage}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter image URL"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editDescription"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="editDescription"
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter description"
+                  rows={3}
+                />
+              </div>
+            </div>
 
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            aria-label="Go to next page"
-            className={`relative inline-flex items-center border-t border-b border-gray-300 bg-white px-3 py-2 text-sm font-medium ${
-              currentPage === totalPages || totalPages === 0
-                ? "text-indigo-600 bg-indigo-100 cursor-default"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <i className="fas fa-angle-right"></i>
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            aria-label="Go to last page"
-            className={`relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium ${
-              currentPage === totalPages || totalPages === 0
-                ? "text-indigo-600 bg-indigo-100 cursor-default"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <i className="fas fa-angle-double-right"></i>
-          </button>
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-      </nav>
+      )}
     </div>
   );
 }

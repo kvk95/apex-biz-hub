@@ -1,22 +1,30 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const PAGE_SIZE = 5;
+const statusOptions = ["Active", "Inactive"];
 
 const EmailTemplates: React.FC = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedTemplate, setEditedTemplate] = useState<{
     title: string;
     subject: string;
     status: string;
-  }>({ title: "", subject: "", status: "Active" });
+  }>({ title: "", subject: "", status: statusOptions[0] });
 
   const loadData = async () => {
     setLoading(true);
@@ -46,14 +54,13 @@ const EmailTemplates: React.FC = () => {
     });
   }, [data, searchTerm, filterStatus]);
 
-  // Pagination
-  const pageCount = Math.ceil(filteredTemplates.length / PAGE_SIZE);
-  const currentTemplates = filteredTemplates.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+  // Paginated data slice
+  const paginatedData = filteredTemplates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  // Handlers
+  // Open edit modal and populate form
   const onEdit = (id: number) => {
     const tpl = data.find((t: any) => t.id === id);
     if (!tpl) return;
@@ -63,15 +70,23 @@ const EmailTemplates: React.FC = () => {
       subject: tpl.subject,
       status: tpl.status,
     });
+    setIsEditModalOpen(true);
   };
 
+  // Cancel editing modal
   const onCancelEdit = () => {
     setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: "Active" });
+    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
+    setIsEditModalOpen(false);
   };
 
+  // Save changes from modal
   const onSave = () => {
     if (editingId === null) return;
+    if (!editedTemplate.title.trim() || !editedTemplate.subject.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
     setData((prev: any[]) =>
       prev.map((t) =>
         t.id === editingId
@@ -85,7 +100,8 @@ const EmailTemplates: React.FC = () => {
       )
     );
     setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: "Active" });
+    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
+    setIsEditModalOpen(false);
   };
 
   const onDelete = (id: number) => {
@@ -95,81 +111,36 @@ const EmailTemplates: React.FC = () => {
       )
     ) {
       setData((prev) => prev.filter((t) => t.id !== id));
-      if ((currentPage - 1) * PAGE_SIZE >= filteredTemplates.length - 1) {
+      if ((currentPage - 1) * itemsPerPage >= filteredTemplates.length - 1) {
         setCurrentPage(Math.max(currentPage - 1, 1));
       }
     }
   };
 
-  const onRefresh = () => {
-    loadData();
+  // Clear button handler (replaces Refresh)
+  const onClear = () => {
     setSearchTerm("");
     setFilterStatus("All");
     setCurrentPage(1);
     setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: "Active" });
+    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
   };
 
-  // Pagination buttons component (using basic buttons as React pagination libs are not specified)
-  const Pagination = () => {
-    const pages = [];
-    for (let i = 1; i <= pageCount; i++) {
-      pages.push(
-        <button
-          key={i}
-          onClick={() => setCurrentPage(i)}
-          className={`mx-1 px-3 py-1 rounded ${
-            i === currentPage
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-          aria-current={i === currentPage ? "page" : undefined}
-          aria-label={`Go to page ${i}`}
-          type="button"
-        >
-          {i}
-        </button>
-      );
-    }
-    return (
-      <nav
-        className="flex items-center justify-center space-x-2 mt-4"
-        aria-label="Pagination"
-      >
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          type="button"
-          aria-label="Previous page"
-        >
-          <i className="fa fa-chevron-left" />
-        </button>
-        {pages}
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, pageCount))}
-          disabled={currentPage === pageCount}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          type="button"
-          aria-label="Next page"
-        >
-          <i className="fa fa-chevron-right" />
-        </button>
-      </nav>
-    );
+  const onReport = () => {
+    alert("Report functionality is not implemented.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
-      <h1 className="text-3xl font-semibold mb-6">Email Templates</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Email Templates</h1>
 
-      {/* Controls: Search, Filter, Refresh, Report */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      {/* Controls: Search, Filter, Clear, Report */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
           <input
             type="text"
             placeholder="Search by Title or Subject"
-            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-72"
+            className="w-full sm:w-72 border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -178,7 +149,7 @@ const EmailTemplates: React.FC = () => {
             aria-label="Search email templates"
           />
           <select
-            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
@@ -187,202 +158,235 @@ const EmailTemplates: React.FC = () => {
             aria-label="Filter by status"
           >
             <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex gap-3">
           <button
-            onClick={onRefresh}
-            className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded transition"
+            onClick={onClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
-            aria-label="Refresh templates"
+            aria-label="Clear filters"
           >
-            <i className="fa fa-sync-alt" />
-            Refresh
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
           <button
-            onClick={() => alert("Report functionality is not implemented.")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+            onClick={onReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
             aria-label="Generate report"
           >
-            <i className="fa fa-file-alt" />
-            Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto bg-white rounded shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Title
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Subject
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Created Date
-              </th>
-              <th
-                scope="col"
-                className="relative px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {currentTemplates.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-6 py-4 whitespace-nowrap text-center text-gray-500"
-                >
-                  No templates found.
-                </td>
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Title
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Subject
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Created Date
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
-            )}
-            {currentTemplates.map((tpl) => (
-              <tr key={tpl.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {editingId === tpl.id ? (
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={editedTemplate.title}
-                      onChange={(e) =>
-                        setEditedTemplate((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      aria-label="Edit title"
-                    />
-                  ) : (
-                    tpl.title
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {editingId === tpl.id ? (
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={editedTemplate.subject}
-                      onChange={(e) =>
-                        setEditedTemplate((prev) => ({
-                          ...prev,
-                          subject: e.target.value,
-                        }))
-                      }
-                      aria-label="Edit subject"
-                    />
-                  ) : (
-                    tpl.subject
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {editingId === tpl.id ? (
-                    <select
-                      className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={editedTemplate.status}
-                      onChange={(e) =>
-                        setEditedTemplate((prev) => ({
-                          ...prev,
-                          status: e.target.value,
-                        }))
-                      }
-                      aria-label="Edit status"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  ) : (
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No templates found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((tpl, idx) => (
+                <tr
+                  key={tpl.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">{tpl.title}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{tpl.subject}</td>
+                  <td className="px-4 py-3 text-sm">
                     <span
-                      className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         tpl.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {tpl.status}
                     </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {tpl.createdDate}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                  {editingId === tpl.id ? (
-                    <>
-                      <button
-                        onClick={onSave}
-                        className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition"
-                        type="button"
-                        aria-label="Save changes"
-                      >
-                        <i className="fa fa-save" />
-                        Save
-                      </button>
-                      <button
-                        onClick={onCancelEdit}
-                        className="flex items-center gap-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded transition"
-                        type="button"
-                        aria-label="Cancel editing"
-                      >
-                        <i className="fa fa-times" />
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => onEdit(tpl.id)}
-                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition"
-                        type="button"
-                        aria-label={`Edit template ${tpl.title}`}
-                      >
-                        <i className="fa fa-edit" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onDelete(tpl.id)}
-                        className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition"
-                        type="button"
-                        aria-label={`Delete template ${tpl.title}`}
-                      >
-                        <i className="fa fa-trash" />
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {tpl.createdDate}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => onEdit(tpl.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit template ${tpl.title}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => onDelete(tpl.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete template ${tpl.title}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination */}
-      {pageCount > 1 && <Pagination />}
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredTemplates.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Email Template
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Title */}
+              <div>
+                <label
+                  htmlFor="editTitle"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="editTitle"
+                  name="title"
+                  value={editedTemplate.title}
+                  onChange={(e) =>
+                    setEditedTemplate((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter title"
+                />
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label
+                  htmlFor="editSubject"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  id="editSubject"
+                  name="subject"
+                  value={editedTemplate.subject}
+                  onChange={(e) =>
+                    setEditedTemplate((prev) => ({
+                      ...prev,
+                      subject: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter subject"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editedTemplate.status}
+                  onChange={(e) =>
+                    setEditedTemplate((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={onCancelEdit}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import { apiService } from "@/services/ApiService";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const pageSize = 5;
+const pageSizeOptions = [5, 10, 20];
 
 export default function SmsTemplates() {
   const [data, setData] = useState([]);
@@ -10,6 +11,7 @@ export default function SmsTemplates() {
 
   const [templates, setTemplates] = useState(data);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
   const [titleFilter, setTitleFilter] = useState("");
   const [messageFilter, setMessageFilter] = useState("");
   const [editingTemplate, setEditingTemplate] = useState<null | {
@@ -19,6 +21,8 @@ export default function SmsTemplates() {
   }>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formMessage, setFormMessage] = useState("");
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -48,22 +52,23 @@ export default function SmsTemplates() {
   );
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredTemplates.length / pageSize);
   const paginatedTemplates = filteredTemplates.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Reset page if filters change and current page is out of range
   useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(1);
-  }, [titleFilter, messageFilter, totalPages, currentPage]);
+    if (currentPage > Math.ceil(filteredTemplates.length / itemsPerPage))
+      setCurrentPage(1);
+  }, [titleFilter, messageFilter, itemsPerPage, currentPage]);
 
   // Handlers
   const handleEdit = (template: { id: number; title: string; message: string }) => {
     setEditingTemplate(template);
     setFormTitle(template.title);
     setFormMessage(template.message);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = (id: number) => {
@@ -110,10 +115,21 @@ export default function SmsTemplates() {
     setFormMessage("");
   };
 
-  const handleRefresh = () => {
+  const handleEditSave = () => {
+    handleSave();
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleClear = () => {
     setTitleFilter("");
     setMessageFilter("");
     setCurrentPage(1);
+    setFormTitle("");
+    setFormMessage("");
   };
 
   const handleReport = () => {
@@ -125,19 +141,19 @@ export default function SmsTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       {/* Page Title */}
       <h1 className="text-2xl font-semibold mb-6">SMS Templates</h1>
 
       {/* Filters Section */}
-      <section className="bg-white rounded shadow p-4 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Filter SMS Templates</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             setCurrentPage(1);
           }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           <div>
             <label
@@ -151,7 +167,7 @@ export default function SmsTemplates() {
               type="text"
               value={titleFilter}
               onChange={(e) => setTitleFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Search by title"
             />
           </div>
@@ -167,53 +183,61 @@ export default function SmsTemplates() {
               type="text"
               value={messageFilter}
               onChange={(e) => setMessageFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Search by message"
             />
           </div>
           <div className="flex items-end space-x-2">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Search"
             >
-              <i className="fa fa-search mr-2" aria-hidden="true"></i> Search
+              <i className="fa fa-search fa-light mr-2" aria-hidden="true"></i> Search
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 flex items-center"
-              title="Refresh"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Clear"
             >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
+              <i className="fa fa-refresh fa-light mr-2" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Generate Report"
             >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i> Report
+              <i className="fa fa-file-text fa-light mr-2" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
       {/* SMS Templates Table Section */}
-      <section className="bg-white rounded shadow p-4 mb-6 overflow-x-auto">
+      <section className="bg-card rounded shadow py-6 mb-6 overflow-x-auto">
         <h2 className="text-lg font-semibold mb-4">SMS Templates List</h2>
         {loading ? (
           <div>Loading...</div>
         ) : error ? (
           <div>Error: {error}</div>
         ) : (
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 w-16">#</th>
-                <th className="border border-gray-300 px-4 py-2 w-48">Title</th>
-                <th className="border border-gray-300 px-4 py-2">Message</th>
-                <th className="border border-gray-300 px-4 py-2 w-36">Actions</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Title
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Message
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -221,7 +245,7 @@ export default function SmsTemplates() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="border border-gray-300 px-4 py-6 text-center text-gray-500"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No SMS templates found.
                   </td>
@@ -230,33 +254,33 @@ export default function SmsTemplates() {
                 paginatedTemplates.map((template, idx) => (
                   <tr
                     key={template.id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="border border-gray-300 px-4 py-2 align-top">
-                      {(currentPage - 1) * pageSize + idx + 1}
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 align-top">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {template.title}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 align-top whitespace-pre-wrap">
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-pre-wrap">
                       {template.message}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 align-top space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(template)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-primary hover:text-primary/80 transition-colors"
                         title="Edit"
                         aria-label={`Edit template ${template.title}`}
                       >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(template.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
                         title="Delete"
                         aria-label={`Delete template ${template.title}`}
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -265,59 +289,18 @@ export default function SmsTemplates() {
             </tbody>
           </table>
         )}
-        {/* Pagination Controls */}
-        <nav
-          className="flex justify-between items-center mt-4"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                : "text-gray-700 hover:bg-gray-200"
-            } flex items-center`}
-            aria-label="Previous page"
-          >
-            <i className="fa fa-chevron-left mr-1" aria-hidden="true"></i> Prev
-          </button>
-
-          <ul className="inline-flex -space-x-px">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1 border border-gray-300 ${
-                    page === currentPage
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages || totalPages === 0
-                ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                : "text-gray-700 hover:bg-gray-200"
-            } flex items-center`}
-            aria-label="Next page"
-          >
-            Next <i className="fa fa-chevron-right ml-1" aria-hidden="true"></i>
-          </button>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredTemplates.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
 
-      {/* Add/Edit SMS Template Section */}
-      <section className="bg-white rounded shadow p-4">
+      {/* Add Section */}
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">
           {editingTemplate ? "Edit SMS Template" : "Add New SMS Template"}
         </h2>
@@ -340,7 +323,7 @@ export default function SmsTemplates() {
               type="text"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter template title"
               required
             />
@@ -356,7 +339,7 @@ export default function SmsTemplates() {
               id="templateMessage"
               value={formMessage}
               onChange={(e) => setFormMessage(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 h-24 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter SMS message content"
               required
             />
@@ -364,25 +347,95 @@ export default function SmsTemplates() {
           <div className="md:col-span-2 flex space-x-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 flex items-center"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title={editingTemplate ? "Save changes" : "Add template"}
             >
-              <i className="fa fa-save mr-2" aria-hidden="true"></i>
+              <i className="fa fa-save fa-light mr-2" aria-hidden="true"></i>
               {editingTemplate ? "Save" : "Add"}
             </button>
             {editingTemplate && (
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 flex items-center"
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 title="Cancel editing"
               >
-                <i className="fa fa-times mr-2" aria-hidden="true"></i> Cancel
+                <i className="fa fa-times fa-light mr-2" aria-hidden="true"></i> Cancel
               </button>
             )}
           </div>
         </form>
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit SMS Template
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="editTemplateTitle"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="editTemplateTitle"
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter template title"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editTemplateMessage"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="editTemplateMessage"
+                  value={formMessage}
+                  onChange={(e) => setFormMessage(e.target.value)}
+                  className="w-full border border-input rounded px-3 py-2 h-24 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter SMS message content"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const roles = ["Admin", "User"];
 const statuses = ["Active", "Inactive"];
@@ -13,6 +14,20 @@ export default function GeneralSettings() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    id: 0,
+    name: "",
+    email: "",
+    role: roles[0],
+    status: statuses[0],
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -55,10 +70,6 @@ export default function GeneralSettings() {
   const [invoiceStartNumber, setInvoiceStartNumber] = useState(0);
   const [invoiceFooterNote, setInvoiceFooterNote] = useState("");
 
-  // Users Table Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 5;
-
   useEffect(() => {
     if (data.length > 0) {
       const generalSettings = data[0];
@@ -85,28 +96,22 @@ export default function GeneralSettings() {
     }
   }, [data]);
 
-  const totalPages = data.length > 0 ? Math.ceil(data[0].users.length / usersPerPage) : 0;
-
-  // Pagination handlers
-  const paginate = (pageNumber: number) => {
-    if (pageNumber < 1) pageNumber = 1;
-    else if (pageNumber > totalPages) pageNumber = totalPages;
-    setCurrentPage(pageNumber);
-  };
-
-  // Current users slice
+  // Current users slice for pagination
   const currentUsers =
     data.length > 0
-      ? data[0].users.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
+      ? data[0].users.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        )
       : [];
 
-  // Handlers for buttons (simulate save, refresh, report)
+  // Handlers for buttons (simulate save, clear, report)
   const handleSave = () => {
     alert("Settings saved successfully.");
   };
 
-  const handleRefresh = () => {
-    // Reset all fields to initial data
+  // Clear button replaces Refresh - resets all fields to initial data
+  const handleClear = () => {
     if (data.length > 0) {
       const generalSettings = data[0];
       setCompanyName(generalSettings.companyInfo.companyName);
@@ -138,33 +143,81 @@ export default function GeneralSettings() {
     alert("Report generated.");
   };
 
+  // Edit modal handlers
+  const openEditModal = (user: any) => {
+    setEditForm({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = () => {
+    setData((prev) => {
+      if (prev.length === 0) return prev;
+      const updatedUsers = prev[0].users.map((user: any) =>
+        user.id === editForm.id
+          ? {
+              ...user,
+              name: editForm.name.trim(),
+              email: editForm.email.trim(),
+              role: editForm.role,
+              status: editForm.status,
+            }
+          : user
+      );
+      const newData = [
+        {
+          ...prev[0],
+          users: updatedUsers,
+        },
+      ];
+      return newData;
+    });
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+  };
+
   return (
     <>
       <title>General Settings - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 text-gray-900 font-sans">
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-semibold mb-8">General Settings</h1>
+      <div className="min-h-screen bg-background font-sans p-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-2xl font-semibold mb-6">General Settings</h1>
 
           {/* Company Information Section */}
-          <section className="bg-white rounded-lg shadow p-6 mb-8">
+          <section className="bg-card rounded shadow p-6 mb-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Company Information</h2>
               <div className="space-x-2">
                 <button
                   onClick={handleReport}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                  className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                   type="button"
                   title="Generate Report"
                 >
-                  <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+                  <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
                 </button>
                 <button
-                  onClick={handleRefresh}
-                  className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded text-sm font-medium"
+                  onClick={handleClear}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                   type="button"
-                  title="Refresh"
+                  title="Clear"
                 >
-                  <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+                  <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
                 </button>
               </div>
             </div>
@@ -181,7 +234,7 @@ export default function GeneralSettings() {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -196,7 +249,7 @@ export default function GeneralSettings() {
                   type="email"
                   value={companyEmail}
                   onChange={(e) => setCompanyEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -211,7 +264,7 @@ export default function GeneralSettings() {
                   type="tel"
                   value={companyPhone}
                   onChange={(e) => setCompanyPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -226,7 +279,7 @@ export default function GeneralSettings() {
                   value={companyAddress}
                   onChange={(e) => setCompanyAddress(e.target.value)}
                   rows={3}
-                  className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div className="md:col-span-2 flex items-center space-x-4">
@@ -234,7 +287,7 @@ export default function GeneralSettings() {
                   <img
                     src={companyLogoUrl}
                     alt="Company Logo"
-                    className="h-20 w-20 object-contain border border-gray-300 rounded"
+                    className="h-20 w-20 object-contain border border-input rounded"
                   />
                 </div>
                 <div className="flex-grow">
@@ -249,7 +302,7 @@ export default function GeneralSettings() {
                     type="url"
                     value={companyLogoUrl}
                     onChange={(e) => setCompanyLogoUrl(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="https://example.com/logo.png"
                   />
                 </div>
@@ -258,7 +311,7 @@ export default function GeneralSettings() {
           </section>
 
           {/* Currency Settings Section */}
-          <section className="bg-white rounded-lg shadow p-6 mb-8">
+          <section className="bg-card rounded shadow p-6 mb-6">
             <h2 className="text-xl font-semibold mb-6">Currency Settings</h2>
             <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -274,7 +327,7 @@ export default function GeneralSettings() {
                   maxLength={3}
                   value={currencySymbol}
                   onChange={(e) => setCurrencySymbol(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -290,7 +343,7 @@ export default function GeneralSettings() {
                   maxLength={3}
                   value={currencyCode}
                   onChange={(e) => setCurrencyCode(e.target.value.toUpperCase())}
-                  className="w-full border border-gray-300 rounded px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 uppercase bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -304,7 +357,7 @@ export default function GeneralSettings() {
                   id="currencyPosition"
                   value={currencyPosition}
                   onChange={(e) => setCurrencyPosition(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {currencyPositions.map((pos) => (
                     <option key={pos.value} value={pos.value}>
@@ -326,7 +379,7 @@ export default function GeneralSettings() {
                   maxLength={1}
                   value={thousandSeparator}
                   onChange={(e) => setThousandSeparator(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -342,7 +395,7 @@ export default function GeneralSettings() {
                   maxLength={1}
                   value={decimalSeparator}
                   onChange={(e) => setDecimalSeparator(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -359,14 +412,14 @@ export default function GeneralSettings() {
                   max={4}
                   value={numberOfDecimals}
                   onChange={(e) => setNumberOfDecimals(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </form>
           </section>
 
           {/* Tax Settings Section */}
-          <section className="bg-white rounded-lg shadow p-6 mb-8">
+          <section className="bg-card rounded shadow p-6 mb-6">
             <h2 className="text-xl font-semibold mb-6">Tax Settings</h2>
             <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -378,7 +431,7 @@ export default function GeneralSettings() {
                   type="text"
                   value={taxName}
                   onChange={(e) => setTaxName(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -392,7 +445,7 @@ export default function GeneralSettings() {
                   max={100}
                   value={taxRate}
                   onChange={(e) => setTaxRate(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -403,7 +456,7 @@ export default function GeneralSettings() {
                   id="taxType"
                   value={taxType}
                   onChange={(e) => setTaxType(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {taxTypes.map((type) => (
                     <option key={type} value={type}>
@@ -416,7 +469,7 @@ export default function GeneralSettings() {
           </section>
 
           {/* Invoice Settings Section */}
-          <section className="bg-white rounded-lg shadow p-6 mb-8">
+          <section className="bg-card rounded shadow p-6 mb-6">
             <h2 className="text-xl font-semibold mb-6">Invoice Settings</h2>
             <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -431,7 +484,7 @@ export default function GeneralSettings() {
                   type="text"
                   value={invoicePrefix}
                   onChange={(e) => setInvoicePrefix(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -447,7 +500,7 @@ export default function GeneralSettings() {
                   min={1}
                   value={invoiceStartNumber}
                   onChange={(e) => setInvoiceStartNumber(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -462,101 +515,90 @@ export default function GeneralSettings() {
                   value={invoiceFooterNote}
                   onChange={(e) => setInvoiceFooterNote(e.target.value)}
                   rows={3}
-                  className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </form>
           </section>
 
           {/* Users Table Section */}
-          <section className="bg-white rounded-lg shadow p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
+          <section className="bg-card rounded shadow py-6">
+            <div className="flex justify-between items-center px-6 mb-6">
               <h2 className="text-xl font-semibold">Users</h2>
               <div className="space-x-2">
                 <button
                   onClick={handleReport}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                  className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                   type="button"
                   title="Generate Report"
                 >
-                  <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+                  <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
                 </button>
                 <button
-                  onClick={handleRefresh}
-                  className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded text-sm font-medium"
+                  onClick={handleClear}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                   type="button"
-                  title="Refresh"
+                  title="Clear"
                 >
-                  <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+                  <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
                 </button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Name
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Email
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Role
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Status
-                    </th>
-                    <th scope="col" className="relative px-6 py-3">
-                      <span className="sr-only">Edit</span>
-                    </th>
+            <div className="overflow-x-auto px-6">
+              <table className="min-w-full border border-border divide-y divide-border">
+                <thead>
+                  <tr className="bg-muted text-muted-foreground text-left text-sm font-semibold">
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Role</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tbody>
+                  {currentUsers.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="text-center px-4 py-6 text-muted-foreground italic"
+                      >
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                  {currentUsers.map((user, idx) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {user.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {user.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-foreground">
                         {user.role}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-4 py-3 text-sm">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             user.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                           }`}
                         >
                           {user.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-3 text-center text-sm space-x-3">
                         <button
+                          onClick={() => openEditModal(user)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          aria-label={`Edit user ${user.name}`}
                           type="button"
-                          title="Edit User"
-                          className="text-indigo-600 hover:text-indigo-900"
-                          onClick={() =>
-                            alert(`Edit user: ${user.name} (Not implemented)`)
-                          }
                         >
-                          <i className="fas fa-edit" aria-hidden="true"></i>
+                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                         </button>
                       </td>
                     </tr>
@@ -566,58 +608,142 @@ export default function GeneralSettings() {
             </div>
 
             {/* Pagination */}
-            <nav
-              className="mt-4 flex justify-end items-center space-x-1"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                aria-label="Previous Page"
-              >
-                <i className="fas fa-chevron-left"></i>
-              </button>
-              {[...Array(totalPages)].map((_, idx) => {
-                const page = idx + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => paginate(page)}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 ${
-                      currentPage === page
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : ""
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                aria-label="Next Page"
-              >
-                <i className="fas fa-chevron-right"></i>
-              </button>
-            </nav>
+            <Pagination
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={data.length > 0 ? data[0].users.length : 0}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setItemsPerPage}
+            />
           </section>
 
           {/* Save Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end px-6">
             <button
               onClick={handleSave}
-              className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded text-lg font-semibold"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               type="button"
               title="Save Settings"
             >
-              <i className="fas fa-save mr-2" aria-hidden="true"></i> Save Settings
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save Settings
             </button>
           </div>
         </div>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
+              >
+                Edit User
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="editName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editName"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editEmail"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="editEmail"
+                    name="email"
+                    value={editForm.email}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter email"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editRole"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Role
+                  </label>
+                  <select
+                    id="editRole"
+                    name="role"
+                    value={editForm.role}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

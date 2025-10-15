@@ -1,7 +1,8 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const pageSize = 5;
+const statusOptions = ["Active", "Inactive"];
 
 export default function CompanySettings() {
   const [data, setData] = useState([]);
@@ -26,7 +27,9 @@ export default function CompanySettings() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [companies, setCompanies] = useState(data);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
     companyName: "",
     email: "",
@@ -35,18 +38,31 @@ export default function CompanySettings() {
     city: "",
     country: "",
     zipCode: "",
-    status: "Active",
+    status: statusOptions[0],
+  });
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    companyName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "",
+    zipCode: "",
+    status: statusOptions[0],
   });
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(companies.length / pageSize);
-  const paginatedCompanies = companies.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  // Synchronize data to local companies state for pagination
+  const [companies, setCompanies] = useState([]);
 
-  // Handlers
+  useEffect(() => {
+    setCompanies(data);
+  }, [data]);
+
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -54,6 +70,15 @@ export default function CompanySettings() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (Add new company)
   const handleSave = () => {
     if (
       !form.companyName.trim() ||
@@ -68,33 +93,21 @@ export default function CompanySettings() {
       return;
     }
 
-    if (editId !== null) {
-      // Edit existing
-      setCompanies((prev) =>
-        prev.map((c) =>
-          c.id === editId
-            ? {
-                ...c,
-                ...form,
-              }
-            : c
-        )
-      );
-      setEditId(null);
-    } else {
-      // Add new
-      const newCompany = {
-        id: companies.length
-          ? Math.max(...companies.map((c) => c.id)) + 1
-          : 1,
-        ...form,
-      };
-      setCompanies((prev) => [...prev, newCompany]);
-      // Go to last page if needed
-      if ((companies.length + 1) / pageSize > totalPages) {
-        setCurrentPage(totalPages + 1);
-      }
-    }
+    const newId = companies.length ? Math.max(...companies.map((c) => c.id)) + 1 : 1;
+    setCompanies((prev) => [
+      ...prev,
+      {
+        id: newId,
+        companyName: form.companyName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
+        country: form.country.trim(),
+        zipCode: form.zipCode.trim(),
+        status: form.status,
+      },
+    ]);
     setForm({
       companyName: "",
       email: "",
@@ -103,14 +116,15 @@ export default function CompanySettings() {
       city: "",
       country: "",
       zipCode: "",
-      status: "Active",
+      status: statusOptions[0],
     });
   };
 
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const company = companies.find((c) => c.id === id);
     if (company) {
-      setForm({
+      setEditForm({
         companyName: company.companyName,
         email: company.email,
         phone: company.phone,
@@ -121,8 +135,51 @@ export default function CompanySettings() {
         status: company.status,
       });
       setEditId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsEditModalOpen(true);
     }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.companyName.trim() ||
+      !editForm.email.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.address.trim() ||
+      !editForm.city.trim() ||
+      !editForm.country.trim() ||
+      !editForm.zipCode.trim()
+    ) {
+      alert("Please fill all fields");
+      return;
+    }
+    if (editId !== null) {
+      setCompanies((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                companyName: editForm.companyName.trim(),
+                email: editForm.email.trim(),
+                phone: editForm.phone.trim(),
+                address: editForm.address.trim(),
+                city: editForm.city.trim(),
+                country: editForm.country.trim(),
+                zipCode: editForm.zipCode.trim(),
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
@@ -134,7 +191,7 @@ export default function CompanySettings() {
       setCompanies((prev) => prev.filter((c) => c.id !== id));
       // Adjust page if needed
       if (
-        (companies.length - 1) / pageSize < currentPage - 1 &&
+        (currentPage - 1) * itemsPerPage >= companies.length - 1 &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -142,9 +199,8 @@ export default function CompanySettings() {
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    setCurrentPage(1);
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setForm({
       companyName: "",
       email: "",
@@ -153,9 +209,10 @@ export default function CompanySettings() {
       city: "",
       country: "",
       zipCode: "",
-      status: "Active",
+      status: statusOptions[0],
     });
     setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -166,32 +223,23 @@ export default function CompanySettings() {
     );
   };
 
-  useEffect(() => {
-    setCompanies(data);
-  }, [data]);
+  // Calculate paginated data using Pagination component props
+  const paginatedCompanies = companies.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">
-        Company Settings
-      </h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Company Settings</h1>
 
-      {/* Form Section */}
-      <section className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">
-          Company Information
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <div className="flex flex-col">
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
             <label
               htmlFor="companyName"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Company Name
             </label>
@@ -201,16 +249,16 @@ export default function CompanySettings() {
               type="text"
               value={form.companyName}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter company name"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="email"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Email
             </label>
@@ -220,16 +268,16 @@ export default function CompanySettings() {
               type="email"
               value={form.email}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter email"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="phone"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Phone
             </label>
@@ -239,16 +287,16 @@ export default function CompanySettings() {
               type="tel"
               value={form.phone}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter phone number"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="address"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Address
             </label>
@@ -258,16 +306,16 @@ export default function CompanySettings() {
               type="text"
               value={form.address}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter address"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="city"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               City
             </label>
@@ -277,16 +325,16 @@ export default function CompanySettings() {
               type="text"
               value={form.city}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter city"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="country"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Country
             </label>
@@ -296,16 +344,16 @@ export default function CompanySettings() {
               type="text"
               value={form.country}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter country"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="zipCode"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Zip Code
             </label>
@@ -315,16 +363,16 @@ export default function CompanySettings() {
               type="text"
               value={form.zipCode}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter zip code"
               required
             />
           </div>
 
-          <div className="flex flex-col">
+          <div>
             <label
               htmlFor="status"
-              className="mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Status
             </label>
@@ -333,115 +381,82 @@ export default function CompanySettings() {
               name="status"
               value={form.status}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               required
             >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
-          </div>
-
-          <div className="flex items-end space-x-4 md:col-span-2 lg:col-span-3">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded flex items-center"
-              aria-label={editId !== null ? "Update Company" : "Save Company"}
-            >
-              <i className="fa fa-save mr-2" aria-hidden="true"></i>
-              {editId !== null ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setForm({
-                  companyName: "",
-                  email: "",
-                  phone: "",
-                  address: "",
-                  city: "",
-                  country: "",
-                  zipCode: "",
-                  status: "Active",
-                });
-                setEditId(null);
-              }}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded flex items-center"
-              aria-label="Clear Form"
-            >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i>Clear
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Company List
-          </h2>
-          <div className="space-x-2">
-            <button
-              onClick={handleReport}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
-              aria-label="Generate Report"
-              type="button"
-            >
-              <i className="fa fa-file-alt mr-2" aria-hidden="true"></i>Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center"
-              aria-label="Refresh Data"
-              type="button"
-            >
-              <i className="fa fa-sync-alt mr-2" aria-hidden="true"></i>Refresh
-            </button>
           </div>
         </div>
 
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+        </div>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Company Name
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Email
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Phone
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Address
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   City
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Country
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Zip Code
                 </th>
-                <th className="px-4 py-2 text-left text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="px-4 py-2 text-center text-gray-700 font-semibold border-b border-gray-300">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {paginatedCompanies.length === 0 && (
                 <tr>
                   <td
                     colSpan={10}
-                    className="text-center py-4 text-gray-500"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No company records found.
                   </td>
@@ -450,59 +465,59 @@ export default function CompanySettings() {
               {paginatedCompanies.map((company, idx) => (
                 <tr
                   key={company.id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
-                    {(currentPage - 1) * pageSize + idx + 1}
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-900 font-medium">
+                  <td className="px-4 py-3 text-sm text-foreground font-semibold">
                     {company.companyName}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.email}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.phone}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.address}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.city}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.country}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {company.zipCode}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         company.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {company.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-center space-x-2">
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => handleEdit(company.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
                       aria-label={`Edit ${company.companyName}`}
-                      className="text-indigo-600 hover:text-indigo-900"
                       type="button"
                     >
-                      <i className="fa fa-edit" aria-hidden="true"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
                       onClick={() => handleDelete(company.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
                       aria-label={`Delete ${company.companyName}`}
-                      className="text-red-600 hover:text-red-900"
                       type="button"
                     >
-                      <i className="fa fa-trash" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
@@ -511,73 +526,201 @@ export default function CompanySettings() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="mt-6 flex justify-center items-center space-x-1"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Go to first page"
-            type="button"
-          >
-            <i className="fa fa-angle-double-left" aria-hidden="true"></i>
-          </button>
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.max(prev - 1, 1))
-            }
-            disabled={currentPage === 1}
-            className={`px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Go to previous page"
-            type="button"
-          >
-            <i className="fa fa-angle-left" aria-hidden="true"></i>
-          </button>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={companies.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
 
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (page) => (
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Company
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="editCompanyName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  id="editCompanyName"
+                  name="companyName"
+                  value={editForm.companyName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter company name"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter email"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="editPhone"
+                  name="phone"
+                  value={editForm.phone}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editAddress"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Address
+                </label>
+                <input
+                  type="text"
+                  id="editAddress"
+                  name="address"
+                  value={editForm.address}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter address"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editCity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  City
+                </label>
+                <input
+                  type="text"
+                  id="editCity"
+                  name="city"
+                  value={editForm.city}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter city"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editCountry"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Country
+                </label>
+                <input
+                  type="text"
+                  id="editCountry"
+                  name="country"
+                  value={editForm.country}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter country"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editZipCode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Zip Code
+                </label>
+                <input
+                  type="text"
+                  id="editZipCode"
+                  name="zipCode"
+                  value={editForm.zipCode}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter zip code"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`px-3 py-1 border border-gray-300 hover:bg-indigo-600 hover:text-white ${
-                  page === currentPage
-                    ? "bg-indigo-600 text-white font-semibold"
-                    : "bg-white text-gray-700"
-                }`}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
-                {page}
+                Cancel
               </button>
-            )
-          )}
-
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Go to next page"
-            type="button"
-          >
-            <i className="fa fa-angle-right" aria-hidden="true"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Go to last page"
-            type="button"
-          >
-            <i className="fa fa-angle-double-right" aria-hidden="true"></i>
-          </button>
-        </nav>
-      </section>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const pageSize = 5;
+const pageSizeOptions = [5, 10, 20];
 
 export default function Appearance() {
   const [data, setData] = useState([]);
@@ -9,6 +10,7 @@ export default function Appearance() {
   const [error, setError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
   const [formData, setFormData] = useState({
     themeName: "",
     sidebarType: "Expanded",
@@ -16,6 +18,16 @@ export default function Appearance() {
     footerType: "Static",
     status: "Active",
   });
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    themeName: "",
+    sidebarType: "Expanded",
+    headerType: "Fixed",
+    footerType: "Static",
+    status: "Active",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -33,11 +45,12 @@ export default function Appearance() {
     loadData();
   }, []);
 
-  const totalPages = Math.ceil(data.length / pageSize);
-
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setItemsPerPage(size);
   };
 
   const handleInputChange = (
@@ -47,213 +60,315 @@ export default function Appearance() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSave = () => {
     alert("Save functionality is not implemented in this demo.");
   };
 
-  const handleRefresh = () => {
-    alert("Refresh functionality is not implemented in this demo.");
+  const handleClear = () => {
+    setFormData({
+      themeName: "",
+      sidebarType: "Expanded",
+      headerType: "Fixed",
+      footerType: "Static",
+      status: "Active",
+    });
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
     alert("Report functionality is not implemented in this demo.");
   };
 
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        themeName: item.name,
+        sidebarType: item.sidebar,
+        headerType: item.header,
+        footerType: item.footer,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditSave = () => {
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+              ...item,
+              name: editForm.themeName,
+              sidebar: editForm.sidebarType,
+              header: editForm.headerType,
+              footer: editForm.footerType,
+              status: editForm.status,
+            }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
   const paginatedData = data.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       <title>Appearance - Dreams POS</title>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
-        <h1 className="text-3xl font-semibold mb-6">Appearance</h1>
+        <h1 className="text-2xl font-semibold mb-6">Appearance</h1>
 
         {/* Form Section */}
-        <section className="bg-white rounded shadow p-6 mb-10">
+        <section className="bg-card rounded shadow p-6 mb-10">
           <h2 className="text-xl font-semibold mb-4">Theme Settings</h2>
           <form className="space-y-6">
             {/* Theme Name */}
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-              <label
-                htmlFor="themeName"
-                className="w-full md:w-48 text-gray-700 font-medium mb-2 md:mb-0"
-              >
-                Theme Name
-              </label>
-              <input
-                type="text"
-                id="themeName"
-                name="themeName"
-                value={formData.themeName}
-                onChange={handleInputChange}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-                placeholder="Enter theme name"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="themeName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Theme Name
+                </label>
+                <input
+                  type="text"
+                  id="themeName"
+                  name="themeName"
+                  value={formData.themeName}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter theme name"
+                />
+              </div>
 
-            {/* Sidebar Type */}
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-              <label className="w-full md:w-48 text-gray-700 font-medium mb-2 md:mb-0">
-                Sidebar Type
-              </label>
-              <select
-                name="sidebarType"
-                value={formData.sidebarType}
-                onChange={handleInputChange}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-              >
-                <option>Expanded</option>
-                <option>Collapsed</option>
-              </select>
-            </div>
+              {/* Sidebar Type */}
+              <div>
+                <label
+                  htmlFor="sidebarType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Sidebar Type
+                </label>
+                <select
+                  id="sidebarType"
+                  name="sidebarType"
+                  value={formData.sidebarType}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Expanded</option>
+                  <option>Collapsed</option>
+                </select>
+              </div>
 
-            {/* Header Type */}
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-              <label className="w-full md:w-48 text-gray-700 font-medium mb-2 md:mb-0">
-                Header Type
-              </label>
-              <select
-                name="headerType"
-                value={formData.headerType}
-                onChange={handleInputChange}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-              >
-                <option>Fixed</option>
-                <option>Static</option>
-              </select>
-            </div>
+              {/* Header Type */}
+              <div>
+                <label
+                  htmlFor="headerType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Header Type
+                </label>
+                <select
+                  id="headerType"
+                  name="headerType"
+                  value={formData.headerType}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Fixed</option>
+                  <option>Static</option>
+                </select>
+              </div>
 
-            {/* Footer Type */}
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-              <label className="w-full md:w-48 text-gray-700 font-medium mb-2 md:mb-0">
-                Footer Type
-              </label>
-              <select
-                name="footerType"
-                value={formData.footerType}
-                onChange={handleInputChange}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-              >
-                <option>Static</option>
-                <option>Fixed</option>
-              </select>
-            </div>
+              {/* Footer Type */}
+              <div>
+                <label
+                  htmlFor="footerType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Footer Type
+                </label>
+                <select
+                  id="footerType"
+                  name="footerType"
+                  value={formData.footerType}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Static</option>
+                  <option>Fixed</option>
+                </select>
+              </div>
 
-            {/* Status */}
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-              <label className="w-full md:w-48 text-gray-700 font-medium mb-2 md:mb-0">
-                Status
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
             </div>
 
             {/* Buttons */}
-            <div className="flex space-x-4 pt-4">
+            <div className="mt-6 flex flex-wrap gap-3">
               <button
-                type="button"
                 onClick={handleSave}
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                <i className="fas fa-save mr-2"></i> Save
+                <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
               </button>
               <button
+                onClick={handleClear}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
-                <i className="fas fa-sync-alt mr-2"></i> Refresh
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
               <button
-                type="button"
                 onClick={handleReport}
-                className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                <i className="fas fa-file-alt mr-2"></i> Report
+                <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
               </button>
             </div>
           </form>
         </section>
 
         {/* Table Section */}
-        <section className="bg-white rounded shadow p-6">
+        <section className="bg-card rounded shadow py-6">
           <h2 className="text-xl font-semibold mb-4">Appearance List</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-gray-700">#</th>
-                  <th className="px-4 py-3 font-medium text-gray-700">Name</th>
-                  <th className="px-4 py-3 font-medium text-gray-700">Theme</th>
-                  <th className="px-4 py-3 font-medium text-gray-700">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    #
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Theme
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                     Sidebar
                   </th>
-                  <th className="px-4 py-3 font-medium text-gray-700">Header</th>
-                  <th className="px-4 py-3 font-medium text-gray-700">Footer</th>
-                  <th className="px-4 py-3 font-medium text-gray-700">Status</th>
-                  <th className="px-4 py-3 font-medium text-gray-700 text-center">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Header
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Footer
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
+                    >
+                      No appearances found.
+                    </td>
+                  </tr>
+                )}
                 {paginatedData.map((item, idx) => (
                   <tr
                     key={item.id}
-                    className={
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-4 py-3">{item.id}</td>
-                    <td className="px-4 py-3">{item.name}</td>
-                    <td className="px-4 py-3">{item.theme}</td>
-                    <td className="px-4 py-3">{item.sidebar}</td>
-                    <td className="px-4 py-3">{item.header}</td>
-                    <td className="px-4 py-3">{item.footer}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.theme}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.sidebar}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.header}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {item.footer}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
                       <span
                         className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           item.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
-                        title="Edit"
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() =>
-                          alert(
-                            `Edit functionality for "${item.name}" is not implemented in this demo.`
-                          )
-                        }
+                        onClick={() => handleEdit(item.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit appearance ${item.name}`}
+                        type="button"
                       >
-                        <i className="fas fa-edit"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         title="Delete"
-                        className="text-red-600 hover:text-red-900 focus:outline-none"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
                         onClick={() =>
                           alert(
                             `Delete functionality for "${item.name}" is not implemented in this demo.`
                           )
                         }
                       >
-                        <i className="fas fa-trash-alt"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -263,71 +378,151 @@ export default function Appearance() {
           </div>
 
           {/* Pagination */}
-          <nav
-            className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-6"
-            aria-label="Table navigation"
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={data.length}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
           >
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
-              <div>
-                <nav
-                  className="isolate inline-flex -space-x-px rounded-md shadow-sm"
-                  aria-label="Pagination"
+                Edit Appearance
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Theme Name */}
+                <div>
+                  <label
+                    htmlFor="editThemeName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Theme Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editThemeName"
+                    name="themeName"
+                    value={editForm.themeName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter theme name"
+                  />
+                </div>
+
+                {/* Sidebar Type */}
+                <div>
+                  <label
+                    htmlFor="editSidebarType"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Sidebar Type
+                  </label>
+                  <select
+                    id="editSidebarType"
+                    name="sidebarType"
+                    value={editForm.sidebarType}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option>Expanded</option>
+                    <option>Collapsed</option>
+                  </select>
+                </div>
+
+                {/* Header Type */}
+                <div>
+                  <label
+                    htmlFor="editHeaderType"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Header Type
+                  </label>
+                  <select
+                    id="editHeaderType"
+                    name="headerType"
+                    value={editForm.headerType}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option>Fixed</option>
+                    <option>Static</option>
+                  </select>
+                </div>
+
+                {/* Footer Type */}
+                <div>
+                  <label
+                    htmlFor="editFooterType"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Footer Type
+                  </label>
+                  <select
+                    id="editFooterType"
+                    name="footerType"
+                    value={editForm.footerType}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option>Static</option>
+                    <option>Fixed</option>
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label
+                    htmlFor="editStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="editStatus"
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-                  {[...Array(totalPages)].map((_, i) => {
-                    const page = i + 1;
-                    const isCurrent = page === currentPage;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        aria-current={isCurrent ? "page" : undefined}
-                        className={`relative z-10 inline-flex items-center border px-4 py-2 text-sm font-medium focus:outline-none ${
-                          isCurrent
-                            ? "border-indigo-600 bg-indigo-600 text-white"
-                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="sr-only">Next</span>
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </nav>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
               </div>
             </div>
-          </nav>
-        </section>
+          </div>
+        )}
       </div>
     </div>
   );

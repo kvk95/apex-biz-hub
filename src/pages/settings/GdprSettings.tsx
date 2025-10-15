@@ -1,21 +1,38 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const requestTypes = [
-  "Data Access",
-  "Data Deletion",
-  "Data Portability",
-];
-
-const statuses = [
-  "Pending",
-  "Completed",
-];
+const requestTypes = ["Data Access", "Data Deletion", "Data Portability"];
+const statuses = ["Pending", "Completed"];
 
 export default function GdprSettings() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Form state for GDPR Settings form
+  const [form, setForm] = useState({
+    requestType: "",
+    status: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    email: "",
+    phone: "",
+    requestType: "",
+    requestDate: "",
+    status: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -33,24 +50,20 @@ export default function GdprSettings() {
     loadData();
   }, []);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  // Form state for GDPR Settings form
-  const [form, setForm] = useState({
-    requestType: "",
-    status: "",
-    startDate: "",
-    endDate: "",
-  });
-
   // Handle form input changes
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle edit modal input changes
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Filtered data based on form filters
@@ -69,16 +82,80 @@ export default function GdprSettings() {
   }, [form, data]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Pagination handlers
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        customerName: item.customerName,
+        email: item.email,
+        phone: item.phone,
+        requestType: item.requestType,
+        requestDate: item.requestDate,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.customerName.trim() ||
+      !editForm.email.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.requestType ||
+      !editForm.requestDate ||
+      !editForm.status
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                customerName: editForm.customerName.trim(),
+                email: editForm.email.trim(),
+                phone: editForm.phone.trim(),
+                requestType: editForm.requestType,
+                requestDate: editForm.requestDate,
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Delete handler
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this request?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
   };
 
   // Button handlers (simulate actions)
@@ -86,8 +163,15 @@ export default function GdprSettings() {
     alert("GDPR settings saved successfully.");
   };
 
-  const handleRefresh = () => {
-    alert("Data refreshed.");
+  const handleClear = () => {
+    setForm({
+      requestType: "",
+      status: "",
+      startDate: "",
+      endDate: "",
+    });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleGenerateReport = () => {
@@ -95,307 +179,402 @@ export default function GdprSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-700">
-      <title>GDPR Settings</title>
+    <div className="min-h-screen bg-background font-sans p-6">
+      {/* Page Title */}
+      <h1 className="text-2xl font-semibold mb-6">GDPR Settings</h1>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Page Title */}
-        <h1 className="text-3xl font-semibold text-gray-900 mb-8">GDPR Settings</h1>
-
-        {/* GDPR Settings Form Section */}
-        <section className="bg-white rounded-lg shadow p-6 mb-10">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Filter Requests</h2>
-          <form
-            className="grid grid-cols-1 md:grid-cols-4 gap-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setCurrentPage(1);
-            }}
-          >
-            {/* Request Type */}
-            <div>
-              <label
-                htmlFor="requestType"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Request Type
-              </label>
-              <select
-                id="requestType"
-                name="requestType"
-                value={form.requestType}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="">All</option>
-                {requestTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status */}
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="">All</option>
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Start Date */}
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Start Date
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={form.startDate}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            {/* End Date */}
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                End Date
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={form.endDate}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="md:col-span-4 flex space-x-4 justify-start mt-4">
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <i className="fas fa-filter mr-2"></i> Filter
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveSettings}
-                className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <i className="fas fa-save mr-2"></i> Save Settings
-              </button>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-white hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              >
-                <i className="fas fa-sync-alt mr-2"></i> Refresh
-              </button>
-              <button
-                type="button"
-                onClick={handleGenerateReport}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <i className="fas fa-file-alt mr-2"></i> Generate Report
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* GDPR Requests Table Section */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">GDPR Requests</h2>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300 rounded-md">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Customer Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Email
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Phone
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Request Type
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Request Date
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
-                  >
-                    Status
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500"
-                    >
-                      No GDPR requests found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.customerName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.phone}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.requestType}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.requestDate}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            item.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button
-                          type="button"
-                          className="text-indigo-600 hover:text-indigo-900"
-                          onClick={() =>
-                            alert(`Edit request ID ${item.id} clicked.`)
-                          }
-                          aria-label={`Edit request for ${item.customerName}`}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() =>
-                            alert(`Delete request ID ${item.id} clicked.`)
-                          }
-                          aria-label={`Delete request for ${item.customerName}`}
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* GDPR Settings Form Section */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Filter Requests</h2>
+        <form
+          className="grid grid-cols-1 md:grid-cols-4 gap-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCurrentPage(1);
+          }}
+        >
+          {/* Request Type */}
+          <div>
+            <label
+              htmlFor="requestType"
+              className="block text-sm font-medium mb-1"
+            >
+              Request Type
+            </label>
+            <select
+              id="requestType"
+              name="requestType"
+              value={form.requestType}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">All</option>
+              {requestTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Pagination Controls */}
-          <nav
-            className="mt-6 flex justify-between items-center"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                currentPage === 1
-                  ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                  : "text-gray-700 bg-white hover:bg-gray-50"
-              }`}
-              aria-label="Previous Page"
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium mb-1"
             >
-              <i className="fas fa-chevron-left mr-2"></i> Previous
-            </button>
-
-            <div className="hidden md:flex space-x-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => goToPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
-                    page === currentPage
-                      ? "z-10 bg-indigo-600 border-indigo-600 text-white"
-                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={form.status}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">All</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
               ))}
+            </select>
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium mb-1"
+            >
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <label
+              htmlFor="endDate"
+              className="block text-sm font-medium mb-1"
+            >
+              End Date
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="md:col-span-4 flex flex-wrap gap-3 mt-6">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-filter fa-light" aria-hidden="true"></i> Filter
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveSettings}
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save Settings
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerateReport}
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Generate Report
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* GDPR Requests Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        <h2 className="text-xl font-semibold mb-4 px-6">GDPR Requests</h2>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Customer Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Phone
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Request Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Request Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No GDPR requests found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.customerName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.email}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.phone}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.requestType}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.requestDate}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Pending"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(item.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit request for ${item.customerName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete request for ${item.customerName}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit GDPR Request
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Customer Name */}
+              <div>
+                <label
+                  htmlFor="editCustomerName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerName"
+                  name="customerName"
+                  value={editForm.customerName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter customer name"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter email"
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="editPhone"
+                  name="phone"
+                  value={editForm.phone}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter phone"
+                />
+              </div>
+
+              {/* Request Type */}
+              <div>
+                <label
+                  htmlFor="editRequestType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Request Type
+                </label>
+                <select
+                  id="editRequestType"
+                  name="requestType"
+                  value={editForm.requestType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {requestTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Request Date */}
+              <div>
+                <label
+                  htmlFor="editRequestDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Request Date
+                </label>
+                <input
+                  type="date"
+                  id="editRequestDate"
+                  name="requestDate"
+                  value={editForm.requestDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                currentPage === totalPages
-                  ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                  : "text-gray-700 bg-white hover:bg-gray-50"
-              }`}
-              aria-label="Next Page"
-            >
-              Next <i className="fas fa-chevron-right ml-2"></i>
-            </button>
-          </nav>
-        </section>
-      </div>
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

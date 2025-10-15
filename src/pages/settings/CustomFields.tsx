@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
-const ITEMS_PER_PAGE = 5;
+const statusOptions = ["Active", "Inactive"];
+const typeOptions = ["Text", "Dropdown", "Textarea", "Date"];
 
 export default function CustomFields() {
   const [data, setData] = useState([]);
@@ -10,16 +12,27 @@ export default function CustomFields() {
 
   const [fields, setFields] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state
+  // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
     name: "",
     type: "Text",
     status: "Active",
   });
 
-  // Editing state
-  const [editingId, setEditingId] = useState<number | null>(null);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    type: "Text",
+    status: "Active",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -34,18 +47,7 @@ export default function CustomFields() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Pagination calculations
-  const pageCount = Math.ceil(fields.length / ITEMS_PER_PAGE);
-  const paginatedFields = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return fields.slice(start, start + ITEMS_PER_PAGE);
-  }, [fields, currentPage]);
-
-  // Handlers
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -53,82 +55,118 @@ export default function CustomFields() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    if (!form.name.trim()) return;
-
-    if (editingId !== null) {
-      // Update existing
-      setFields((prev) =>
-        prev.map((f) =>
-          f.id === editingId ? { ...f, ...form, createdAt: f.createdAt } : f
-        )
-      );
-      setEditingId(null);
-    } else {
-      // Add new
-      const newField = {
-        id: fields.length ? Math.max(...fields.map((f) => f.id)) + 1 : 1,
-        name: form.name.trim(),
-        type: form.type,
-        status: form.status,
-        createdAt: new Date().toISOString().slice(0, 10),
-      };
-      setFields((prev) => [newField, ...prev]);
-      setCurrentPage(1);
-    }
-    setForm({ name: "", type: "Text", status: "Active" });
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Save handler for Add Section (Add new custom field)
+  const handleSave = () => {
+    if (!form.name.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    const newId = fields.length ? Math.max(...fields.map((f) => f.id)) + 1 : 1;
+    const newField = {
+      id: newId,
+      name: form.name.trim(),
+      type: form.type,
+      status: form.status,
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    setFields((prev) => [newField, ...prev]);
+    setForm({ name: "", type: "Text", status: "Active" });
+    setCurrentPage(1);
+  };
+
+  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const field = fields.find((f) => f.id === id);
     if (field) {
-      setForm({
+      setEditForm({
         name: field.name,
         type: field.type,
         status: field.status,
       });
-      setEditingId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setEditId(id);
+      setIsEditModalOpen(true);
     }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (!editForm.name.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setFields((prev) =>
+        prev.map((f) =>
+          f.id === editId
+            ? {
+                ...f,
+                name: editForm.name.trim(),
+                type: editForm.type,
+                status: editForm.status,
+              }
+            : f
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this custom field?")) {
       setFields((prev) => prev.filter((f) => f.id !== id));
-      if (paginatedFields.length === 1 && currentPage > 1) {
-        setCurrentPage((p) => p - 1);
+      // If deleting last item on page, go to previous page if needed
+      if (
+        (currentPage - 1) * itemsPerPage >= fields.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
       }
     }
   };
 
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setFields(data);
     setCurrentPage(1);
     setForm({ name: "", type: "Text", status: "Active" });
-    setEditingId(null);
+    setEditId(null);
   };
 
   const handleReport = () => {
-    // For demonstration, just alert JSON data
-    alert(JSON.stringify(fields, null, 2));
+    alert("Report Data:\n" + JSON.stringify(fields, null, 2));
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
-      <h1 className="text-3xl font-semibold mb-6">Custom Fields</h1>
+  // Calculate paginated data using Pagination component props
+  const paginatedFields = fields.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-      {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Custom Field</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <label htmlFor="name" className="font-medium">
+  return (
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Custom Fields</h1>
+
+      {/* Form Section (Add Section) - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">
               Name <span className="text-red-600">*</span>
             </label>
             <input
@@ -137,14 +175,13 @@ export default function CustomFields() {
               type="text"
               value={form.name}
               onChange={handleInputChange}
-              className="col-span-2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter field name"
-              required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <label htmlFor="type" className="font-medium">
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium mb-1">
               Type
             </label>
             <select
@@ -152,17 +189,18 @@ export default function CustomFields() {
               name="type"
               value={form.type}
               onChange={handleInputChange}
-              className="col-span-2 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option>Text</option>
-              <option>Dropdown</option>
-              <option>Textarea</option>
-              <option>Date</option>
+              {typeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <label htmlFor="status" className="font-medium">
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
               Status
             </label>
             <select
@@ -170,169 +208,237 @@ export default function CustomFields() {
               name="status"
               value={form.status}
               onChange={handleInputChange}
-              className="col-span-2 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option>Active</option>
-              <option>Inactive</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
           </div>
+        </div>
 
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-400 rounded hover:bg-gray-100 transition"
-              title="Refresh"
-            >
-              <i className="fas fa-sync-alt"></i>
-              <span>Refresh</span>
-            </button>
-            <button
-              type="submit"
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              title={editingId !== null ? "Update" : "Save"}
-            >
-              <i className="fas fa-save"></i>
-              <span>{editingId !== null ? "Update" : "Save"}</span>
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Custom Fields List</h2>
-          <button
-            onClick={handleReport}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-            title="Report"
-          >
-            <i className="fas fa-file-alt"></i>
-            <span>Report</span>
-          </button>
-        </div>
-
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 rounded">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-sm font-semibold">
-              <tr>
-                <th className="px-4 py-3 border-b border-gray-300 text-left">#</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-left">Name</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-left">Type</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-left">Status</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-left">Created At</th>
-                <th className="px-4 py-3 border-b border-gray-300 text-center">Actions</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Created At
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {paginatedFields.length === 0 ? (
+              {paginatedFields.length === 0 && (
                 <tr>
                   <td
                     colSpan={6}
-                    className="text-center py-6 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No custom fields found.
                   </td>
                 </tr>
-              ) : (
-                paginatedFields.map((field, idx) => (
-                  <tr
-                    key={field.id}
-                    className="hover:bg-gray-50 even:bg-gray-50"
-                  >
-                    <td className="px-4 py-3 border-b border-gray-300">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">{field.name}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">{field.type}</td>
-                    <td className="px-4 py-3 border-b border-gray-300">
-                      <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                          field.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {field.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 border-b border-gray-300">{field.createdAt}</td>
-                    <td className="px-4 py-3 border-b border-gray-300 text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(field.id)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(field.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete"
-                      >
-                        <i className="fas fa-trash-alt"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
               )}
+              {paginatedFields.map((field, idx) => (
+                <tr
+                  key={field.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{field.name}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{field.type}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        field.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {field.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{field.createdAt}</td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(field.id)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit custom field ${field.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(field.id)}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete custom field ${field.name}`}
+                      type="button"
+                    >
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-semibold">
-              {(currentPage - 1) * ITEMS_PER_PAGE + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold">
-              {Math.min(currentPage * ITEMS_PER_PAGE, fields.length)}
-            </span>{" "}
-            of <span className="font-semibold">{fields.length}</span> entries
-          </div>
-          <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous"
-              title="Previous"
-            >
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                  page === currentPage
-                    ? "z-10 bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-                title={`Page ${page}`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, pageCount))}
-              disabled={currentPage === pageCount}
-              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                currentPage === pageCount ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Next"
-              title="Next"
-            >
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </nav>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={fields.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Custom Field
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Name <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter field name"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Type
+                </label>
+                <select
+                  id="editType"
+                  name="type"
+                  value={editForm.type}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {typeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const pageSizeOptions = [5, 10, 15];
 
@@ -18,6 +19,14 @@ export default function SmsSettings() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    smsGateway: "",
+    username: "",
+    password: "",
+    senderId: "",
+    status: "Active",
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -36,8 +45,6 @@ export default function SmsSettings() {
   }, []);
 
   // Pagination calculations
-  const pageCount = Math.ceil(data.length / pageSize);
-
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return data.slice(start, start + pageSize);
@@ -49,6 +56,13 @@ export default function SmsSettings() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
@@ -105,7 +119,7 @@ export default function SmsSettings() {
   const handleEdit = (id: number) => {
     const item = data.find((d) => d.id === id);
     if (item) {
-      setForm({
+      setEditForm({
         smsGateway: item.smsGateway,
         username: item.username,
         password: item.password,
@@ -113,8 +127,42 @@ export default function SmsSettings() {
         status: item.status,
       });
       setEditingId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsEditModalOpen(true);
     }
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.smsGateway.trim() ||
+      !editForm.username.trim() ||
+      !editForm.password.trim() ||
+      !editForm.senderId.trim()
+    )
+      return;
+
+    if (editingId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editingId
+            ? {
+                ...item,
+                smsGateway: editForm.smsGateway,
+                username: editForm.username,
+                password: editForm.password,
+                senderId: editForm.senderId,
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditingId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setEditingId(null);
   };
 
   const handleDelete = (id: number) => {
@@ -126,10 +174,7 @@ export default function SmsSettings() {
     }
   };
 
-  const handleRefresh = () => {
-    loadData();
-    setCurrentPage(1);
-    setEditingId(null);
+  const handleClear = () => {
     setForm({
       smsGateway: "",
       username: "",
@@ -137,6 +182,8 @@ export default function SmsSettings() {
       senderId: "",
       status: "Active",
     });
+    setEditingId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -145,11 +192,11 @@ export default function SmsSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       <h1 className="text-2xl font-semibold mb-6">SMS Settings</h1>
 
       {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Add / Edit SMS Gateway</h2>
         <form
           onSubmit={(e) => {
@@ -172,7 +219,7 @@ export default function SmsSettings() {
                 type="text"
                 value={form.smsGateway}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter SMS Gateway"
                 required
               />
@@ -190,7 +237,7 @@ export default function SmsSettings() {
                 type="text"
                 value={form.username}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter Username"
                 required
               />
@@ -208,7 +255,7 @@ export default function SmsSettings() {
                 type="password"
                 value={form.password}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter Password"
                 required
                 autoComplete="new-password"
@@ -230,7 +277,7 @@ export default function SmsSettings() {
                 type="text"
                 value={form.senderId}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter Sender ID"
                 required
               />
@@ -247,7 +294,7 @@ export default function SmsSettings() {
                 name="status"
                 value={form.status}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               >
                 <option value="Active">Active</option>
@@ -257,130 +304,129 @@ export default function SmsSettings() {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                className="w-full md:w-auto px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 title={editingId !== null ? "Update" : "Save"}
               >
                 {editingId !== null ? (
                   <>
-                    <i className="fa fa-edit mr-2" aria-hidden="true"></i> Update
+                    <i className="fa fa-edit fa-light mr-2" aria-hidden="true"></i> Update
                   </>
                 ) : (
                   <>
-                    <i className="fa fa-save mr-2" aria-hidden="true"></i> Save
+                    <i className="fa fa-save fa-light mr-2" aria-hidden="true"></i> Save
                   </>
                 )}
               </button>
             </div>
           </div>
         </form>
+
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h2 className="text-lg font-semibold mb-3 md:mb-0">SMS Gateway List</h2>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleReport}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
-              title="Report"
-              type="button"
-            >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i> Report
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition"
-              title="Refresh"
-              type="button"
-            >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
-            </button>
-          </div>
-        </div>
-
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   #
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   SMS Gateway
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Username
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Password
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Sender ID
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-r border-gray-300">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No SMS Gateway entries found.
                   </td>
                 </tr>
               ) : (
                 paginatedData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                  <tr
+                    key={item.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.smsGateway}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.username}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 font-mono">
+                    <td className="px-4 py-3 text-sm text-foreground font-mono">
                       {item.password}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {item.senderId}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                          item.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(item.id)}
-                        className="text-blue-600 hover:text-blue-800 focus:outline-none"
-                        title="Edit"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit SMS Gateway ${item.smsGateway}`}
                         type="button"
                       >
-                        <i className="fa fa-pencil" aria-hidden="true"></i>
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 focus:outline-none"
-                        title="Delete"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete SMS Gateway ${item.smsGateway}`}
                         type="button"
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                       </button>
                     </td>
                   </tr>
@@ -390,106 +436,152 @@ export default function SmsSettings() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="flex flex-col md:flex-row items-center justify-between mt-4 space-y-3 md:space-y-0">
-          <div className="flex items-center space-x-2">
-            <label
-              htmlFor="pageSize"
-              className="text-sm font-medium text-gray-700"
-            >
-              Show
-            </label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span className="text-sm text-gray-700">entries</span>
-          </div>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={pageSize}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
+      </section>
 
-          <nav
-            className="inline-flex -space-x-px rounded-md shadow-sm"
-            aria-label="Pagination"
-          >
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="First Page"
-              type="button"
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
             >
-              <i className="fa fa-angle-double-left" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-              }`}
-              aria-label="Previous Page"
-              type="button"
-            >
-              <i className="fa fa-angle-left" aria-hidden="true"></i>
-            </button>
+              Edit SMS Gateway
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* SMS Gateway */}
+              <div>
+                <label
+                  htmlFor="editSmsGateway"
+                  className="block text-sm font-medium mb-1"
+                >
+                  SMS Gateway
+                </label>
+                <input
+                  type="text"
+                  id="editSmsGateway"
+                  name="smsGateway"
+                  value={editForm.smsGateway}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter SMS Gateway"
+                />
+              </div>
 
-            {/* Page numbers */}
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
+              {/* Username */}
+              <div>
+                <label
+                  htmlFor="editUsername"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="editUsername"
+                  name="username"
+                  value={editForm.username}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Username"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label
+                  htmlFor="editPassword"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="editPassword"
+                  name="password"
+                  value={editForm.password}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Password"
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Sender ID */}
+              <div>
+                <label
+                  htmlFor="editSenderId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Sender ID
+                </label>
+                <input
+                  type="text"
+                  id="editSenderId"
+                  name="senderId"
+                  value={editForm.senderId}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter Sender ID"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  currentPage === page
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-                aria-current={currentPage === page ? "page" : undefined}
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
-                {page}
+                Cancel
               </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))}
-              disabled={currentPage === pageCount || pageCount === 0}
-              className={`px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentPage === pageCount || pageCount === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Next Page"
-              type="button"
-            >
-              <i className="fa fa-angle-right" aria-hidden="true"></i>
-            </button>
-            <button
-              onClick={() => setCurrentPage(pageCount)}
-              disabled={currentPage === pageCount || pageCount === 0}
-              className={`px-3 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentPage === pageCount || pageCount === 0
-                  ? "cursor-not-allowed opacity-50"
-                  : ""
-              }`}
-              aria-label="Last Page"
-              type="button"
-            >
-              <i className="fa fa-angle-double-right" aria-hidden="true"></i>
-            </button>
-          </nav>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

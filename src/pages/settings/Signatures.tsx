@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const pageSizeOptions = [5, 10, 20];
 
@@ -15,6 +16,14 @@ export default function Signatures() {
     remarks: "",
   });
   const [editId, setEditId] = useState<number | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    customerId: "",
+    signatureDate: "",
+    signatureStatus: "Active",
+    remarks: "",
+  });
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +73,15 @@ export default function Signatures() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  const handleEditInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((f) => ({ ...f, [name]: value }));
+  };
+
   const handleSave = () => {
     if (!form.customerName || !form.customerId || !form.signatureDate) {
       alert("Please fill in all required fields.");
@@ -99,7 +117,7 @@ export default function Signatures() {
   const handleEdit = (id: number) => {
     const item = data.find((d) => d.id === id);
     if (item) {
-      setForm({
+      setEditForm({
         customerName: item.customerName,
         customerId: item.customerId,
         signatureDate: item.signatureDate,
@@ -107,7 +125,38 @@ export default function Signatures() {
         remarks: item.remarks,
       });
       setEditId(id);
+      setIsEditModalOpen(true);
     }
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.customerName ||
+      !editForm.customerId ||
+      !editForm.signatureDate
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((d) =>
+        d.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                ...editForm,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
@@ -126,10 +175,7 @@ export default function Signatures() {
     }
   };
 
-  const handleRefresh = () => {
-    setSearch("");
-    setPageSize(5);
-    setCurrentPage(1);
+  const handleClear = () => {
     setForm({
       customerName: "",
       customerId: "",
@@ -138,37 +184,24 @@ export default function Signatures() {
       remarks: "",
     });
     setEditId(null);
-    loadData();
+    setCurrentPage(1);
+    setSearch("");
   };
 
-  // Pagination navigation handlers
-  const goToPage = (page: number) => {
-    if (page < 1) page = 1;
-    else if (page > pageCount) page = pageCount;
-    setCurrentPage(page);
-  }; 
-
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
-      <h1 className="text-3xl font-semibold mb-6">Signatures</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Signatures</h1>
 
       {/* Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Signature</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          noValidate
-        >
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Customer Name */}
           <div>
             <label
               htmlFor="customerName"
-              className="block mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Customer Name <span className="text-red-600">*</span>
+              Customer Name
             </label>
             <input
               type="text"
@@ -176,18 +209,18 @@ export default function Signatures() {
               name="customerName"
               value={form.customerName}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter customer name"
             />
           </div>
 
+          {/* Customer ID */}
           <div>
             <label
               htmlFor="customerId"
-              className="block mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Customer ID <span className="text-red-600">*</span>
+              Customer ID
             </label>
             <input
               type="text"
@@ -195,18 +228,18 @@ export default function Signatures() {
               name="customerId"
               value={form.customerId}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter customer ID"
             />
           </div>
 
+          {/* Signature Date */}
           <div>
             <label
               htmlFor="signatureDate"
-              className="block mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
-              Signature Date <span className="text-red-600">*</span>
+              Signature Date
             </label>
             <input
               type="date"
@@ -214,15 +247,15 @@ export default function Signatures() {
               name="signatureDate"
               value={form.signatureDate}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
+          {/* Signature Status */}
           <div>
             <label
               htmlFor="signatureStatus"
-              className="block mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Signature Status
             </label>
@@ -231,17 +264,18 @@ export default function Signatures() {
               name="signatureStatus"
               value={form.signatureStatus}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>Active</option>
               <option>Inactive</option>
             </select>
           </div>
 
+          {/* Remarks */}
           <div className="md:col-span-2">
             <label
               htmlFor="remarks"
-              className="block mb-1 font-medium text-gray-700"
+              className="block text-sm font-medium mb-1"
             >
               Remarks
             </label>
@@ -251,39 +285,30 @@ export default function Signatures() {
               value={form.remarks}
               onChange={handleInputChange}
               rows={2}
-              className="w-full rounded border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter remarks"
             />
           </div>
+        </div>
 
-          <div className="flex items-end space-x-3">
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded flex items-center"
-              title={editId !== null ? "Update Signature" : "Save Signature"}
-            >
-              <i className="fas fa-save mr-2" aria-hidden="true"></i>
-              {editId !== null ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setForm({
-                  customerName: "",
-                  customerId: "",
-                  signatureDate: "",
-                  signatureStatus: "Active",
-                  remarks: "",
-                });
-                setEditId(null);
-              }}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-5 py-2 rounded flex items-center"
-              title="Clear Form"
-            >
-              <i className="fas fa-undo mr-2" aria-hidden="true"></i> Clear
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+        </div>
       </section>
 
       {/* Search and Actions */}
@@ -297,28 +322,28 @@ export default function Signatures() {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="rounded border border-gray-300 px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded border border-input px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
-            onClick={handleRefresh}
-            title="Refresh Data"
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded flex items-center"
+            onClick={handleClear}
+            title="Clear Data"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded flex items-center"
           >
-            <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
           </button>
           <button
             onClick={() => alert("Report generation not implemented")}
             title="Generate Report"
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded flex items-center"
           >
-            <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
           </button>
         </div>
 
         <div className="flex items-center space-x-2">
           <label
             htmlFor="pageSize"
-            className="font-medium text-gray-700 whitespace-nowrap"
+            className="font-medium text-sm"
           >
             Rows per page:
           </label>
@@ -329,7 +354,7 @@ export default function Signatures() {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded border border-input px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {pageSizeOptions.map((opt) => (
               <option key={opt} value={opt}>
@@ -341,228 +366,235 @@ export default function Signatures() {
       </section>
 
       {/* Table Section */}
-      <section className="bg-white rounded shadow overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Customer Name
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Customer ID
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Signature Date
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Remarks
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-4 whitespace-nowrap text-center text-gray-500"
-                >
-                  No signatures found.
-                </td>
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Customer Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Customer ID
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Signature Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Remarks
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
-            ) : (
-              paginatedData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No signatures found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.customerName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.customerId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.customerId}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">
                     {item.signatureDate}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm">
                     <span
-                      className={`inline-flex px-2 text-xs font-semibold leading-5 rounded-full ${
-                        item.signatureStatus === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.signatureStatus === "Active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
                     >
                       {item.signatureStatus}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.remarks}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.remarks}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
                       onClick={() => handleEdit(item.id)}
-                      title="Edit Signature"
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit signature ${item.customerName}`}
+                      type="button"
                     >
-                      <i className="fas fa-edit" aria-hidden="true"></i>
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      title="Delete Signature"
-                      className="text-red-600 hover:text-red-800"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`Delete signature ${item.customerName}`}
+                      type="button"
                     >
-                      <i className="fas fa-trash-alt" aria-hidden="true"></i>
+                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={pageSize}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </section>
 
-      {/* Pagination Controls */}
-      <nav
-        className="flex items-center justify-between mt-4"
-        aria-label="Pagination"
-      >
-        <div className="flex-1 flex justify-between sm:hidden">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-              currentPage === 1
-                ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                : "text-gray-700 bg-white hover:bg-gray-50"
-            }`}
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === pageCount || pageCount === 0}
-            className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-              currentPage === pageCount || pageCount === 0
-                ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                : "text-gray-700 bg-white hover:bg-gray-50"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
-          <ul className="inline-flex -space-x-px rounded-md shadow-sm">
-            <li>
-              <button
-                onClick={() => goToPage(1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-                aria-label="Go to first page"
-              >
-                <i className="fas fa-angle-double-left" aria-hidden="true"></i>
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-                aria-label="Go to previous page"
-              >
-                <i className="fas fa-angle-left" aria-hidden="true"></i>
-              </button>
-            </li>
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Signature
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Customer Name */}
+              <div>
+                <label
+                  htmlFor="editCustomerName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerName"
+                  name="customerName"
+                  value={editForm.customerName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter customer name"
+                />
+              </div>
 
-            {/* Show page numbers with max 5 pages visible */}
-            {Array.from(
-              {
-                length: Math.min(pageCount, 5),
-              },
-              (_, i) => {
-                let pageNumber = i + 1;
-                // If currentPage > 3 and pageCount > 5, shift pages
-                if (currentPage > 3 && pageCount > 5) {
-                  if (currentPage + 2 <= pageCount) {
-                    pageNumber = currentPage - 3 + i + 1;
-                  } else {
-                    pageNumber = pageCount - 4 + i;
-                  }
-                }
-                if (pageNumber < 1 || pageNumber > pageCount) return null;
-                return (
-                  <li key={pageNumber}>
-                    <button
-                      onClick={() => goToPage(pageNumber)}
-                      aria-current={pageNumber === currentPage ? "page" : undefined}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        pageNumber === currentPage
-                          ? "z-10 bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-500 border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {pageNumber}
-                    </button>
-                  </li>
-                );
-              }
-            )}
+              {/* Customer ID */}
+              <div>
+                <label
+                  htmlFor="editCustomerId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer ID
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerId"
+                  name="customerId"
+                  value={editForm.customerId}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter customer ID"
+                />
+              </div>
 
-            <li>
+              {/* Signature Date */}
+              <div>
+                <label
+                  htmlFor="editSignatureDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Signature Date
+                </label>
+                <input
+                  type="date"
+                  id="editSignatureDate"
+                  name="signatureDate"
+                  value={editForm.signatureDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Signature Status */}
+              <div>
+                <label
+                  htmlFor="editSignatureStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Signature Status
+                </label>
+                <select
+                  id="editSignatureStatus"
+                  name="signatureStatus"
+                  value={editForm.signatureStatus}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
+
+              {/* Remarks */}
+              <div className="md:col-span-2">
+                <label
+                  htmlFor="editRemarks"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Remarks
+                </label>
+                <textarea
+                  id="editRemarks"
+                  name="remarks"
+                  value={editForm.remarks}
+                  onChange={handleEditInputChange}
+                  rows={2}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter remarks"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === pageCount || pageCount === 0}
-                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === pageCount || pageCount === 0
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-                aria-label="Go to next page"
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                <i className="fas fa-angle-right" aria-hidden="true"></i>
+                Cancel
               </button>
-            </li>
-            <li>
               <button
-                onClick={() => goToPage(pageCount)}
-                disabled={currentPage === pageCount || pageCount === 0}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === pageCount || pageCount === 0
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-                aria-label="Go to last page"
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
               >
-                <i className="fas fa-angle-double-right" aria-hidden="true"></i>
+                Save
               </button>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
-      </nav>
+      )}
     </div>
   );
 }

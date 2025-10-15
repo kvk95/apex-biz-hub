@@ -1,7 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
-
-const ITEMS_PER_PAGE = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function PosSettings() {
   const [data, setData] = useState([]);
@@ -29,15 +28,12 @@ export default function PosSettings() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
-
-  // Get current page data slice
-  const currentData = data.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -49,10 +45,10 @@ export default function PosSettings() {
     alert("Settings saved (mock).");
   };
 
-  const handleRefresh = () => {
-    if (data.length > 0) {
-      setForm(data[0]);
-    }
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({});
+    setEditId(null);
     setCurrentPage(1);
   };
 
@@ -61,25 +57,37 @@ export default function PosSettings() {
   };
 
   // Pagination handlers
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  useEffect(() => {
-    if (data.length > 0) {
-      setForm(data[0]);
-    }
-  }, [data]);
+  const handlePageSizeChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
+
+  // Open edit modal and populate edit form if edit button exists
+  // Check if edit icon/button exists in the grid - yes, we have none in original, so do not add new edit controls
+  // But if edit icon/button existed, we would implement modal edit here.
+  // Since no edit icon/button exists, skip modal edit implementation.
+
+  // However, per instructions: "If no edit icon/button exists, do not add or modify edit controls."
+  // So no modal or edit button added.
+
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background font-sans p-6">
       <title>POS Settings | Dreams POS</title>
 
-      <h1 className="text-3xl font-semibold mb-6">POS Settings</h1>
+      <h1 className="text-2xl font-semibold mb-6">POS Settings</h1>
 
       {/* POS Settings Form */}
-      <section className="bg-white rounded shadow p-6 mb-8">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">POS Settings</h2>
 
         <form className="space-y-6 max-w-4xl">
@@ -95,7 +103,7 @@ export default function PosSettings() {
                 name="posName"
                 value={form.posName || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter POS Name"
               />
             </div>
@@ -109,7 +117,7 @@ export default function PosSettings() {
                 name="posEmail"
                 value={form.posEmail || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter POS Email"
               />
             </div>
@@ -123,7 +131,7 @@ export default function PosSettings() {
                 name="posPhone"
                 value={form.posPhone || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter POS Phone"
               />
             </div>
@@ -140,7 +148,7 @@ export default function PosSettings() {
               value={form.posAddress || ""}
               onChange={handleInputChange}
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Enter POS Address"
             />
           </div>
@@ -156,7 +164,7 @@ export default function PosSettings() {
               value={form.posFooterText || ""}
               onChange={handleInputChange}
               rows={2}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Enter POS Footer Text"
             />
           </div>
@@ -173,7 +181,7 @@ export default function PosSettings() {
                 name="posInvoicePrefix"
                 value={form.posInvoicePrefix || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Prefix"
               />
             </div>
@@ -187,7 +195,7 @@ export default function PosSettings() {
                 name="posInvoiceStartNo"
                 value={form.posInvoiceStartNo || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Start Number"
                 min={0}
               />
@@ -202,7 +210,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter"
                 value={form.posInvoiceFooter || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -216,7 +224,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter2"
                 value={form.posInvoiceFooter2 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -230,7 +238,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter3"
                 value={form.posInvoiceFooter3 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -248,7 +256,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter4"
                 value={form.posInvoiceFooter4 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -262,7 +270,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter5"
                 value={form.posInvoiceFooter5 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -276,7 +284,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter6"
                 value={form.posInvoiceFooter6 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -290,7 +298,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter7"
                 value={form.posInvoiceFooter7 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -304,7 +312,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter8"
                 value={form.posInvoiceFooter8 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -321,7 +329,7 @@ export default function PosSettings() {
                 name="posInvoiceFooter9"
                 value={form.posInvoiceFooter9 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
@@ -335,121 +343,104 @@ export default function PosSettings() {
                 name="posInvoiceFooter10"
                 value={form.posInvoiceFooter10 || ""}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Footer text"
               />
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="flex space-x-4 mt-6">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleSave}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-save"></i>
-              <span>Save</span>
+              <i className="fa fa-save fa-light" aria-hidden="true"></i>
+              Save
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded shadow"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-refresh"></i>
-              <span>Refresh</span>
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i>
+              Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-file-text-o"></i>
-              <span>Report</span>
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i>
+              Report
             </button>
           </div>
         </form>
       </section>
 
       {/* POS Settings List Table */}
-      <section className="bg-white rounded shadow p-6 max-w-6xl">
+      <section className="bg-card rounded shadow py-6 max-w-6xl">
         <h2 className="text-xl font-semibold mb-4">POS Settings List</h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-200">
+          <table className="min-w-full border border-border text-left text-sm">
+            <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <th className="px-4 py-2 border border-gray-300">#</th>
-                <th className="px-4 py-2 border border-gray-300">POS Name</th>
-                <th className="px-4 py-2 border border-gray-300">Email</th>
-                <th className="px-4 py-2 border border-gray-300">Phone</th>
-                <th className="px-4 py-2 border border-gray-300">Address</th>
+                <th className="px-4 py-3 border border-border text-muted-foreground text-sm font-medium">
+                  #
+                </th>
+                <th className="px-4 py-3 border border-border text-muted-foreground text-sm font-medium">
+                  POS Name
+                </th>
+                <th className="px-4 py-3 border border-border text-muted-foreground text-sm font-medium">
+                  Email
+                </th>
+                <th className="px-4 py-3 border border-border text-muted-foreground text-sm font-medium">
+                  Phone
+                </th>
+                <th className="px-4 py-3 border border-border text-muted-foreground text-sm font-medium">
+                  Address
+                </th>
               </tr>
             </thead>
             <tbody>
-              {currentData.map((item: any, idx: number) => (
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No POS settings found.
+                  </td>
+                </tr>
+              )}
+              {paginatedData.map((item: any, idx: number) => (
                 <tr
                   key={item.id}
-                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="border border-gray-300 px-4 py-2">{item.id}</td>
-                  <td className="border border-gray-300 px-4 py-2">{item.posName}</td>
-                  <td className="border border-gray-300 px-4 py-2">{item.posEmail}</td>
-                  <td className="border border-gray-300 px-4 py-2">{item.posPhone}</td>
-                  <td className="border border-gray-300 px-4 py-2">{item.posAddress}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.posName}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.posEmail}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.posPhone}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{item.posAddress}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex justify-center items-center space-x-2 mt-6"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <i className="fa fa-chevron-left"></i>
-          </button>
-
-          {[...Array(totalPages)].map((_, i) => {
-            const page = i + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => goToPage(page)}
-                className={`px-3 py-1 rounded border border-gray-300 ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-200"
-                }`}
-                aria-current={page === currentPage ? "page" : undefined}
-              >
-                {page}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <i className="fa fa-chevron-right"></i>
-          </button>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </section>
     </div>
   );

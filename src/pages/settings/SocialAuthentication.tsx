@@ -1,10 +1,35 @@
 import { apiService } from "@/services/ApiService";
 import React, { useState, useEffect } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function SocialAuthentication() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    socialName: "",
+    clientId: "",
+    clientSecret: "",
+    redirectUrl: "",
+    status: "Active",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Form state for Add Section
+  const [form, setForm] = useState({
+    socialName: "",
+    clientId: "",
+    clientSecret: "",
+    redirectUrl: "",
+    status: "Active",
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -22,159 +47,402 @@ export default function SocialAuthentication() {
     loadData();
   }, []);
 
-  // Pagination state
-  const itemsPerPage = 5;
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const currentData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Form state for adding/editing social auth (simulate)
-  const [form, setForm] = useState({
-    socialName: "",
-    clientId: "",
-    clientSecret: "",
-    redirectUrl: "",
-    status: "Active",
-  });
-
-  // Handlers for form inputs
+  // Handlers for Add Section form inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Simulate refresh and report buttons
-  const handleRefresh = () => {
-    alert("Refresh clicked - data reloaded");
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleReport = () => {
-    alert("Report generated");
-  };
-
-  // Simulate save button
+  // Save handler for Add Section
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     alert("Save clicked - form data submitted");
   };
 
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
+    setForm({
+      socialName: "",
+      clientId: "",
+      clientSecret: "",
+      redirectUrl: "",
+      status: "Active",
+    });
+    setEditId(null);
+    setCurrentPage(1);
+  };
+
+  // Report button handler
+  const handleReport = () => {
+    alert("Report generated");
+  };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        socialName: item.socialName,
+        clientId: item.clientId,
+        clientSecret: item.clientSecret,
+        redirectUrl: item.redirectUrl,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                socialName: editForm.socialName,
+                clientId: editForm.clientId,
+                clientSecret: editForm.clientSecret,
+                redirectUrl: editForm.redirectUrl,
+                status: editForm.status,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Delete handler
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this social authentication?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      // If deleting last item on page, go to previous page if needed
+      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <>
       <title>Social Authentication - DreamsPOS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-700">
-        <div className="container mx-auto px-4 py-8">
-          {/* Page Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">Social Authentication</h1>
-            <div className="space-x-2">
+      <div className="min-h-screen bg-background font-sans p-6">
+        {/* Page Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold text-foreground">Social Authentication</h1>
+          <div className="space-x-3">
+            <button
+              onClick={handleReport}
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            </button>
+            <button
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Form Section (Add Section) - preserved exactly */}
+        <section className="bg-card rounded shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Add / Edit Social Authentication</h2>
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Social Name */}
+              <div>
+                <label htmlFor="socialName" className="block text-sm font-medium mb-1">
+                  Social Name
+                </label>
+                <input
+                  id="socialName"
+                  name="socialName"
+                  type="text"
+                  value={form.socialName}
+                  onChange={handleInputChange}
+                  placeholder="Enter social platform name"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Client ID */}
+              <div>
+                <label htmlFor="clientId" className="block text-sm font-medium mb-1">
+                  Client ID
+                </label>
+                <input
+                  id="clientId"
+                  name="clientId"
+                  type="text"
+                  value={form.clientId}
+                  onChange={handleInputChange}
+                  placeholder="Enter client ID"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Client Secret */}
+              <div>
+                <label htmlFor="clientSecret" className="block text-sm font-medium mb-1">
+                  Client Secret
+                </label>
+                <input
+                  id="clientSecret"
+                  name="clientSecret"
+                  type="password"
+                  value={form.clientSecret}
+                  onChange={handleInputChange}
+                  placeholder="Enter client secret"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Redirect URL */}
+              <div>
+                <label htmlFor="redirectUrl" className="block text-sm font-medium mb-1">
+                  Redirect URL
+                </label>
+                <input
+                  id="redirectUrl"
+                  name="redirectUrl"
+                  type="url"
+                  value={form.redirectUrl}
+                  onChange={handleInputChange}
+                  placeholder="Enter redirect URL"
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium mb-1">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={form.status}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border flex justify-end">
               <button
-                onClick={handleReport}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow"
-                title="Generate Report"
-                type="button"
+                type="submit"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fas fa-file-alt mr-2"></i> Report
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded shadow"
-                title="Refresh Data"
-                type="button"
-              >
-                <i className="fas fa-sync-alt mr-2"></i> Refresh
+                <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
               </button>
             </div>
+          </form>
+        </section>
+
+        {/* Table Section */}
+        <section className="bg-card rounded shadow py-6">
+          <h2 className="text-lg font-semibold mb-4 px-6 text-foreground">Social Authentication List</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">#</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Social Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Client ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Client Secret</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Redirect URL</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="text-center px-4 py-6 text-muted-foreground italic">
+                      No social authentications found.
+                    </td>
+                  </tr>
+                )}
+                {paginatedData.map((item, idx) => (
+                  <tr key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-foreground">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                    <td className="px-4 py-3 text-sm text-foreground flex items-center space-x-2">
+                      <i className={`${item.socialIcon} fa-light text-lg text-primary w-5`}></i>
+                      <span>{item.socialName}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">{item.clientId}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{item.clientSecret}</td>
+                    <td className="px-4 py-3 text-sm text-foreground break-all max-w-xs">{item.redirectUrl}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                          item.status === "Active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                      <button
+                        onClick={() => handleEdit(item.id)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Edit ${item.socialName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label={`Delete ${item.socialName}`}
+                        type="button"
+                      >
+                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          {/* Form Section */}
-          <section className="bg-white rounded shadow p-6 mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Add / Edit Social Authentication</h2>
-            <form onSubmit={handleSave} className="space-y-6">
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={data.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2 id="edit-modal-title" className="text-xl font-semibold mb-4 text-center">
+                Edit Social Authentication
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Social Name */}
                 <div>
-                  <label htmlFor="socialName" className="block mb-1 font-medium text-gray-700">
+                  <label htmlFor="editSocialName" className="block text-sm font-medium mb-1">
                     Social Name
                   </label>
                   <input
-                    id="socialName"
-                    name="socialName"
                     type="text"
-                    value={form.socialName}
-                    onChange={handleInputChange}
+                    id="editSocialName"
+                    name="socialName"
+                    value={editForm.socialName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Enter social platform name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Client ID */}
                 <div>
-                  <label htmlFor="clientId" className="block mb-1 font-medium text-gray-700">
+                  <label htmlFor="editClientId" className="block text-sm font-medium mb-1">
                     Client ID
                   </label>
                   <input
-                    id="clientId"
-                    name="clientId"
                     type="text"
-                    value={form.clientId}
-                    onChange={handleInputChange}
+                    id="editClientId"
+                    name="clientId"
+                    value={editForm.clientId}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Enter client ID"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Client Secret */}
                 <div>
-                  <label htmlFor="clientSecret" className="block mb-1 font-medium text-gray-700">
+                  <label htmlFor="editClientSecret" className="block text-sm font-medium mb-1">
                     Client Secret
                   </label>
                   <input
-                    id="clientSecret"
-                    name="clientSecret"
                     type="password"
-                    value={form.clientSecret}
-                    onChange={handleInputChange}
+                    id="editClientSecret"
+                    name="clientSecret"
+                    value={editForm.clientSecret}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Enter client secret"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Redirect URL */}
                 <div>
-                  <label htmlFor="redirectUrl" className="block mb-1 font-medium text-gray-700">
+                  <label htmlFor="editRedirectUrl" className="block text-sm font-medium mb-1">
                     Redirect URL
                   </label>
                   <input
-                    id="redirectUrl"
-                    name="redirectUrl"
                     type="url"
-                    value={form.redirectUrl}
-                    onChange={handleInputChange}
+                    id="editRedirectUrl"
+                    name="redirectUrl"
+                    value={editForm.redirectUrl}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Enter redirect URL"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Status */}
                 <div>
-                  <label htmlFor="status" className="block mb-1 font-medium text-gray-700">
+                  <label htmlFor="editStatus" className="block text-sm font-medium mb-1">
                     Status
                   </label>
                   <select
-                    id="status"
+                    id="editStatus"
                     name="status"
-                    value={form.status}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={editForm.status}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     required
                   >
                     <option value="Active">Active</option>
@@ -183,189 +451,26 @@ export default function SocialAuthentication() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 flex justify-end">
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
                 <button
-                  type="submit"
-                  className="inline-flex items-center px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded shadow"
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
-                  <i className="fas fa-save mr-2"></i> Save
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
                 </button>
               </div>
-            </form>
-          </section>
-
-          {/* Table Section */}
-          <section className="bg-white rounded shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Social Authentication List</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      #
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      Social Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      Client ID
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      Client Secret
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      Redirect URL
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentData.map((item, idx) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 flex items-center space-x-2">
-                        <i className={`${item.socialIcon} text-lg text-blue-600 w-5`}></i>
-                        <span>{item.socialName}</span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{item.clientId}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">{item.clientSecret}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300 break-all max-w-xs">{item.redirectUrl}</td>
-                      <td className="px-4 py-3 whitespace-nowrap border-r border-gray-300">
-                        <span
-                          className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                            item.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
-                        <button
-                          type="button"
-                          title="Edit"
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() => {
-                            setForm({
-                              socialName: item.socialName,
-                              clientId: item.clientId,
-                              clientSecret: item.clientSecret,
-                              redirectUrl: item.redirectUrl,
-                              status: item.status,
-                            });
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          type="button"
-                          title="Delete"
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() => alert(`Delete action for ${item.socialName} (not implemented)`)}
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-
-            {/* Pagination Controls */}
-            <nav
-              className="mt-6 flex justify-between items-center"
-              aria-label="Table navigation"
-            >
-              <div className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-semibold">
-                  {(currentPage - 1) * itemsPerPage + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-semibold">
-                  {Math.min(currentPage * itemsPerPage, data.length)}
-                </span>{" "}
-                of <span className="font-semibold">{data.length}</span> entries
-              </div>
-              <ul className="inline-flex items-center -space-x-px">
-                <li>
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 ${
-                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="First Page"
-                  >
-                    <i className="fas fa-angle-double-left"></i>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 ${
-                      currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="Previous Page"
-                  >
-                    <i className="fas fa-angle-left"></i>
-                  </button>
-                </li>
-                {[...Array(totalPages)].map((_, i) => {
-                  const page = i + 1;
-                  return (
-                    <li key={page}>
-                      <button
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border border-gray-300 hover:bg-blue-100 ${
-                          currentPage === page
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-700"
-                        }`}
-                        aria-current={currentPage === page ? "page" : undefined}
-                      >
-                        {page}
-                      </button>
-                    </li>
-                  );
-                })}
-                <li>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 ${
-                      currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="Next Page"
-                  >
-                    <i className="fas fa-angle-right"></i>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 ${
-                      currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""
-                    }`}
-                    aria-label="Last Page"
-                  >
-                    <i className="fas fa-angle-double-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </section>
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

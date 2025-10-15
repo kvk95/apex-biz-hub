@@ -1,12 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-
-const PAGE_SIZE = 5;
+import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function InvoiceSettings() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Invoice settings form state
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [invoiceStartNo, setInvoiceStartNo] = useState(0);
+  const [invoiceFooter, setInvoiceFooter] = useState("");
+  const [invoiceTerms, setInvoiceTerms] = useState("");
+  const [invoiceNote, setInvoiceNote] = useState("");
+  const [invoiceLogoUrl, setInvoiceLogoUrl] = useState("");
+
+  // Invoice template selection state
+  const [templates, setTemplates] = useState<any[]>([]);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editInvoice, setEditInvoice] = useState<any>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -24,27 +42,6 @@ export default function InvoiceSettings() {
     loadData();
   }, []);
 
-  // State for invoice settings form
-  const [invoicePrefix, setInvoicePrefix] = useState("");
-  const [invoiceStartNo, setInvoiceStartNo] = useState(0);
-  const [invoiceFooter, setInvoiceFooter] = useState("");
-  const [invoiceTerms, setInvoiceTerms] = useState("");
-  const [invoiceNote, setInvoiceNote] = useState("");
-  const [invoiceLogoUrl, setInvoiceLogoUrl] = useState("");
-
-  // Invoice template selection state
-  const [templates, setTemplates] = useState<any[]>([]);
-
-  // Invoice list pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil((data?.invoiceList?.length || 0) / PAGE_SIZE);
-
-  // Paginated invoices
-  const paginatedInvoices = data?.invoiceList?.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  ) || [];
-
   // Handlers
   const handleTemplateSelect = (id: number) => {
     setTemplates((prev) =>
@@ -52,8 +49,13 @@ export default function InvoiceSettings() {
     );
   };
 
-  const handleRefresh = () => {
-    loadData();
+  const handleClear = () => {
+    setInvoicePrefix("");
+    setInvoiceStartNo(0);
+    setInvoiceFooter("");
+    setInvoiceTerms("");
+    setInvoiceNote("");
+    setInvoiceLogoUrl("");
     setCurrentPage(1);
   };
 
@@ -65,10 +67,19 @@ export default function InvoiceSettings() {
     alert("Invoice report generated!");
   };
 
-  // Pagination handlers
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  // Modal handlers
+  const handleEdit = (invoice: any) => {
+    setEditInvoice(invoice);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSave = () => {
+    // In a real app, update the invoice here and close the modal
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
   };
 
   useEffect(() => {
@@ -83,21 +94,27 @@ export default function InvoiceSettings() {
     }
   }, [data]);
 
-  if (loading) return <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">Loading...</div>;
-  if (error) return <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">Error: {error}</div>;
+  // Paginated invoices
+  const paginatedInvoices = data?.invoiceList?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  ) || [];
+
+  if (loading) return <div className="min-h-screen bg-background p-6 font-sans">Loading...</div>;
+  if (error) return <div className="min-h-screen bg-background p-6 font-sans">Error: {error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <h1 className="text-3xl font-semibold mb-6">Invoice Settings</h1>
+    <div className="min-h-screen bg-background font-sans p-6">
+      <h1 className="text-2xl font-semibold mb-6">Invoice Settings</h1>
 
-      <section className="bg-white rounded-lg shadow p-6 mb-8">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Invoice Settings</h2>
         <form className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label
                 htmlFor="invoicePrefix"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Invoice Prefix
               </label>
@@ -106,14 +123,14 @@ export default function InvoiceSettings() {
                 id="invoicePrefix"
                 value={invoicePrefix}
                 onChange={(e) => setInvoicePrefix(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="e.g. INV-"
               />
             </div>
             <div>
               <label
                 htmlFor="invoiceStartNo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Invoice Start Number
               </label>
@@ -122,14 +139,14 @@ export default function InvoiceSettings() {
                 id="invoiceStartNo"
                 value={invoiceStartNo}
                 onChange={(e) => setInvoiceStartNo(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 min={1}
               />
             </div>
             <div>
               <label
                 htmlFor="invoiceLogo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Invoice Logo URL
               </label>
@@ -138,7 +155,7 @@ export default function InvoiceSettings() {
                 id="invoiceLogo"
                 value={invoiceLogoUrl}
                 onChange={(e) => setInvoiceLogoUrl(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Paste logo image URL"
               />
             </div>
@@ -147,7 +164,7 @@ export default function InvoiceSettings() {
           <div>
             <label
               htmlFor="invoiceFooter"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Invoice Footer
             </label>
@@ -156,7 +173,7 @@ export default function InvoiceSettings() {
               value={invoiceFooter}
               onChange={(e) => setInvoiceFooter(e.target.value)}
               rows={2}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Footer text for invoices"
             />
           </div>
@@ -164,7 +181,7 @@ export default function InvoiceSettings() {
           <div>
             <label
               htmlFor="invoiceTerms"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Invoice Terms
             </label>
@@ -173,7 +190,7 @@ export default function InvoiceSettings() {
               value={invoiceTerms}
               onChange={(e) => setInvoiceTerms(e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Terms and conditions"
             />
           </div>
@@ -181,7 +198,7 @@ export default function InvoiceSettings() {
           <div>
             <label
               htmlFor="invoiceNote"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Invoice Note
             </label>
@@ -190,38 +207,38 @@ export default function InvoiceSettings() {
               value={invoiceNote}
               onChange={(e) => setInvoiceNote(e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Additional notes"
             />
           </div>
 
-          <div className="flex space-x-4 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex items-center px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-save mr-2" aria-hidden="true"></i> Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-5 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded shadow"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </form>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-6 mb-8">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Invoice Template</h2>
         <div className="flex flex-wrap gap-6">
           {templates.map((template) => (
@@ -230,8 +247,8 @@ export default function InvoiceSettings() {
               onClick={() => handleTemplateSelect(template.id)}
               className={`cursor-pointer border rounded-lg p-3 w-40 flex flex-col items-center transition-shadow ${
                 template.selected
-                  ? "border-indigo-600 shadow-lg"
-                  : "border-gray-300 hover:shadow-md"
+                  ? "border-primary shadow-lg"
+                  : "border-border hover:shadow-md"
               }`}
               aria-label={`Select ${template.name} template`}
             >
@@ -244,7 +261,7 @@ export default function InvoiceSettings() {
               <span className="text-center font-medium">{template.name}</span>
               {template.selected && (
                 <i
-                  className="fa fa-check-circle text-indigo-600 mt-1"
+                  className="fa fa-check-circle fa-light text-primary mt-1"
                   aria-hidden="true"
                 ></i>
               )}
@@ -253,101 +270,217 @@ export default function InvoiceSettings() {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-card rounded shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Invoices</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200 text-left text-sm">
-            <thead className="bg-indigo-50">
-              <tr>
-                <th className="px-4 py-3 border-b border-gray-200">Invoice No</th>
-                <th className="px-4 py-3 border-b border-gray-200">Customer</th>
-                <th className="px-4 py-3 border-b border-gray-200">Date</th>
-                <th className="px-4 py-3 border-b border-gray-200">Due Date</th>
-                <th className="px-4 py-3 border-b border-gray-200">Total</th>
-                <th className="px-4 py-3 border-b border-gray-200">Status</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice No</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Due Date</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Total</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedInvoices.map((invoice) => (
-                <tr
-                  key={invoice.id}
-                  className="hover:bg-indigo-50 transition-colors"
-                >
-                  <td className="px-4 py-3 border-b border-gray-200">{invoice.invoiceNo}</td>
-                  <td className="px-4 py-3 border-b border-gray-200">{invoice.customer}</td>
-                  <td className="px-4 py-3 border-b border-gray-200">{invoice.date}</td>
-                  <td className="px-4 py-3 border-b border-gray-200">{invoice.dueDate}</td>
-                  <td className="px-4 py-3 border-b border-gray-200">{invoice.total}</td>
-                  <td className="px-4 py-3 border-b border-gray-200">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        invoice.status === "Paid"
-                          ? "bg-green-100 text-green-800"
-                          : invoice.status === "Unpaid"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {invoice.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
               {paginatedInvoices.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
-                    className="text-center py-6 text-gray-500 italic border-b border-gray-200"
+                    colSpan={7}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No invoices found.
                   </td>
                 </tr>
               )}
+              {paginatedInvoices.map((invoice, idx) => (
+                <tr
+                  key={invoice.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground">{invoice.invoiceNo}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{invoice.customer}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{invoice.date}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{invoice.dueDate}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{invoice.total}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        invoice.status === "Paid"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : invoice.status === "Unpaid"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                      }`}
+                    >
+                      {invoice.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <button
+                      onClick={() => handleEdit(invoice)}
+                      className="text-primary hover:text-primary/80 transition-colors"
+                      aria-label={`Edit invoice ${invoice.invoiceNo}`}
+                      type="button"
+                    >
+                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      onClick={() => {}}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label={`View invoice ${invoice.invoiceNo}`}
+                      type="button"
+                    >
+                      <i className="fa fa-eye fa-light" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        <nav
-          className="flex justify-between items-center mt-6"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Previous page"
-          >
-            <i className="fa fa-chevron-left mr-1" aria-hidden="true"></i> Prev
-          </button>
-
-          <ul className="inline-flex space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => goToPage(page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`px-3 py-1 rounded border ${
-                    page === currentPage
-                      ? "bg-indigo-600 text-white border-indigo-600"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`inline-flex items-center px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-            aria-label="Next page"
-          >
-            Next <i className="fa fa-chevron-right ml-1" aria-hidden="true"></i>
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data?.invoiceList?.length || 0}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editInvoice && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Invoice
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="editInvoiceNo"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Invoice No
+                </label>
+                <input
+                  type="text"
+                  id="editInvoiceNo"
+                  value={editInvoice.invoiceNo}
+                  readOnly
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editCustomer"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer
+                </label>
+                <input
+                  type="text"
+                  id="editCustomer"
+                  value={editInvoice.customer}
+                  readOnly
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Date
+                </label>
+                <input
+                  type="text"
+                  id="editDate"
+                  value={editInvoice.date}
+                  readOnly
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editDueDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Due Date
+                </label>
+                <input
+                  type="text"
+                  id="editDueDate"
+                  value={editInvoice.dueDate}
+                  readOnly
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editTotal"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Total
+                </label>
+                <input
+                  type="text"
+                  id="editTotal"
+                  value={editInvoice.total}
+                  readOnly
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  value={editInvoice.status}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
