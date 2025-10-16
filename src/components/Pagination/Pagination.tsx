@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/select";
 import React, { useState, useEffect } from "react";
 
+import { useTheme } from "../theme/theme-provider";
+
 interface PaginationProps {
   currentPage?: number;
   totalItems: number;
@@ -30,6 +32,12 @@ export function Pagination({
   const totalPages = Math.ceil(totalItems / pageSize);
   const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalItems);
+
+  const { theme } = useTheme();
+
+  const primaryHsl = theme.primaryColor ?? "220 98% 61%";
+  const selectionBg = `hsl(${primaryHsl})`;
+  const selectionText = "white";
 
   useEffect(() => {
     setPage(currentPage);
@@ -86,16 +94,16 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 text-sm font-poppins ">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 text-sm font-poppins mt-2 ">
       <div className="text-muted-foreground text-sm">
-        Showing {startItem} to {endItem} of {totalItems} results
+        Showing <b>{startItem}</b> to <b>{endItem}</b> of <b>{totalItems}</b> results
       </div>
 
       <div className="flex items-center gap-1">
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
           type="button"
         >
@@ -116,9 +124,18 @@ export function Pagination({
               onClick={() => setPage(pageNum as number)}
               className={`w-6 h-6 flex items-center justify-center rounded-full transition-all text-sm ${
                 page === pageNum
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-muted text-muted-foreground hover:border hover:border-primary hover:shadow-md"
+                  ? "text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:border hover:border-primary hover:shadow-md"
               }`}
+              style={
+                page === pageNum
+                  ? {
+                      // Selected state: use primary color background and white text
+                      backgroundColor: selectionBg,
+                      color: selectionText,
+                    }
+                  : undefined
+              }
               aria-label={`Go to page ${pageNum}`}
               aria-current={page === pageNum ? "page" : undefined}
               type="button"
@@ -131,7 +148,7 @@ export function Pagination({
         <button
           onClick={() => setPage(page + 1)}
           disabled={page === totalPages || totalPages === 0}
-          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
           type="button"
         >
@@ -146,7 +163,7 @@ export function Pagination({
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(Number(value))}
           >
-            <SelectTrigger className="h-7 w-16">
+            <SelectTrigger className="h-5 w-16 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

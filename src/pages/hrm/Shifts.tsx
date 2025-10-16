@@ -324,21 +324,15 @@ export default function Shifts() {
               {paginatedShifts.map((shift, idx) => (
                 <tr
                   key={shift.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
                 >
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {shift.shiftName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {shift.startTime}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {shift.endTime}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-2">{shift.shiftName}</td>
+                  <td className="px-4 py-2">{shift.startTime}</td>
+                  <td className="px-4 py-2">{shift.endTime}</td>
+                  <td className="px-4 py-2 text-sm">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         shift.status === "Active"
@@ -349,12 +343,12 @@ export default function Shifts() {
                       {shift.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                  <td className="px-4 py-2 text-center text-sm space-x-3">
                     <button
                       type="button"
                       onClick={() => handleEdit(shift.id)}
                       aria-label={`Edit shift ${shift.shiftName}`}
-                      className="text-gray-900 border border-gray-700 hover:bg-gray-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
+                      className="text-gray-900 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
                       <i className="fa fa-edit" aria-hidden="true"></i>
                       <span className="sr-only">Edit record</span>
@@ -363,7 +357,7 @@ export default function Shifts() {
                       type="button"
                       onClick={() => handleDelete(shift.id)}
                       aria-label={`Edit shift ${shift.shiftName}`}
-                      className="text-gray-900 border border-gray-700 hover:bg-gray-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
+                      className="text-gray-900 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
                       <i
                         className="fa fa-trash-can-xmark"
