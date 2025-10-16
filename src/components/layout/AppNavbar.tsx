@@ -212,11 +212,18 @@ export function AppNavbar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.location.href = "/auth/profile"}>
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.location.href = "/settings/general-settings"}>
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem>Help & Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={() => window.location.href = "/auth/logout"}
+              >
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>

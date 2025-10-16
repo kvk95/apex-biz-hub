@@ -95,7 +95,7 @@ export function Pagination({
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="px-3 py-1.5 rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
           type="button"
         >
@@ -106,7 +106,7 @@ export function Pagination({
           pageNum === "..." ? (
             <span
               key={`ellipsis-${idx}`}
-              className="px-3 py-1.5 text-muted-foreground"
+              className="px-2 text-muted-foreground"
             >
               ...
             </span>
@@ -114,10 +114,10 @@ export function Pagination({
             <button
               key={pageNum}
               onClick={() => setPage(pageNum as number)}
-              className={`px-3 py-1.5 rounded border transition-colors ${
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
                 page === pageNum
-                  ? "bg-[#FF902F] text-white border-[#FF902F] font-medium"
-                  : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-primary text-primary-foreground font-medium shadow-md"
+                  : "bg-muted text-muted-foreground hover:border hover:border-primary hover:shadow-md"
               }`}
               aria-label={`Go to page ${pageNum}`}
               aria-current={page === pageNum ? "page" : undefined}
@@ -131,7 +131,7 @@ export function Pagination({
         <button
           onClick={() => setPage(page + 1)}
           disabled={page === totalPages || totalPages === 0}
-          className="px-3 py-1.5 rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
           type="button"
         >

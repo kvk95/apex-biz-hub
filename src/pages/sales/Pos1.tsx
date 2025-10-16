@@ -3,7 +3,10 @@ import { apiService } from "@/services/ApiService";
 import { Pagination } from "@/components/Pagination/Pagination";
 
 export default function Pos1() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<{
+    customers: any[];
+    products: any[];
+  }>({ customers: [], products: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +28,7 @@ export default function Pos1() {
       products: any[];
     }>("Pos1");
     if (response.status.code === "S") {
-      setData(response.result || []);
+      setData(response.result || { customers: [], products: [] });
       setError(null);
     } else {
       setError(response.status.description);
