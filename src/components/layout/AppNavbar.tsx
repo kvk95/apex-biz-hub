@@ -109,9 +109,9 @@ export function AppNavbar() {
             className="pt-2 hover:bg-primary hover:text-primary-foreground"
           >
             {isFullscreen ? (
-              <i className="fa-solid fa-compress fa-light h-5 w-5"></i>
+              <i className="fa fa-compress fa-light h-5 w-5"></i>
             ) : (
-              <i className="fa-solid fa-expand fa-light h-5 w-5"></i>
+              <i className="fa fa-expand fa-light h-5 w-5"></i>
             )}
           </Button>
 
@@ -124,7 +124,7 @@ export function AppNavbar() {
                 size="icon"
                 className="pt-2 hover:bg-primary hover:text-primary-foreground"
               >
-                <i className="fa-solid fa-globe fa-light h-5 w-5"></i>
+                <i className="fa fa-globe fa-light h-5 w-5"></i>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-popover">
@@ -146,7 +146,7 @@ export function AppNavbar() {
                 size="icon"
                 className="relative pt-2 hover:bg-primary hover:text-primary-foreground"
               >
-                <i className="fa-solid fa-bell fa-light h-5 w-5"></i>
+                <i className="fa fa-bell fa-light h-5 w-5"></i>
                 <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs bg-destructive">
                   2
                 </Badge>
@@ -215,18 +215,18 @@ export function AppNavbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/settings/general/profile")}>
-                Profile
+                <i className="fa fa-user-circle fa-light me-2"></i> Profile
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/settings/website/system")}>
-                Settings
+                <i className="fa fa-cog fa-light me-2"></i> Settings
               </DropdownMenuItem>
-              <DropdownMenuItem>Help & Support</DropdownMenuItem>
+              <DropdownMenuItem><i className="fa fa-life-ring fa-light me-2"></i> Help & Support</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 className="text-destructive"
                 onClick={() => navigate("/logout")}
               >
-                Logout
+               <i className="fa fa-sign-out-alt fa-light me-2"></i> Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

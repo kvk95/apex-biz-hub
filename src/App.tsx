@@ -160,8 +160,7 @@ const App = () => {
               path="/login"
               element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />}
             />
-             <Route path="/logout" element={<Logout />}
-            />
+            <Route path="/logout" element={<Logout />} />
 
             {/* Protected Routes */}
             {isLoggedIn ? (

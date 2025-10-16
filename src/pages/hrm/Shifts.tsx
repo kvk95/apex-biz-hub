@@ -106,7 +106,11 @@ export default function Shifts() {
 
   // Save handler for Edit Modal
   const handleEditSave = () => {
-    if (!editForm.shiftName.trim() || !editForm.startTime || !editForm.endTime) {
+    if (
+      !editForm.shiftName.trim() ||
+      !editForm.startTime ||
+      !editForm.endTime
+    ) {
       alert("Please fill all required fields.");
       return;
     }
@@ -217,10 +221,7 @@ export default function Shifts() {
 
           {/* End Time */}
           <div>
-            <label
-              htmlFor="endTime"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="endTime" className="block text-sm font-medium mb-1">
               End Time
             </label>
             <input
@@ -235,10 +236,7 @@ export default function Shifts() {
 
           {/* Status */}
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
               Status
             </label>
             <select
@@ -280,7 +278,8 @@ export default function Shifts() {
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+            Report
           </button>
         </div>
       </section>
@@ -352,20 +351,25 @@ export default function Shifts() {
                   </td>
                   <td className="px-4 py-3 text-center text-sm space-x-3">
                     <button
-                      onClick={() => handleEdit(shift.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit shift ${shift.shiftName}`}
                       type="button"
+                      onClick={() => handleEdit(shift.id)}
+                      aria-label={`Edit shift ${shift.shiftName}`}
+                      className="text-gray-900 border border-gray-700 hover:bg-gray-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      <i className="fa fa-edit" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
                     </button>
                     <button
-                      onClick={() => handleDelete(shift.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete shift ${shift.shiftName}`}
                       type="button"
+                      onClick={() => handleDelete(shift.id)}
+                      aria-label={`Edit shift ${shift.shiftName}`}
+                      className="text-gray-900 border border-gray-700 hover:bg-gray-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      <i
+                        className="fa fa-trash-can-xmark"
+                        aria-hidden="true"
+                      ></i>
+                      <span className="sr-only">Delete record</span>
                     </button>
                   </td>
                 </tr>
