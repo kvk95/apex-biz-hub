@@ -205,9 +205,9 @@ export default function EmailSettings() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Email Settings</h1>
+      <h1 className="text-lg font-semibold mb-6">Email Settings</h1>
 
       {/* Form Section (Add Section) - preserved exactly */}
       <section className="bg-card rounded shadow p-6 mb-6">

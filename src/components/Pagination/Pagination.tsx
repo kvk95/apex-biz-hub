@@ -86,8 +86,8 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 text-sm">
-      <div className="text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 text-sm font-poppins ">
+      <div className="text-muted-foreground text-sm">
         Showing {startItem} to {endItem} of {totalItems} results
       </div>
 
@@ -114,7 +114,7 @@ export function Pagination({
             <button
               key={pageNum}
               onClick={() => setPage(pageNum as number)}
-              className={`w-6 h-6 flex items-center justify-center rounded-full transition-all text-xs ${
+              className={`w-6 h-6 flex items-center justify-center rounded-full transition-all text-sm ${
                 page === pageNum
                   ? "bg-primary text-primary-foreground shadow-md"
                   : "bg-muted text-muted-foreground hover:border hover:border-primary hover:shadow-md"
@@ -141,7 +141,7 @@ export function Pagination({
 
       {onPageSizeChange && (
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows Per Page</span>
+          <span className="text-muted-foreground text-sm">Rows Per Page</span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(Number(value))}
@@ -157,7 +157,7 @@ export function Pagination({
               ))}
             </SelectContent>
           </Select>
-          <span className="text-muted-foreground">Entries</span>
+          <span className="text-muted-foreground text-sm">Entries</span>
         </div>
       )}
     </div>

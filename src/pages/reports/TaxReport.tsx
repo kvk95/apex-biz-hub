@@ -76,11 +76,9 @@ export default function TaxReport() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Page Title */}
-      <title>Tax Report - Dreams POS</title>
+    <div className="min-h-screen bg-background">
 
-      <h1 className="text-2xl font-semibold mb-6">Tax Report</h1>
+      <h1 className="text-lg font-semibold mb-6">Tax Report</h1>
 
       {/* Filter Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

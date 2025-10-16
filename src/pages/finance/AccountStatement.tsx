@@ -85,10 +85,9 @@ export default function AccountStatement() {
   };
 
   return (
-    <>
-      <title>Account Statement</title>
-      <div className="min-h-screen bg-background font-sans p-6">
-        <h1 className="text-2xl font-semibold mb-6">Account Statement</h1>
+    <> 
+      <div className="min-h-screen bg-background ">
+        <h1 className="text-lg font-semibold mb-6">Account Statement</h1>
 
         {/* Customer Info Section */}
         <section className="bg-card rounded shadow p-6 mb-6">

@@ -138,9 +138,9 @@ export default function Companies() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-3xl font-semibold mb-6">Companies</h1>
+      <h1 className="text-lg font-semibold mb-6">Companies</h1>
 
       {/* Company Form Section */}
       <section className="bg-white rounded shadow p-6 mb-8 max-w-7xl mx-auto">

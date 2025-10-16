@@ -138,8 +138,8 @@ const PrintQrCode: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6 text-center">Print QR Code</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="text-lg font-semibold mb-6 ">Print QR Code</h1>
 
       <section className="bg-card rounded shadow p-6 mb-6">
         <form className="flex flex-wrap gap-4 items-center justify-between">

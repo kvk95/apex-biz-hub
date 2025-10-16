@@ -21,8 +21,7 @@ export default function ForgotPassword3() {
   };
 
   return (
-    <>
-      <title>Forgot Password 3 | Dreams POS</title>
+    <> 
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start py-12 px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">

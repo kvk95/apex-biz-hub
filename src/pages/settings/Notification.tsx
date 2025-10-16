@@ -45,16 +45,16 @@ export default function Notification() {
   // Filtered and searched notifications
   const filteredNotifications = useMemo(() => {
     return data
-      .filter((n) =>
-        filterType ? n.notificationType === filterType : true
-      )
+      .filter((n) => (filterType ? n.notificationType === filterType : true))
       .filter((n) => (filterStatus ? n.status === filterStatus : true))
       .filter((n) =>
         searchText
           ? n.notificationTitle
               .toLowerCase()
               .includes(searchText.toLowerCase()) ||
-            n.notificationDetails.toLowerCase().includes(searchText.toLowerCase())
+            n.notificationDetails
+              .toLowerCase()
+              .includes(searchText.toLowerCase())
           : true
       );
   }, [data, filterType, filterStatus, searchText]);
@@ -71,7 +71,9 @@ export default function Notification() {
     setCurrentPage(1);
   };
 
-  const handleFilterStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFilterStatusChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setFilterStatus(e.target.value);
     setCurrentPage(1);
   };
@@ -163,13 +165,10 @@ export default function Notification() {
 
   return (
     <>
-      <title>Notification - Dreams POS</title>
-      <div className="min-h-screen bg-background font-sans p-6">
-        {/* Page Header */}
+      <div className="min-h-screen bg-background">
+        <h1 className="text-lg font-semibold mb-6">Notification</h1>
+
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-semibold mb-4 md:mb-0 text-foreground">
-            Notification
-          </h1>
           <div className="flex space-x-3">
             <button
               onClick={handleReport}
@@ -177,7 +176,8 @@ export default function Notification() {
               type="button"
               aria-label="Generate Report"
             >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+              Report
             </button>
             <button
               onClick={handleRefresh}
@@ -185,7 +185,8 @@ export default function Notification() {
               type="button"
               aria-label="Clear"
             >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i>{" "}
+              Clear
             </button>
           </div>
         </div>
@@ -327,13 +328,23 @@ export default function Notification() {
                     <tr
                       key={n.id}
                       className={`border-b border-border hover:bg-muted/50 transition-colors ${
-                        n.status === "Inactive" ? "text-muted-foreground" : "text-foreground"
+                        n.status === "Inactive"
+                          ? "text-muted-foreground"
+                          : "text-foreground"
                       }`}
                     >
-                      <td className="px-4 py-3 text-sm font-medium">{n.notificationType}</td>
-                      <td className="px-4 py-3 text-sm">{n.notificationTitle}</td>
-                      <td className="px-4 py-3 text-sm">{n.notificationDetails}</td>
-                      <td className="px-4 py-3 text-sm">{n.notificationDate}</td>
+                      <td className="px-4 py-3 text-sm font-medium">
+                        {n.notificationType}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {n.notificationTitle}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {n.notificationDetails}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {n.notificationDate}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
@@ -352,7 +363,10 @@ export default function Notification() {
                           aria-label={`Edit notification ${n.notificationTitle}`}
                           type="button"
                         >
-                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                          <i
+                            className="fa fa-pencil fa-light"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                       </td>
                     </tr>

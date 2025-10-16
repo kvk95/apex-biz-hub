@@ -102,13 +102,12 @@ const StockAdjustment: React.FC = () => {
   }
 
   return (
-    <>
-      <title>Stock Adjustment - Dreams POS</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-700">
+    <> 
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6">
           {/* Page Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-lg font-semibold text-gray-900">
               Stock Adjustment
             </h1>
             <div className="flex space-x-2">

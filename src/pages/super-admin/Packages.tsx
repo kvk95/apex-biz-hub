@@ -139,12 +139,12 @@ const Packages: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Packages</h1>
+      <h1 className="text-lg font-semibold mb-6">Packages</h1>
 
       {/* Package Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8 max-w-4xl mx-auto">
+      <section className="bg-white rounded shadow p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">
           {mode === "add" ? "Add Package" : "Edit Package"}
         </h2>
@@ -281,7 +281,7 @@ const Packages: React.FC = () => {
       </section>
 
       {/* Packages Table Section */}
-      <section className="bg-white rounded shadow p-6 max-w-6xl mx-auto">
+       <section className="bg-white rounded shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Packages List</h2>
           <div className="flex space-x-3">

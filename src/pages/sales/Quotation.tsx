@@ -194,13 +194,14 @@ export default function Quotation() {
   };
 
   return (
-    <>
-      <title>Quotation - Dreams POS</title>
-      <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
+    <> 
+      <div className="min-h-screen bg-background">
+        
+        <h1 className="text-lg font-semibold mb-6">Quotation</h1>
+        
         <div className="max-w-7xl mx-auto bg-white shadow rounded-lg p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">Quotation</h1>
             <div className="flex space-x-3">
               <button
                 onClick={onReportClick}

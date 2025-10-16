@@ -6,93 +6,93 @@
   "result": [
     {
       "id": 1,
-      "domainName": "dreamspos.com",
-      "domainUrl": "https://dreamspos.com",
+      "domainName": "nyainfopos.com",
+      "domainUrl": "https://nyainfopos.com",
       "domainType": "Primary",
       "domainStatus": "Active",
       "domainExpireDate": "2025-12-31",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 2,
-      "domainName": "dreamspos.net",
-      "domainUrl": "https://dreamspos.net",
+      "domainName": "nyainfopos.net",
+      "domainUrl": "https://nyainfopos.net",
       "domainType": "Secondary",
       "domainStatus": "Active",
       "domainExpireDate": "2024-11-15",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 3,
-      "domainName": "dreamspos.org",
-      "domainUrl": "https://dreamspos.org",
+      "domainName": "nyainfopos.org",
+      "domainUrl": "https://nyainfopos.org",
       "domainType": "Secondary",
       "domainStatus": "Inactive",
       "domainExpireDate": "2023-08-20",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 4,
-      "domainName": "dreamspos.co",
-      "domainUrl": "https://dreamspos.co",
+      "domainName": "nyainfopos.co",
+      "domainUrl": "https://nyainfopos.co",
       "domainType": "Primary",
       "domainStatus": "Active",
       "domainExpireDate": "2026-01-10",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 5,
-      "domainName": "dreamspos.info",
-      "domainUrl": "https://dreamspos.info",
+      "domainName": "nyainfopos.info",
+      "domainUrl": "https://nyainfopos.info",
       "domainType": "Secondary",
       "domainStatus": "Active",
       "domainExpireDate": "2025-05-30",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 6,
-      "domainName": "dreamspos.biz",
-      "domainUrl": "https://dreamspos.biz",
+      "domainName": "nyainfopos.biz",
+      "domainUrl": "https://nyainfopos.biz",
       "domainType": "Secondary",
       "domainStatus": "Inactive",
       "domainExpireDate": "2023-12-01",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 7,
-      "domainName": "dreamspos.store",
-      "domainUrl": "https://dreamspos.store",
+      "domainName": "nyainfopos.store",
+      "domainUrl": "https://nyainfopos.store",
       "domainType": "Primary",
       "domainStatus": "Active",
       "domainExpireDate": "2026-06-15",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 8,
-      "domainName": "dreamspos.tech",
-      "domainUrl": "https://dreamspos.tech",
+      "domainName": "nyainfopos.tech",
+      "domainUrl": "https://nyainfopos.tech",
       "domainType": "Secondary",
       "domainStatus": "Active",
       "domainExpireDate": "2025-09-05",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 9,
-      "domainName": "dreamspos.app",
-      "domainUrl": "https://dreamspos.app",
+      "domainName": "nyainfopos.app",
+      "domainUrl": "https://nyainfopos.app",
       "domainType": "Secondary",
       "domainStatus": "Inactive",
       "domainExpireDate": "2024-03-22",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     },
     {
       "id": 10,
-      "domainName": "dreamspos.cloud",
-      "domainUrl": "https://dreamspos.cloud",
+      "domainName": "nyainfopos.cloud",
+      "domainUrl": "https://nyainfopos.cloud",
       "domainType": "Primary",
       "domainStatus": "Active",
       "domainExpireDate": "2026-12-31",
-      "domainOwner": "Dreams Technologies"
+      "domainOwner": "Nyainfo Technologies"
     }
   ]
 }

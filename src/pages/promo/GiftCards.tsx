@@ -200,9 +200,9 @@ export default function GiftCards() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Gift Cards</h1>
+      <h1 className="text-lg font-semibold mb-6">Gift Cards</h1>
 
       {/* Controls: Search, Report, Clear */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">

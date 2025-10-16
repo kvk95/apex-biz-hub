@@ -121,11 +121,10 @@ export default function StockTransfer() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans text-gray-800">
-      <title>Stock Transfer</title>
+    <div className="min-h-screen bg-background">
 
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Stock Transfer</h1>
+      <h1 className="text-lg font-semibold mb-6 ">Stock Transfer</h1>
 
       {/* Form Section */}
       <section className="bg-white rounded shadow p-6 mb-8">

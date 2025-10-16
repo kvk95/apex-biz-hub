@@ -36,16 +36,37 @@ export default function CustomerDueReport() {
   const filteredCustomers = useMemo(() => {
     return data.filter((c: any) => {
       const matchName = c.name.toLowerCase().includes(searchName.toLowerCase());
-      const matchPhone = c.phone.toLowerCase().includes(searchPhone.toLowerCase());
-      const matchEmail = c.email.toLowerCase().includes(searchEmail.toLowerCase());
-      const matchAddress = c.address.toLowerCase().includes(searchAddress.toLowerCase());
+      const matchPhone = c.phone
+        .toLowerCase()
+        .includes(searchPhone.toLowerCase());
+      const matchEmail = c.email
+        .toLowerCase()
+        .includes(searchEmail.toLowerCase());
+      const matchAddress = c.address
+        .toLowerCase()
+        .includes(searchAddress.toLowerCase());
       const dueFromNum = parseFloat(searchDueFrom);
       const dueToNum = parseFloat(searchDueTo);
       const matchDueFrom = isNaN(dueFromNum) ? true : c.dueAmount >= dueFromNum;
       const matchDueTo = isNaN(dueToNum) ? true : c.dueAmount <= dueToNum;
-      return matchName && matchPhone && matchEmail && matchAddress && matchDueFrom && matchDueTo;
+      return (
+        matchName &&
+        matchPhone &&
+        matchEmail &&
+        matchAddress &&
+        matchDueFrom &&
+        matchDueTo
+      );
     });
-  }, [data, searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
+  }, [
+    data,
+    searchName,
+    searchPhone,
+    searchEmail,
+    searchAddress,
+    searchDueFrom,
+    searchDueTo,
+  ]);
 
   // Paginated data
   const paginatedCustomers = filteredCustomers.slice(
@@ -56,7 +77,14 @@ export default function CustomerDueReport() {
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
+  }, [
+    searchName,
+    searchPhone,
+    searchEmail,
+    searchAddress,
+    searchDueFrom,
+    searchDueTo,
+  ]);
 
   // Handlers
   const handleReset = () => {
@@ -78,11 +106,9 @@ export default function CustomerDueReport() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6 border-b border-border pb-2">
-        Customer Due Report
-      </h1>
+      <h1 className="text-lg font-semibold mb-6"> Customer Due Report </h1>
 
       {/* Filter Section */}
       <section className="bg-card rounded shadow p-6 mb-6">
@@ -189,7 +215,8 @@ export default function CustomerDueReport() {
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               aria-label="Search"
             >
-              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
+              <i className="fa fa-search fa-light" aria-hidden="true"></i>{" "}
+              Search
             </button>
             <button
               type="button"
@@ -213,7 +240,8 @@ export default function CustomerDueReport() {
               className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500 ml-auto"
               aria-label="Generate Report"
             >
-              <i className="fa fa-file-alt fa-light" aria-hidden="true"></i> Report
+              <i className="fa fa-file-alt fa-light" aria-hidden="true"></i>{" "}
+              Report
             </button>
           </div>
         </form>

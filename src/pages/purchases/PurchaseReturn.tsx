@@ -234,10 +234,10 @@ export default function PurchaseReturn() {
   }, [currentPage, itemsPerPage, data]);
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Page Header */}
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Purchase Return</h1>
+        <h1 className="text-lg font-semibold">Purchase Return</h1>
         <div className="flex space-x-3">
           <button
             onClick={onReport}

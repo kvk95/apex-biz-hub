@@ -6,10 +6,10 @@
   "result": [
     {
       "id": 1,
-      "supplierName": "Dreams Technologies",
+      "supplierName": "Nyainfo Technologies",
       "contactPerson": "John Doe",
       "phone": "123-456-7890",
-      "email": "contact@dreamspos.com",
+      "email": "contact@nyainfopos.com",
       "address": "123 Dream St.",
       "city": "Dream City",
       "country": "Dreamland",

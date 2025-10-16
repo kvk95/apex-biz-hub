@@ -179,8 +179,8 @@ export default function CurrencySettings() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6">Currency Settings</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="text-lg font-semibold mb-6">Currency Settings</h1>
 
       <section className="bg-card rounded shadow p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

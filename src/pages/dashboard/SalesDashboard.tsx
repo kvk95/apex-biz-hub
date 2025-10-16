@@ -226,12 +226,11 @@ const SalesDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      <title>Sales Dashboard</title>
+    <div className="min-h-screen bg-gray-100 text-gray-800">
 
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <h1 className="text-3xl font-semibold mb-6">Sales Dashboard</h1>
+        <h1 className="text-lg font-semibold mb-6">Sales Dashboard</h1>
 
         {/* Filters Section */}
         <section className="bg-white rounded shadow p-6 mb-6">

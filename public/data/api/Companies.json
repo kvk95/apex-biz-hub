@@ -6,9 +6,9 @@
   "result": [
     {
       "id": 1,
-      "companyName": "Dreams Technologies",
+      "companyName": "Nyainfo Technologies",
       "contactPerson": "John Doe",
-      "email": "john.doe@dreamspos.com",
+      "email": "john.doe@nyabuypos.com",
       "phone": "+1 234 567 890",
       "address": "123 Dream St, Silicon Valley, CA",
       "city": "San Jose",

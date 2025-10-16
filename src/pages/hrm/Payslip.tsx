@@ -123,14 +123,13 @@ export default function Payslip() {
   ) ?? [];
 
   return (
-    <>
-      <title>Payslip - Dreams Technologies</title>
-      <div className="min-h-screen bg-background font-sans p-6">
+    <> 
+      <div className="min-h-screen bg-background">
+        <h1 className="text-lg font-semibold mb-6">Payslip</h1>
         <div className="max-w-7xl mx-auto bg-card rounded shadow border border-border">
           {/* Header */}
           <header className="p-6 border-b border-border flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">Payslip</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {data.employee?.payslipMonth}
               </p>

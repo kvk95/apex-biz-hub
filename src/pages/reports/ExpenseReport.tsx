@@ -224,9 +224,9 @@ export default function ExpenseReport() {
   const totalAmount = paginatedData.reduce((acc, e) => acc + e.amount, 0);
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Page Title */}
-      <h1 className="text-2xl font-semibold mb-6">Expense Report</h1>
+    <div className="min-h-screen bg-background">
+      
+      <h1 className="text-lg font-semibold mb-6">Expense Report</h1>
 
       {/* Form Section (Add Section) - preserved exactly */}
       <section className="bg-card rounded shadow p-6 mb-6">

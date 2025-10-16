@@ -74,12 +74,11 @@ export default function SuperadminDashboard() {
   };
 
   return (
-    <>
-      <title>{pageTitle}</title>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+    <> 
+      <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="bg-white shadow px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">{pageTitle}</h1>
+          <h1 className="text-lg font-semibold">{pageTitle}</h1>
           <button
             onClick={handleRefresh}
             className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 focus:outline-none"

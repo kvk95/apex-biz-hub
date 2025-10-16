@@ -66,10 +66,12 @@ export default function ProfitLoss() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Page Header */}
+    <div className="min-h-screen bg-background">
+      
+      <h1 className="text-lg font-semibold mb-6">Profit Loss</h1> 
+
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-semibold mb-4 md:mb-0">Profit Loss</h1>
+        
         <div className="flex flex-wrap gap-3">
           <button
             type="button"

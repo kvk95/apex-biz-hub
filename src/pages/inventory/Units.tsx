@@ -173,9 +173,9 @@ export default function Units() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Units</h1>
+      <h1 className="text-lg font-semibold mb-6">Units</h1>
 
       {/* Form Section (Add Section) - preserved exactly */}
       <section className="bg-card rounded shadow p-6 mb-6">
@@ -242,8 +242,12 @@ export default function Units() {
         </form>
       </section>
 
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6">
+        
       {/* Search Section */}
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-start px-6">
         <input
           type="text"
           placeholder="Search Units..."
@@ -252,9 +256,6 @@ export default function Units() {
           className="border border-input rounded px-3 py-2 w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>

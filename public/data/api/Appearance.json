@@ -6,7 +6,7 @@
   "result": [
     {
       "id": 1,
-      "name": "Dreams POS",
+      "name": "Nyabuy POS",
       "theme": "Light",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "name": "Dreams POS Dark",
+      "name": "Nyabuy POS Dark",
       "theme": "Dark",
       "sidebar": "Collapsed",
       "header": "Static",
@@ -24,7 +24,7 @@
     },
     {
       "id": 3,
-      "name": "Dreams POS Blue",
+      "name": "Nyabuy POS Blue",
       "theme": "Blue",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -33,7 +33,7 @@
     },
     {
       "id": 4,
-      "name": "Dreams POS Green",
+      "name": "Nyabuy POS Green",
       "theme": "Green",
       "sidebar": "Collapsed",
       "header": "Static",
@@ -42,7 +42,7 @@
     },
     {
       "id": 5,
-      "name": "Dreams POS Red",
+      "name": "Nyabuy POS Red",
       "theme": "Red",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -51,7 +51,7 @@
     },
     {
       "id": 6,
-      "name": "Dreams POS Yellow",
+      "name": "Nyabuy POS Yellow",
       "theme": "Yellow",
       "sidebar": "Collapsed",
       "header": "Static",
@@ -60,7 +60,7 @@
     },
     {
       "id": 7,
-      "name": "Dreams POS Purple",
+      "name": "Nyabuy POS Purple",
       "theme": "Purple",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -69,7 +69,7 @@
     },
     {
       "id": 8,
-      "name": "Dreams POS Orange",
+      "name": "Nyabuy POS Orange",
       "theme": "Orange",
       "sidebar": "Collapsed",
       "header": "Static",
@@ -78,7 +78,7 @@
     },
     {
       "id": 9,
-      "name": "Dreams POS Cyan",
+      "name": "Nyabuy POS Cyan",
       "theme": "Cyan",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -87,7 +87,7 @@
     },
     {
       "id": 10,
-      "name": "Dreams POS Magenta",
+      "name": "Nyabuy POS Magenta",
       "theme": "Magenta",
       "sidebar": "Collapsed",
       "header": "Static",
@@ -96,7 +96,7 @@
     },
     {
       "id": 11,
-      "name": "Dreams POS Lime",
+      "name": "Nyabuy POS Lime",
       "theme": "Lime",
       "sidebar": "Expanded",
       "header": "Fixed",
@@ -105,7 +105,7 @@
     },
     {
       "id": 12,
-      "name": "Dreams POS Teal",
+      "name": "Nyabuy POS Teal",
       "theme": "Teal",
       "sidebar": "Collapsed",
       "header": "Static",

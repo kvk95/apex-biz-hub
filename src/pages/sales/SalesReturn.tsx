@@ -182,9 +182,9 @@ export default function SalesReturn() {
   const grandTotal = products.reduce((acc, p) => acc + p.total, 0);
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Sales Return</h1>
+      <h1 className="text-lg font-semibold mb-6">Sales Return</h1>
 
       {/* Customer & Invoice Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

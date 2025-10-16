@@ -122,9 +122,9 @@ export default function InvoiceTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Invoice Templates</h1>
+      <h1 className="text-lg font-semibold mb-6">Invoice Templates</h1>
 
       {/* Controls Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">

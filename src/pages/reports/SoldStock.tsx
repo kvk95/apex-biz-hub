@@ -197,9 +197,9 @@ const SoldStock: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Sold Stock</h1>
+    <div className="min-h-screen bg-background"> 
+
+      <h1 className="text-lg font-semibold mb-6">Sold Stock</h1>
 
       {/* Filters Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

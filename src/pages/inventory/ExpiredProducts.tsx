@@ -124,219 +124,215 @@ export default function ExpiredProducts() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <title>Expired Products - Dreams POS</title>
+    <div className="min-h-screen bg-background  ">
+      <h1 className="text-lg font-semibold mb-6">Expired Products</h1>
 
-      <div className="container mx-auto">
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-semibold mb-4 md:mb-0 text-foreground">
-            Expired Products
-          </h1>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Generate Report"
-              type="button"
-            >
-              <i className="fa fa-file-pdf-o fa-light" aria-hidden="true"></i> Report
-            </button>
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-              type="button"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-          </div>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="flex space-x-3">
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            title="Generate Report"
+            type="button"
+          >
+            <i className="fa fa-file-pdf-o fa-light" aria-hidden="true"></i>{" "}
+            Report
+          </button>
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            title="Clear"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
         </div>
-
-        {/* Preserved Add Section (filters form) exactly as is */}
-        <section className="bg-card rounded shadow p-6 mb-6">
-          <form className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label
-                htmlFor="productName"
-                className="block text-sm font-medium mb-1 text-foreground"
-              >
-                Product Name
-              </label>
-              <input
-                id="productName"
-                name="productName"
-                type="text"
-                placeholder="Product Name"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium mb-1 text-foreground"
-              >
-                Category
-              </label>
-              <select
-                id="category"
-                name="category"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Select Category
-                </option>
-                <option>Fruits</option>
-                <option>Dairy</option>
-                <option>Bakery</option>
-                <option>Vegetables</option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="supplier"
-                className="block text-sm font-medium mb-1 text-foreground"
-              >
-                Supplier
-              </label>
-              <select
-                id="supplier"
-                name="supplier"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Select Supplier
-                </option>
-                <option>Supplier A</option>
-                <option>Supplier B</option>
-                <option>Supplier C</option>
-                <option>Supplier D</option>
-                <option>Supplier E</option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="expiredDate"
-                className="block text-sm font-medium mb-1 text-foreground"
-              >
-                Expired Date
-              </label>
-              <input
-                id="expiredDate"
-                name="expiredDate"
-                type="date"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
-              />
-            </div>
-          </form>
-        </section>
-
-        {/* Table Section */}
-        <section className="bg-card rounded shadow py-6 overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Product Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Product Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Supplier
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Expired Date
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Quantity
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Unit
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Cost
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Price
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={10}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No expired products found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.productName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.productCode}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.category}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.supplier}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.expiredDate}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
-                    {item.quantity}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                    {item.unit}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
-                    ${item.cost?.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
-                    ${item.price?.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(idx)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit product ${item.productName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={data.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
-          />
-        </section>
       </div>
+
+      {/* Preserved Add Section (filters form) exactly as is */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <form className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div>
+            <label
+              htmlFor="productName"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
+              Product Name
+            </label>
+            <input
+              id="productName"
+              name="productName"
+              type="text"
+              placeholder="Product Name"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
+              Category
+            </label>
+            <select
+              id="category"
+              name="category"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select Category
+              </option>
+              <option>Fruits</option>
+              <option>Dairy</option>
+              <option>Bakery</option>
+              <option>Vegetables</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="supplier"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
+              Supplier
+            </label>
+            <select
+              id="supplier"
+              name="supplier"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select Supplier
+              </option>
+              <option>Supplier A</option>
+              <option>Supplier B</option>
+              <option>Supplier C</option>
+              <option>Supplier D</option>
+              <option>Supplier E</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="expiredDate"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
+              Expired Date
+            </label>
+            <input
+              id="expiredDate"
+              name="expiredDate"
+              type="date"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+            />
+          </div>
+        </form>
+      </section>
+
+      {/* Table Section */}
+      <section className="bg-card rounded shadow py-6 overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Product Name
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Product Code
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Category
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Supplier
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Expired Date
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Quantity
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Unit
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Cost
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Price
+              </th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedData.length === 0 && (
+              <tr>
+                <td
+                  colSpan={10}
+                  className="text-center px-4 py-6 text-muted-foreground italic"
+                >
+                  No expired products found.
+                </td>
+              </tr>
+            )}
+            {paginatedData.map((item, idx) => (
+              <tr
+                key={idx}
+                className="border-b border-border hover:bg-muted/50 transition-colors"
+              >
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.productName}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.productCode}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.category}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.supplier}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.expiredDate}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
+                  {item.quantity}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                  {item.unit}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
+                  ${item.cost?.toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
+                  ${item.price?.toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-center text-sm space-x-3">
+                  <button
+                    onClick={() => handleEdit(idx)}
+                    className="text-primary hover:text-primary/80 transition-colors"
+                    aria-label={`Edit product ${item.productName}`}
+                    type="button"
+                  >
+                    <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
+      </section>
 
       {/* Edit Modal */}
       {isEditModalOpen && (

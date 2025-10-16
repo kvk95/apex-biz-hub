@@ -120,9 +120,9 @@ export default function RolesPermissions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900">Roles & Permissions</h1>
+      <h1 className="text-lg font-semibold mb-6">Roles & Permissions</h1>
 
       {/* Controls: Add Role, Refresh, Report */}
       <div className="flex flex-wrap items-center justify-between mb-6 gap-3">

@@ -214,11 +214,10 @@ const Purchases: React.FC = () => {
 
   return (
     <>
-      <title>Purchases - Dreams POS</title>
-      <div className="min-h-screen bg-background font-sans p-6">
+      <div className="min-h-screen bg-background">
         {/* Page Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-semibold mb-4 md:mb-0">Purchases</h1>
+          <h1 className="text-lg font-semibold mb-4 md:mb-0">Purchases</h1>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleReport}

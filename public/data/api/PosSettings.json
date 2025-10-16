@@ -6,10 +6,10 @@
   "result": [
     {
       "id": 1,
-      "posName": "Dreams POS",
-      "posEmail": "dreamspos@example.com",
+      "posName": "NyaBuy POS",
+      "posEmail": "nyabuypos@example.com",
       "posPhone": "123-456-7890",
-      "posAddress": "123 Dreams Street, Dream City"
+      "posAddress": "123 kurukku Street, Dream City"
     },
     {
       "id": 2,

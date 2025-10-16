@@ -229,12 +229,11 @@ export default function CreateProduct() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <title>Create Product - Dreams POS</title>
+    <div className="min-h-screen bg-background "> 
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold mb-6">Create Product</h1>
+          <h1 className="text-lg font-semibold mb-6">Create Product</h1>
           <div className="space-x-2">
             <button
               onClick={handleReport}

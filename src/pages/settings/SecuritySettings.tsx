@@ -166,8 +166,8 @@ const SecuritySettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6">Security Settings</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="text-lg font-semibold mb-6">Security Settings</h1>
 
       {/* Password Change Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

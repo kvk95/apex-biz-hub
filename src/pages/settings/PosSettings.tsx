@@ -81,10 +81,9 @@ export default function PosSettings() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <title>POS Settings | Dreams POS</title>
+    <div className="min-h-screen bg-background">
 
-      <h1 className="text-2xl font-semibold mb-6">POS Settings</h1>
+      <h1 className="text-lg font-semibold mb-6">POS Settings</h1>
 
       {/* POS Settings Form */}
       <section className="bg-card rounded shadow p-6 mb-6">

@@ -74,9 +74,9 @@ export default function AnnualReport() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Annual Report</h1>
+      <h1 className="text-lg font-semibold mb-6">Annual Report</h1>
 
       {/* Filters Section (preserve structure but apply source styling) */}
       <section className="bg-card rounded shadow p-6 mb-6">

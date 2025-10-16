@@ -126,14 +126,15 @@ export default function DeleteAccountRequest() {
   }
 
   return (
-    <>
-      <title>Delete Account Request</title>
-      <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
-        <div className="max-w-7xl mx-auto p-6">
+    <> 
+      <div className="min-h-screen bg-background">
+        
           {/* Page Title */}
-          <h1 className="text-3xl font-semibold mb-6 text-gray-900">
+          <h1 className="text-lg font-semibold mb-6">
             Delete Account Request
           </h1>
+          
+        <div className="max-w-7xl mx-auto p-6">
 
           {/* Explanation Section */}
           <section className="mb-8 bg-white p-6 rounded shadow-sm border border-gray-200">

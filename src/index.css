@@ -156,6 +156,10 @@ All colors MUST be HSL.
   }
 }
 
+.font-poppins {
+  font-family: "Poppins", sans-serif;
+}
+
 .sidebar-top {
   padding: 0 24px;
   height: 65px;

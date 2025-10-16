@@ -179,9 +179,9 @@ export default function GdprSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Page Title */}
-      <h1 className="text-2xl font-semibold mb-6">GDPR Settings</h1>
+      <h1 className="text-lg font-semibold mb-6">GDPR Settings</h1>
 
       {/* GDPR Settings Form Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

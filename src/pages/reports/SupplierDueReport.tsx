@@ -150,9 +150,9 @@ const SupplierDueReport: React.FC = () => {
   const totalTotalAmount = filteredData.reduce((acc, cur) => acc + cur.totalAmount, 0);
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Supplier Due Report</h1>
+    <div className="min-h-screen bg-background"> 
+
+      <h1 className="text-lg font-semibold mb-6">Supplier Due Report</h1>
 
       {/* Filter Section */}
       <section className="bg-card rounded shadow p-6 mb-6">

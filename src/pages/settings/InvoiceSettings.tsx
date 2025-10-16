@@ -104,8 +104,8 @@ export default function InvoiceSettings() {
   if (error) return <div className="min-h-screen bg-background p-6 font-sans">Error: {error}</div>;
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6">Invoice Settings</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="text-lg font-semibold mb-6">Invoice Settings</h1>
 
       <section className="bg-card rounded shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Invoice Settings</h2>

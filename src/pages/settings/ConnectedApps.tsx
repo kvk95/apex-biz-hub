@@ -44,7 +44,7 @@ export default function ConnectedApps() {
 
   // Sort and paginate data
   const paginatedData = useMemo(() => {
-    let sortedData = [...data];
+    const sortedData = [...data];
     if (sortField) {
       sortedData.sort((a, b) => {
         if (a[sortField] < b[sortField]) return sortOrder === "asc" ? -1 : 1;
@@ -162,9 +162,9 @@ export default function ConnectedApps() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Connected Apps</h1>
+      <h1 className="text-lg font-semibold mb-6">Connected Apps</h1>
 
       {/* Table Section */}
       <section className="bg-card rounded shadow py-6">

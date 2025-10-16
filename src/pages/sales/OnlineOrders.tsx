@@ -185,13 +185,12 @@ export default function OnlineOrders() {
   };
 
   return (
-    <>
-      <title>Online Orders - Dreams POS</title>
-      <div className="min-h-screen bg-background font-sans p-6">
+    <> 
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto bg-card rounded shadow p-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-2xl font-semibold mb-4 md:mb-0 text-foreground">
+            <h1 className="text-lg font-semibold mb-4 md:mb-0 text-foreground">
               Online Orders
             </h1>
             <div className="flex space-x-3">

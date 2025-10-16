@@ -8,7 +8,7 @@
     "John Doe",
     "Jane Smith",
     "Acme Corp",
-    "Dreams Technologies",
+    "Nyainfo Technologies",
     "Customer A",
     "Customer B",
     "All",
@@ -60,7 +60,7 @@
     {
       "id": 4,
       "invoiceNo": "INV-0004",
-      "customer": "Dreams Technologies",
+      "customer": "Nyainfo Technologies",
       "date": "2022-04-12",
       "dueDate": "2022-04-27",
       "status": "Paid",
@@ -126,7 +126,7 @@
     {
       "id": 10,
       "invoiceNo": "INV-0010",
-      "customer": "Dreams Technologies",
+      "customer": "Nyainfo Technologies",
       "date": "2022-10-10",
       "dueDate": "2022-10-25",
       "status": "Unpaid",

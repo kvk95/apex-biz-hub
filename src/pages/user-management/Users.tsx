@@ -139,9 +139,9 @@ export default function Users() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6">Users</h1>
+      <h1 className="text-lg font-semibold mb-6">Users</h1>
 
       {/* User Form Section */}
       <section className="bg-white rounded shadow p-6 mb-8 max-w-4xl mx-auto">

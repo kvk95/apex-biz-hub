@@ -172,9 +172,8 @@ export default function Shifts() {
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Shifts</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="text-lg font-semibold mb-6">Shifts</h1>
 
       {/* Form Section (Add Section) - preserved exactly */}
       <section className="bg-card rounded shadow p-6 mb-6">

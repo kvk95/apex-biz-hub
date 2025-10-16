@@ -153,9 +153,9 @@ const Preference: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background">
       {/* Page Title */}
-      <h1 className="text-3xl font-semibold mb-6 border-b border-gray-300 pb-2">Preference</h1>
+      <h1 className="text-lg font-semibold mb-6">Preference</h1>
 
       {/* General Settings Section */}
       <section className="mb-10 bg-white rounded shadow p-6">

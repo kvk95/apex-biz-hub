@@ -112,10 +112,9 @@ export default function SystemSettings() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <title>System Settings - Dreams POS</title>
+    <div className="min-h-screen bg-background">
 
-      <h1 className="text-3xl font-semibold mb-6">System Settings</h1>
+      <h1 className="text-lg font-semibold mb-6">System Settings</h1>
 
       {/* General Settings Section */}
       <section className="bg-white rounded shadow p-6 mb-8">

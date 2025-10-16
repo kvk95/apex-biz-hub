@@ -145,9 +145,8 @@ export default function Invoices() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6 text-foreground">
-      {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Invoices</h1>
+    <div className="min-h-screen bg-background"> 
+      <h1 className="text-lg font-semibold mb-6">Invoices</h1>
 
       {/* Controls Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-6">

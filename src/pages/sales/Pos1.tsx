@@ -181,11 +181,11 @@ export default function Pos1() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       <div className="max-w-[1280px] mx-auto">
         {/* Header */}
         <header className="mb-6 flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">POS 1</h1>
+          <h1 className="text-lg font-semibold">POS 1</h1>
           <div className="flex space-x-3">
             <button
               type="button"

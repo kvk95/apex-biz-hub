@@ -145,12 +145,14 @@ export default function SocialAuthentication() {
   );
 
   return (
-    <>
-      <title>Social Authentication - DreamsPOS</title>
-      <div className="min-h-screen bg-background font-sans p-6">
+    <>       
+      <div className="min-h-screen bg-background">
+
+        <h1 className="text-lg font-semibold mb-6">Social Authentication</h1>
+        
         {/* Page Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-foreground">Social Authentication</h1>
+          
           <div className="space-x-3">
             <button
               onClick={handleReport}

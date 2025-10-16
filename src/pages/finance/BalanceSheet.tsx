@@ -105,12 +105,11 @@ export default function BalanceSheet() {
   );
 
   return (
-    <>
-      <title>Balance Sheet - Dreams POS</title>
-      <div className="min-h-screen bg-background font-sans p-6">
+    <> 
+      <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h1 className="text-2xl font-semibold mb-6 sm:mb-0">Balance Sheet</h1>
+          <h1 className="text-lg font-semibold mb-6 sm:mb-0">Balance Sheet</h1>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleReport}

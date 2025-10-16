@@ -105,12 +105,11 @@ export default function ManageStock() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      <title>Manage Stock</title>
+    <div className="min-h-screen bg-background">
 
       <div className="max-w-full mx-auto p-6">
         {/* Page Title */}
-        <h1 className="text-3xl font-semibold mb-6 text-gray-900">Manage Stock</h1>
+        <h1 className="text-lg font-semibold mb-6 ">Manage Stock</h1>
 
         {/* Filters and Actions */}
         <div className="bg-white p-6 rounded shadow mb-6">

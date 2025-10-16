@@ -148,9 +148,9 @@ export default function Warranties() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
+    <div className="min-h-screen bg-background">
       {/* Title */}
-      <h1 className="text-2xl font-semibold mb-6">Warranties</h1>
+      <h1 className="text-lg font-semibold mb-6">Warranties</h1>
 
       {/* Search / Filter Section */}
       <section className="bg-card rounded shadow p-6 mb-6">
