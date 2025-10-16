@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
 
@@ -18,6 +19,7 @@ export function AppNavbar() {
   const [language, setLanguage] = useState("EN");
   const { theme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const navigate = useNavigate();
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -212,17 +214,17 @@ export function AppNavbar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => window.location.href = "/auth/profile"}>
+              <DropdownMenuItem onClick={() => navigate("/settings/general/profile")}>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = "/settings/general-settings"}>
+              <DropdownMenuItem onClick={() => navigate("/settings/website/system")}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem>Help & Support</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 className="text-destructive"
-                onClick={() => window.location.href = "/auth/logout"}
+                onClick={() => navigate("/logout")}
               >
                 Logout
               </DropdownMenuItem>

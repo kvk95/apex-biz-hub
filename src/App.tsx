@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
+import Logout from "./pages/auth/Logout";
 import Admin1Dashboard from "./pages/dashboard/Admin1Dashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
 import AccountStatement from "./pages/finance/AccountStatement";
@@ -158,6 +159,8 @@ const App = () => {
             <Route
               path="/login"
               element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />}
+            />
+             <Route path="/logout" element={<Logout />}
             />
 
             {/* Protected Routes */}
@@ -484,12 +487,12 @@ const App = () => {
                 {/* Logout */}
                 <Route
                   path="logout"
-                  element={<Navigate to="/login" replace />}
+                  element={<Navigate to="/logout" replace />}
                 />
               </Route>
             ) : (
               // Redirect any other route to login if not logged in
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/logout" replace />} />
             )}
           </Routes>
         </BrowserRouter>

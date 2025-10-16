@@ -86,8 +86,8 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 text-sm">
+      <div className="text-muted-foreground">
         Showing {startItem} to {endItem} of {totalItems} results
       </div>
 
@@ -95,7 +95,7 @@ export function Pagination({
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
           type="button"
         >
@@ -114,9 +114,9 @@ export function Pagination({
             <button
               key={pageNum}
               onClick={() => setPage(pageNum as number)}
-              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+              className={`w-6 h-6 flex items-center justify-center rounded-full transition-all text-xs ${
                 page === pageNum
-                  ? "bg-primary text-primary-foreground font-medium shadow-md"
+                  ? "bg-primary text-primary-foreground shadow-md"
                   : "bg-muted text-muted-foreground hover:border hover:border-primary hover:shadow-md"
               }`}
               aria-label={`Go to page ${pageNum}`}
@@ -131,7 +131,7 @@ export function Pagination({
         <button
           onClick={() => setPage(page + 1)}
           disabled={page === totalPages || totalPages === 0}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-input bg-background hover:border-primary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
           type="button"
         >
@@ -140,13 +140,13 @@ export function Pagination({
       </div>
 
       {onPageSizeChange && (
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Rows Per Page</span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(Number(value))}
           >
-            <SelectTrigger className="h-9 w-20">
+            <SelectTrigger className="h-7 w-16">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

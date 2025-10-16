@@ -10,7 +10,7 @@ export default function Logout() {
     localStorage.clear();
     
     // Redirect to login
-    navigate("/auth/login", { replace: true });
+    navigate("/login", { replace: true });
   }, [navigate]);
 
   return (
