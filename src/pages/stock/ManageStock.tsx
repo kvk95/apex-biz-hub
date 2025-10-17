@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const categories = [
   "All Categories",
@@ -39,6 +40,22 @@ export default function ManageStock() {
   const [unitFilter, setUnitFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    productName: "",
+    productCode: "",
+    category: "",
+    supplier: "",
+    unit: "",
+    purchaseQty: 0,
+    saleQty: 0,
+    stockQty: 0,
+    purchasePrice: 0,
+    salePrice: 0,
+    stockValue: 0,
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -104,15 +121,56 @@ export default function ManageStock() {
     alert("Save functionality is not implemented in this demo.");
   };
 
+  // Edit Modal handlers
+  const handleEdit = (id: number) => {
+    const item = filteredData.find((i) => i.id === id);
+    if (item) {
+      setEditForm({
+        productName: item.productName,
+        productCode: item.productCode,
+        category: item.category,
+        supplier: item.supplier,
+        unit: item.unit,
+        purchaseQty: item.purchaseQty,
+        saleQty: item.saleQty,
+        stockQty: item.stockQty,
+        purchasePrice: item.purchasePrice,
+        salePrice: item.salePrice,
+        stockValue: item.stockValue,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = () => {
+    if (editId !== null) {
+      // Update logic here (not implemented in this example)
+      setIsEditModalOpen(false);
+      setEditId(null);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setEditId(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-
       <div className="max-w-full mx-auto p-6">
         {/* Page Title */}
         <h1 className="text-lg font-semibold mb-6 ">Manage Stock</h1>
 
         {/* Filters and Actions */}
-        <div className="bg-white p-6 rounded shadow mb-6">
+        <div className="bg-card rounded shadow p-6 mb-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -124,7 +182,7 @@ export default function ManageStock() {
             <div className="col-span-1 md:col-span-2">
               <label
                 htmlFor="search"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Search Product Name or Code
               </label>
@@ -132,7 +190,7 @@ export default function ManageStock() {
                 id="search"
                 type="text"
                 placeholder="Search..."
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -142,13 +200,13 @@ export default function ManageStock() {
             <div>
               <label
                 htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Category
               </label>
               <select
                 id="category"
-                className="w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
@@ -164,13 +222,13 @@ export default function ManageStock() {
             <div>
               <label
                 htmlFor="supplier"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Supplier
               </label>
               <select
                 id="supplier"
-                className="w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={supplierFilter}
                 onChange={(e) => setSupplierFilter(e.target.value)}
               >
@@ -186,13 +244,13 @@ export default function ManageStock() {
             <div>
               <label
                 htmlFor="unit"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Unit
               </label>
               <select
                 id="unit"
-                className="w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={unitFilter}
                 onChange={(e) => setUnitFilter(e.target.value)}
               >
@@ -209,120 +267,108 @@ export default function ManageStock() {
             <div className="flex space-x-2 md:justify-end">
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-search mr-2" aria-hidden="true"></i> Search
+                <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
               </button>
               <button
                 type="button"
                 onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium rounded"
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <i className="fa fa-refresh mr-2" aria-hidden="true"></i> Refresh
+                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
               </button>
             </div>
           </form>
         </div>
 
         {/* Stock Table */}
-        <div className="bg-white rounded shadow overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+        <div className="bg-card rounded shadow overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Product Name
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Product Code
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Supplier
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Unit
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Purchase Qty
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Sale Qty
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Stock Qty
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Purchase Price
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Sale Price
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Stock Value
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700 whitespace-nowrap">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {pagedData.length === 0 && (
                 <tr>
                   <td
                     colSpan={12}
-                    className="px-4 py-6 text-center text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No stock items found.
                   </td>
                 </tr>
               )}
               {pagedData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap">{item.productName}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.productCode}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.category}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.supplier}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{item.unit}</td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {item.purchaseQty}
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {item.saleQty}
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {item.stockQty}
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    ${item.purchasePrice.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    ${item.salePrice.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    ${item.stockValue.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-center whitespace-nowrap space-x-2">
+                <tr key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500">
+                  <td className="px-4 py-2">{item.productName}</td>
+                  <td className="px-4 py-2">{item.productCode}</td>
+                  <td className="px-4 py-2">{item.category}</td>
+                  <td className="px-4 py-2">{item.supplier}</td>
+                  <td className="px-4 py-2">{item.unit}</td>
+                  <td className="px-4 py-2 text-right">{item.purchaseQty}</td>
+                  <td className="px-4 py-2 text-right">{item.saleQty}</td>
+                  <td className="px-4 py-2 text-right">{item.stockQty}</td>
+                  <td className="px-4 py-2 text-right">${item.purchasePrice.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right">${item.salePrice.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right">${item.stockValue.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-center space-x-2">
                     <button
                       type="button"
-                      title="Edit"
-                      className="text-indigo-600 hover:text-indigo-900"
-                      onClick={() =>
-                        alert(`Edit functionality not implemented for ${item.productName}`)
-                      }
+                      onClick={() => handleEdit(item.id)}
+                      aria-label={`Edit ${item.productName}`}
+                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
                     >
-                      <i className="fa fa-pencil" aria-hidden="true"></i>
+                      <i className="fa fa-edit fa-light" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
                     </button>
                     <button
                       type="button"
                       title="Delete"
-                      className="text-red-600 hover:text-red-900"
+                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
                       onClick={() =>
                         alert(`Delete functionality not implemented for ${item.productName}`)
                       }
                     >
-                      <i className="fa fa-trash" aria-hidden="true"></i>
+                      <i className="fa fa-trash-can-xmark fa-light" aria-hidden="true"></i>
+                      <span className="sr-only">Delete record</span>
                     </button>
                   </td>
                 </tr>
@@ -330,137 +376,271 @@ export default function ManageStock() {
             </tbody>
           </table>
 
-          {/* Pagination Controls */}
-          <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
-            <div className="flex items-center space-x-2 mb-2 md:mb-0">
-              <label
-                htmlFor="pageSize"
-                className="text-sm font-medium text-gray-700"
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={pageSize}
+            totalItems={filteredData.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
               >
-                Show
-              </label>
-              <select
-                id="pageSize"
-                className="mt-1 block rounded border border-gray-300 bg-white py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-              >
-                {pageSizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-              <span className="text-sm text-gray-700">entries</span>
+                Edit Stock Item
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Product Name */}
+                <div>
+                  <label
+                    htmlFor="editProductName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editProductName"
+                    name="productName"
+                    value={editForm.productName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                {/* Product Code */}
+                <div>
+                  <label
+                    htmlFor="editProductCode"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Product Code
+                  </label>
+                  <input
+                    type="text"
+                    id="editProductCode"
+                    name="productCode"
+                    value={editForm.productCode}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter product code"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label
+                    htmlFor="editCategory"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="editCategory"
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Supplier */}
+                <div>
+                  <label
+                    htmlFor="editSupplier"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Supplier
+                  </label>
+                  <select
+                    id="editSupplier"
+                    name="supplier"
+                    value={editForm.supplier}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {suppliers.map((sup) => (
+                      <option key={sup} value={sup}>
+                        {sup}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Unit */}
+                <div>
+                  <label
+                    htmlFor="editUnit"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Unit
+                  </label>
+                  <select
+                    id="editUnit"
+                    name="unit"
+                    value={editForm.unit}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {units.map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Purchase Qty */}
+                <div>
+                  <label
+                    htmlFor="editPurchaseQty"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Purchase Qty
+                  </label>
+                  <input
+                    type="number"
+                    id="editPurchaseQty"
+                    name="purchaseQty"
+                    value={editForm.purchaseQty}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Sale Qty */}
+                <div>
+                  <label
+                    htmlFor="editSaleQty"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Sale Qty
+                  </label>
+                  <input
+                    type="number"
+                    id="editSaleQty"
+                    name="saleQty"
+                    value={editForm.saleQty}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Stock Qty */}
+                <div>
+                  <label
+                    htmlFor="editStockQty"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Stock Qty
+                  </label>
+                  <input
+                    type="number"
+                    id="editStockQty"
+                    name="stockQty"
+                    value={editForm.stockQty}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Purchase Price */}
+                <div>
+                  <label
+                    htmlFor="editPurchasePrice"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Purchase Price
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="editPurchasePrice"
+                    name="purchasePrice"
+                    value={editForm.purchasePrice}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Sale Price */}
+                <div>
+                  <label
+                    htmlFor="editSalePrice"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Sale Price
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="editSalePrice"
+                    name="salePrice"
+                    value={editForm.salePrice}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Stock Value */}
+                <div>
+                  <label
+                    htmlFor="editStockValue"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Stock Value
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="editStockValue"
+                    name="stockValue"
+                    value={editForm.stockValue}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
             </div>
-
-            <nav
-              className="inline-flex -space-x-px rounded-md shadow-sm"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                aria-label="Previous"
-              >
-                <i className="fa fa-chevron-left" aria-hidden="true"></i>
-              </button>
-
-              {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => {
-                // Show all pages if <= 7, else show first, last, current +/- 1 with ellipsis
-                if (pageCount <= 7) {
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page)}
-                      aria-current={page === currentPage ? "page" : undefined}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        page === currentPage
-                          ? "z-10 bg-indigo-600 text-white border-indigo-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                } else {
-                  // Complex pagination with ellipsis
-                  if (
-                    page === 1 ||
-                    page === pageCount ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        aria-current={page === currentPage ? "page" : undefined}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === currentPage
-                            ? "z-10 bg-indigo-600 text-white border-indigo-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  } else if (
-                    (page === currentPage - 2 && page > 1) ||
-                    (page === currentPage + 2 && page < pageCount)
-                  ) {
-                    return (
-                      <span
-                        key={"ellipsis-" + page}
-                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 select-none"
-                      >
-                        &hellip;
-                      </span>
-                    );
-                  } else {
-                    return null;
-                  }
-                }
-              })}
-
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === pageCount || pageCount === 0}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
-                  currentPage === pageCount || pageCount === 0
-                    ? "cursor-not-allowed opacity-50"
-                    : ""
-                }`}
-                aria-label="Next"
-              >
-                <i className="fa fa-chevron-right" aria-hidden="true"></i>
-              </button>
-            </nav>
           </div>
-        </div>
-
-        {/* Bottom Action Buttons */}
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={handleReport}
-            className="inline-flex items-center px-5 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded"
-          >
-            <i className="fa fa-file-text-o mr-2" aria-hidden="true"></i> Report
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="inline-flex items-center px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded"
-          >
-            <i className="fa fa-floppy-o mr-2" aria-hidden="true"></i> Save
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
