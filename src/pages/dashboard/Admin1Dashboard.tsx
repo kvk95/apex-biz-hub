@@ -10,6 +10,11 @@ import { Chart } from "@/components/Chart/Chart";
 import { DataTable, Column, RowAction } from "@/components/DataTable/DataTable";
 
 interface DashboardData {
+  ordersToday: number;
+  stockAlert: {
+    product: string;
+    stock: number;
+  };
   stats: Array<{
     id: string;
     title: string;
@@ -18,6 +23,15 @@ interface DashboardData {
     icon: string;
     gradient: string;
   }>;
+  counts: {
+    totalPurchaseCount: string;
+    totalSalesCount: string;
+    suppliers: number;
+    customers: number;
+    orders: number;
+    purchaseInvoice: number;
+    salesInvoice: number;
+  };
   salesData: Array<{
     month: string;
     sales: number;
@@ -28,11 +42,17 @@ interface DashboardData {
   recentOrders: Array<any>;
   lowStockProducts: Array<any>;
   topCustomers: Array<any>;
-  roomAvailability: Array<any>;
-  reservationData: Array<any>;
-  visitorsData: Array<any>;
-  guestList: Array<any>;
-  bookingSource: Array<any>;
+  topSellingProducts: Array<any>;
+  recentSales: Array<any>;
+  revenue: { value: string; percentage: number };
+  expense: { value: string; percentage: number };
+  customerTransactions: Array<any>;
+  supplierTransactions: Array<any>;
+  expenses: Array<any>;
+  invoices: Array<any>;
+  topCategories: Array<any>;
+  recentlyAddedProducts: Array<any>;
+  expiredProducts: Array<any>;
 }
 
 export default function Dashboard() {
@@ -76,8 +96,48 @@ export default function Dashboard() {
     { key: "date", label: "Date" },
   ];
 
+  const customerTransactionColumns: Column[] = [
+    { key: "date", label: "Date" },
+    { key: "customer", label: "Customer" },
+    { key: "status", label: "Status" },
+    { key: "total", label: "Total" },
+  ];
+
+  const supplierTransactionColumns: Column[] = [
+    { key: "date", label: "Date" },
+    { key: "supplier", label: "Supplier" },
+    { key: "status", label: "Status" },
+    { key: "total", label: "Total" },
+  ];
+
+  const expenseColumns: Column[] = [
+    { key: "date", label: "Date" },
+    { key: "expense", label: "Expense" },
+    { key: "status", label: "Status" },
+    { key: "total", label: "Total" },
+  ];
+
+  const invoiceColumns: Column[] = [
+    { key: "customer", label: "Customer" },
+    { key: "dueDate", label: "Due Date" },
+    { key: "status", label: "Status" },
+    { key: "amount", label: "Amount" },
+  ];
+
+  const recentlyAddedColumns: Column[] = [
+    { key: "id", label: "#" },
+    { key: "product", label: "Products" },
+    { key: "price", label: "Price" },
+  ];
+
+  const expiredColumns: Column[] = [
+    { key: "product", label: "Product" },
+    { key: "sku", label: "SKU" },
+    { key: "manufacturedDate", label: "Manufactured Date" },
+    { key: "expiredDate", label: "Expired Date" },
+  ];
+
   useEffect(() => {
-    
     loadData();
   }, []);
 
@@ -136,6 +196,15 @@ export default function Dashboard() {
           <p className="text-muted-foreground">
             Welcome back! Here's what's happening today.
           </p>
+          <p className="text-info">
+            You have {data.ordersToday}+ Orders, Today.
+          </p>
+          <p className="text-warning">
+            Your Product {data.stockAlert.product} is running Low, already below {data.stockAlert.stock} Pcs.{" "}
+            <Button variant="link" onClick={() => console.log("Add Stock")}>
+              Add Stock
+            </Button>
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Today</Button>
@@ -145,34 +214,47 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          title="Total Orders"
-          value="1,234"
-          trend={12.5}
-          icon={<i className="fa fa-shopping-cart h-6 w-6" aria-hidden="true" />}
-          iconBg="bg-primary/10"
-        />
-        <KPICard
-          title="Total Sales"
-          value="$67,432"
-          trend={8.2}
-          icon={<i className="fa fa-dollar-sign h-6 w-6" aria-hidden="true" />}
-          iconBg="bg-success/10"
-        />
-        <KPICard
-          title="Total Profit"
-          value="$25,890"
-          trend={15.3}
-          icon={<i className="fa fa-trending-up h-6 w-6" aria-hidden="true" />}
-          iconBg="bg-accent/10"
-        />
-        <KPICard
-          title="Low Stock Items"
-          value="24"
-          trend={-5.7}
-          icon={<i className="fa fa-exclamation-circle h-6 w-6" aria-hidden="true" />}
-          iconBg="bg-warning/10"
-        />
+        {data.stats.map((stat) => (
+          <KPICard
+            key={stat.id}
+            title={stat.title}
+            value={stat.value}
+            trend={stat.change}
+            icon={<i className={`${stat.icon} h-6 w-6`} aria-hidden="true" />}
+            iconBg={stat.gradient}
+          />
+        ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sales & Purchase</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p>Total Purchase: {data.counts.totalPurchaseCount}</p>
+            <p>Total Sales: {data.counts.totalSalesCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Overall Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p>Suppliers: {data.counts.suppliers}</p>
+            <p>Customers: {data.counts.customers}</p>
+            <p>Orders: {data.counts.orders}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoices</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p>Purchase Invoices: {data.counts.purchaseInvoice}</p>
+            <p>Sales Invoices: {data.counts.salesInvoice}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -282,6 +364,171 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* New sections from templates */}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Selling Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(data.topSellingProducts || []).map((product) => (
+                <div key={product.name} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.sales} Sales</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{product.price}</p>
+                    <p className="text-xs text-success">{product.percentage}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Sales</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(data.recentSales || []).map((sale) => (
+                <div key={sale.name} className="space-y-1">
+                  <p className="font-medium">{sale.name}</p>
+                  <p className="text-xs text-muted-foreground">{sale.category} - {sale.date}</p>
+                  <div className="flex justify-between">
+                    <Badge variant="outline">{sale.status}</Badge>
+                    <p className="font-semibold">{sale.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{data.revenue.value}</p>
+            <p className="text-success">{data.revenue.percentage}%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{data.expense.value}</p>
+            <p className="text-success">{data.expense.percentage}%</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Customer Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={customerTransactionColumns}
+              data={data.customerTransactions || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Supplier Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={supplierTransactionColumns}
+              data={data.supplierTransactions || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={expenseColumns}
+              data={data.expenses || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={invoiceColumns}
+              data={data.invoices || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Categories</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {(data.topCategories || []).map((category) => (
+              <div key={category.name} className="flex justify-between">
+                <p>{category.name}</p>
+                <p>{category.sales} Sales</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recently Added Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={recentlyAddedColumns}
+              data={data.recentlyAddedProducts || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Expired Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={expiredColumns}
+              data={data.expiredProducts || []}
+              rowActions={rowActions}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
