@@ -1,16 +1,32 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const subscriptionPlans = ["Basic Plan", "Standard Plan", "Premium Plan"];
 
 const SubscriptionStatusOptions = ["Active", "Expired", "Pending"];
 
-const PAGE_SIZE = 5;
-
 export default function Subscriptions() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    subscriptionId: "",
+    customerName: "",
+    customerEmail: "",
+    subscriptionPlan: "",
+    startDate: "",
+    endDate: "",
+    status: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -29,10 +45,6 @@ export default function Subscriptions() {
   }, []);
 
   const [subscriptions, setSubscriptions] = useState(data);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterPlan, setFilterPlan] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     subscriptionId: "",
     customerName: "",
@@ -42,11 +54,14 @@ export default function Subscriptions() {
     endDate: "",
     status: "",
   });
-  const [isEditingId, setIsEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     setSubscriptions(data);
   }, [data]);
+
+  const [filterPlan, setFilterPlan] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter and search logic
   const filteredSubscriptions = useMemo(() => {
@@ -63,32 +78,37 @@ export default function Subscriptions() {
     });
   }, [subscriptions, filterPlan, filterStatus, searchTerm]);
 
-  const totalPages = Math.ceil(filteredSubscriptions.length / PAGE_SIZE);
-
+  // Calculate paginated data using Pagination component props
   const paginatedSubscriptions = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredSubscriptions.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredSubscriptions, currentPage]);
+    return filteredSubscriptions.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredSubscriptions, currentPage, itemsPerPage]);
 
   // Handlers
   function handlePageChange(page: number) {
-    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
+  }
+
+  function handleItemsPerPageChange(size: number) {
+    setItemsPerPage(size);
+    setCurrentPage(1);
   }
 
   function handleInputChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
     const { name, value } = e.target;
-    setFormData((fd) => ({
+    setEditForm((fd) => ({
       ...fd,
       [name]: value,
     }));
   }
 
+  // Open edit modal and populate edit form
   function handleEdit(subscription: (typeof subscriptions)[0]) {
-    setIsEditingId(subscription.id);
-    setFormData({
+    setEditForm({
       subscriptionId: subscription.subscriptionId,
       customerName: subscription.customerName,
       customerEmail: subscription.customerEmail,
@@ -97,82 +117,66 @@ export default function Subscriptions() {
       endDate: subscription.endDate,
       status: subscription.status,
     });
+    setEditId(subscription.id);
+    setIsEditModalOpen(true);
   }
 
-  function handleCancelEdit() {
-    setIsEditingId(null);
-    setFormData({
-      subscriptionId: "",
-      customerName: "",
-      customerEmail: "",
-      subscriptionPlan: "",
-      startDate: "",
-      endDate: "",
-      status: "",
-    });
-  }
-
-  function handleSave() {
+  // Save handler for Edit Modal
+  function handleEditSave() {
     if (
-      !formData.subscriptionId.trim() ||
-      !formData.customerName.trim() ||
-      !formData.customerEmail.trim() ||
-      !formData.subscriptionPlan.trim() ||
-      !formData.startDate.trim() ||
-      !formData.endDate.trim() ||
-      !formData.status.trim()
+      !editForm.subscriptionId.trim() ||
+      !editForm.customerName.trim() ||
+      !editForm.customerEmail.trim() ||
+      !editForm.subscriptionPlan.trim() ||
+      !editForm.startDate.trim() ||
+      !editForm.endDate.trim() ||
+      !editForm.status.trim()
     ) {
       alert("Please fill all fields.");
       return;
     }
-    if (isEditingId !== null) {
+    if (editId !== null) {
       setSubscriptions((subs) =>
         subs.map((sub) =>
-          sub.id === isEditingId
+          sub.id === editId
             ? {
-                ...sub,
-                subscriptionId: formData.subscriptionId,
-                customerName: formData.customerName,
-                customerEmail: formData.customerEmail,
-                subscriptionPlan: formData.subscriptionPlan,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                status: formData.status,
-              }
+              ...sub,
+              subscriptionId: editForm.subscriptionId,
+              customerName: editForm.customerName,
+              customerEmail: editForm.customerEmail,
+              subscriptionPlan: editForm.subscriptionPlan,
+              startDate: editForm.startDate,
+              endDate: editForm.endDate,
+              status: editForm.status,
+            }
             : sub
         )
       );
-    } else {
-      const newId = subscriptions.length
-        ? Math.max(...subscriptions.map((s) => s.id)) + 1
-        : 1;
-      setSubscriptions((subs) => [
-        ...subs,
-        {
-          id: newId,
-          subscriptionId: formData.subscriptionId,
-          customerName: formData.customerName,
-          customerEmail: formData.customerEmail,
-          subscriptionPlan: formData.subscriptionPlan,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          status: formData.status,
-        },
-      ]);
+      setEditId(null);
+      setIsEditModalOpen(false);
     }
-    handleCancelEdit();
+  }
+
+  // Cancel editing modal
+  function handleEditCancel() {
+    setEditId(null);
+    setIsEditModalOpen(false);
   }
 
   function handleDelete(id: number) {
     if (window.confirm("Are you sure you want to delete this subscription?")) {
       setSubscriptions((subs) => subs.filter((sub) => sub.id !== id));
-      if (paginatedSubscriptions.length === 1 && currentPage > 1) {
-        setCurrentPage((p) => p - 1);
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredSubscriptions.length - 1 &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
       }
     }
   }
 
-  function handleRefresh() {
+  // Clear button handler (replaces Refresh)
+  function handleClear() {
     setFilterPlan("");
     setFilterStatus("");
     setSearchTerm("");
@@ -188,7 +192,7 @@ export default function Subscriptions() {
       <h1 className="text-lg font-semibold mb-6">Subscriptions</h1>
 
       {/* Filters and Actions Section */}
-      <section className="bg-white rounded shadow p-6 mb-6">
+      <section className="bg-card rounded shadow p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:space-x-6 space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 flex-grow">
             <div className="flex flex-col">
@@ -198,7 +202,7 @@ export default function Subscriptions() {
               <select
                 id="filterPlan"
                 name="filterPlan"
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={filterPlan}
                 onChange={(e) => {
                   setFilterPlan(e.target.value);
@@ -223,7 +227,7 @@ export default function Subscriptions() {
               <select
                 id="filterStatus"
                 name="filterStatus"
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={filterStatus}
                 onChange={(e) => {
                   setFilterStatus(e.target.value);
@@ -247,7 +251,7 @@ export default function Subscriptions() {
                 id="searchTerm"
                 name="searchTerm"
                 placeholder="Search by Subscription ID, Customer Name or Email"
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -260,161 +264,171 @@ export default function Subscriptions() {
           <div className="flex space-x-3">
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              title="Refresh"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Clear"
             >
-              <i className="fas fa-sync-alt mr-2"></i> Refresh
+              <i className="fa fa-refresh fa-light"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 border border-indigo-600 bg-indigo-600 text-white rounded shadow-sm text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Generate Report"
             >
-              <i className="fas fa-file-alt mr-2"></i> Report
+              <i className="fa fa-file-text fa-light"></i> Report
             </button>
           </div>
         </div>
       </section>
 
       {/* Subscriptions Table Section */}
-      <section className="bg-white rounded shadow p-6 mb-6 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Subscription ID
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Customer Name
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Email
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Plan
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Start Date
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                End Date
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {paginatedSubscriptions.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                  No subscriptions found.
-                </td>
+      <section className="bg-card rounded shadow py-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Subscription ID
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Customer Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Plan
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Start Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  End Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
-            ) : (
-              paginatedSubscriptions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{sub.subscriptionId}</td>
-                  <td className="px-4 py-3">{sub.customerName}</td>
-                  <td className="px-4 py-3">{sub.customerEmail}</td>
-                  <td className="px-4 py-3">{sub.subscriptionPlan}</td>
-                  <td className="px-4 py-3">{sub.startDate}</td>
-                  <td className="px-4 py-3">{sub.endDate}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        sub.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : sub.status === "Expired"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {sub.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(sub)}
-                      title="Edit"
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(sub.id)}
-                      title="Delete"
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
+            </thead>
+            <tbody>
+              {paginatedSubscriptions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No subscriptions found.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                paginatedSubscriptions.map((sub) => (
+                  <tr
+                    key={sub.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
+                  >
+                    <td className="px-4 py-2">{sub.subscriptionId}</td>
+                    <td className="px-4 py-2">{sub.customerName}</td>
+                    <td className="px-4 py-2">{sub.customerEmail}</td>
+                    <td className="px-4 py-2">{sub.subscriptionPlan}</td>
+                    <td className="px-4 py-2">{sub.startDate}</td>
+                    <td className="px-4 py-2">{sub.endDate}</td>
+                    <td className="px-4 py-2 text-sm">
+                      <span
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${sub.status === "Active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : sub.status === "Expired"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          }`}
+                      >
+                        {sub.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-center space-x-2 whitespace-nowrap">
+                      <button
+                        onClick={() => handleEdit(sub)}
+                        aria-label={`Edit subscription ${sub.subscriptionId}`}
+                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+                      >
+                        <i className="fa fa-edit fa-light" aria-hidden="true"></i>
+                        <span className="sr-only">Edit record</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(sub.id)}
+                        aria-label={`Delete subscription ${sub.subscriptionId}`}
+                        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+                      >
+                        <i
+                          className="fa fa-trash-can-xmark fa-light"
+                          aria-hidden="true"
+                        ></i>
+                        <span className="sr-only">Delete record</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <nav
-          className="mt-4 flex justify-center items-center space-x-2"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border ${
-              currentPage === 1
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous Page"
-          >
-            <i className="fas fa-chevron-left"></i>
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              aria-current={currentPage === i + 1 ? "page" : undefined}
-              className={`px-3 py-1 rounded border ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 border-indigo-600 text-white"
-                  : "border-gray-400 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`px-3 py-1 rounded border ${
-              currentPage === totalPages || totalPages === 0
-                ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                : "border-gray-400 text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next Page"
-          >
-            <i className="fas fa-chevron-right"></i>
-          </button>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredSubscriptions.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handleItemsPerPageChange}
+        />
       </section>
 
-      {/* Add / Edit Subscription Form Section */}
-      <section className="bg-white rounded shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">
-          {isEditingId !== null ? "Edit Subscription" : "Add New Subscription"}
-        </h2>
+      {/* Add Section - preserved exactly */}
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Add Subscription</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSave();
+            if (
+              !formData.subscriptionId.trim() ||
+              !formData.customerName.trim() ||
+              !formData.customerEmail.trim() ||
+              !formData.subscriptionPlan.trim() ||
+              !formData.startDate.trim() ||
+              !formData.endDate.trim() ||
+              !formData.status.trim()
+            ) {
+              alert("Please fill all fields.");
+              return;
+            }
+            const newId = subscriptions.length
+              ? Math.max(...subscriptions.map((s) => s.id)) + 1
+              : 1;
+            setSubscriptions((subs) => [
+              ...subs,
+              {
+                id: newId,
+                subscriptionId: formData.subscriptionId,
+                customerName: formData.customerName,
+                customerEmail: formData.customerEmail,
+                subscriptionPlan: formData.subscriptionPlan,
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+                status: formData.status,
+              },
+            ]);
+            setFormData({
+              subscriptionId: "",
+              customerName: "",
+              customerEmail: "",
+              subscriptionPlan: "",
+              startDate: "",
+              endDate: "",
+              status: "",
+            });
           }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
@@ -426,9 +440,11 @@ export default function Subscriptions() {
               type="text"
               id="subscriptionId"
               name="subscriptionId"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.subscriptionId}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, subscriptionId: e.target.value }))
+              }
               required
               autoComplete="off"
             />
@@ -441,9 +457,11 @@ export default function Subscriptions() {
               type="text"
               id="customerName"
               name="customerName"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.customerName}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, customerName: e.target.value }))
+              }
               required
               autoComplete="off"
             />
@@ -456,9 +474,11 @@ export default function Subscriptions() {
               type="email"
               id="customerEmail"
               name="customerEmail"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.customerEmail}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, customerEmail: e.target.value }))
+              }
               required
               autoComplete="off"
             />
@@ -470,9 +490,11 @@ export default function Subscriptions() {
             <select
               id="subscriptionPlan"
               name="subscriptionPlan"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.subscriptionPlan}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, subscriptionPlan: e.target.value }))
+              }
               required
             >
               <option value="">Select Plan</option>
@@ -491,9 +513,11 @@ export default function Subscriptions() {
               type="date"
               id="startDate"
               name="startDate"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.startDate}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, startDate: e.target.value }))
+              }
               required
             />
           </div>
@@ -505,9 +529,11 @@ export default function Subscriptions() {
               type="date"
               id="endDate"
               name="endDate"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.endDate}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, endDate: e.target.value }))
+              }
               required
             />
           </div>
@@ -518,9 +544,11 @@ export default function Subscriptions() {
             <select
               id="status"
               name="status"
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               value={formData.status}
-              onChange={handleInputChange}
+              onChange={(e) =>
+                setFormData((fd) => ({ ...fd, status: e.target.value }))
+              }
               required
             >
               <option value="">Select Status</option>
@@ -533,24 +561,180 @@ export default function Subscriptions() {
           </div>
 
           <div className="md:col-span-3 flex space-x-4 justify-end pt-4">
-            {isEditingId !== null && (
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="px-5 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-            )}
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {isEditingId !== null ? "Save Changes" : "Add Subscription"}
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Add
+              Subscription
             </button>
           </div>
         </form>
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Subscription
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="editSubscriptionId"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Subscription ID
+                </label>
+                <input
+                  type="text"
+                  id="editSubscriptionId"
+                  name="subscriptionId"
+                  value={editForm.subscriptionId}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter subscription ID"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editCustomerName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerName"
+                  name="customerName"
+                  value={editForm.customerName}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter customer name"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editCustomerEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Customer Email
+                </label>
+                <input
+                  type="email"
+                  id="editCustomerEmail"
+                  name="customerEmail"
+                  value={editForm.customerEmail}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter customer email"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editSubscriptionPlan"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Subscription Plan
+                </label>
+                <select
+                  id="editSubscriptionPlan"
+                  name="subscriptionPlan"
+                  value={editForm.subscriptionPlan}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {subscriptionPlans.map((plan) => (
+                    <option key={plan} value={plan}>
+                      {plan}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="editStartDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="editStartDate"
+                  name="startDate"
+                  value={editForm.startDate}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editEndDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="editEndDate"
+                  name="endDate"
+                  value={editForm.endDate}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {SubscriptionStatusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
