@@ -1,5 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const suppliers = [
   "ABC Suppliers",
@@ -15,8 +16,6 @@ const suppliers = [
 ];
 
 const paymentMethods = ["Cash", "Cheque", "Bank Transfer", "Credit Card"];
-
-const pageSize = 5;
 
 export default function PurchaseTransaction() {
   const [data, setData] = useState([]);
@@ -39,16 +38,11 @@ export default function PurchaseTransaction() {
     loadData();
   }, []);
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [paginatedData, setPaginatedData] = useState([]);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    const start = (currentPage - 1) * pageSize;
-    setPaginatedData(data.slice(start, start + pageSize));
-  }, [currentPage, data]);
-
-  const totalPages = Math.ceil(data.length / pageSize);
-
+  // Form state for Add Section (preserved exactly)
   const [form, setForm] = useState({
     invoiceNo: "",
     supplierName: "",
@@ -61,6 +55,22 @@ export default function PurchaseTransaction() {
     paymentNote: "",
   });
 
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    invoiceNo: "",
+    supplierName: "",
+    purchaseDate: "",
+    totalAmount: "",
+    paidAmount: "",
+    dueAmount: "",
+    paymentMethod: paymentMethods[0],
+    paymentDate: "",
+    paymentNote: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -70,11 +80,23 @@ export default function PurchaseTransaction() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handlers for Edit Modal form inputs
+  const handleEditInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save handler for Add Section (preserved exactly)
   const handleSave = () => {
     alert("Save functionality is not implemented in this demo.");
   };
 
-  const handleRefresh = () => {
+  // Clear button handler (replaces Refresh)
+  const handleClear = () => {
     setForm({
       invoiceNo: "",
       supplierName: "",
@@ -86,11 +108,79 @@ export default function PurchaseTransaction() {
       paymentDate: "",
       paymentNote: "",
     });
+    setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
     alert("Report functionality is not implemented in this demo.");
   };
+
+  // Open edit modal and populate edit form
+  const handleEdit = (id: number) => {
+    const item = data.find((d) => d.id === id);
+    if (item) {
+      setEditForm({
+        invoiceNo: item.invoiceNo,
+        supplierName: item.supplierName,
+        purchaseDate: item.purchaseDate,
+        totalAmount: item.totalAmount,
+        paidAmount: item.paidAmount,
+        dueAmount: item.dueAmount,
+        paymentMethod: item.paymentMethod,
+        paymentDate: item.paymentDate,
+        paymentNote: item.paymentNote,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  // Save handler for Edit Modal
+  const handleEditSave = () => {
+    if (
+      !editForm.invoiceNo.trim() ||
+      !editForm.supplierName.trim() ||
+      !editForm.purchaseDate
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                invoiceNo: editForm.invoiceNo.trim(),
+                supplierName: editForm.supplierName,
+                purchaseDate: editForm.purchaseDate,
+                totalAmount: editForm.totalAmount,
+                paidAmount: editForm.paidAmount,
+                dueAmount: editForm.dueAmount,
+                paymentMethod: editForm.paymentMethod,
+                paymentDate: editForm.paymentDate,
+                paymentNote: editForm.paymentNote,
+              }
+            : item
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  // Cancel editing modal
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  // Calculate paginated data using Pagination component props
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <>
@@ -99,7 +189,7 @@ export default function PurchaseTransaction() {
         <h1 className="text-lg font-semibold mb-6">Purchase Transaction</h1>
 
         {/* Purchase Transaction Form */}
-        <section className="bg-white rounded shadow p-6 mb-8">
+        <section className="bg-card rounded shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Purchase Details</h2>
           <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -115,7 +205,7 @@ export default function PurchaseTransaction() {
                 name="invoiceNo"
                 value={form.invoiceNo}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter Invoice No"
               />
             </div>
@@ -131,7 +221,7 @@ export default function PurchaseTransaction() {
                 name="supplierName"
                 value={form.supplierName}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Select Supplier</option>
                 {suppliers.map((sup) => (
@@ -154,7 +244,7 @@ export default function PurchaseTransaction() {
                 name="purchaseDate"
                 value={form.purchaseDate}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -172,7 +262,7 @@ export default function PurchaseTransaction() {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="0.00"
               />
             </div>
@@ -191,7 +281,7 @@ export default function PurchaseTransaction() {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="0.00"
               />
             </div>
@@ -210,7 +300,7 @@ export default function PurchaseTransaction() {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="0.00"
               />
             </div>
@@ -226,7 +316,7 @@ export default function PurchaseTransaction() {
                 name="paymentMethod"
                 value={form.paymentMethod}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {paymentMethods.map((method) => (
                   <option key={method} value={method}>
@@ -248,7 +338,7 @@ export default function PurchaseTransaction() {
                 name="paymentDate"
                 value={form.paymentDate}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="md:col-span-3">
@@ -264,7 +354,7 @@ export default function PurchaseTransaction() {
                 value={form.paymentNote}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 placeholder="Enter any notes here"
               />
             </div>
@@ -275,106 +365,116 @@ export default function PurchaseTransaction() {
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-save mr-2"></i> Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
             <button
               type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-sync-alt mr-2"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               type="button"
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <i className="fas fa-file-alt mr-2"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
           </div>
         </section>
 
         {/* Purchase Transactions Table */}
-        <section className="bg-white rounded shadow p-6">
+        <section className="bg-card rounded shadow py-6">
           <h2 className="text-xl font-semibold mb-4">Purchase Transactions</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Invoice No
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Supplier Name
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border">
                     Purchase Date
                   </th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground border-r border-border">
                     Total Amount
                   </th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground border-r border-border">
                     Paid Amount
                   </th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground border-r border-border">
                     Due Amount
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-gray-700 border-r border-gray-300">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground border-r border-border">
                     Status
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody>
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="text-center px-4 py-6 text-muted-foreground italic"
+                    >
+                      No purchase transactions found.
+                    </td>
+                  </tr>
+                )}
                 {paginatedData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
+                  <tr
+                    key={item.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
+                  >
+                    <td className="px-4 py-2 border-r border-border">
                       {item.invoiceNo}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-2 border-r border-border">
                       {item.supplierName}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap border-r border-gray-300">
+                    <td className="px-4 py-2 border-r border-border">
                       {item.purchaseDate}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-right border-r border-gray-300">
+                    <td className="px-4 py-2 text-right border-r border-border">
                       ₹{item.totalAmount.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-right border-r border-gray-300">
+                    <td className="px-4 py-2 text-right border-r border-border">
                       ₹{item.paidAmount.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-right border-r border-gray-300">
+                    <td className="px-4 py-2 text-right border-r border-border">
                       ₹{item.dueAmount.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center border-r border-gray-300">
+                    <td className="px-4 py-2 text-center border-r border-border">
                       <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           item.status === "Paid"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                             : item.status === "Partial"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center">
+                    <td className="px-4 py-2 text-center space-x-2 whitespace-nowrap">
                       <button
                         type="button"
-                        title="Edit"
-                        className="text-blue-600 hover:text-blue-800 focus:outline-none"
-                        onClick={() =>
-                          alert(
-                            `Edit functionality for ${item.invoiceNo} not implemented.`
-                          )
-                        }
+                        onClick={() => handleEdit(item.id)}
+                        aria-label={`Edit purchase ${item.invoiceNo}`}
+                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
                       >
-                        <i className="fas fa-edit"></i>
+                        <i className="fa fa-edit fa-light" aria-hidden="true"></i>
+                        <span className="sr-only">Edit record</span>
                       </button>
                     </td>
                   </tr>
@@ -384,105 +484,219 @@ export default function PurchaseTransaction() {
           </div>
 
           {/* Pagination */}
-          <nav
-            className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-4"
-            aria-label="Pagination"
-          >
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(p + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * pageSize + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium">
-                    {Math.min(currentPage * pageSize, data.length)}
-                  </span>{" "}
-                  of <span className="font-medium">{data.length}</span> results
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px ml-6"
-                  aria-label="Pagination"
-                >
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="First"
-                  >
-                    <i className="fas fa-angle-double-left"></i>
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Previous"
-                  >
-                    <i className="fas fa-angle-left"></i>
-                  </button>
-
-                  {[...Array(totalPages)].map((_, i) => {
-                    const page = i + 1;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        aria-current={currentPage === page ? "page" : undefined}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page
-                            ? "z-10 bg-blue-600 border-blue-600 text-white"
-                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Next"
-                  >
-                    <i className="fas fa-angle-right"></i>
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Last"
-                  >
-                    <i className="fas fa-angle-double-right"></i>
-                  </button>
-                </nav>
-              </div>
-            </div>
-          </nav>
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={data.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setItemsPerPage}
+          />
         </section>
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+              <h2
+                id="edit-modal-title"
+                className="text-xl font-semibold mb-4 text-center"
+              >
+                Edit Purchase Transaction
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="editInvoiceNo"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Invoice No
+                  </label>
+                  <input
+                    type="text"
+                    id="editInvoiceNo"
+                    name="invoiceNo"
+                    value={editForm.invoiceNo}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Enter Invoice No"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editSupplierName"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Supplier Name
+                  </label>
+                  <select
+                    id="editSupplierName"
+                    name="supplierName"
+                    value={editForm.supplierName}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select Supplier</option>
+                    {suppliers.map((sup) => (
+                      <option key={sup} value={sup}>
+                        {sup}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editPurchaseDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Purchase Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editPurchaseDate"
+                    name="purchaseDate"
+                    value={editForm.purchaseDate}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editTotalAmount"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Total Amount
+                  </label>
+                  <input
+                    type="number"
+                    id="editTotalAmount"
+                    name="totalAmount"
+                    value={editForm.totalAmount}
+                    onChange={handleEditInputChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editPaidAmount"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Paid Amount
+                  </label>
+                  <input
+                    type="number"
+                    id="editPaidAmount"
+                    name="paidAmount"
+                    value={editForm.paidAmount}
+                    onChange={handleEditInputChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editDueAmount"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Due Amount
+                  </label>
+                  <input
+                    type="number"
+                    id="editDueAmount"
+                    name="dueAmount"
+                    value={editForm.dueAmount}
+                    onChange={handleEditInputChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="editPaymentMethod"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Payment Method
+                  </label>
+                  <select
+                    id="editPaymentMethod"
+                    name="paymentMethod"
+                    value={editForm.paymentMethod}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {paymentMethods.map((method) => (
+                      <option key={method} value={method}>
+                        {method}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="editPaymentDate"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Payment Date
+                  </label>
+                  <input
+                    type="date"
+                    id="editPaymentDate"
+                    name="paymentDate"
+                    value={editForm.paymentDate}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <label
+                    htmlFor="editPaymentNote"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Payment Note
+                  </label>
+                  <textarea
+                    id="editPaymentNote"
+                    name="paymentNote"
+                    value={editForm.paymentNote}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                    placeholder="Enter any notes here"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

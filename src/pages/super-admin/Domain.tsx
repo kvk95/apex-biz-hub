@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const domainTypes = ["Primary", "Secondary"];
 const domainStatuses = ["Active", "Inactive"];
@@ -7,7 +8,7 @@ const domainStatuses = ["Active", "Inactive"];
 export default function Domain() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Form state for adding/editing domain
   const [form, setForm] = useState({
@@ -19,8 +20,16 @@ export default function Domain() {
     domainOwner: "",
   });
 
-  // Editing state
-  const [isEditing, setIsEditing] = useState(false);
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    domainName: "",
+    domainUrl: "",
+    domainType: "Primary",
+    domainStatus: "Active",
+    domainExpireDate: "",
+    domainOwner: "",
+  });
   const [editId, setEditId] = useState<number | null>(null);
 
   // Data state
@@ -46,19 +55,19 @@ export default function Domain() {
     loadData();
   }, []);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(domains.length / itemsPerPage);
-  const paginatedDomains = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return domains.slice(start, start + itemsPerPage);
-  }, [currentPage, domains]);
-
   // Handlers
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
@@ -71,7 +80,7 @@ export default function Domain() {
       alert("Please fill all required fields.");
       return;
     }
-    if (isEditing && editId !== null) {
+    if (editId !== null) {
       setDomains((prev) =>
         prev.map((d) => (d.id === editId ? { ...d, ...form } : d))
       );
@@ -97,7 +106,7 @@ export default function Domain() {
   const handleEdit = (id: number) => {
     const domain = domains.find((d) => d.id === id);
     if (domain) {
-      setForm({
+      setEditForm({
         domainName: domain.domainName,
         domainUrl: domain.domainUrl,
         domainType: domain.domainType,
@@ -105,10 +114,33 @@ export default function Domain() {
         domainExpireDate: domain.domainExpireDate,
         domainOwner: domain.domainOwner,
       });
-      setIsEditing(true);
       setEditId(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsEditModalOpen(true);
     }
+  };
+
+  const handleEditSave = () => {
+    if (
+      !editForm.domainName.trim() ||
+      !editForm.domainUrl.trim() ||
+      !editForm.domainExpireDate.trim() ||
+      !editForm.domainOwner.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (editId !== null) {
+      setDomains((prev) =>
+        prev.map((d) => (d.id === editId ? { ...d, ...editForm } : d))
+      );
+      setIsEditModalOpen(false);
+      setEditId(null);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setEditId(null);
   };
 
   const handleDelete = (id: number) => {
@@ -124,9 +156,7 @@ export default function Domain() {
     }
   };
 
-  const handleRefresh = () => {
-    setDomains(data);
-    setCurrentPage(1);
+  const handleClear = () => {
     setForm({
       domainName: "",
       domainUrl: "",
@@ -135,8 +165,9 @@ export default function Domain() {
       domainExpireDate: "",
       domainOwner: "",
     });
-    setIsEditing(false);
+    setIsEditModalOpen(false);
     setEditId(null);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -144,73 +175,71 @@ export default function Domain() {
     alert(JSON.stringify(domains, null, 2));
   };
 
+  // Calculate paginated data using Pagination component props
+  const paginatedDomains = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return domains.slice(start, start + itemsPerPage);
+  }, [currentPage, domains]);
+
   return (
     <div className="min-h-screen bg-background">
       <h1 className="text-lg font-semibold mb-6">Domain</h1>
 
       {/* Domain Form Section */}
-      <section className="bg-white rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Domain</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          noValidate
-        >
+      <section className="bg-card rounded shadow p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Domain Name */}
           <div>
             <label
               htmlFor="domainName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain Name <span className="text-red-600">*</span>
+              Domain Name
             </label>
             <input
+              type="text"
               id="domainName"
               name="domainName"
-              type="text"
               value={form.domainName}
               onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter domain name"
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             />
           </div>
 
+          {/* Domain URL */}
           <div>
             <label
               htmlFor="domainUrl"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain URL <span className="text-red-600">*</span>
+              Domain URL
             </label>
             <input
+              type="url"
               id="domainUrl"
               name="domainUrl"
-              type="url"
               value={form.domainUrl}
               onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="https://example.com"
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             />
           </div>
 
+          {/* Domain Type */}
           <div>
             <label
               htmlFor="domainType"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain Type <span className="text-red-600">*</span>
+              Domain Type
             </label>
             <select
               id="domainType"
               name="domainType"
               value={form.domainType}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {domainTypes.map((type) => (
                 <option key={type} value={type}>
@@ -220,20 +249,20 @@ export default function Domain() {
             </select>
           </div>
 
+          {/* Domain Status */}
           <div>
             <label
               htmlFor="domainStatus"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain Status <span className="text-red-600">*</span>
+              Domain Status
             </label>
             <select
               id="domainStatus"
               name="domainStatus"
               value={form.domainStatus}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {domainStatuses.map((status) => (
                 <option key={status} value={status}>
@@ -243,134 +272,119 @@ export default function Domain() {
             </select>
           </div>
 
+          {/* Domain Expire Date */}
           <div>
             <label
               htmlFor="domainExpireDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain Expire Date <span className="text-red-600">*</span>
+              Domain Expire Date
             </label>
             <input
+              type="date"
               id="domainExpireDate"
               name="domainExpireDate"
-              type="date"
               value={form.domainExpireDate}
               onChange={handleInputChange}
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
+          {/* Domain Owner */}
           <div>
             <label
               htmlFor="domainOwner"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium mb-1"
             >
-              Domain Owner <span className="text-red-600">*</span>
+              Domain Owner
             </label>
             <input
+              type="text"
               id="domainOwner"
               name="domainOwner"
-              type="text"
               value={form.domainOwner}
               onChange={handleInputChange}
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter domain owner"
-              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             />
           </div>
+        </div>
 
-          <div className="md:col-span-3 flex space-x-4 pt-4">
-            <button
-              type="submit"
-              className="inline-flex items-center px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <i className="fas fa-save mr-2"></i>
-              {isEditing ? "Update" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setForm({
-                  domainName: "",
-                  domainUrl: "",
-                  domainType: "Primary",
-                  domainStatus: "Active",
-                  domainExpireDate: "",
-                  domainOwner: "",
-                });
-                setIsEditing(false);
-                setEditId(null);
-              }}
-              className="inline-flex items-center px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <i className="fas fa-times mr-2"></i>Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            >
-              <i className="fas fa-sync-alt mr-2"></i>Refresh
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="inline-flex items-center px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <i className="fas fa-file-alt mr-2"></i>Report
-            </button>
-          </div>
-        </form>
+        {/* Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
+          </button>
+
+          <button
+            onClick={handleClear}
+            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+          </button>
+
+          <button
+            onClick={handleReport}
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+            type="button"
+          >
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+          </button>
+        </div>
       </section>
 
       {/* Domain List Section */}
-      <section className="bg-white rounded shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Domain List</h2>
+      <section className="bg-card rounded shadow py-6">
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 divide-y divide-gray-200">
-            <thead className="bg-indigo-600 text-white">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Domain Name
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Domain URL
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Domain Type
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Domain Status
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Expire Date
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Domain Owner
                 </th>
-                <th className="px-4 py-2 text-center text-sm font-semibold">
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {paginatedDomains.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
-                    className="text-center py-4 text-gray-500 italic"
+                    className="text-center px-4 py-6 text-muted-foreground italic"
                   >
                     No domains found.
                   </td>
                 </tr>
               ) : (
                 paginatedDomains.map((domain) => (
-                  <tr key={domain.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {domain.domainName}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-indigo-600 underline">
+                  <tr
+                    key={domain.id}
+                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
+                  >
+                    <td className="px-4 py-2">{domain.domainName}</td>
+                    <td className="px-4 py-2">
                       <a
                         href={domain.domainUrl}
                         target="_blank"
@@ -380,38 +394,39 @@ export default function Domain() {
                         {domain.domainUrl}
                       </a>
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-                      {domain.domainType}
-                    </td>
+                    <td className="px-4 py-2">{domain.domainType}</td>
                     <td
-                      className={`px-4 py-2 whitespace-nowrap text-sm font-semibold ${
+                      className={`px-4 py-2 text-sm ${
                         domain.domainStatus === "Active"
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                       }`}
                     >
                       {domain.domainStatus}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-                      {domain.domainExpireDate}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-                      {domain.domainOwner}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center text-sm space-x-2">
+                    <td className="px-4 py-2">{domain.domainExpireDate}</td>
+                    <td className="px-4 py-2">{domain.domainOwner}</td>
+                    <td className="px-4 py-2 text-center space-x-2">
                       <button
+                        type="button"
                         onClick={() => handleEdit(domain.id)}
-                        title="Edit"
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                        aria-label={`Edit domain ${domain.domainName}`}
+                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                       >
-                        <i className="fas fa-edit"></i>
+                        <i className="fa fa-edit fa-light" aria-hidden="true"></i>
+                        <span className="sr-only">Edit record</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDelete(domain.id)}
-                        title="Delete"
-                        className="text-red-600 hover:text-red-900 focus:outline-none"
+                        aria-label={`Delete domain ${domain.domainName}`}
+                        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                       >
-                        <i className="fas fa-trash-alt"></i>
+                        <i
+                          className="fa fa-trash-can-xmark fa-light"
+                          aria-hidden="true"
+                        ></i>
+                        <span className="sr-only">Delete record</span>
                       </button>
                     </td>
                   </tr>
@@ -421,80 +436,174 @@ export default function Domain() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="mt-6 flex justify-center items-center space-x-2"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            aria-label="First Page"
-          >
-            <i className="fas fa-angle-double-left"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            aria-label="Previous Page"
-          >
-            <i className="fas fa-angle-left"></i>
-          </button>
-
-          {[...Array(totalPages)].map((_, i) => {
-            const pageNum = i + 1;
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                aria-current={currentPage === pageNum ? "page" : undefined}
-                className={`px-3 py-1 rounded border border-gray-300 ${
-                  currentPage === pageNum
-                    ? "bg-indigo-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            aria-label="Next Page"
-          >
-            <i className="fas fa-angle-right"></i>
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            aria-label="Last Page"
-          >
-            <i className="fas fa-angle-double-right"></i>
-          </button>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={domains.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit Domain
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Domain Name */}
+              <div>
+                <label
+                  htmlFor="editDomainName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain Name
+                </label>
+                <input
+                  type="text"
+                  id="editDomainName"
+                  name="domainName"
+                  value={editForm.domainName}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter domain name"
+                />
+              </div>
+
+              {/* Domain URL */}
+              <div>
+                <label
+                  htmlFor="editDomainUrl"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain URL
+                </label>
+                <input
+                  type="url"
+                  id="editDomainUrl"
+                  name="domainUrl"
+                  value={editForm.domainUrl}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              {/* Domain Type */}
+              <div>
+                <label
+                  htmlFor="editDomainType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain Type
+                </label>
+                <select
+                  id="editDomainType"
+                  name="domainType"
+                  value={editForm.domainType}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {domainTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Domain Status */}
+              <div>
+                <label
+                  htmlFor="editDomainStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain Status
+                </label>
+                <select
+                  id="editDomainStatus"
+                  name="domainStatus"
+                  value={editForm.domainStatus}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {domainStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Domain Expire Date */}
+              <div>
+                <label
+                  htmlFor="editDomainExpireDate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain Expire Date
+                </label>
+                <input
+                  type="date"
+                  id="editDomainExpireDate"
+                  name="domainExpireDate"
+                  value={editForm.domainExpireDate}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Domain Owner */}
+              <div>
+                <label
+                  htmlFor="editDomainOwner"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Domain Owner
+                </label>
+                <input
+                  type="text"
+                  id="editDomainOwner"
+                  name="domainOwner"
+                  value={editForm.domainOwner}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter domain owner"
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
