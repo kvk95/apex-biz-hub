@@ -13,7 +13,7 @@
       {
         "id": "totalSales",
         "title": "Total Sales",
-        "value": "$48,988,078",
+        "value": "₹8,988,078",
         "change": 22,
         "icon": "fa fa-dollar-sign",
         "gradient": "bg-success/10"
@@ -21,7 +21,7 @@
       {
         "id": "totalSalesReturn",
         "title": "Total Sales Return",
-        "value": "$16,478,145",
+        "value": "₹1,478,145",
         "change": -22,
         "icon": "fa fa-undo",
         "gradient": "bg-warning/10"
@@ -29,7 +29,7 @@
       {
         "id": "totalPurchase",
         "title": "Total Purchase",
-        "value": "$24,145,789",
+        "value": "₹2,145,789",
         "change": 22,
         "icon": "fa fa-shopping-bag",
         "gradient": "bg-primary/10"
@@ -37,7 +37,7 @@
       {
         "id": "totalPurchaseReturn",
         "title": "Total Purchase Return",
-        "value": "$18,458,747",
+        "value": "₹1,458,747",
         "change": 22,
         "icon": "fa fa-undo",
         "gradient": "bg-warning/10"
@@ -45,7 +45,7 @@
       {
         "id": "profit",
         "title": "Profit",
-        "value": "$8,458,798",
+        "value": "₹8,458,798",
         "change": 35,
         "icon": "fa fa-trending-up",
         "gradient": "bg-accent/10"
@@ -53,7 +53,7 @@
       {
         "id": "invoiceDue",
         "title": "Invoice Due",
-        "value": "$4,898,878",
+        "value": "₹4,898,878",
         "change": 35,
         "icon": "fa fa-file-invoice",
         "gradient": "bg-info/10"
@@ -61,7 +61,7 @@
       {
         "id": "totalExpenses",
         "title": "Total Expenses",
-        "value": "$8,980,097",
+        "value": "₹8,980,097",
         "change": 41,
         "icon": "fa fa-money-bill",
         "gradient": "bg-danger/10"
@@ -69,7 +69,7 @@
       {
         "id": "totalPaymentReturns",
         "title": "Total Payment Returns",
-        "value": "$78,458,798",
+        "value": "₹7,458,798",
         "change": -20,
         "icon": "fa fa-undo",
         "gradient": "bg-warning/10"
@@ -77,7 +77,7 @@
       {
         "id": "totalPurchaseDue",
         "title": "Total Purchase Due",
-        "value": "$307,144.00",
+        "value": "₹3,144.00",
         "change": 0,
         "icon": "fa fa-shopping-bag",
         "gradient": "bg-primary/10"
@@ -85,7 +85,7 @@
       {
         "id": "totalSalesDue",
         "title": "Total Sales Due",
-        "value": "$4,385.00",
+        "value": "₹4,385.00",
         "change": 0,
         "icon": "fa fa-dollar-sign",
         "gradient": "bg-success/10"
@@ -93,7 +93,7 @@
       {
         "id": "totalSaleAmount",
         "title": "Total Sale Amount",
-        "value": "$385,656.50",
+        "value": "₹35,656.50",
         "change": 0,
         "icon": "fa fa-dollar-sign",
         "gradient": "bg-success/10"
@@ -101,7 +101,7 @@
       {
         "id": "totalExpenseAmount",
         "title": "Total Expense Amount",
-        "value": "$400.00",
+        "value": "₹400.00",
         "change": 0,
         "icon": "fa fa-money-bill",
         "gradient": "bg-danger/10"
@@ -155,7 +155,7 @@
         "id": "1",
         "customer": "John Doe",
         "product": "Apple Watch",
-        "amount": "$640",
+        "amount": "₹640",
         "status": "Completed",
         "date": "Today"
       },
@@ -163,7 +163,7 @@
         "id": "2",
         "customer": "Jane Smith",
         "product": "Gold Bracelet",
-        "amount": "$126",
+        "amount": "₹126",
         "status": "Processing",
         "date": "15 Jan 2025"
       }
@@ -187,43 +187,43 @@
         "name": "Carlos Curran",
         "email": "carlos@example.com",
         "orders": 24,
-        "total": "$8,9645"
+        "total": "₹8,9645"
       },
       {
         "name": "Stan Gaunter",
         "email": "stan@example.com",
         "orders": 22,
-        "total": "$16,985"
+        "total": "₹16,985"
       }
     ],
     "topSellingProducts": [
       {
         "name": "Charger Cable - Lighting",
-        "price": "$187",
+        "price": "₹187",
         "sales": "247+",
         "percentage": "25%"
       },
       {
         "name": "Yves Saint Eau De Parfum",
-        "price": "$145",
+        "price": "₹145",
         "sales": "289+",
         "percentage": "25%"
       },
       {
         "name": "Apple Airpods 2",
-        "price": "$458",
+        "price": "₹458",
         "sales": "300+",
         "percentage": "25%"
       },
       {
         "name": "Vacuum Cleaner",
-        "price": "$139",
+        "price": "₹139",
         "sales": "225+",
         "percentage": "21%"
       },
       {
         "name": "Samsung Galaxy S21 Fe 5g",
-        "price": "$898",
+        "price": "₹898",
         "sales": "365+",
         "percentage": "25%"
       }
@@ -232,31 +232,31 @@
       {
         "name": "Apple Watch Series 9",
         "category": "Electronics",
-        "price": "$640",
+        "price": "₹640",
         "date": "Today",
         "status": "Processing"
       },
       {
         "name": "Gold Bracelet",
         "category": "Fashion",
-        "price": "$126",
+        "price": "₹126",
         "date": "15 Jan 2025",
         "status": "Cancelled"
       },
       {
         "name": "Osmo Genius Starter Kit",
         "category": "Lifestyles",
-        "price": "$87.56",
+        "price": "₹87.56",
         "date": "11 Jan 2025",
         "status": "Completed"
       }
     ],
     "revenue": {
-      "value": "$12,189",
+      "value": "₹12,189",
       "percentage": 25
     },
     "expense": {
-      "value": "$48,988,078",
+      "value": "₹48,988,078",
       "percentage": 25
     },
     "customerTransactions": [
@@ -264,31 +264,31 @@
         "date": "24 May 2025",
         "customer": "",
         "status": "Completed",
-        "total": "$4,560"
+        "total": "₹4,560"
       },
       {
         "date": "23 May 2025",
         "customer": "",
         "status": "Completed",
-        "total": "$3,569"
+        "total": "₹3,569"
       },
       {
         "date": "22 May 2025",
         "customer": "",
         "status": "Draft",
-        "total": "$4,560"
+        "total": "₹4,560"
       },
       {
         "date": "21 May 2025",
         "customer": "Randy McCree #114589",
         "status": "Completed",
-        "total": "$2,155"
+        "total": "₹2,155"
       },
       {
         "date": "21 May 2025",
         "customer": "",
         "status": "Completed",
-        "total": "$5,123"
+        "total": "₹5,123"
       }
     ],
     "supplierTransactions": [
@@ -296,31 +296,31 @@
         "date": "24 May 2025",
         "supplier": "Electro Mart",
         "status": "Completed",
-        "total": "$1000"
+        "total": "₹1000"
       },
       {
         "date": "23 May 2025",
         "supplier": "Quantum Gadgets",
         "status": "Completed",
-        "total": "$1500"
+        "total": "₹1500"
       },
       {
         "date": "22 May 2025",
         "supplier": "Prime Bazaar",
         "status": "Pending",
-        "total": "$2000"
+        "total": "₹2000"
       },
       {
         "date": "21 May 2025",
         "supplier": "Alpha Mobiles",
         "status": "Completed",
-        "total": "$1200"
+        "total": "₹1200"
       },
       {
         "date": "21 May 2025",
         "supplier": "Aesthetic Bags",
         "status": "Completed",
-        "total": "$1300"
+        "total": "₹1300"
       }
     ],
     "expenses": [
@@ -328,31 +328,31 @@
         "date": "24 May 2025",
         "expense": "Electricity Payment #EX849",
         "status": "Approved",
-        "total": "$200"
+        "total": "₹200"
       },
       {
         "date": "23 May 2025",
         "expense": "Electricity Payment #EX849",
         "status": "Approved",
-        "total": "$200"
+        "total": "₹200"
       },
       {
         "date": "22 May 2025",
         "expense": "Stationery Purchase #EX848",
         "status": "Approved",
-        "total": "$50"
+        "total": "₹50"
       },
       {
         "date": "21 May 2025",
         "expense": "AC Repair Service #EX847",
         "status": "Pending",
-        "total": "$800"
+        "total": "₹800"
       },
       {
         "date": "21 May 2025",
         "expense": "Client Meeting #EX846",
         "status": "Approved",
-        "total": "$100"
+        "total": "₹100"
       }
     ],
     "invoices": [
@@ -360,31 +360,31 @@
         "customer": "",
         "dueDate": "24 May 2025",
         "status": "Paid",
-        "amount": "$1300"
+        "amount": "₹1300"
       },
       {
         "customer": "",
         "dueDate": "23 May 2025",
         "status": "Overdue",
-        "amount": "$1250"
+        "amount": "₹1250"
       },
       {
         "customer": "",
         "dueDate": "22 May 2025",
         "status": "Paid",
-        "amount": "$1700"
+        "amount": "₹1700"
       },
       {
         "customer": "Randy McCree #INV002",
         "dueDate": "21 May 2025",
         "status": "Unpaid",
-        "amount": "$1500"
+        "amount": "₹1500"
       },
       {
         "customer": "",
         "dueDate": "21 May 2025",
         "status": "Paid",
-        "amount": "$1000"
+        "amount": "₹1000"
       }
     ],
     "topCategories": [
@@ -405,22 +405,22 @@
       {
         "id": 1,
         "product": "Product A",
-        "price": "$12500"
+        "price": "₹12500"
       },
       {
         "id": 2,
         "product": "Product B",
-        "price": "$1600"
+        "price": "₹1600"
       },
       {
         "id": 3,
         "product": "Product C",
-        "price": "$2000"
+        "price": "₹2000"
       },
       {
         "id": 4,
         "product": "Product D",
-        "price": "$800"
+        "price": "₹800"
       }
     ],
     "expiredProducts": [
