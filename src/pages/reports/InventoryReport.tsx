@@ -88,8 +88,6 @@ const InventoryReport: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // No edit/delete features exist in the destination, so no modal logic is added
-
   return (
     <div className="min-h-screen bg-background">
       <h1 className="text-lg font-semibold mb-6">Inventory Report</h1>

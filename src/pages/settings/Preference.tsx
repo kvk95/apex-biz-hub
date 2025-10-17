@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
+import { Pagination } from "@/components/Pagination/Pagination";
 
 const roles = ["Admin", "User", "Manager"];
 const statuses = ["Active", "Inactive"];
@@ -23,7 +24,7 @@ const Preference: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []); 
+  }, []);
 
   // General Settings state
   const [companyName, setCompanyName] = useState("");
@@ -55,7 +56,6 @@ const Preference: React.FC = () => {
   // When data changes, update states accordingly
   useEffect(() => {
     if (!loading && !error && data) {
-      // Assuming data has the same structure as preferenceData.sections
       const sections = (data as any).sections || {};
 
       const generalSettings = sections.generalSettings || {};
@@ -88,51 +88,31 @@ const Preference: React.FC = () => {
 
   // Pagination calculations
   const totalUsers = users.length;
-  const totalPages = Math.ceil(totalUsers / itemsPerPage);
 
-  const paginatedUsers = users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // Handlers for pagination buttons
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-  };
-
-  // Handlers for buttons (Save, Refresh, Report)
+  // Handlers for buttons (Save, Clear, Report)
   const handleSave = () => {
     alert("Settings saved successfully.");
   };
 
-  const handleRefresh = () => {
-    if (data) {
-      const sections = (data as any).sections || {};
-
-      const generalSettings = sections.generalSettings || {};
-      setCompanyName(generalSettings.companyName || "");
-      setCompanyEmail(generalSettings.companyEmail || "");
-      setCompanyPhone(generalSettings.companyPhone || "");
-      setCompanyAddress(generalSettings.companyAddress || "");
-      setCurrency(generalSettings.currency || "");
-      setTimezone(generalSettings.timezone || "");
-      setDateFormat(generalSettings.dateFormat || "");
-      setTimeFormat(generalSettings.timeFormat || "");
-      setLanguage(generalSettings.language || "");
-
-      const invoiceSettings = sections.invoiceSettings || {};
-      setInvoicePrefix(invoiceSettings.invoicePrefix || "");
-      setInvoiceStartNumber(invoiceSettings.invoiceStartNumber || undefined);
-      setInvoiceFooterNote(invoiceSettings.invoiceFooterNote || "");
-      setInvoiceTerms(invoiceSettings.invoiceTerms || "");
-
-      const userPreferences = sections.userPreferences || {};
-      setTheme(userPreferences.theme || "");
-      setNotifications(userPreferences.notifications || false);
-      setAutoSave(userPreferences.autoSave || false);
-      setItemsPerPage(userPreferences.itemsPerPage || 10);
-
-      setUsers(sections.users || []);
-      setCurrentPage(1);
-    }
+  const handleClear = () => {
+    setCompanyName("");
+    setCompanyEmail("");
+    setCompanyPhone("");
+    setCompanyAddress("");
+    setCurrency("");
+    setTimezone("");
+    setDateFormat("");
+    setTimeFormat("");
+    setLanguage("");
+    setInvoicePrefix("");
+    setInvoiceStartNumber(undefined);
+    setInvoiceFooterNote("");
+    setInvoiceTerms("");
+    setTheme("");
+    setNotifications(false);
+    setAutoSave(false);
+    setItemsPerPage(10);
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
@@ -152,13 +132,74 @@ const Preference: React.FC = () => {
     );
   };
 
+  // Modal editing state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    role: roles[0],
+    status: statuses[0],
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  const handleEdit = (id: number) => {
+    const item = users.find((u) => u.id === id);
+    if (item) {
+      setEditForm({
+        name: item.name,
+        email: item.email,
+        role: item.role,
+        status: item.status,
+      });
+      setEditId(id);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleEditSave = () => {
+    if (editId !== null) {
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === editId
+            ? {
+                ...user,
+                name: editForm.name,
+                email: editForm.email,
+                role: editForm.role,
+                status: editForm.status,
+              }
+            : user
+        )
+      );
+      setEditId(null);
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Page Title */}
       <h1 className="text-lg font-semibold mb-6">Preference</h1>
 
       {/* General Settings Section */}
-      <section className="mb-10 bg-white rounded shadow p-6">
+      <section className="mb-10 bg-card rounded shadow p-6">
         <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">General Settings</h2>
         <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -168,7 +209,8 @@ const Preference: React.FC = () => {
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter company name"
             />
           </div>
           <div>
@@ -178,7 +220,7 @@ const Preference: React.FC = () => {
               type="email"
               value={companyEmail}
               onChange={(e) => setCompanyEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -188,7 +230,7 @@ const Preference: React.FC = () => {
               type="tel"
               value={companyPhone}
               onChange={(e) => setCompanyPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -198,7 +240,7 @@ const Preference: React.FC = () => {
               type="text"
               value={companyAddress}
               onChange={(e) => setCompanyAddress(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -207,7 +249,7 @@ const Preference: React.FC = () => {
               id="currency"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>USD</option>
               <option>EUR</option>
@@ -222,7 +264,7 @@ const Preference: React.FC = () => {
               id="timezone"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>GMT-12</option>
               <option>GMT-11</option>
@@ -257,7 +299,7 @@ const Preference: React.FC = () => {
               id="dateFormat"
               value={dateFormat}
               onChange={(e) => setDateFormat(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>MM/DD/YYYY</option>
               <option>DD/MM/YYYY</option>
@@ -270,7 +312,7 @@ const Preference: React.FC = () => {
               id="timeFormat"
               value={timeFormat}
               onChange={(e) => setTimeFormat(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>12 Hour</option>
               <option>24 Hour</option>
@@ -282,7 +324,7 @@ const Preference: React.FC = () => {
               id="language"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>English</option>
               <option>Spanish</option>
@@ -295,7 +337,7 @@ const Preference: React.FC = () => {
       </section>
 
       {/* Invoice Settings Section */}
-      <section className="mb-10 bg-white rounded shadow p-6">
+      <section className="mb-10 bg-card rounded shadow p-6">
         <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">Invoice Settings</h2>
         <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -305,7 +347,8 @@ const Preference: React.FC = () => {
               type="text"
               value={invoicePrefix}
               onChange={(e) => setInvoicePrefix(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Enter invoice prefix"
             />
           </div>
           <div>
@@ -316,7 +359,7 @@ const Preference: React.FC = () => {
               min={1}
               value={invoiceStartNumber || ""}
               onChange={(e) => setInvoiceStartNumber(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div className="md:col-span-2">
@@ -326,7 +369,7 @@ const Preference: React.FC = () => {
               rows={3}
               value={invoiceFooterNote}
               onChange={(e) => setInvoiceFooterNote(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div className="md:col-span-2">
@@ -336,14 +379,14 @@ const Preference: React.FC = () => {
               rows={3}
               value={invoiceTerms}
               onChange={(e) => setInvoiceTerms(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </form>
       </section>
 
       {/* User Preferences Section */}
-      <section className="mb-10 bg-white rounded shadow p-6">
+      <section className="mb-10 bg-card rounded shadow p-6">
         <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">User Preferences</h2>
         <form className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           <div>
@@ -352,7 +395,7 @@ const Preference: React.FC = () => {
               id="theme"
               value={theme}
               onChange={(e) => setTheme(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option>Light</option>
               <option>Dark</option>
@@ -388,7 +431,7 @@ const Preference: React.FC = () => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -400,54 +443,78 @@ const Preference: React.FC = () => {
       </section>
 
       {/* Users Table Section */}
-      <section className="bg-white rounded shadow p-6">
+      <section className="bg-card rounded shadow py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold border-b border-gray-200 pb-2">Users</h2>
           <div className="space-x-2">
             <button
               onClick={handleReport}
-              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Generate Report"
             >
-              <i className="fas fa-file-alt mr-2" aria-hidden="true"></i> Report
+              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
             </button>
             <button
-              onClick={handleRefresh}
-              className="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              title="Refresh Data"
+              onClick={handleClear}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Clear Settings"
             >
-              <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i> Refresh
+              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
             </button>
             <button
               onClick={handleSave}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
               title="Save Settings"
             >
-              <i className="fas fa-save mr-2" aria-hidden="true"></i> Save
+              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
             </button>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 border-b border-gray-300">Name</th>
-                <th className="px-4 py-2 border-b border-gray-300">Email</th>
-                <th className="px-4 py-2 border-b border-gray-300">Role</th>
-                <th className="px-4 py-2 border-b border-gray-300">Status</th>
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Role
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map(({ id, name, email, role, status }: any) => (
-                <tr key={id} className="even:bg-gray-50">
-                  <td className="px-4 py-2 border-b border-gray-200">{name}</td>
-                  <td className="px-4 py-2 border-b border-gray-200">{email}</td>
-                  <td className="px-4 py-2 border-b border-gray-200">
+              {paginatedUsers.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="text-center px-4 py-6 text-muted-foreground italic"
+                  >
+                    No users to display.
+                  </td>
+                </tr>
+              )}
+              {paginatedUsers.map((user) => (
+                <tr
+                  key={user.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
+                >
+                  <td className="px-4 py-2">{user.name}</td>
+                  <td className="px-4 py-2">{user.email}</td>
+                  <td className="px-4 py-2">
                     <select
-                      value={role}
-                      onChange={(e) => handleUserRoleChange(id, e.target.value)}
-                      className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={user.role}
+                      onChange={(e) => handleUserRoleChange(user.id, e.target.value)}
+                      className="border border-input rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       {roles.map((r) => (
                         <option key={r} value={r}>
@@ -456,11 +523,11 @@ const Preference: React.FC = () => {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-2 border-b border-gray-200">
+                  <td className="px-4 py-2">
                     <select
-                      value={status}
-                      onChange={(e) => handleUserStatusChange(id, e.target.value)}
-                      className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={user.status}
+                      onChange={(e) => handleUserStatusChange(user.id, e.target.value)}
+                      className="border border-input rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       {statuses.map((s) => (
                         <option key={s} value={s}>
@@ -469,67 +536,153 @@ const Preference: React.FC = () => {
                       ))}
                     </select>
                   </td>
-                </tr>
-              ))}
-              {paginatedUsers.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center py-4 text-gray-500">
-                    No users to display.
+                  <td className="px-4 py-2 text-center text-sm space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(user.id)}
+                      aria-label={`Edit user ${user.name}`}
+                      className="text-gray-900 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
+                    >
+                      <i className="fa fa-edit fa-light" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <nav
-          className="flex justify-center items-center space-x-2 mt-4"
-          aria-label="Pagination"
-        >
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Previous Page"
-          >
-            <i className="fas fa-chevron-left" aria-hidden="true"></i>
-          </button>
-          {[...Array(totalPages)].map((_, i) => {
-            const page = i + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => goToPage(page)}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`px-3 py-1 rounded border border-gray-300 ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border border-gray-300 ${
-              currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Next Page"
-          >
-            <i className="fas fa-chevron-right" aria-hidden="true"></i>
-          </button>
-        </nav>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={users.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setItemsPerPage}
+        />
       </section>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
+            <h2
+              id="edit-modal-title"
+              className="text-xl font-semibold mb-4 text-center"
+            >
+              Edit User
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter name"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label
+                  htmlFor="editRole"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Role
+                </label>
+                <select
+                  id="editRole"
+                  name="role"
+                  value={editForm.role}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {roles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
