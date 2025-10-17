@@ -97,7 +97,9 @@ export default function Coupons() {
       alert("Please fill in all required fields.");
       return;
     }
-    const newId = coupons.length ? Math.max(...coupons.map((c) => c.id)) + 1 : 1;
+    const newId = coupons.length
+      ? Math.max(...coupons.map((c) => c.id)) + 1
+      : 1;
     setCoupons((prev) => [...prev, { ...form, id: newId }]);
     setForm({
       couponCode: "",
@@ -195,7 +197,8 @@ export default function Coupons() {
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > Math.ceil(filteredCoupons.length / itemsPerPage)) return;
+    if (page < 1 || page > Math.ceil(filteredCoupons.length / itemsPerPage))
+      return;
     setCurrentPage(page);
   };
 
@@ -205,8 +208,7 @@ export default function Coupons() {
   };
 
   return (
-    <div className="min-h-screen bg-background"> 
-
+    <div className="min-h-screen bg-background">
       <h1 className="text-lg font-semibold mb-6">Coupons</h1>
 
       {/* Coupon Form Section (Add Section) - preserved exactly */}
@@ -337,10 +339,7 @@ export default function Coupons() {
 
           {/* End Date */}
           <div>
-            <label
-              htmlFor="endDate"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
               End Date <span className="text-destructive">*</span>
             </label>
             <input
@@ -356,10 +355,7 @@ export default function Coupons() {
 
           {/* Status */}
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
               Status
             </label>
             <select
@@ -401,7 +397,8 @@ export default function Coupons() {
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+            Report
           </button>
         </div>
       </section>
@@ -473,59 +470,63 @@ export default function Coupons() {
                 paginatedData.map((coupon, idx) => (
                   <tr
                     key={coupon.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
                   >
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-foreground">
+                    <td className="px-4 py-2 font-semibold">
                       {coupon.couponCode}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.couponType}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.discountAmount}
                       {coupon.couponType === "Percentage" ? "%" : ""}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.maxDiscountAmount || "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.minPurchaseAmount || "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.startDate}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
+                    <td className="px-4 py-2">
                       {coupon.endDate}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-2">
                       <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${coupon.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
+                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                          coupon.status === "Active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
                       >
                         {coupon.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
+                    <td className="px-4 py-2 text-center text-sm space-x-3">
                       <button
                         onClick={() => handleEdit(coupon.id)}
-                        className="text-primary hover:text-primary/80 transition-colors"
                         aria-label={`Edit coupon ${coupon.couponCode}`}
-                        type="button"
+                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                       >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                        <i className="fa fa-edit" aria-hidden="true"></i>
+                        <span className="sr-only">Edit record</span>
                       </button>
                       <button
                         onClick={() => handleDelete(coupon.id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
                         aria-label={`Delete coupon ${coupon.couponCode}`}
-                        type="button"
+                        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                       >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                        <i
+                          className="fa fa-trash-can-xmark"
+                          aria-hidden="true"
+                        ></i>
+                        <span className="sr-only">Delete record</span>
                       </button>
                     </td>
                   </tr>

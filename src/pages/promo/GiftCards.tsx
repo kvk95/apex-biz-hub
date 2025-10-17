@@ -174,7 +174,10 @@ export default function GiftCards() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this gift card?")) {
       setData((d) => d.filter((card) => card.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -229,7 +232,8 @@ export default function GiftCards() {
             type="button"
             title="Generate Report"
           >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+            Report
           </button>
           <button
             onClick={handleClear}
@@ -326,10 +330,7 @@ export default function GiftCards() {
             />
           </div>
           <div>
-            <label
-              htmlFor="balance"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="balance" className="block text-sm font-medium mb-1">
               Balance
             </label>
             <input
@@ -346,10 +347,7 @@ export default function GiftCards() {
             />
           </div>
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
               Status
             </label>
             <select
@@ -419,24 +417,24 @@ export default function GiftCards() {
               {paginatedData.map((card) => (
                 <tr
                   key={card.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors  text-sm text-gray-500"
                 >
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {card.cardNumber}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {card.cardHolder}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {card.issueDate}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {card.expiryDate}
                   </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
+                  <td className="px-4 py-2 text-right">
                     ${card.balance.toFixed(2)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-center">
+                  <td className="px-4 py-2 text-center">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         card.status === "Active"
@@ -447,22 +445,25 @@ export default function GiftCards() {
                       {card.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                  <td className="px-4 py-2 text-center space-x-3">
                     <button
                       onClick={() => handleEdit(card.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
                       aria-label={`Edit gift card ${card.cardNumber}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      <i className="fa fa-edit" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
                     </button>
                     <button
                       onClick={() => handleDelete(card.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
                       aria-label={`Delete gift card ${card.cardNumber}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      <i
+                        className="fa fa-trash-can-xmark"
+                        aria-hidden="true"
+                      ></i>
+                      <span className="sr-only">Delete record</span>
                     </button>
                   </td>
                 </tr>

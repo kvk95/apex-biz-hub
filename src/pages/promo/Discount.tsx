@@ -137,14 +137,14 @@ export default function Discount() {
         prev.map((item) =>
           item.id === editId
             ? {
-              ...item,
-              discountName: editForm.discountName.trim(),
-              discountType: editForm.discountType,
-              discountValue: Number(editForm.discountValue),
-              startDate: editForm.startDate,
-              endDate: editForm.endDate,
-              status: editForm.status,
-            }
+                ...item,
+                discountName: editForm.discountName.trim(),
+                discountType: editForm.discountType,
+                discountValue: Number(editForm.discountValue),
+                startDate: editForm.startDate,
+                endDate: editForm.endDate,
+                status: editForm.status,
+              }
             : item
         )
       );
@@ -344,7 +344,8 @@ export default function Discount() {
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+            Report
           </button>
         </div>
       </section>
@@ -395,54 +396,58 @@ export default function Discount() {
               {paginatedData.map((item, idx) => (
                 <tr
                   key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
                 >
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {item.discountName}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {item.discountType}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {item.discountType === "Percentage"
                       ? `${item.discountValue}%`
                       : `$${item.discountValue}`}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {item.startDate}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {item.endDate}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-2">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.status === "Active"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
                     >
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                  <td className="px-4 py-2 text-center   space-x-3">
                     <button
                       onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
                       aria-label={`Edit discount ${item.discountName}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      <i className="fa fa-edit" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
                       aria-label={`Delete discount ${item.discountName}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      <i
+                        className="fa fa-trash-can-xmark"
+                        aria-hidden="true"
+                      ></i>
+                      <span className="sr-only">Delete record</span>
                     </button>
                   </td>
                 </tr>

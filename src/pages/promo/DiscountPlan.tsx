@@ -137,14 +137,14 @@ export default function DiscountPlan() {
         prev.map((plan) =>
           plan.id === editId
             ? {
-              ...plan,
-              discountPlanName: editForm.discountPlanName.trim(),
-              discountType: editForm.discountType,
-              discountValue: Number(editForm.discountValue),
-              startDate: editForm.startDate,
-              endDate: editForm.endDate,
-              status: editForm.status,
-            }
+                ...plan,
+                discountPlanName: editForm.discountPlanName.trim(),
+                discountType: editForm.discountType,
+                discountValue: Number(editForm.discountValue),
+                startDate: editForm.startDate,
+                endDate: editForm.endDate,
+                status: editForm.status,
+              }
             : plan
         )
       );
@@ -162,7 +162,10 @@ export default function DiscountPlan() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this discount plan?")) {
       setPlans((prev) => prev.filter((p) => p.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= plans.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= plans.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -339,7 +342,8 @@ export default function DiscountPlan() {
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
+            Report
           </button>
         </div>
       </section>
@@ -390,54 +394,58 @@ export default function DiscountPlan() {
               {paginatedPlans.map((plan, idx) => (
                 <tr
                   key={plan.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
                 >
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {plan.discountPlanName}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {plan.discountType}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {plan.discountType === "Percentage"
                       ? `${plan.discountValue}%`
                       : `$${plan.discountValue}`}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {plan.startDate}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  <td className="px-4 py-2">
                     {plan.endDate}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-2">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${plan.status === "Active"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        plan.status === "Active"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
                     >
                       {plan.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                  <td className="px-4 py-2 text-center space-x-3">
                     <button
                       onClick={() => handleEdit(plan.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
                       aria-label={`Edit discount plan ${plan.discountPlanName}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      <i className="fa fa-edit" aria-hidden="true"></i>
+                      <span className="sr-only">Edit record</span>
                     </button>
                     <button
                       onClick={() => handleDelete(plan.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
                       aria-label={`Delete discount plan ${plan.discountPlanName}`}
-                      type="button"
+                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
+                      <i
+                        className="fa fa-trash-can-xmark"
+                        aria-hidden="true"
+                      ></i>
+                      <span className="sr-only">Delete record</span>
                     </button>
                   </td>
                 </tr>

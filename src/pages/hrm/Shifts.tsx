@@ -348,7 +348,7 @@ export default function Shifts() {
                       type="button"
                       onClick={() => handleEdit(shift.id)}
                       aria-label={`Edit shift ${shift.shiftName}`}
-                      className="text-gray-900 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
+                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
                       <i className="fa fa-edit" aria-hidden="true"></i>
                       <span className="sr-only">Edit record</span>
@@ -357,7 +357,7 @@ export default function Shifts() {
                       type="button"
                       onClick={() => handleDelete(shift.id)}
                       aria-label={`Edit shift ${shift.shiftName}`}
-                      className="text-gray-900 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
+                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
                     >
                       <i
                         className="fa fa-trash-can-xmark"
