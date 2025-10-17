@@ -429,7 +429,7 @@ export default function Discount() {
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-center   space-x-3">
+                  <td className="px-4 py-2 text-center space-x-2">
                     <button
                       onClick={() => handleEdit(item.id)}
                       aria-label={`Edit discount ${item.discountName}`}

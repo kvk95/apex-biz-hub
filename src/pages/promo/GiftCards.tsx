@@ -436,7 +436,7 @@ export default function GiftCards() {
                   </td>
                   <td className="px-4 py-2 text-center">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                      className={`inline-block px-2 py-1 rounded font-semibold ${
                         card.status === "Active"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
@@ -445,7 +445,7 @@ export default function GiftCards() {
                       {card.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-center space-x-3">
+                  <td className="px-4 py-2 text-center space-x-2">
                     <button
                       onClick={() => handleEdit(card.id)}
                       aria-label={`Edit gift card ${card.cardNumber}`}

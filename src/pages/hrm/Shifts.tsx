@@ -343,7 +343,7 @@ export default function Shifts() {
                       {shift.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-center text-sm space-x-3">
+                  <td className="px-4 py-2 text-center space-x-2">
                     <button
                       type="button"
                       onClick={() => handleEdit(shift.id)}

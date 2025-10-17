@@ -171,6 +171,11 @@ All colors MUST be HSL.
   --sidebar-background: hsl(var(--sidebar-background));
 }
 
+.sidebar-ul-item {
+  margin-right: 0.300rem;
+  padding-right: 0;
+}
+
 .header {
   background-color: #ffffff;
 }
