@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
+import { PageBase1 } from "@/pages/PageBase1";
 
 type Role = {
   id: number;
@@ -8,342 +9,342 @@ type Role = {
   status: "Active" | "Inactive";
 };
 
-const pageSize = 5;
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any) => JSX.Element;
+}
 
 export default function RolesPermissions() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [data, setData] = useState<Role[]>([]);
+  const [search, setSearch] = useState("");
 
-  // Form state for Add/Edit Role
+  // Form state
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [formRoleName, setFormRoleName] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
-  const [editRoleId, setEditRoleId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    roleName: "",
+    description: "",
+    status: "Active" as "Active" | "Inactive",
+  });
 
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Data fetching
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("RolesPermissions");
+    const response = await apiService.get<Role[]>("RolesPermissions");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
-      setRoles(response.result);
     } else {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("loadData:", { data: response.result });
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(roles.length / pageSize);
-  const pagedRoles = roles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // Filter data
+  const filteredRoles = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter((r) =>
+          r.roleName.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("filteredRoles:", result, { search });
+    return result;
+  }, [search, data]);
+
+  // Paginated data
+  const paginatedRoles = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredRoles.slice(start, end);
+    console.log("paginatedRoles:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+    });
+    return result;
+  }, [currentPage, itemsPerPage, filteredRoles]);
 
   // Handlers
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
   const handleAddClick = () => {
     setFormMode("add");
-    setFormRoleName("");
-    setFormDescription("");
-    setFormStatus("Active");
-    setEditRoleId(null);
+    setForm({
+      id: null,
+      roleName: "",
+      description: "",
+      status: "Active",
+    });
   };
 
-  const handleEditClick = (role: Role) => {
+  const handleRefresh = () => {
+    loadData();
+    setFormMode(null);
+    setSearch("");
+    setCurrentPage(1);
+    console.log("handleRefresh");
+  };
+
+  const handleReport = () => {
+    alert("Roles Report:\n\n" + JSON.stringify(data, null, 2));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("handleSearchChange:", { search: e.target.value });
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handlePermission = (role: Role) => {
     setFormMode("edit");
-    setFormRoleName(role.roleName);
-    setFormDescription(role.description);
-    setFormStatus(role.status);
-    setEditRoleId(role.id);
+    setForm({
+      id: role.id,
+      roleName: role.roleName,
+      description: role.description,
+      status: role.status,
+    });
   };
 
-  const handleDeleteClick = (id: number) => {
-    if (confirm("Are you sure you want to delete this role?")) {
-      setRoles((prev) => prev.filter((r) => r.id !== id));
-      // Adjust page if needed
-      if ((roles.length - 1) % pageSize === 0 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
+  const handleEdit = (role: Role) => {
+    setFormMode("edit");
+    setForm({
+      id: role.id,
+      roleName: role.roleName,
+      description: role.description,
+      status: role.status,
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this role?")) {
+      setData((prev) => prev.filter((r) => r.id !== id));
+      const totalPages = Math.ceil((filteredRoles.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
+      console.log("handleDelete:", { id, totalPages });
     }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formRoleName.trim()) {
+    if (!form.roleName.trim()) {
       alert("Role Name is required.");
       return;
     }
     if (formMode === "add") {
-      const newRole: Role = {
-        id: roles.length ? Math.max(...roles.map((r) => r.id)) + 1 : 1,
-        roleName: formRoleName.trim(),
-        description: formDescription.trim(),
-        status: formStatus,
-      };
-      setRoles((prev) => [...prev, newRole]);
-      setCurrentPage(totalPages + (roles.length % pageSize === 0 ? 1 : 0));
-    } else if (formMode === "edit" && editRoleId !== null) {
-      setRoles((prev) =>
-        prev.map((r) =>
-          r.id === editRoleId
-            ? { ...r, roleName: formRoleName.trim(), description: formDescription.trim(), status: formStatus }
-            : r
-        )
+      const newId = data.length ? Math.max(...data.map((r) => r.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId }]);
+      const totalPages = Math.ceil((filteredRoles.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setData((prev) =>
+        prev.map((r) => (r.id === form.id ? { ...form, id: form.id } : r))
       );
     }
     setFormMode(null);
-    setEditRoleId(null);
+    console.log("handleFormSubmit:", { form, formMode });
   };
 
-  const handleRefresh = () => {
-    loadData();
-    setCurrentPage(1);
-    setFormMode(null);
-    setEditRoleId(null);
-  };
+  // Table columns
+  const columns: Column[] = [
+    {
+      key: "roleName",
+      label: "Role",
+      render: (value) => (
+        <span className="font-semibold text-gray-900">{value}</span>
+      ),
+    },
+    { key: "description", label: "Description" },
+    {
+      key: "createdDate",
+      label: "Created Date",
+      render: () => new Date().toLocaleDateString(),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+            value === "Active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+  ];
 
-  const handleReport = () => {
-    alert("Roles Report:\n\n" + JSON.stringify(roles, null, 2));
+  // Row actions
+  const rowActions = (row: Role) => (
+    <>
+      <button
+        onClick={() => handlePermission(row)}
+        aria-label={`Edit permissions for ${row.roleName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-shield" aria-hidden="true"></i>
+        <span className="sr-only">Permission</span>
+      </button>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit role ${row.roleName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit role</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete role ${row.roleName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete role</span>
+      </button>
+    </>
+  );
+
+  // Modal
+  const modal = (themeStyles: ThemeStyles) => {
+    return formMode === "add" || formMode === "edit" ? (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 mx-4">
+          <h2
+            id="modal-title"
+            className="text-xl font-semibold text-gray-900 mb-4"
+          >
+            {formMode === "add" ? "Add New Role" : "Edit Role"}
+          </h2>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="roleName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Role Name <span className="text-red-600">*</span>
+              </label>
+              <input
+                id="roleName"
+                name="roleName"
+                type="text"
+                value={form.roleName}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows={3}
+                value={form.description}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setFormMode(null)}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded shadow transition"
+              >
+                Cancel
+              </button>
+              <button
+              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              style={
+                {
+                  backgroundColor: themeStyles.selectionBg,
+                  "--hover-bg": themeStyles.hoverColor,
+                } as React.CSSProperties
+              }
+              type="button"
+              >
+                {formMode === "add" ? "Save" : "Update"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    ) : null;
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">Roles & Permissions</h1>
-
-      {/* Controls: Add Role, Refresh, Report */}
-      <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
-        <button
-          onClick={handleAddClick}
-          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded shadow transition"
-          type="button"
-          aria-label="Add Role"
-        >
-          Add Role
-        </button>
-        <div className="flex gap-3">
-          <button
-            onClick={handleRefresh}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded shadow transition"
-            type="button"
-            aria-label="Refresh Roles"
-          >
-            Refresh
-          </button>
-          <button
-            onClick={handleReport}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition"
-            type="button"
-            aria-label="Generate Report"
-          >
-            Report
-          </button>
-        </div>
-      </div>
-
-      {/* Roles Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">#</th>
-              <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Role Name</th>
-              <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 font-medium text-gray-700 uppercase tracking-wider text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {pagedRoles.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  No roles found.
-                </td>
-              </tr>
-            ) : (
-              pagedRoles.map((role, idx) => (
-                <tr key={role.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">{(currentPage - 1) * pageSize + idx + 1}</td>
-                  <td className="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">{role.roleName}</td>
-                  <td className="px-6 py-4 whitespace-normal max-w-xl">{role.description}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                        role.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {role.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
-                    <button
-                      onClick={() => handleEditClick(role)}
-                      className="text-orange-600 hover:text-orange-800 font-semibold focus:outline-none"
-                      aria-label={`Edit role ${role.roleName}`}
-                      type="button"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(role.id)}
-                      className="text-red-600 hover:text-red-800 font-semibold focus:outline-none"
-                      aria-label={`Delete role ${role.roleName}`}
-                      type="button"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <nav
-        className="flex items-center justify-center mt-6 space-x-1"
-        aria-label="Pagination Navigation"
-      >
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className={`px-3 py-1 rounded-l border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-          aria-label="Previous Page"
-          type="button"
-        >
-          &laquo;
-        </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <button
-            key={page}
-            onClick={() => handlePageChange(page)}
-            className={`px-4 py-1 border-t border-b border-gray-300 hover:bg-gray-100 focus:outline-none ${
-              page === currentPage
-                ? "bg-orange-500 text-white font-semibold"
-                : "bg-white text-gray-700"
-            }`}
-            aria-current={page === currentPage ? "page" : undefined}
-            type="button"
-          >
-            {page}
-          </button>
-        ))}
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className={`px-3 py-1 rounded-r border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-          aria-label="Next Page"
-          type="button"
-        >
-          &raquo;
-        </button>
-      </nav>
-
-      {/* Add/Edit Role Form Modal */}
-      {(formMode === "add" || formMode === "edit") && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-        >
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 mx-4">
-            <h2
-              id="modal-title"
-              className="text-xl font-semibold text-gray-900 mb-4"
-            >
-              {formMode === "add" ? "Add New Role" : "Edit Role"}
-            </h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="roleName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Role Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="roleName"
-                  name="roleName"
-                  type="text"
-                  value={formRoleName}
-                  onChange={(e) => setFormRoleName(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  required
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formStatus}
-                  onChange={(e) =>
-                    setFormStatus(e.target.value as "Active" | "Inactive")
-                  }
-                  className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setFormMode(null)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded shadow transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded shadow transition"
-                >
-                  {formMode === "add" ? "Save" : "Update"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Roles & Permissions"
+      description="Manage roles and their permissions for your application."
+      icon="fa fa-user-shield"
+      onAddClick={handleAddClick}
+      onRefresh={handleRefresh}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredRoles.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedRoles}
+      rowActions={rowActions}
+      modal={modal}
+    />
   );
 }

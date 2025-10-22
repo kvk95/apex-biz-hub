@@ -1,41 +1,72 @@
 import { apiService } from "@/services/ApiService";
-import React, { useEffect, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 
 const discountTypes = ["Percentage", "Fixed"];
 const statusOptions = ["Active", "Inactive"];
 
+interface Discount {
+  id: number;
+  discountName: string;
+  discountType: string;
+  discountValue: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any) => JSX.Element;
+}
+
+interface ThemeStyles {
+  selectionBg: string;
+  hoverColor: string;
+}
+
 export default function Discount() {
-  // Pagination state
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    discountName: "",
+    discountType: discountTypes[0],
+    discountValue: "",
+    startDate: "",
+    endDate: "",
+    status: statusOptions[0],
+  });
+
+  const [data, setData] = useState<Discount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state for Add Section
-  const [form, setForm] = useState({
-    discountName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
-    startDate: "",
-    endDate: "",
-    status: statusOptions[0],
-  });
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter((d) =>
+          d.discountName.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("filteredData:", result, { search });
+    return result;
+  }, [data, search]);
 
-  // Data state
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    discountName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
-    startDate: "",
-    endDate: "",
-    status: statusOptions[0],
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     loadData();
@@ -43,7 +74,7 @@ export default function Discount() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Discount");
+    const response = await apiService.get<Discount[]>("Discount");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -51,9 +82,9 @@ export default function Discount() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("loadData:", { data: response.result });
   };
 
-  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -61,17 +92,36 @@ export default function Discount() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      discountName: "",
+      discountType: discountTypes[0],
+      discountValue: "",
+      startDate: "",
+      endDate: "",
+      status: statusOptions[0],
+    });
+    console.log("handleAddClick: Modal opened for add");
   };
 
-  // Save handler for Add Section (Add new discount)
-  const handleSave = () => {
-    // Validate required fields (discountName, discountValue, dates)
+  const handleEdit = (item: Discount) => {
+    setFormMode("edit");
+    setForm({
+      id: item.id,
+      discountName: item.discountName,
+      discountType: item.discountType,
+      discountValue: item.discountValue.toString(),
+      startDate: item.startDate,
+      endDate: item.endDate,
+      status: item.status,
+    });
+    console.log("handleEdit: Modal opened for edit", { item });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
       !form.discountName.trim() ||
       !form.discountValue ||
@@ -81,549 +131,305 @@ export default function Discount() {
       alert("Please fill all required fields.");
       return;
     }
-    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-    setData((prev) => [
-      ...prev,
-      {
-        id: newId,
-        discountName: form.discountName.trim(),
-        discountType: form.discountType,
-        discountValue: Number(form.discountValue),
-        startDate: form.startDate,
-        endDate: form.endDate,
-        status: form.status,
-      },
-    ]);
-    setForm({
-      discountName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
-      startDate: "",
-      endDate: "",
-      status: statusOptions[0],
-    });
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        discountName: item.discountName,
-        discountType: item.discountType,
-        discountValue: item.discountValue.toString(),
-        startDate: item.startDate,
-        endDate: item.endDate,
-        status: item.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.discountName.trim() ||
-      !editForm.discountValue ||
-      !editForm.startDate ||
-      !editForm.endDate
-    ) {
-      alert("Please fill all required fields.");
+    const discountValue = Number(form.discountValue);
+    if (isNaN(discountValue) || discountValue < 0) {
+      alert("Discount value must be a valid number greater than or equal to 0");
       return;
     }
-    if (editId !== null) {
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId, discountValue }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
       setData((prev) =>
         prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                discountName: editForm.discountName.trim(),
-                discountType: editForm.discountType,
-                discountValue: Number(editForm.discountValue),
-                startDate: editForm.startDate,
-                endDate: editForm.endDate,
-                status: editForm.status,
-              }
-            : item
+          item.id === form.id ? { ...form, id: form.id, discountValue } : item
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+    setFormMode(null);
+    console.log("handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this discount?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
+      console.log("handleDelete:", { id, totalPages });
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setForm({
-      discountName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
-      startDate: "",
-      endDate: "",
-      status: statusOptions[0],
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    console.log("handleClear");
   };
 
   const handleReport = () => {
-    // For demo, just alert JSON data
-    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+    alert("Discounts Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("handleSearchChange:", { search: e.target.value });
+  };
+
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, row, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    {
+      key: "discountName",
+      label: "Discount Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "discountType", label: "Discount Type" },
+    {
+      key: "discountValue",
+      label: "Discount Value",
+      render: (value, row) =>
+        row.discountType === "Percentage" ? `${value}%` : `$${value}`,
+    },
+    { key: "startDate", label: "Start Date" },
+    { key: "endDate", label: "End Date" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+            value === "Active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+  ];
+
+  const rowActions = (row: Discount) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit discount ${row.discountName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit discount</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete discount ${row.discountName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete discount</span>
+      </button>
+    </>
   );
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Discount</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Discount Name */}
-          <div>
-            <label
-              htmlFor="discountName"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Name
-            </label>
-            <input
-              type="text"
-              id="discountName"
-              name="discountName"
-              value={form.discountName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter discount name"
-            />
-          </div>
-
-          {/* Discount Type */}
-          <div>
-            <label
-              htmlFor="discountType"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Type
-            </label>
-            <select
-              id="discountType"
-              name="discountType"
-              value={form.discountType}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {discountTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Discount Value */}
-          <div>
-            <label
-              htmlFor="discountValue"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Value
-            </label>
-            <input
-              type="number"
-              id="discountValue"
-              name="discountValue"
-              value={form.discountValue}
-              onChange={handleInputChange}
-              min={0}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter discount value"
-            />
-          </div>
-
-          {/* Start Date */}
-          <div>
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={form.endDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
-            Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Value
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Start Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  End Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No discounts found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                >
-                  <td className="px-4 py-2">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-2">
-                    {item.discountName}
-                  </td>
-                  <td className="px-4 py-2">
-                    {item.discountType}
-                  </td>
-                  <td className="px-4 py-2">
-                    {item.discountType === "Percentage"
-                      ? `${item.discountValue}%`
-                      : `$${item.discountValue}`}
-                  </td>
-                  <td className="px-4 py-2">
-                    {item.startDate}
-                  </td>
-                  <td className="px-4 py-2">
-                    {item.endDate}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      aria-label={`Edit discount ${item.discountName}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i className="fa fa-edit" aria-hidden="true"></i>
-                      <span className="sr-only">Edit record</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      aria-label={`Delete discount ${item.discountName}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i
-                        className="fa fa-trash-can-xmark"
-                        aria-hidden="true"
-                      ></i>
-                      <span className="sr-only">Delete record</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Discount
+  const modal = (themeStyles: ThemeStyles) => {
+    console.log("Discount modal themeStyles:", themeStyles);
+    return formMode === "add" || formMode === "edit" ? (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div className="bg-white rounded shadow-lg max-w-xl w-full p-1">
+          <div className="flex justify-between items-center mb-4 border-b border-border px-2 py-2">
+            <h2 id="modal-title" className="text-xl font-semibold text-left">
+              {formMode === "add" ? "Add Discount" : "Edit Discount"}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Discount Name */}
-              <div>
-                <label
-                  htmlFor="editDiscountName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Name
-                </label>
-                <input
-                  type="text"
-                  id="editDiscountName"
-                  name="discountName"
-                  value={editForm.discountName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter discount name"
-                />
-              </div>
-
-              {/* Discount Type */}
-              <div>
-                <label
-                  htmlFor="editDiscountType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Type
-                </label>
-                <select
-                  id="editDiscountType"
-                  name="discountType"
-                  value={editForm.discountType}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {discountTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Discount Value */}
-              <div>
-                <label
-                  htmlFor="editDiscountValue"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Value
-                </label>
-                <input
-                  type="number"
-                  id="editDiscountValue"
-                  name="discountValue"
-                  value={editForm.discountValue}
-                  onChange={handleEditInputChange}
-                  min={0}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter discount value"
-                />
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label
-                  htmlFor="editStartDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  id="editStartDate"
-                  name="startDate"
-                  value={editForm.startDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label
-                  htmlFor="editEndDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="editEndDate"
-                  name="endDate"
-                  value={editForm.endDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
+            <button
+              onClick={() => {
+                setFormMode(null);
+                console.log("Modal closed via close button");
+              }}
+              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full p-2"
+              aria-label="Close modal"
+            >
+              <i className="fa fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form
+            onSubmit={handleFormSubmit}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4"
+          >
+            <div>
+              <label
+                htmlFor="discountName"
+                className="block text-sm font-medium mb-1"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
+                Discount Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountName"
+                name="discountName"
+                type="text"
+                value={form.discountName}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount name"
+                required
+              />
             </div>
+            <div>
+              <label
+                htmlFor="discountType"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Type
+              </label>
+              <select
+                id="discountType"
+                name="discountType"
+                value={form.discountType}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {discountTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="discountValue"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Value <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountValue"
+                name="discountValue"
+                type="number"
+                min={0}
+                value={form.discountValue}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount value"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium mb-1"
+              >
+                Start Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                value={form.startDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium mb-1"
+              >
+                End Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                value={form.endDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </form>
+          <div className="mt-6 border-t border-border py-2 px-2 flex justify-end gap-3">
+            <button
+              onClick={() => setFormMode(null)}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              Cancel
+            </button>            
+            <button
+              onClick={handleFormSubmit}
+              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              style={
+                {
+                  backgroundColor: themeStyles.selectionBg,
+                  "--hover-bg": themeStyles.hoverColor,
+                } as React.CSSProperties
+              }
+              type="button"
+            >
+              {formMode === "add" ? "Save" : "Update"}
+            </button>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    ) : null;
+  };
+
+  return (
+    <PageBase1
+      title="Discounts"
+      description="Manage discounts for your application."
+      icon="fa fa-credit-card"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      modal={modal}
+    />
   );
 }

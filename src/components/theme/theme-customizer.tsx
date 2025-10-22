@@ -39,7 +39,7 @@ const colors = {
     { name: "Purple", value: "283 85% 65%" },
     { name: "Blue", value: "221.2 83.2% 53.3%" },
     { name: "Green", value: "142.1 76.2% 36.3%" },
-    { name: "Orange", value: "24.6 95% 53.1%" },
+    { name: "Orange", value: "32.4 99% 63%" },
     { name: "Red", value: "0 84% 60%" },
     { name: "Pink", value: "330 100% 71%" },
     { name: "Teal", value: "170 100% 40%" },

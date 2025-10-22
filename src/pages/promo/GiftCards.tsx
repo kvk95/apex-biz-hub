@@ -1,41 +1,72 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
-export default function GiftCards() {
-  // Pagination state
+const discountTypes = ["Percentage", "Fixed"];
+const statusOptions = ["Active", "Inactive"];
+
+interface Discount {
+  id: number;
+  discountName: string;
+  discountType: string;
+  discountValue: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any) => JSX.Element;
+}
+
+interface ThemeStyles {
+  selectionBg: string;
+  hoverColor: string;
+}
+
+export default function Discount() {
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    discountName: "",
+    discountType: discountTypes[0],
+    discountValue: "",
+    startDate: "",
+    endDate: "",
+    status: statusOptions[0],
+  });
+
+  const [data, setData] = useState<Discount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state for Add Section (preserved exactly)
-  const [form, setForm] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    issueDate: "",
-    expiryDate: "",
-    balance: "",
-    status: "Active",
-  });
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter((d) =>
+          d.discountName.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("filteredData:", result, { search });
+    return result;
+  }, [data, search]);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    issueDate: "",
-    expiryDate: "",
-    balance: "",
-    status: "Active",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  // Filter state (search by card number or holder)
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Data state
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     loadData();
@@ -43,7 +74,7 @@ export default function GiftCards() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("GiftCards");
+    const response = await apiService.get<Discount[]>("Discount");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -51,581 +82,342 @@ export default function GiftCards() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("loadData:", { data: response.result });
   };
 
-  // Filtered and paginated data
-  const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return data;
-    return data.filter(
-      (card) =>
-        card.cardNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.cardHolder.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [data, searchTerm]);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage, itemsPerPage]);
-
-  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Save handler for Add Section (Add new gift card)
-  const handleSave = () => {
-    if (
-      !form.cardNumber.trim() ||
-      !form.cardHolder.trim() ||
-      !form.issueDate ||
-      !form.expiryDate ||
-      form.balance === ""
-    ) {
-      alert("Please fill all fields");
-      return;
-    }
-    const newCard = {
-      id: data.length ? Math.max(...data.map((c) => c.id)) + 1 : 1,
-      cardNumber: form.cardNumber,
-      cardHolder: form.cardHolder,
-      issueDate: form.issueDate,
-      expiryDate: form.expiryDate,
-      balance: Number(form.balance),
-      status: form.status,
-    };
-    setData((d) => [newCard, ...d]);
+  const handleAddClick = () => {
+    setFormMode("add");
     setForm({
-      cardNumber: "",
-      cardHolder: "",
-      issueDate: "",
-      expiryDate: "",
-      balance: "",
-      status: "Active",
+      id: null,
+      discountName: "",
+      discountType: discountTypes[0],
+      discountValue: "",
+      startDate: "",
+      endDate: "",
+      status: statusOptions[0],
     });
   };
 
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const card = data.find((c) => c.id === id);
-    if (!card) return;
-    setEditForm({
-      cardNumber: card.cardNumber,
-      cardHolder: card.cardHolder,
-      issueDate: card.issueDate,
-      expiryDate: card.expiryDate,
-      balance: card.balance.toString(),
-      status: card.status,
+  const handleEdit = (item: Discount) => {
+    setFormMode("edit");
+    setForm({
+      id: item.id,
+      discountName: item.discountName,
+      discountType: item.discountType,
+      discountValue: item.discountValue.toString(),
+      startDate: item.startDate,
+      endDate: item.endDate,
+      status: item.status,
     });
-    setEditId(id);
-    setIsEditModalOpen(true);
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
-      !editForm.cardNumber.trim() ||
-      !editForm.cardHolder.trim() ||
-      !editForm.issueDate ||
-      !editForm.expiryDate ||
-      editForm.balance === ""
+      !form.discountName.trim() ||
+      !form.discountValue ||
+      !form.startDate ||
+      !form.endDate
     ) {
-      alert("Please fill all fields");
+      alert("Please fill all required fields.");
       return;
     }
-    if (editId !== null) {
-      setData((d) =>
-        d.map((card) =>
-          card.id === editId
-            ? {
-                ...card,
-                cardNumber: editForm.cardNumber,
-                cardHolder: editForm.cardHolder,
-                issueDate: editForm.issueDate,
-                expiryDate: editForm.expiryDate,
-                balance: Number(editForm.balance),
-                status: editForm.status,
-              }
-            : card
+    const discountValue = Number(form.discountValue);
+    if (isNaN(discountValue) || discountValue < 0) {
+      alert("Discount value must be a valid number greater than or equal to 0");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId, discountValue }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === form.id ? { ...form, id: form.id, discountValue } : item
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+    setFormMode(null);
+    console.log("handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this gift card?")) {
-      setData((d) => d.filter((card) => card.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+    if (window.confirm("Are you sure you want to delete this discount?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
+      console.log("handleDelete:", { id, totalPages });
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setForm({
-      cardNumber: "",
-      cardHolder: "",
-      issueDate: "",
-      expiryDate: "",
-      balance: "",
-      status: "Active",
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
-    setSearchTerm("");
+    console.log("handleClear");
   };
 
   const handleReport = () => {
-    alert("Report generated for current gift cards data.");
+    alert("Discounts Report:\n\n" + JSON.stringify(data, null, 2));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("handleSearchChange:", { search: e.target.value });
+  };
+
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, row, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    {
+      key: "discountName",
+      label: "Discount Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "discountType", label: "Discount Type" },
+    {
+      key: "discountValue",
+      label: "Discount Value",
+      render: (value, row) =>
+        row.discountType === "Percentage" ? `${value}%` : `$${value}`,
+    },
+    { key: "startDate", label: "Start Date" },
+    { key: "endDate", label: "End Date" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+            value === "Active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+  ];
+
+  const rowActions = (row: Discount) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit discount ${row.discountName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit discount</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete discount ${row.discountName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete discount</span>
+      </button>
+    </>
+  );
+
+  const modal = (themeStyles: ThemeStyles) => {
+    return formMode === "add" || formMode === "edit" ? (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div className="bg-white rounded shadow-lg max-w-xl w-full p-6">
+          <h2
+            id="modal-title"
+            className="text-xl font-semibold mb-4 text-center"
+          >
+            {formMode === "add" ? "Add Discount" : "Edit Discount"}
+          </h2>
+          <form
+            onSubmit={handleFormSubmit}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <div>
+              <label
+                htmlFor="discountName"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountName"
+                name="discountName"
+                type="text"
+                value={form.discountName}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount name"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="discountType"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Type
+              </label>
+              <select
+                id="discountType"
+                name="discountType"
+                value={form.discountType}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {discountTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="discountValue"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Value <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountValue"
+                name="discountValue"
+                type="number"
+                min={0}
+                value={form.discountValue}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount value"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium mb-1"
+              >
+                Start Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                value={form.startDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium mb-1"
+              >
+                End Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                value={form.endDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </form>
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={() => setFormMode(null)}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFormSubmit}
+              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              style={
+                {
+                  backgroundColor: themeStyles.selectionBg,
+                  "--hover-bg": themeStyles.hoverColor,
+                } as React.CSSProperties
+              }
+              type="button"
+            >
+              {formMode === "add" ? "Save" : "Update"}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null;
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Gift Cards</h1>
-
-      {/* Controls: Search, Report, Clear */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <div className="flex items-center space-x-2 w-full md:w-1/3">
-          <label htmlFor="search" className="block text-sm font-medium mb-1">
-            Search:
-          </label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Card Number or Holder"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-          />
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            title="Generate Report"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
-            Report
-          </button>
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            title="Clear"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-        </div>
-      </div>
-
-      {/* Add Gift Card Form (preserved exactly) */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Gift Card</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <div>
-            <label
-              htmlFor="cardNumber"
-              className="block text-sm font-medium mb-1"
-            >
-              Card Number
-            </label>
-            <input
-              id="cardNumber"
-              name="cardNumber"
-              type="text"
-              value={form.cardNumber}
-              onChange={handleInputChange}
-              placeholder="XXXX XXXX XXXX XXXX"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-              maxLength={19}
-              pattern="[\d\s]+"
-              title="Card number format: digits and spaces only"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="cardHolder"
-              className="block text-sm font-medium mb-1"
-            >
-              Card Holder
-            </label>
-            <input
-              id="cardHolder"
-              name="cardHolder"
-              type="text"
-              value={form.cardHolder}
-              onChange={handleInputChange}
-              placeholder="Full Name"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="issueDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Issue Date
-            </label>
-            <input
-              id="issueDate"
-              name="issueDate"
-              type="date"
-              value={form.issueDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="expiryDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Expiry Date
-            </label>
-            <input
-              id="expiryDate"
-              name="expiryDate"
-              type="date"
-              value={form.expiryDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="balance" className="block text-sm font-medium mb-1">
-              Balance
-            </label>
-            <input
-              id="balance"
-              name="balance"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.balance}
-              onChange={handleInputChange}
-              placeholder="0.00"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              required
-            >
-              <option value="Active">Active</option>
-              <option value="Expired">Expired</option>
-            </select>
-          </div>
-
-          <div className="md:col-span-3 flex justify-end pt-4">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Gift Cards Table */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Card Number
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Card Holder
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Issue Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Expiry Date
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Balance
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No gift cards found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((card) => (
-                <tr
-                  key={card.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors  text-sm text-gray-500"
-                >
-                  <td className="px-4 py-2">
-                    {card.cardNumber}
-                  </td>
-                  <td className="px-4 py-2">
-                    {card.cardHolder}
-                  </td>
-                  <td className="px-4 py-2">
-                    {card.issueDate}
-                  </td>
-                  <td className="px-4 py-2">
-                    {card.expiryDate}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    ${card.balance.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <span
-                      className={`inline-block px-2 py-1 rounded font-semibold ${
-                        card.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {card.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(card.id)}
-                      aria-label={`Edit gift card ${card.cardNumber}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i className="fa fa-edit" aria-hidden="true"></i>
-                      <span className="sr-only">Edit record</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(card.id)}
-                      aria-label={`Delete gift card ${card.cardNumber}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i
-                        className="fa fa-trash-can-xmark"
-                        aria-hidden="true"
-                      ></i>
-                      <span className="sr-only">Delete record</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-card rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Gift Card
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label
-                  htmlFor="editCardNumber"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Card Number
-                </label>
-                <input
-                  type="text"
-                  id="editCardNumber"
-                  name="cardNumber"
-                  value={editForm.cardNumber}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                  placeholder="XXXX XXXX XXXX XXXX"
-                  maxLength={19}
-                  pattern="[\d\s]+"
-                  title="Card number format: digits and spaces only"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editCardHolder"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Card Holder
-                </label>
-                <input
-                  type="text"
-                  id="editCardHolder"
-                  name="cardHolder"
-                  value={editForm.cardHolder}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                  placeholder="Full Name"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editIssueDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Issue Date
-                </label>
-                <input
-                  type="date"
-                  id="editIssueDate"
-                  name="issueDate"
-                  value={editForm.issueDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editExpiryDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Expiry Date
-                </label>
-                <input
-                  type="date"
-                  id="editExpiryDate"
-                  name="expiryDate"
-                  value={editForm.expiryDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editBalance"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Balance
-                </label>
-                <input
-                  type="number"
-                  id="editBalance"
-                  name="balance"
-                  min="0"
-                  step="0.01"
-                  value={editForm.balance}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Expired">Expired</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Discounts"
+      description="Manage discounts for your application."
+      icon="fa fa-credit-card"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      modal={modal}
+    />
   );
 }

@@ -1,41 +1,68 @@
 import { apiService } from "@/services/ApiService";
-import React, { useEffect, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 
 const discountTypes = ["Percentage", "Fixed"];
 const statusOptions = ["Active", "Inactive"];
 
+interface DiscountPlan {
+  id: number;
+  discountPlanName: string;
+  discountType: string;
+  discountValue: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any) => JSX.Element;
+}
+
 export default function DiscountPlan() {
-  // Pagination state
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    discountPlanName: "",
+    discountType: discountTypes[0],
+    discountValue: "",
+    startDate: "",
+    endDate: "",
+    status: statusOptions[0],
+  });
+
+  const [plans, setPlans] = useState<DiscountPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state for Add Section (preserved exactly)
-  const [form, setForm] = useState({
-    discountPlanName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
-    startDate: "",
-    endDate: "",
-    status: statusOptions[0],
-  });
+  // Filtered and paginated data
+  const filteredPlans = useMemo(() => {
+    const result = !search.trim()
+      ? plans
+      : plans.filter((p) =>
+          p.discountPlanName.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("filteredPlans:", result, { search });
+    return result;
+  }, [plans, search]);
 
-  // Data state
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    discountPlanName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
-    startDate: "",
-    endDate: "",
-    status: statusOptions[0],
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const paginatedPlans = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredPlans.slice(start, end);
+    console.log("paginatedPlans:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+    });
+    return result;
+  }, [filteredPlans, currentPage, itemsPerPage]);
 
   useEffect(() => {
     loadData();
@@ -43,7 +70,7 @@ export default function DiscountPlan() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("DiscountPlan");
+    const response = await apiService.get<DiscountPlan[]>("DiscountPlan");
     if (response.status.code === "S") {
       setPlans(response.result);
       setError(null);
@@ -51,9 +78,9 @@ export default function DiscountPlan() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("loadData:", { data: response.result });
   };
 
-  // Handlers for Add Section form inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -61,16 +88,34 @@ export default function DiscountPlan() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      discountPlanName: "",
+      discountType: discountTypes[0],
+      discountValue: "",
+      startDate: "",
+      endDate: "",
+      status: statusOptions[0],
+    });
   };
 
-  // Save handler for Add Section (Add new discount plan)
-  const handleSave = () => {
+  const handleEdit = (plan: DiscountPlan) => {
+    setFormMode("edit");
+    setForm({
+      id: plan.id,
+      discountPlanName: plan.discountPlanName,
+      discountType: plan.discountType,
+      discountValue: plan.discountValue.toString(),
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      status: plan.status,
+    });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
       !form.discountPlanName.trim() ||
       !form.discountValue ||
@@ -80,548 +125,298 @@ export default function DiscountPlan() {
       alert("Please fill all required fields.");
       return;
     }
-    const newId = plans.length ? Math.max(...plans.map((p) => p.id)) + 1 : 1;
-    setPlans((prev) => [
-      ...prev,
-      {
-        id: newId,
-        discountPlanName: form.discountPlanName.trim(),
-        discountType: form.discountType,
-        discountValue: Number(form.discountValue),
-        startDate: form.startDate,
-        endDate: form.endDate,
-        status: form.status,
-      },
-    ]);
-    setForm({
-      discountPlanName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
-      startDate: "",
-      endDate: "",
-      status: statusOptions[0],
-    });
-    setCurrentPage(1);
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const plan = plans.find((p) => p.id === id);
-    if (plan) {
-      setEditForm({
-        discountPlanName: plan.discountPlanName,
-        discountType: plan.discountType,
-        discountValue: plan.discountValue.toString(),
-        startDate: plan.startDate,
-        endDate: plan.endDate,
-        status: plan.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.discountPlanName.trim() ||
-      !editForm.discountValue ||
-      !editForm.startDate ||
-      !editForm.endDate
-    ) {
-      alert("Please fill all required fields.");
+    const discountValue = Number(form.discountValue);
+    if (isNaN(discountValue) || discountValue < 0) {
+      alert("Discount value must be a valid number greater than or equal to 0");
       return;
     }
-    if (editId !== null) {
+    if (formMode === "add") {
+      const newId = plans.length ? Math.max(...plans.map((p) => p.id)) + 1 : 1;
+      setPlans((prev) => [...prev, { ...form, id: newId, discountValue }]);
+      const totalPages = Math.ceil((filteredPlans.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
       setPlans((prev) =>
         prev.map((plan) =>
-          plan.id === editId
-            ? {
-                ...plan,
-                discountPlanName: editForm.discountPlanName.trim(),
-                discountType: editForm.discountType,
-                discountValue: Number(editForm.discountValue),
-                startDate: editForm.startDate,
-                endDate: editForm.endDate,
-                status: editForm.status,
-              }
-            : plan
+          plan.id === form.id ? { ...form, id: form.id, discountValue } : plan
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+    setFormMode(null);
+    console.log("handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this discount plan?")) {
       setPlans((prev) => prev.filter((p) => p.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= plans.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredPlans.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
+      console.log("handleDelete:", { id, totalPages });
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setForm({
-      discountPlanName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
-      startDate: "",
-      endDate: "",
-      status: statusOptions[0],
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    console.log("handleClear");
   };
 
   const handleReport = () => {
-    alert("Discount Plans Report:\n" + JSON.stringify(plans, null, 2));
+    alert("Discount Plans Report:\n\n" + JSON.stringify(plans, null, 2));
   };
 
-  // Calculate paginated data
-  const paginatedPlans = plans.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("handleSearchChange:", { search: e.target.value });
+  };
+
+  // Table columns
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, row, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    {
+      key: "discountPlanName",
+      label: "Discount Plan Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "discountType", label: "Discount Type" },
+    {
+      key: "discountValue",
+      label: "Discount Value",
+      render: (value, row) =>
+        row.discountType === "Percentage" ? `${value}%` : `$${value}`,
+    },
+    { key: "startDate", label: "Start Date" },
+    { key: "endDate", label: "End Date" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+            value === "Active"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+  ];
+
+  // Row actions
+  const rowActions = (row: DiscountPlan) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit discount plan ${row.discountPlanName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit discount plan</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete discount plan ${row.discountPlanName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete discount plan</span>
+      </button>
+    </>
   );
 
+  // Modal for add/edit
+  const modal = (themeStyles: ThemeStyles) => {
+    return formMode === "add" || formMode === "edit" ? (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div className="bg-white rounded shadow-lg max-w-xl w-full p-6">
+          <h2
+            id="modal-title"
+            className="text-xl font-semibold mb-4 text-center"
+          >
+            {formMode === "add" ? "Add Discount Plan" : "Edit Discount Plan"}
+          </h2>
+          <form
+            onSubmit={handleFormSubmit}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <div>
+              <label
+                htmlFor="discountPlanName"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Plan Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountPlanName"
+                name="discountPlanName"
+                type="text"
+                value={form.discountPlanName}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount plan name"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="discountType"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Type
+              </label>
+              <select
+                id="discountType"
+                name="discountType"
+                value={form.discountType}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {discountTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="discountValue"
+                className="block text-sm font-medium mb-1"
+              >
+                Discount Value <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="discountValue"
+                name="discountValue"
+                type="number"
+                min={0}
+                value={form.discountValue}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter discount value"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium mb-1"
+              >
+                Start Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                value={form.startDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium mb-1"
+              >
+                End Date <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                value={form.endDate}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium mb-1"
+              >
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={handleInputChange}
+                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </form>
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={() => setFormMode(null)}
+              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFormSubmit}
+              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              style={
+                {
+                  backgroundColor: themeStyles.selectionBg,
+                  "--hover-bg": themeStyles.hoverColor,
+                } as React.CSSProperties
+              }
+              type="button"
+            >
+              {formMode === "add" ? "Save" : "Update"}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null;
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Discount Plan</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Discount Plan Name */}
-          <div>
-            <label
-              htmlFor="discountPlanName"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Plan Name
-            </label>
-            <input
-              type="text"
-              id="discountPlanName"
-              name="discountPlanName"
-              value={form.discountPlanName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter discount plan name"
-            />
-          </div>
-
-          {/* Discount Type */}
-          <div>
-            <label
-              htmlFor="discountType"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Type
-            </label>
-            <select
-              id="discountType"
-              name="discountType"
-              value={form.discountType}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {discountTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Discount Value */}
-          <div>
-            <label
-              htmlFor="discountValue"
-              className="block text-sm font-medium mb-1"
-            >
-              Discount Value
-            </label>
-            <input
-              type="number"
-              id="discountValue"
-              name="discountValue"
-              value={form.discountValue}
-              onChange={handleInputChange}
-              min={0}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter discount value"
-            />
-          </div>
-
-          {/* Start Date */}
-          <div>
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={form.endDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save  fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i>{" "}
-            Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Plan Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Discount Value
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Start Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  End Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPlans.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No discount plans found.
-                  </td>
-                </tr>
-              )}
-              {paginatedPlans.map((plan, idx) => (
-                <tr
-                  key={plan.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                >
-                  <td className="px-4 py-2">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-2">
-                    {plan.discountPlanName}
-                  </td>
-                  <td className="px-4 py-2">
-                    {plan.discountType}
-                  </td>
-                  <td className="px-4 py-2">
-                    {plan.discountType === "Percentage"
-                      ? `${plan.discountValue}%`
-                      : `$${plan.discountValue}`}
-                  </td>
-                  <td className="px-4 py-2">
-                    {plan.startDate}
-                  </td>
-                  <td className="px-4 py-2">
-                    {plan.endDate}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        plan.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {plan.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(plan.id)}
-                      aria-label={`Edit discount plan ${plan.discountPlanName}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i className="fa fa-edit" aria-hidden="true"></i>
-                      <span className="sr-only">Edit record</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(plan.id)}
-                      aria-label={`Delete discount plan ${plan.discountPlanName}`}
-                      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1 "
-                    >
-                      <i
-                        className="fa fa-trash-can-xmark"
-                        aria-hidden="true"
-                      ></i>
-                      <span className="sr-only">Delete record</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={plans.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Discount Plan
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Discount Plan Name */}
-              <div>
-                <label
-                  htmlFor="editDiscountPlanName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Plan Name
-                </label>
-                <input
-                  type="text"
-                  id="editDiscountPlanName"
-                  name="discountPlanName"
-                  value={editForm.discountPlanName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter discount plan name"
-                />
-              </div>
-
-              {/* Discount Type */}
-              <div>
-                <label
-                  htmlFor="editDiscountType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Type
-                </label>
-                <select
-                  id="editDiscountType"
-                  name="discountType"
-                  value={editForm.discountType}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {discountTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Discount Value */}
-              <div>
-                <label
-                  htmlFor="editDiscountValue"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Discount Value
-                </label>
-                <input
-                  type="number"
-                  id="editDiscountValue"
-                  name="discountValue"
-                  value={editForm.discountValue}
-                  onChange={handleEditInputChange}
-                  min={0}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter discount value"
-                />
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label
-                  htmlFor="editStartDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  id="editStartDate"
-                  name="startDate"
-                  value={editForm.startDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label
-                  htmlFor="editEndDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="editEndDate"
-                  name="endDate"
-                  value={editForm.endDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Discount Plans"
+      description="Manage discount plans for your application."
+      icon="fa fa-project-diagram"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredPlans.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedPlans}
+      rowActions={rowActions}
+      modal={modal}
+    />
   );
 }
