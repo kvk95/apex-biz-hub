@@ -30,7 +30,11 @@ interface PageBase1Props {
   tableColumns: Column[];
   tableData: any[];
   rowActions: (row: any) => JSX.Element;
-  modal: (themeStyles: ThemeStyles) => JSX.Element | null;
+  formMode: "add" | "edit" | null;
+  setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | null>>;
+  modalTitle: string;
+  modalForm: (themeStyles: ThemeStyles) => JSX.Element;
+  onFormSubmit: (e: React.FormEvent) => void;
 }
 
 function adjustColor(hex: string, percent: number): string {
@@ -67,7 +71,11 @@ export function PageBase1({
   tableColumns,
   tableData,
   rowActions,
-  modal,
+  formMode,
+  setFormMode,
+  modalTitle,
+  modalForm,
+  onFormSubmit,
 }: PageBase1Props) {
   const { theme } = useTheme();
   const primaryColor = theme.primaryColor || "#f97316";
@@ -192,7 +200,55 @@ export function PageBase1({
         />
       </section>
 
-      {modal(themeStyles)}
+      {formMode && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div className="bg-white rounded shadow-lg w-full max-w-4xl max-h-full">
+            <div className="flex justify-between items-center border-b border-border px-4 py-2 ">
+              <h2 id="modal-title" className="text-xl font-semibold text-left">
+                {modalTitle}
+              </h2>
+              <button
+                onClick={() => {
+                  setFormMode(null);
+                  console.log("PageBase1: Modal closed via close button");
+                }}
+                className="text-white bg-red-500 hover:bg-red-800 focus:ring-2 focus:ring-red-500 rounded-full px-2 py-1 text-xs"
+                aria-label="Close modal"
+              >
+                <i className="fa fa-times" aria-hidden="true"></i>
+              </button>
+            </div>
+            <form onSubmit={onFormSubmit} className="px-4 py-4">
+              {modalForm(themeStyles)}
+            </form>
+            <div className="border-t border-border px-4 pt-2 pb-3 flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setFormMode(null);
+                  console.log("PageBase1: Modal closed via cancel button");
+                }}
+                className="inline-flex items-center gap-2 bg-gray-600 hover:bg-secondary/80 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onFormSubmit}
+                className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ backgroundColor: themeStyles.selectionBg, "--hover-bg": themeStyles.hoverColor } as React.CSSProperties}
+                type="button"
+              >
+                {formMode === "add" ? "Save" : "Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

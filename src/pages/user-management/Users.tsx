@@ -20,14 +20,16 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
+interface ThemeStyles {
+  selectionBg: string;
+  hoverColor: string;
+}
+
 export default function Users() {
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-
-  // Form state
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
     id: null as number | null,
@@ -37,11 +39,9 @@ export default function Users() {
     role: "User",
     status: "Active",
   });
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Data fetching
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<User[]>("Users");
@@ -52,14 +52,13 @@ export default function Users() {
       setError(response.status.description);
     }
     setLoading(false);
-    console.log("loadData:", { data: response.result });
+    console.log("Users loadData:", { data: response.result });
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // Filter data
   const filteredUsers = useMemo(() => {
     const result = !search.trim()
       ? data
@@ -71,25 +70,24 @@ export default function Users() {
             u.role.toLowerCase().includes(search.toLowerCase()) ||
             u.status.toLowerCase().includes(search.toLowerCase())
         );
-    console.log("filteredUsers:", result, { search });
+    console.log("Users filteredUsers:", result, { search });
     return result;
   }, [search, data]);
 
-  // Paginated data
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const result = filteredUsers.slice(start, end);
-    console.log("paginatedUsers:", result, {
+    console.log("Users paginatedUsers:", result, {
       currentPage,
       start,
       end,
       itemsPerPage,
+      totalItems: filteredUsers.length,
     });
     return result;
   }, [currentPage, itemsPerPage, filteredUsers]);
 
-  // Handlers
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
@@ -100,6 +98,7 @@ export default function Users() {
       role: "User",
       status: "Active",
     });
+    console.log("Users handleAddClick: Modal opened for add");
   };
 
   const handleRefresh = () => {
@@ -107,7 +106,7 @@ export default function Users() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("handleRefresh");
+    console.log("Users handleRefresh");
   };
 
   const handleReport = () => {
@@ -117,7 +116,10 @@ export default function Users() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("handleSearchChange:", { search: e.target.value });
+    console.log("Users handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
   const handleInputChange = (
@@ -130,6 +132,7 @@ export default function Users() {
   const handleEdit = (user: User) => {
     setFormMode("edit");
     setForm(user);
+    console.log("Users handleEdit: Modal opened for edit", { user });
   };
 
   const handleDelete = (id: number) => {
@@ -138,10 +141,34 @@ export default function Users() {
       const totalPages = Math.ceil((filteredUsers.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+        console.log("Users handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
       } else if (totalPages === 0) {
         setCurrentPage(1);
+        console.log("Users handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      console.log("handleDelete:", { id, totalPages });
+      console.log("Users handleDelete:", { id, totalPages });
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Users handlePageChange:", { page, totalPages, currentPage });
+    } else {
+      console.warn("Users handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
     }
   };
 
@@ -149,6 +176,11 @@ export default function Users() {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) {
       alert("Name and Email are required.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      alert("Please enter a valid email address.");
       return;
     }
     if (formMode === "edit" && form.id !== null) {
@@ -162,10 +194,9 @@ export default function Users() {
       setCurrentPage(totalPages);
     }
     setFormMode(null);
-    console.log("handleFormSubmit:", { form, formMode });
+    console.log("Users handleFormSubmit:", { form, formMode });
   };
 
-  // Table columns
   const columns: Column[] = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
@@ -188,7 +219,6 @@ export default function Users() {
     },
   ];
 
-  // Row actions
   const rowActions = (row: User) => (
     <>
       <button
@@ -210,145 +240,90 @@ export default function Users() {
     </>
   );
 
-  // Modal
-  const modal = (themeStyles: ThemeStyles) => {
-    return formMode === "add" || formMode === "edit" ? (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 mx-4">
-          <h2
-            id="modal-title"
-            className="text-xl font-semibold text-gray-900 mb-4"
-          >
-            {formMode === "add" ? "Add New User" : "Edit User"}
-          </h2>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={form.name}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                placeholder="Enter full name"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Email <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                placeholder="Enter email address"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Phone
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                placeholder="Enter phone number"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={form.role}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-              >
-                {ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-              >
-                {STATUS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => setFormMode(null)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded shadow transition"
-              >
-                Cancel
-              </button>
-              <button
-              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              style={
-                {
-                  backgroundColor: themeStyles.selectionBg,
-                  "--hover-bg": themeStyles.hoverColor,
-                } as React.CSSProperties
-              }
-              type="button"
-                type="button"
-              >
-                {formMode === "add" ? "Save" : "Update"}
-              </button>
-            </div>
-          </form>
-        </div>
+  const modalForm = (themeStyles: ThemeStyles) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium mb-1">
+          Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value={form.name}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter full name"
+          required
+        />
       </div>
-    ) : null;
-  };
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium mb-1">
+          Email <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter email address"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium mb-1">
+          Phone
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          value={form.phone}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter phone number"
+        />
+      </div>
+      <div>
+        <label htmlFor="role" className="block text-sm font-medium mb-1">
+          Role
+        </label>
+        <select
+          id="role"
+          name="role"
+          value={form.role}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ROLES.map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {STATUS.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
 
   return (
     <PageBase1
@@ -363,12 +338,16 @@ export default function Users() {
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredUsers.length}
-      onPageChange={setCurrentPage}
+      onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedUsers}
       rowActions={rowActions}
-      modal={modal}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add New User" : "Edit User"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
     />
   );
 }

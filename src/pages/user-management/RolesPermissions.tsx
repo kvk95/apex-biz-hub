@@ -7,6 +7,7 @@ type Role = {
   roleName: string;
   description: string;
   status: "Active" | "Inactive";
+  createdDate: string;
 };
 
 interface Column {
@@ -15,14 +16,16 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
+interface ThemeStyles {
+  selectionBg: string;
+  hoverColor: string;
+}
+
 export default function RolesPermissions() {
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
-
-  // Form state
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
     id: null as number | null,
@@ -30,11 +33,9 @@ export default function RolesPermissions() {
     description: "",
     status: "Active" as "Active" | "Inactive",
   });
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Data fetching
   const loadData = async () => {
     setLoading(true);
     const response = await apiService.get<Role[]>("RolesPermissions");
@@ -45,39 +46,37 @@ export default function RolesPermissions() {
       setError(response.status.description);
     }
     setLoading(false);
-    console.log("loadData:", { data: response.result });
+    console.log("RolesPermissions loadData:", { data: response.result });
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // Filter data
   const filteredRoles = useMemo(() => {
     const result = !search.trim()
       ? data
       : data.filter((r) =>
           r.roleName.toLowerCase().includes(search.toLowerCase())
         );
-    console.log("filteredRoles:", result, { search });
+    console.log("RolesPermissions filteredRoles:", result, { search });
     return result;
   }, [search, data]);
 
-  // Paginated data
   const paginatedRoles = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const result = filteredRoles.slice(start, end);
-    console.log("paginatedRoles:", result, {
+    console.log("RolesPermissions paginatedRoles:", result, {
       currentPage,
       start,
       end,
       itemsPerPage,
+      totalItems: filteredRoles.length,
     });
     return result;
   }, [currentPage, itemsPerPage, filteredRoles]);
 
-  // Handlers
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
@@ -86,6 +85,7 @@ export default function RolesPermissions() {
       description: "",
       status: "Active",
     });
+    console.log("RolesPermissions handleAddClick: Modal opened for add");
   };
 
   const handleRefresh = () => {
@@ -93,7 +93,7 @@ export default function RolesPermissions() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("handleRefresh");
+    console.log("RolesPermissions handleRefresh");
   };
 
   const handleReport = () => {
@@ -103,7 +103,10 @@ export default function RolesPermissions() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("handleSearchChange:", { search: e.target.value });
+    console.log("RolesPermissions handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
   const handleInputChange = (
@@ -115,16 +118,6 @@ export default function RolesPermissions() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handlePermission = (role: Role) => {
-    setFormMode("edit");
-    setForm({
-      id: role.id,
-      roleName: role.roleName,
-      description: role.description,
-      status: role.status,
-    });
-  };
-
   const handleEdit = (role: Role) => {
     setFormMode("edit");
     setForm({
@@ -133,6 +126,7 @@ export default function RolesPermissions() {
       description: role.description,
       status: role.status,
     });
+    console.log("RolesPermissions handleEdit: Modal opened for edit", { role });
   };
 
   const handleDelete = (id: number) => {
@@ -141,10 +135,36 @@ export default function RolesPermissions() {
       const totalPages = Math.ceil((filteredRoles.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+        console.log("RolesPermissions handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
       } else if (totalPages === 0) {
         setCurrentPage(1);
+        console.log(
+          "RolesPermissions handleDelete: Reset to page 1 (no data)",
+          { id, currentPage, totalPages }
+        );
       }
-      console.log("handleDelete:", { id, totalPages });
+      console.log("RolesPermissions handleDelete:", { id, totalPages });
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("RolesPermissions handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn(
+        "RolesPermissions handlePageChange: Invalid page or same page",
+        { page, totalPages, currentPage }
+      );
     }
   };
 
@@ -154,21 +174,37 @@ export default function RolesPermissions() {
       alert("Role Name is required.");
       return;
     }
+    if (
+      data.some(
+        (r) =>
+          r.roleName.toLowerCase() === form.roleName.toLowerCase() &&
+          (formMode === "add" || (formMode === "edit" && r.id !== form.id))
+      )
+    ) {
+      alert("Role Name must be unique.");
+      return;
+    }
     if (formMode === "add") {
       const newId = data.length ? Math.max(...data.map((r) => r.id)) + 1 : 1;
-      setData((prev) => [...prev, { ...form, id: newId }]);
+      setData((prev) => [
+        ...prev,
+        { ...form, id: newId, createdDate: new Date().toISOString() },
+      ]);
       const totalPages = Math.ceil((filteredRoles.length + 1) / itemsPerPage);
       setCurrentPage(totalPages);
     } else if (formMode === "edit" && form.id !== null) {
       setData((prev) =>
-        prev.map((r) => (r.id === form.id ? { ...form, id: form.id } : r))
+        prev.map((r) =>
+          r.id === form.id
+            ? { ...form, id: form.id, createdDate: r.createdDate }
+            : r
+        )
       );
     }
     setFormMode(null);
-    console.log("handleFormSubmit:", { form, formMode });
+    console.log("RolesPermissions handleFormSubmit:", { form, formMode });
   };
 
-  // Table columns
   const columns: Column[] = [
     {
       key: "roleName",
@@ -178,11 +214,7 @@ export default function RolesPermissions() {
       ),
     },
     { key: "description", label: "Description" },
-    {
-      key: "createdDate",
-      label: "Created Date",
-      render: () => new Date().toLocaleDateString(),
-    },
+    { key: "createdDate", label: "Created Date" },
     {
       key: "status",
       label: "Status",
@@ -200,16 +232,15 @@ export default function RolesPermissions() {
     },
   ];
 
-  // Row actions
   const rowActions = (row: Role) => (
     <>
       <button
-        onClick={() => handlePermission(row)}
+        onClick={() => handleEdit(row)}
         aria-label={`Edit permissions for ${row.roleName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-shield" aria-hidden="true"></i>
-        <span className="sr-only">Permission</span>
+        <span className="sr-only">Edit permissions</span>
       </button>
       <button
         onClick={() => handleEdit(row)}
@@ -230,101 +261,55 @@ export default function RolesPermissions() {
     </>
   );
 
-  // Modal
-  const modal = (themeStyles: ThemeStyles) => {
-    return formMode === "add" || formMode === "edit" ? (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 mx-4">
-          <h2
-            id="modal-title"
-            className="text-xl font-semibold text-gray-900 mb-4"
-          >
-            {formMode === "add" ? "Add New Role" : "Edit Role"}
-          </h2>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="roleName"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Role Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="roleName"
-                name="roleName"
-                type="text"
-                value={form.roleName}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                required
-                autoFocus
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                value={form.description}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => setFormMode(null)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded shadow transition"
-              >
-                Cancel
-              </button>
-              <button
-              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              style={
-                {
-                  backgroundColor: themeStyles.selectionBg,
-                  "--hover-bg": themeStyles.hoverColor,
-                } as React.CSSProperties
-              }
-              type="button"
-              >
-                {formMode === "add" ? "Save" : "Update"}
-              </button>
-            </div>
-          </form>
-        </div>
+  const modalForm = (themeStyles: ThemeStyles) => (
+    <div className="grid grid-cols-1 gap-4">
+      <div>
+        <label htmlFor="roleName" className="block text-sm font-medium mb-1">
+          Role Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="roleName"
+          name="roleName"
+          type="text"
+          value={form.roleName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter role name"
+          required
+          autoFocus
+        />
       </div>
-    ) : null;
-  };
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          rows={3}
+          value={form.description}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          placeholder="Enter role description"
+        />
+      </div>
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+  );
 
   return (
     <PageBase1
@@ -339,12 +324,16 @@ export default function RolesPermissions() {
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredRoles.length}
-      onPageChange={setCurrentPage}
+      onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedRoles}
       rowActions={rowActions}
-      modal={modal}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add New Role" : "Edit Role"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
     />
   );
 }

@@ -51,7 +51,7 @@ export default function Discount() {
       : data.filter((d) =>
           d.discountName.toLowerCase().includes(search.toLowerCase())
         );
-    console.log("filteredData:", result, { search });
+    console.log("Discount filteredData:", result, { search });
     return result;
   }, [data, search]);
 
@@ -59,11 +59,12 @@ export default function Discount() {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const result = filteredData.slice(start, end);
-    console.log("paginatedData:", result, {
+    console.log("Discount paginatedData:", result, {
       currentPage,
       start,
       end,
       itemsPerPage,
+      totalItems: filteredData.length,
     });
     return result;
   }, [filteredData, currentPage, itemsPerPage]);
@@ -82,7 +83,7 @@ export default function Discount() {
       setError(response.status.description);
     }
     setLoading(false);
-    console.log("loadData:", { data: response.result });
+    console.log("Discount loadData:", { data: response.result });
   };
 
   const handleInputChange = (
@@ -103,7 +104,7 @@ export default function Discount() {
       endDate: "",
       status: statusOptions[0],
     });
-    console.log("handleAddClick: Modal opened for add");
+    console.log("Discount handleAddClick: Modal opened for add");
   };
 
   const handleEdit = (item: Discount) => {
@@ -117,7 +118,7 @@ export default function Discount() {
       endDate: item.endDate,
       status: item.status,
     });
-    console.log("handleEdit: Modal opened for edit", { item });
+    console.log("Discount handleEdit: Modal opened for edit", { item });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -149,7 +150,7 @@ export default function Discount() {
       );
     }
     setFormMode(null);
-    console.log("handleFormSubmit:", { form, formMode });
+    console.log("Discount handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
@@ -158,10 +159,20 @@ export default function Discount() {
       const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+        console.log("Discount handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
       } else if (totalPages === 0) {
         setCurrentPage(1);
+        console.log("Discount handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      console.log("handleDelete:", { id, totalPages });
+      console.log("Discount handleDelete:", { id, totalPages });
     }
   };
 
@@ -170,7 +181,7 @@ export default function Discount() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("handleClear");
+    console.log("Discount handleClear");
   };
 
   const handleReport = () => {
@@ -180,7 +191,28 @@ export default function Discount() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("handleSearchChange:", { search: e.target.value });
+    console.log("Discount handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Discount handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Discount handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
   };
 
   const columns: Column[] = [
@@ -241,175 +273,114 @@ export default function Discount() {
     </>
   );
 
-  const modal = (themeStyles: ThemeStyles) => {
-    console.log("Discount modal themeStyles:", themeStyles);
-    return formMode === "add" || formMode === "edit" ? (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="bg-white rounded shadow-lg max-w-xl w-full p-1">
-          <div className="flex justify-between items-center mb-4 border-b border-border px-2 py-2">
-            <h2 id="modal-title" className="text-xl font-semibold text-left">
-              {formMode === "add" ? "Add Discount" : "Edit Discount"}
-            </h2>
-            <button
-              onClick={() => {
-                setFormMode(null);
-                console.log("Modal closed via close button");
-              }}
-              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full p-2"
-              aria-label="Close modal"
-            >
-              <i className="fa fa-times" aria-hidden="true"></i>
-            </button>
-          </div>
-          <form
-            onSubmit={handleFormSubmit}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4"
-          >
-            <div>
-              <label
-                htmlFor="discountName"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountName"
-                name="discountName"
-                type="text"
-                value={form.discountName}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount name"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="discountType"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Type
-              </label>
-              <select
-                id="discountType"
-                name="discountType"
-                value={form.discountType}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {discountTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="discountValue"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Value <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountValue"
-                name="discountValue"
-                type="number"
-                min={0}
-                value={form.discountValue}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount value"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Start Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={form.startDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium mb-1"
-              >
-                End Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="endDate"
-                name="endDate"
-                type="date"
-                value={form.endDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
-          <div className="mt-6 border-t border-border py-2 px-2 flex justify-end gap-3">
-            <button
-              onClick={() => setFormMode(null)}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-            >
-              Cancel
-            </button>            
-            <button
-              onClick={handleFormSubmit}
-              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              style={
-                {
-                  backgroundColor: themeStyles.selectionBg,
-                  "--hover-bg": themeStyles.hoverColor,
-                } as React.CSSProperties
-              }
-              type="button"
-            >
-              {formMode === "add" ? "Save" : "Update"}
-            </button>
-          </div>
-        </div>
+  const modalForm = (themeStyles: ThemeStyles) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label
+          htmlFor="discountName"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="discountName"
+          name="discountName"
+          type="text"
+          value={form.discountName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter discount name"
+          required
+        />
       </div>
-    ) : null;
-  };
+      <div>
+        <label
+          htmlFor="discountType"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Type
+        </label>
+        <select
+          id="discountType"
+          name="discountType"
+          value={form.discountType}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {discountTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label
+          htmlFor="discountValue"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Value <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="discountValue"
+          name="discountValue"
+          type="number"
+          min={0}
+          value={form.discountValue}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter discount value"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="startDate" className="block text-sm font-medium mb-1">
+          Start Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="startDate"
+          name="startDate"
+          type="date"
+          value={form.startDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+          End Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="endDate"
+          name="endDate"
+          type="date"
+          value={form.endDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
 
   return (
     <PageBase1
@@ -424,12 +395,16 @@ export default function Discount() {
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}
-      onPageChange={setCurrentPage}
+      onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
       rowActions={rowActions}
-      modal={modal}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Discount" : "Edit Discount"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
     />
   );
 }

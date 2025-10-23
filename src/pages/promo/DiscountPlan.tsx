@@ -21,6 +21,11 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
+interface ThemeStyles {
+  selectionBg: string;
+  hoverColor: string;
+}
+
 export default function DiscountPlan() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
@@ -40,14 +45,13 @@ export default function DiscountPlan() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Filtered and paginated data
   const filteredPlans = useMemo(() => {
     const result = !search.trim()
       ? plans
       : plans.filter((p) =>
           p.discountPlanName.toLowerCase().includes(search.toLowerCase())
         );
-    console.log("filteredPlans:", result, { search });
+    console.log("DiscountPlan filteredPlans:", result, { search });
     return result;
   }, [plans, search]);
 
@@ -55,11 +59,12 @@ export default function DiscountPlan() {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const result = filteredPlans.slice(start, end);
-    console.log("paginatedPlans:", result, {
+    console.log("DiscountPlan paginatedPlans:", result, {
       currentPage,
       start,
       end,
       itemsPerPage,
+      totalItems: filteredPlans.length,
     });
     return result;
   }, [filteredPlans, currentPage, itemsPerPage]);
@@ -78,7 +83,7 @@ export default function DiscountPlan() {
       setError(response.status.description);
     }
     setLoading(false);
-    console.log("loadData:", { data: response.result });
+    console.log("DiscountPlan loadData:", { data: response.result });
   };
 
   const handleInputChange = (
@@ -99,6 +104,7 @@ export default function DiscountPlan() {
       endDate: "",
       status: statusOptions[0],
     });
+    console.log("DiscountPlan handleAddClick: Modal opened for add");
   };
 
   const handleEdit = (plan: DiscountPlan) => {
@@ -112,6 +118,7 @@ export default function DiscountPlan() {
       endDate: plan.endDate,
       status: plan.status,
     });
+    console.log("DiscountPlan handleEdit: Modal opened for edit", { plan });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -143,7 +150,7 @@ export default function DiscountPlan() {
       );
     }
     setFormMode(null);
-    console.log("handleFormSubmit:", { form, formMode });
+    console.log("DiscountPlan handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
@@ -152,10 +159,20 @@ export default function DiscountPlan() {
       const totalPages = Math.ceil((filteredPlans.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+        console.log("DiscountPlan handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
       } else if (totalPages === 0) {
         setCurrentPage(1);
+        console.log("DiscountPlan handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      console.log("handleDelete:", { id, totalPages });
+      console.log("DiscountPlan handleDelete:", { id, totalPages });
     }
   };
 
@@ -164,7 +181,7 @@ export default function DiscountPlan() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("handleClear");
+    console.log("DiscountPlan handleClear");
   };
 
   const handleReport = () => {
@@ -174,10 +191,30 @@ export default function DiscountPlan() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("handleSearchChange:", { search: e.target.value });
+    console.log("DiscountPlan handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
-  // Table columns
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredPlans.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("DiscountPlan handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("DiscountPlan handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
+  };
+
   const columns: Column[] = [
     {
       key: "index",
@@ -215,7 +252,6 @@ export default function DiscountPlan() {
     },
   ];
 
-  // Row actions
   const rowActions = (row: DiscountPlan) => (
     <>
       <button
@@ -237,166 +273,114 @@ export default function DiscountPlan() {
     </>
   );
 
-  // Modal for add/edit
-  const modal = (themeStyles: ThemeStyles) => {
-    return formMode === "add" || formMode === "edit" ? (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="bg-white rounded shadow-lg max-w-xl w-full p-6">
-          <h2
-            id="modal-title"
-            className="text-xl font-semibold mb-4 text-center"
-          >
-            {formMode === "add" ? "Add Discount Plan" : "Edit Discount Plan"}
-          </h2>
-          <form
-            onSubmit={handleFormSubmit}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            <div>
-              <label
-                htmlFor="discountPlanName"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Plan Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountPlanName"
-                name="discountPlanName"
-                type="text"
-                value={form.discountPlanName}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount plan name"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="discountType"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Type
-              </label>
-              <select
-                id="discountType"
-                name="discountType"
-                value={form.discountType}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {discountTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="discountValue"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Value <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountValue"
-                name="discountValue"
-                type="number"
-                min={0}
-                value={form.discountValue}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount value"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Start Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={form.startDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium mb-1"
-              >
-                End Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="endDate"
-                name="endDate"
-                type="date"
-                value={form.endDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              onClick={() => setFormMode(null)}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleFormSubmit}
-              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              style={
-                {
-                  backgroundColor: themeStyles.selectionBg,
-                  "--hover-bg": themeStyles.hoverColor,
-                } as React.CSSProperties
-              }
-              type="button"
-            >
-              {formMode === "add" ? "Save" : "Update"}
-            </button>
-          </div>
-        </div>
+  const modalForm = (themeStyles: ThemeStyles) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label
+          htmlFor="discountPlanName"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Plan Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="discountPlanName"
+          name="discountPlanName"
+          type="text"
+          value={form.discountPlanName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter discount plan name"
+          required
+        />
       </div>
-    ) : null;
-  };
+      <div>
+        <label
+          htmlFor="discountType"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Type
+        </label>
+        <select
+          id="discountType"
+          name="discountType"
+          value={form.discountType}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {discountTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label
+          htmlFor="discountValue"
+          className="block text-sm font-medium mb-1"
+        >
+          Discount Value <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="discountValue"
+          name="discountValue"
+          type="number"
+          min={0}
+          value={form.discountValue}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter discount value"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="startDate" className="block text-sm font-medium mb-1">
+          Start Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="startDate"
+          name="startDate"
+          type="date"
+          value={form.startDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+          End Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="endDate"
+          name="endDate"
+          type="date"
+          value={form.endDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
 
   return (
     <PageBase1
@@ -411,12 +395,18 @@ export default function DiscountPlan() {
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredPlans.length}
-      onPageChange={setCurrentPage}
+      onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedPlans}
       rowActions={rowActions}
-      modal={modal}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={
+        formMode === "add" ? "Add Discount Plan" : "Edit Discount Plan"
+      }
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
     />
   );
 }

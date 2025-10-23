@@ -2,23 +2,22 @@ import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
 import { PageBase1 } from "@/pages/PageBase1";
 
-const discountTypes = ["Percentage", "Fixed"];
-const statusOptions = ["Active", "Inactive"];
+const statusOptions = ["Active", "Expired"];
 
-interface Discount {
+interface GiftCard {
   id: number;
-  discountName: string;
-  discountType: string;
-  discountValue: number;
-  startDate: string;
-  endDate: string;
+  cardNumber: string;
+  cardHolder: string;
+  issueDate: string;
+  expiryDate: string;
+  balance: number;
   status: string;
 }
 
 interface Column {
   key: string;
   label: string;
-  render?: (value: any, row: any) => JSX.Element;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
 }
 
 interface ThemeStyles {
@@ -26,47 +25,23 @@ interface ThemeStyles {
   hoverColor: string;
 }
 
-export default function Discount() {
+export default function GiftCards() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
     id: null as number | null,
-    discountName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
-    startDate: "",
-    endDate: "",
+    cardNumber: "",
+    cardHolder: "",
+    issueDate: "",
+    expiryDate: "",
+    balance: "",
     status: statusOptions[0],
   });
-
-  const [data, setData] = useState<Discount[]>([]);
+  const [data, setData] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const filteredData = useMemo(() => {
-    const result = !search.trim()
-      ? data
-      : data.filter((d) =>
-          d.discountName.toLowerCase().includes(search.toLowerCase())
-        );
-    console.log("filteredData:", result, { search });
-    return result;
-  }, [data, search]);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const result = filteredData.slice(start, end);
-    console.log("paginatedData:", result, {
-      currentPage,
-      start,
-      end,
-      itemsPerPage,
-    });
-    return result;
-  }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     loadData();
@@ -74,7 +49,7 @@ export default function Discount() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<Discount[]>("Discount");
+    const response = await apiService.get<GiftCard[]>("GiftCards");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -82,8 +57,34 @@ export default function Discount() {
       setError(response.status.description);
     }
     setLoading(false);
-    console.log("loadData:", { data: response.result });
+    console.log("GiftCards loadData:", { data: response.result });
   };
+
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter(
+          (card) =>
+            card.cardNumber.toLowerCase().includes(search.toLowerCase()) ||
+            card.cardHolder.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("GiftCards filteredData:", result, { search });
+    return result;
+  }, [data, search]);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("GiftCards paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -91,75 +92,97 @@ export default function Discount() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
+ 
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
       id: null,
-      discountName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
-      startDate: "",
-      endDate: "",
+      cardNumber: "",
+      cardHolder: "",
+      issueDate: "",
+      expiryDate: "",
+      balance: "",
       status: statusOptions[0],
     });
+    console.log("GiftCards handleAddClick: Modal opened for add" );
   };
 
-  const handleEdit = (item: Discount) => {
+  const handleEdit = (card: GiftCard) => {
     setFormMode("edit");
     setForm({
-      id: item.id,
-      discountName: item.discountName,
-      discountType: item.discountType,
-      discountValue: item.discountValue.toString(),
-      startDate: item.startDate,
-      endDate: item.endDate,
-      status: item.status,
+      id: card.id,
+      cardNumber: card.cardNumber,
+      cardHolder: card.cardHolder,
+      issueDate: card.issueDate,
+      expiryDate: card.expiryDate,
+      balance: card.balance.toString(),
+      status: card.status,
     });
+    console.log("GiftCards handleEdit: Modal opened for edit", { card });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      !form.discountName.trim() ||
-      !form.discountValue ||
-      !form.startDate ||
-      !form.endDate
+      !form.cardNumber.trim() ||
+      !form.cardHolder.trim() ||
+      !form.issueDate ||
+      !form.expiryDate ||
+      !form.balance
     ) {
       alert("Please fill all required fields.");
       return;
     }
-    const discountValue = Number(form.discountValue);
-    if (isNaN(discountValue) || discountValue < 0) {
-      alert("Discount value must be a valid number greater than or equal to 0");
+    const balance = Number(form.balance);
+    if (isNaN(balance) || balance < 0) {
+      alert("Balance must be a valid number greater than or equal to 0");
       return;
     }
-    if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { ...form, id: newId, discountValue }]);
-      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
-    } else if (formMode === "edit" && form.id !== null) {
+    if (
+      data.some(
+        (card) =>
+          card.cardNumber.toLowerCase() === form.cardNumber.toLowerCase() &&
+          (formMode === "edit" && card.id !== form.id)
+      )
+    ) {
+      alert("Card Number must be unique.");
+      return;
+    }
+    if (form.issueDate && form.expiryDate && form.issueDate > form.expiryDate) {
+      alert("Expiry Date must be after Issue Date.");
+      return;
+    }
+    if (formMode === "edit" && form.id !== null) {
       setData((prev) =>
-        prev.map((item) =>
-          item.id === form.id ? { ...form, id: form.id, discountValue } : item
+        prev.map((card) =>
+          card.id === form.id ? { ...form, id: form.id, balance } : card
         )
       );
     }
     setFormMode(null);
-    console.log("handleFormSubmit:", { form, formMode });
+    console.log("GiftCards handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this discount?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
+    if (window.confirm("Are you sure you want to delete this gift card?")) {
+      setData((prev) => prev.filter((card) => card.id !== id));
       const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+        console.log("GiftCards handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
       } else if (totalPages === 0) {
         setCurrentPage(1);
+        console.log("GiftCards handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      console.log("handleDelete:", { id, totalPages });
+      console.log("GiftCards handleDelete:", { id, totalPages });
     }
   };
 
@@ -168,39 +191,68 @@ export default function Discount() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("handleClear");
+    setForm({
+      id: null,
+      cardNumber: "",
+      cardHolder: "",
+      issueDate: "",
+      expiryDate: "",
+      balance: "",
+      status: statusOptions[0],
+    });
+    console.log("GiftCards handleClear");
   };
 
   const handleReport = () => {
-    alert("Discounts Report:\n\n" + JSON.stringify(data, null, 2));
+    alert("Gift Cards Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("handleSearchChange:", { search: e.target.value });
+    console.log("GiftCards handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("GiftCards handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("GiftCards handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
   };
 
   const columns: Column[] = [
     {
       key: "index",
       label: "#",
-      render: (_, row, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
     },
     {
-      key: "discountName",
-      label: "Discount Name",
+      key: "cardNumber",
+      label: "Card Number",
       render: (value) => <span className="font-semibold">{value}</span>,
     },
-    { key: "discountType", label: "Discount Type" },
+    { key: "cardHolder", label: "Card Holder" },
+    { key: "issueDate", label: "Issue Date" },
+    { key: "expiryDate", label: "Expiry Date" },
     {
-      key: "discountValue",
-      label: "Discount Value",
-      render: (value, row) =>
-        row.discountType === "Percentage" ? `${value}%` : `$${value}`,
+      key: "balance",
+      label: "Balance",
+      render: (value) => `$${Number(value).toFixed(2)}`,
     },
-    { key: "startDate", label: "Start Date" },
-    { key: "endDate", label: "End Date" },
     {
       key: "status",
       label: "Status",
@@ -218,192 +270,151 @@ export default function Discount() {
     },
   ];
 
-  const rowActions = (row: Discount) => (
+  const rowActions = (row: GiftCard) => (
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit discount ${row.discountName}`}
+        aria-label={`Edit gift card ${row.cardNumber}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit discount</span>
+        <span className="sr-only">Edit gift card</span>
       </button>
       <button
         onClick={() => handleDelete(row.id)}
-        aria-label={`Delete discount ${row.discountName}`}
+        aria-label={`Delete gift card ${row.cardNumber}`}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete discount</span>
+        <span className="sr-only">Delete gift card</span>
       </button>
     </>
   );
 
-  const modal = (themeStyles: ThemeStyles) => {
-    return formMode === "add" || formMode === "edit" ? (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="bg-white rounded shadow-lg max-w-xl w-full p-6">
-          <h2
-            id="modal-title"
-            className="text-xl font-semibold mb-4 text-center"
-          >
-            {formMode === "add" ? "Add Discount" : "Edit Discount"}
-          </h2>
-          <form
-            onSubmit={handleFormSubmit}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            <div>
-              <label
-                htmlFor="discountName"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountName"
-                name="discountName"
-                type="text"
-                value={form.discountName}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount name"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="discountType"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Type
-              </label>
-              <select
-                id="discountType"
-                name="discountType"
-                value={form.discountType}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {discountTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="discountValue"
-                className="block text-sm font-medium mb-1"
-              >
-                Discount Value <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="discountValue"
-                name="discountValue"
-                type="number"
-                min={0}
-                value={form.discountValue}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter discount value"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Start Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={form.startDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium mb-1"
-              >
-                End Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="endDate"
-                name="endDate"
-                type="date"
-                value={form.endDate}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              onClick={() => setFormMode(null)}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleFormSubmit}
-              className="inline-flex items-center gap-2 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              style={
-                {
-                  backgroundColor: themeStyles.selectionBg,
-                  "--hover-bg": themeStyles.hoverColor,
-                } as React.CSSProperties
-              }
-              type="button"
-            >
-              {formMode === "add" ? "Save" : "Update"}
-            </button>
-          </div>
-        </div>
+  const modalForm = (themeStyles: ThemeStyles) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label
+          htmlFor="cardNumber"
+          className="block text-sm font-medium mb-1"
+        >
+          Card Number <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="cardNumber"
+          name="cardNumber"
+          type="text"
+          value={form.cardNumber}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="XXXX XXXX XXXX XXXX"
+          required
+          maxLength={19}
+          pattern="[\d\s]+"
+          title="Card number format: digits and spaces only"
+        />
       </div>
-    ) : null;
-  };
+      <div>
+        <label
+          htmlFor="cardHolder"
+          className="block text-sm font-medium mb-1"
+        >
+          Card Holder <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="cardHolder"
+          name="cardHolder"
+          type="text"
+          value={form.cardHolder}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Full Name"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="issueDate"
+          className="block text-sm font-medium mb-1"
+        >
+          Issue Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="issueDate"
+          name="issueDate"
+          type="date"
+          value={form.issueDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="expiryDate"
+          className="block text-sm font-medium mb-1"
+        >
+          Expiry Date <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="expiryDate"
+          name="expiryDate"
+          type="date"
+          value={form.expiryDate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="balance"
+          className="block text-sm font-medium mb-1"
+        >
+          Balance <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="balance"
+          name="balance"
+          type="number"
+          min="0"
+          step="0.01"
+          value={form.balance}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="0.00"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="status"
+          className="block text-sm font-medium mb-1"
+        >
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
 
   return (
     <PageBase1
-      title="Discounts"
-      description="Manage discounts for your application."
-      icon="fa fa-credit-card"
+      title="Gift Cards"
+      description="Manage gift cards for your application."
+      icon="fa fa-gift"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}
@@ -412,12 +423,16 @@ export default function Discount() {
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}
-      onPageChange={setCurrentPage}
+      onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
       rowActions={rowActions}
-      modal={modal}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Discount" : "Edit Discount"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
     />
   );
 }
