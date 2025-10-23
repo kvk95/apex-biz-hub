@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
-
-const ROLES = ["Admin", "User"];
-const STATUS = ["Active", "Inactive"];
+import { ROLES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 type User = {
   id: number;
   name: string;
   email: string;
   phone: string;
-  role: string;
-  status: string;
+  role: (typeof ROLES)[number];
+  status: (typeof STATUSES)[number];
 };
 
 interface Column {
@@ -20,24 +19,19 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
-interface ThemeStyles {
-  selectionBg: string;
-  hoverColor: string;
-}
-
 export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<User>({
     id: null as number | null,
     name: "",
     email: "",
     phone: "",
-    role: "User",
-    status: "Active",
+    role: ROLES[0],
+    status: STATUSES[0],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,8 +89,8 @@ export default function Users() {
       name: "",
       email: "",
       phone: "",
-      role: "User",
-      status: "Active",
+    role: ROLES[0],
+    status: STATUSES[0],
     });
     console.log("Users handleAddClick: Modal opened for add");
   };
@@ -202,21 +196,7 @@ export default function Users() {
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
     { key: "role", label: "Role" },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => (
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+    { key: "status", label: "Status", render: renderStatusBadge },
   ];
 
   const rowActions = (row: User) => (
@@ -240,7 +220,7 @@ export default function Users() {
     </>
   );
 
-  const modalForm = (themeStyles: ThemeStyles) => (
+  const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -315,7 +295,7 @@ export default function Users() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {STATUS.map((status) => (
+          {STATUSES.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>

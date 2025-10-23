@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
+import { STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 type Role = {
   id: number;
   roleName: string;
   description: string;
-  status: "Active" | "Inactive";
+  status: (typeof STATUSES)[number];
   createdDate: string;
 };
 
@@ -16,22 +18,18 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
-interface ThemeStyles {
-  selectionBg: string;
-  hoverColor: string;
-}
-
 export default function RolesPermissions() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Role>({
     id: null as number | null,
     roleName: "",
     description: "",
-    status: "Active" as "Active" | "Inactive",
+    status: STATUSES[0],
+    createdDate: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +81,8 @@ export default function RolesPermissions() {
       id: null,
       roleName: "",
       description: "",
-      status: "Active",
+      status: STATUSES[0],
+      createdDate: "",
     });
     console.log("RolesPermissions handleAddClick: Modal opened for add");
   };
@@ -120,12 +119,7 @@ export default function RolesPermissions() {
 
   const handleEdit = (role: Role) => {
     setFormMode("edit");
-    setForm({
-      id: role.id,
-      roleName: role.roleName,
-      description: role.description,
-      status: role.status,
-    });
+    setForm(role);
     console.log("RolesPermissions handleEdit: Modal opened for edit", { role });
   };
 
@@ -215,21 +209,7 @@ export default function RolesPermissions() {
     },
     { key: "description", label: "Description" },
     { key: "createdDate", label: "Created Date" },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => (
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+    { key: "status", label: "Status", render: renderStatusBadge },
   ];
 
   const rowActions = (row: Role) => (
@@ -261,7 +241,7 @@ export default function RolesPermissions() {
     </>
   );
 
-  const modalForm = (themeStyles: ThemeStyles) => (
+  const modalForm = () => (
     <div className="grid grid-cols-1 gap-4">
       <div>
         <label htmlFor="roleName" className="block text-sm font-medium mb-1">
@@ -304,8 +284,11 @@ export default function RolesPermissions() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
         </select>
       </div>
     </div>

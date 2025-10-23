@@ -1,38 +1,44 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
-const pageSizeOptions = [5, 10, 20];
+interface Department {
+  id: number;
+  departmentName: string;
+  description: string;
+  status: typeof STATUSES[number];
+}
 
-const Departments: React.FC = () => {
-  useEffect(() => {
-    // Load data on mount
-  }, []);
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+}
 
-  // State for form inputs
-  const [departmentName, setDepartmentName] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("Active");
-
-  // State for table data and pagination
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-
-  // State for editing
-  const [editId, setEditId] = useState<number | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
+export default function Departments() {
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<Department>({
+    id: 0,
     departmentName: "",
     description: "",
-    status: "Active",
+    status: STATUSES[0],
   });
+  const [data, setData] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Departments");
+    const response = await apiService.get<Department[]>("Departments");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -40,403 +46,260 @@ const Departments: React.FC = () => {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("Departments loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter(
+          (dept) =>
+            dept.departmentName.toLowerCase().includes(search.toLowerCase()) ||
+            dept.description.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("Departments filteredData:", result, { search });
+    return result;
+  }, [data, search]);
 
-  // Pagination calculations
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return data.slice(startIndex, startIndex + pageSize);
-  }, [data, currentPage, pageSize]);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("Departments paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers
-  const resetForm = () => {
-    setDepartmentName("");
-    setDescription("");
-    setStatus("Active");
-    setEditId(null);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    if (!departmentName.trim()) {
-      alert("Department Name is required.");
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: 0,
+      departmentName: "",
+      description: "",
+      status: STATUSES[0],
+    });
+    console.log("Departments handleAddClick: Modal opened for add");
+  };
+
+  const handleEdit = (dept: Department) => {
+    setFormMode("edit");
+    setForm(dept);
+    console.log("Departments handleEdit: Modal opened for edit", { dept });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.departmentName.trim()) {
+      alert("Please fill Department Name (required).");
       return;
     }
-    if (editId !== null) {
-      // Edit existing
+    if (
+      data.some(
+        (dept) =>
+          dept.departmentName.toLowerCase() === form.departmentName.toLowerCase() &&
+          (formMode === "edit" ? dept.id !== form.id : true)
+      )
+    ) {
+      alert("Department Name must be unique.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { id: newId, ...form }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== 0) {
       setData((prev) =>
-        prev.map((d) =>
-          d.id === editId
-            ? { ...d, departmentName, description, status }
-            : d
+        prev.map((item) =>
+          item.id === form.id ? { ...item, ...form } : item
         )
       );
-    } else {
-      // Add new
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [
-        ...prev,
-        { id: newId, departmentName, description, status },
-      ]);
     }
-    resetForm();
-  };
-
-  const handleEdit = (id: number) => {
-    const dept = data.find((d) => d.id === id);
-    if (dept) {
-      setEditForm({
-        departmentName: dept.departmentName,
-        description: dept.description,
-        status: dept.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
+    setFormMode(null);
+    console.log("Departments handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this department?"
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this department?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * pageSize >= data.length - 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+        console.log("Departments handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+        console.log("Departments handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
+      console.log("Departments handleDelete:", { id, totalPages });
     }
   };
 
   const handleClear = () => {
-    resetForm();
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
-    setPageSize(5);
+    setItemsPerPage(5);
+    console.log("Departments handleClear");
   };
 
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleReport = () => {
+    alert("Department Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  const handleEditSave = () => {
-    if (
-      !editForm.departmentName.trim() ||
-      !editForm.description.trim()
-    ) {
-      alert("Please fill all required fields.");
-      return;
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("Departments handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Departments handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Departments handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
     }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-              ...item,
-              departmentName: editForm.departmentName,
-              description: editForm.description,
-              status: editForm.status,
-            }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
-    }
   };
 
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
+  const columns: Column[] = [ 
+    {
+      key: "departmentName",
+      label: "Department Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "description", label: "Description" },
+    { key: "status", label: "Status", render: renderStatusBadge },
+  ];
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Departments</h1>
+  const rowActions = (row: Department) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit department ${row.departmentName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit department</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete department ${row.departmentName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete department</span>
+      </button>
+    </>
+  );
 
-      {/* Form Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Department Name */}
-          <div>
-            <label
-              htmlFor="departmentName"
-              className="block text-sm font-medium mb-1"
-            >
-              Department Name
-            </label>
-            <input
-              type="text"
-              id="departmentName"
-              name="departmentName"
-              value={departmentName}
-              onChange={(e) => setDepartmentName(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter department name"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium mb-1"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter description"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={() => alert("Report generated")}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Department Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Description
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No departments found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((dept, idx) => (
-                <tr
-                  key={dept.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * pageSize + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {dept.departmentName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {dept.description}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${dept.status === "Active"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                    >
-                      {dept.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(dept.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit department ${dept.departmentName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(dept.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete department ${dept.departmentName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={pageSize}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label htmlFor="departmentName" className="block text-sm font-medium mb-1">
+          Department Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="departmentName"
+          name="departmentName"
+          value={form.departmentName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter department name"
+          required
         />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
+      </div>
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={form.description}
+          onChange={handleInputChange}
+          rows={3}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter description"
+        />
+      </div>
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Department
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Department Name */}
-              <div>
-                <label
-                  htmlFor="editDepartmentName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Department Name
-                </label>
-                <input
-                  type="text"
-                  id="editDepartmentName"
-                  name="departmentName"
-                  value={editForm.departmentName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter department name"
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="editDescription"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="editDescription"
-                  name="description"
-                  value={editForm.description}
-                  onChange={handleEditInputChange}
-                  rows={3}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter description"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
-};
 
-export default Departments;
+  return (
+    <PageBase1
+      title="Departments"
+      description="Manage departments for your application."
+      icon="fa fa-building"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Department" : "Edit Department"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
+  );
+}

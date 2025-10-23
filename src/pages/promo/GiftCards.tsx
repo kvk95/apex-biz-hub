@@ -1,8 +1,8 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
 import { PageBase1 } from "@/pages/PageBase1";
-
-const statusOptions = ["Active", "Expired"];
+import { EXPIRED_STATUSES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface GiftCard {
   id: number;
@@ -11,7 +11,7 @@ interface GiftCard {
   issueDate: string;
   expiryDate: string;
   balance: number;
-  status: string;
+  status: (typeof EXPIRED_STATUSES)[number];
 }
 
 interface Column {
@@ -20,21 +20,16 @@ interface Column {
   render?: (value: any, row: any, idx?: number) => JSX.Element;
 }
 
-interface ThemeStyles {
-  selectionBg: string;
-  hoverColor: string;
-}
-
 export default function GiftCards() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<GiftCard>({
     id: null as number | null,
     cardNumber: "",
     cardHolder: "",
     issueDate: "",
     expiryDate: "",
-    balance: "",
-    status: statusOptions[0],
+    balance: 0,
+    status: EXPIRED_STATUSES[0],
   });
   const [data, setData] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +87,7 @@ export default function GiftCards() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
- 
+
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
@@ -101,23 +96,15 @@ export default function GiftCards() {
       cardHolder: "",
       issueDate: "",
       expiryDate: "",
-      balance: "",
-      status: statusOptions[0],
+      balance: 0,
+      status: EXPIRED_STATUSES[0],
     });
-    console.log("GiftCards handleAddClick: Modal opened for add" );
+    console.log("GiftCards handleAddClick: Modal opened for add");
   };
 
   const handleEdit = (card: GiftCard) => {
     setFormMode("edit");
-    setForm({
-      id: card.id,
-      cardNumber: card.cardNumber,
-      cardHolder: card.cardHolder,
-      issueDate: card.issueDate,
-      expiryDate: card.expiryDate,
-      balance: card.balance.toString(),
-      status: card.status,
-    });
+    setForm(card);
     console.log("GiftCards handleEdit: Modal opened for edit", { card });
   };
 
@@ -142,7 +129,8 @@ export default function GiftCards() {
       data.some(
         (card) =>
           card.cardNumber.toLowerCase() === form.cardNumber.toLowerCase() &&
-          (formMode === "edit" && card.id !== form.id)
+          formMode === "edit" &&
+          card.id !== form.id
       )
     ) {
       alert("Card Number must be unique.");
@@ -197,8 +185,8 @@ export default function GiftCards() {
       cardHolder: "",
       issueDate: "",
       expiryDate: "",
-      balance: "",
-      status: statusOptions[0],
+      balance: 0,
+      status: STATUSES[0],
     });
     console.log("GiftCards handleClear");
   };
@@ -253,21 +241,7 @@ export default function GiftCards() {
       label: "Balance",
       render: (value) => `$${Number(value).toFixed(2)}`,
     },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => (
-        <span
-          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+    { key: "status", label: "Status", render: renderStatusBadge },
   ];
 
   const rowActions = (row: GiftCard) => (
@@ -291,13 +265,10 @@ export default function GiftCards() {
     </>
   );
 
-  const modalForm = (themeStyles: ThemeStyles) => (
+  const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <label
-          htmlFor="cardNumber"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="cardNumber" className="block text-sm font-medium mb-1">
           Card Number <span className="text-destructive">*</span>
         </label>
         <input
@@ -315,10 +286,7 @@ export default function GiftCards() {
         />
       </div>
       <div>
-        <label
-          htmlFor="cardHolder"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="cardHolder" className="block text-sm font-medium mb-1">
           Card Holder <span className="text-destructive">*</span>
         </label>
         <input
@@ -333,10 +301,7 @@ export default function GiftCards() {
         />
       </div>
       <div>
-        <label
-          htmlFor="issueDate"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="issueDate" className="block text-sm font-medium mb-1">
           Issue Date <span className="text-destructive">*</span>
         </label>
         <input
@@ -350,10 +315,7 @@ export default function GiftCards() {
         />
       </div>
       <div>
-        <label
-          htmlFor="expiryDate"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="expiryDate" className="block text-sm font-medium mb-1">
           Expiry Date <span className="text-destructive">*</span>
         </label>
         <input
@@ -367,10 +329,7 @@ export default function GiftCards() {
         />
       </div>
       <div>
-        <label
-          htmlFor="balance"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="balance" className="block text-sm font-medium mb-1">
           Balance <span className="text-destructive">*</span>
         </label>
         <input
@@ -387,10 +346,7 @@ export default function GiftCards() {
         />
       </div>
       <div>
-        <label
-          htmlFor="status"
-          className="block text-sm font-medium mb-1"
-        >
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
           Status
         </label>
         <select
@@ -400,7 +356,7 @@ export default function GiftCards() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {statusOptions.map((status) => (
+          {EXPIRED_STATUSES.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>

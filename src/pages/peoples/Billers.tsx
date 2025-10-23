@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
 interface Biller {
   id: number;
@@ -15,9 +15,16 @@ interface Biller {
   createdAt: string;
 }
 
-const Billers: React.FC = () => {
-  // Form state for Add Section
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+}
+
+export default function Billers() {
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
+    id: null as number | null,
     name: "",
     email: "",
     phone: "",
@@ -28,35 +35,20 @@ const Billers: React.FC = () => {
     gstNo: "",
     createdAt: "",
   });
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Data state
   const [billers, setBillers] = useState<Biller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    country: "",
-    postalCode: "",
-    gstNo: "",
-    createdAt: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  // Load data from API
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Billers");
+    const response = await apiService.get<Biller[]>("Billers");
     if (response.status.code === "S") {
       setBillers(response.result);
       setError(null);
@@ -64,30 +56,76 @@ const Billers: React.FC = () => {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("Billers loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? billers
+      : billers.filter(
+          (biller) =>
+            biller.name.toLowerCase().includes(search.toLowerCase()) ||
+            biller.email.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("Billers filteredData:", result, { search });
+    return result;
+  }, [billers, search]);
 
-  // Handlers for Add Section form inputs
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("Billers paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      country: "",
+      postalCode: "",
+      gstNo: "",
+      createdAt: "",
+    });
+    console.log("Billers handleAddClick: Modal opened for add");
   };
 
-  // Save handler for Add Section
-  const handleSave = () => {
+  const handleEdit = (biller: Biller) => {
+    setFormMode("edit");
+    setForm({
+      id: biller.id,
+      name: biller.name,
+      email: biller.email,
+      phone: biller.phone,
+      address: biller.address,
+      city: biller.city,
+      country: biller.country,
+      postalCode: biller.postalCode,
+      gstNo: biller.gstNo,
+      createdAt: biller.createdAt,
+    });
+    console.log("Billers handleEdit: Modal opened for edit", { biller });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
       !form.name.trim() ||
       !form.email.trim() ||
@@ -101,675 +139,325 @@ const Billers: React.FC = () => {
       alert("Please fill all required fields.");
       return;
     }
-
-    const newBiller: Biller = {
-      id: billers.length ? Math.max(...billers.map((b) => b.id)) + 1 : 1,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      address: form.address.trim(),
-      city: form.city.trim(),
-      country: form.country.trim(),
-      postalCode: form.postalCode.trim(),
-      gstNo: form.gstNo.trim(),
-      createdAt: form.createdAt || new Date().toISOString().split("T")[0],
-    };
-    setBillers((prev) => [...prev, newBiller]);
-    setForm({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      country: "",
-      postalCode: "",
-      gstNo: "",
-      createdAt: "",
-    });
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const biller = billers.find((b) => b.id === id);
-    if (biller) {
-      setEditForm({
-        name: biller.name,
-        email: biller.email,
-        phone: biller.phone,
-        address: biller.address,
-        city: biller.city,
-        country: biller.country,
-        postalCode: biller.postalCode,
-        gstNo: biller.gstNo,
-        createdAt: biller.createdAt,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.name.trim() ||
-      !editForm.email.trim() ||
-      !editForm.phone.trim() ||
-      !editForm.address.trim() ||
-      !editForm.city.trim() ||
-      !editForm.country.trim() ||
-      !editForm.postalCode.trim() ||
-      !editForm.gstNo.trim()
-    ) {
-      alert("Please fill all required fields.");
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.email)) {
+      alert("Please enter a valid email address.");
       return;
     }
-    if (editId !== null) {
+    if (
+      billers.some(
+        (biller) =>
+          biller.gstNo.toLowerCase() === form.gstNo.toLowerCase() &&
+          (formMode === "edit" ? biller.id !== form.id : true)
+      )
+    ) {
+      alert("GST No must be unique.");
+      return;
+    }
+    if (formMode === "add") {
+      const newBiller: Biller = {
+        id: billers.length ? Math.max(...billers.map((b) => b.id)) + 1 : 1,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
+        country: form.country.trim(),
+        postalCode: form.postalCode.trim(),
+        gstNo: form.gstNo.trim(),
+        createdAt: form.createdAt || new Date().toISOString().split("T")[0],
+      };
+      setBillers((prev) => [...prev, newBiller]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
       setBillers((prev) =>
         prev.map((b) =>
-          b.id === editId
+          b.id === form.id
             ? {
-                ...b,
-                name: editForm.name.trim(),
-                email: editForm.email.trim(),
-                phone: editForm.phone.trim(),
-                address: editForm.address.trim(),
-                city: editForm.city.trim(),
-                country: editForm.country.trim(),
-                postalCode: editForm.postalCode.trim(),
-                gstNo: editForm.gstNo.trim(),
-                createdAt: editForm.createdAt || b.createdAt,
+                id: form.id,
+                name: form.name.trim(),
+                email: form.email.trim(),
+                phone: form.phone.trim(),
+                address: form.address.trim(),
+                city: form.city.trim(),
+                country: form.country.trim(),
+                postalCode: form.postalCode.trim(),
+                gstNo: form.gstNo.trim(),
+                createdAt: form.createdAt || b.createdAt,
               }
             : b
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
+    setFormMode(null);
+    console.log("Billers handleFormSubmit:", { form, formMode });
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
-  // Delete handler
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this biller?")) {
       setBillers((prev) => prev.filter((b) => b.id !== id));
-      // Adjust page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= billers.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+        console.log("Billers handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+        console.log("Billers handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
+      console.log("Billers handleDelete:", { id, totalPages });
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setForm({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      country: "",
-      postalCode: "",
-      gstNo: "",
-      createdAt: "",
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    console.log("Billers handleClear");
   };
 
-  // Report handler
   const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(billers, null, 2));
+    alert("Billers Report:\n\n" + JSON.stringify(billers, null, 2));
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedBillers = billers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("Billers handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Billers handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Billers handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "address", label: "Address" },
+    { key: "city", label: "City" },
+    { key: "country", label: "Country" },
+    { key: "postalCode", label: "Postal Code" },
+    { key: "gstNo", label: "GST No" },
+    { key: "createdAt", label: "Created At" },
+  ];
+
+  const rowActions = (row: Biller) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit biller ${row.name}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit biller</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete biller ${row.name}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete biller</span>
+      </button>
+    </>
+  );
+
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium mb-1">
+          Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={form.name}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter name"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium mb-1">
+          Email <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={form.email}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter email"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium mb-1">
+          Phone <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={form.phone}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter phone"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="address" className="block text-sm font-medium mb-1">
+          Address <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="address"
+          name="address"
+          value={form.address}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter address"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="city" className="block text-sm font-medium mb-1">
+          City <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="city"
+          name="city"
+          value={form.city}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter city"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="country" className="block text-sm font-medium mb-1">
+          Country <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="country"
+          name="country"
+          value={form.country}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter country"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="postalCode" className="block text-sm font-medium mb-1">
+          Postal Code <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="postalCode"
+          name="postalCode"
+          value={form.postalCode}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter postal code"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="gstNo" className="block text-sm font-medium mb-1">
+          GST No <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="gstNo"
+          name="gstNo"
+          value={form.gstNo}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter GST No"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="createdAt" className="block text-sm font-medium mb-1">
+          Created At
+        </label>
+        <input
+          type="date"
+          id="createdAt"
+          name="createdAt"
+          value={form.createdAt}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Billers</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Biller</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
-              Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={form.name}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter name"
-              required
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter email"
-              required
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1">
-              Phone <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={form.phone}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter phone"
-              required
-            />
-          </div>
-
-          {/* Address */}
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium mb-1">
-              Address <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={form.address}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter address"
-              required
-            />
-          </div>
-
-          {/* City */}
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium mb-1">
-              City <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={form.city}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter city"
-              required
-            />
-          </div>
-
-          {/* Country */}
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium mb-1">
-              Country <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              value={form.country}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter country"
-              required
-            />
-          </div>
-
-          {/* Postal Code */}
-          <div>
-            <label htmlFor="postalCode" className="block text-sm font-medium mb-1">
-              Postal Code <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="postalCode"
-              name="postalCode"
-              value={form.postalCode}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter postal code"
-              required
-            />
-          </div>
-
-          {/* GST No */}
-          <div>
-            <label htmlFor="gstNo" className="block text-sm font-medium mb-1">
-              GST No <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="gstNo"
-              name="gstNo"
-              value={form.gstNo}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter GST No"
-              required
-            />
-          </div>
-
-          {/* Created At */}
-          <div>
-            <label htmlFor="createdAt" className="block text-sm font-medium mb-1">
-              Created At
-            </label>
-            <input
-              type="date"
-              id="createdAt"
-              name="createdAt"
-              value={form.createdAt}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Phone
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Address
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  City
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Country
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Postal Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  GST No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Created At
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={11}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    Loading...
-                  </td>
-                </tr>
-              ) : paginatedBillers.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={11}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No billers found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedBillers.map((biller, idx) => (
-                  <tr
-                    key={biller.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.email}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.phone}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.address}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.city}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.country}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.postalCode}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.gstNo}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {biller.createdAt}
-                    </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
-                      <button
-                        onClick={() => handleEdit(biller.id)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        aria-label={`Edit biller ${biller.name}`}
-                        type="button"
-                      >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(biller.id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
-                        aria-label={`Delete biller ${biller.name}`}
-                        type="button"
-                      >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={billers.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Biller
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="editName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editName"
-                  name="name"
-                  value={editForm.name}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter name"
-                  required
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="editEmail"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Email <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="editEmail"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter email"
-                  required
-                />
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label
-                  htmlFor="editPhone"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Phone <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="editPhone"
-                  name="phone"
-                  value={editForm.phone}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter phone"
-                  required
-                />
-              </div>
-
-              {/* Address */}
-              <div>
-                <label
-                  htmlFor="editAddress"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Address <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editAddress"
-                  name="address"
-                  value={editForm.address}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter address"
-                  required
-                />
-              </div>
-
-              {/* City */}
-              <div>
-                <label
-                  htmlFor="editCity"
-                  className="block text-sm font-medium mb-1"
-                >
-                  City <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editCity"
-                  name="city"
-                  value={editForm.city}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter city"
-                  required
-                />
-              </div>
-
-              {/* Country */}
-              <div>
-                <label
-                  htmlFor="editCountry"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Country <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editCountry"
-                  name="country"
-                  value={editForm.country}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter country"
-                  required
-                />
-              </div>
-
-              {/* Postal Code */}
-              <div>
-                <label
-                  htmlFor="editPostalCode"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Postal Code <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editPostalCode"
-                  name="postalCode"
-                  value={editForm.postalCode}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter postal code"
-                  required
-                />
-              </div>
-
-              {/* GST No */}
-              <div>
-                <label
-                  htmlFor="editGstNo"
-                  className="block text-sm font-medium mb-1"
-                >
-                  GST No <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editGstNo"
-                  name="gstNo"
-                  value={editForm.gstNo}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter GST No"
-                  required
-                />
-              </div>
-
-              {/* Created At */}
-              <div>
-                <label
-                  htmlFor="editCreatedAt"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Created At
-                </label>
-                <input
-                  type="date"
-                  id="editCreatedAt"
-                  name="createdAt"
-                  value={editForm.createdAt}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Billers"
+      description="Manage billers for your application."
+      icon="fa fa-user-tie"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Biller" : "Edit Biller"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
   );
-};
-
-export default Billers;
+}

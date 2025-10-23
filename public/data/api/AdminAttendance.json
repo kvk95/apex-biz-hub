@@ -35,7 +35,7 @@
       "date": "2025-10-01",
       "inTime": "09:05 AM",
       "outTime": "06:05 PM",
-      "status": "Present"
+      "status": "Absent"
     },
     {
       "id": 4,
@@ -57,7 +57,7 @@
       "date": "2025-10-01",
       "inTime": "09:10 AM",
       "outTime": "06:10 PM",
-      "status": "Present"
+      "status": "Late"
     },
     {
       "id": 6,
@@ -68,7 +68,7 @@
       "date": "2025-10-01",
       "inTime": "09:20 AM",
       "outTime": "06:20 PM",
-      "status": "Present"
+      "status": "Leave"
     },
     {
       "id": 7,

@@ -1,31 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
-const Designation: React.FC = () => {
-  // Page title as in reference: "Designation"
-  useEffect(() => {
-    // No effect needed here
-  }, []);
+interface Designation {
+  id: number;
+  designation: string;
+  description: string;
+}
 
-  // Form state
-  const [designation, setDesignation] = useState("");
-  const [description, setDescription] = useState("");
-  const [editId, setEditId] = useState<number | null>(null);
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+}
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
+export default function Designation() {
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<Designation>({
+    id: 0,
     designation: "",
     description: "",
   });
+  const [data, setData] = useState<Designation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Designation");
+    const response = await apiService.get<Designation[]>("Designation");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -33,358 +42,240 @@ const Designation: React.FC = () => {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("Designation loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter(
+          (item) =>
+            item.designation.toLowerCase().includes(search.toLowerCase()) ||
+            item.description.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("Designation filteredData:", result, { search });
+    return result;
+  }, [data, search]);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("Designation paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Pagination slice
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Handlers
-  const resetForm = () => {
-    setDesignation("");
-    setDescription("");
-    setEditId(null);
-  };
-
-  const handleSave = () => {
-    if (!designation.trim()) {
-      alert("Please enter Designation");
-      return;
-    }
-    if (editId !== null) {
-      // Edit existing
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId ? { ...item, designation, description } : item
-        )
-      );
-    } else {
-      // Add new
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [
-        ...prev,
-        { id: newId, designation, description },
-      ]);
-      // If new item added on last page, may need to adjust page
-      if (currentPage !== Math.ceil(data.length / itemsPerPage))
-        setCurrentPage(Math.ceil(data.length / itemsPerPage));
-    }
-    resetForm();
-  };
-
-  const handleEditInputChange = (
+  const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        designation: item.designation,
-        description: item.description,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: 0,
+      designation: "",
+      description: "",
+    });
+    console.log("Designation handleAddClick: Modal opened for add");
   };
 
-  const handleEditSave = () => {
-    if (!editForm.designation.trim()) {
-      alert("Please enter Designation");
+  const handleEdit = (item: Designation) => {
+    setFormMode("edit");
+    setForm(item);
+    console.log("Designation handleEdit: Modal opened for edit", { item });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.designation.trim()) {
+      alert("Please fill Designation (required).");
       return;
     }
-    if (editId !== null) {
+    if (
+      data.some(
+        (item) =>
+          item.designation.toLowerCase() === form.designation.toLowerCase() &&
+          (formMode === "edit" ? item.id !== form.id : true)
+      )
+    ) {
+      alert("Designation must be unique.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { id: newId, ...form }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== 0) {
       setData((prev) =>
         prev.map((item) =>
-          item.id === editId
-            ? { ...item, designation: editForm.designation, description: editForm.description }
-            : item
+          item.id === form.id ? { ...item, ...form } : item
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
-  };
-
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+    setFormMode(null);
+    console.log("Designation handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this designation?"
-      )
-    ) {
-      setData((prev) => prev.filter((item) => item.id !== id));
-      // Adjust page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >=
-        data.length - 1
-      ) {
-        setCurrentPage((p) => Math.max(p - 1, 1));
+    if (window.confirm("Are you sure you want to delete this designation?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+        console.log("Designation handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+        console.log("Designation handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      if (editId === id) resetForm();
+      console.log("Designation handleDelete:", { id, totalPages });
     }
   };
 
   const handleClear = () => {
-    setDesignation("");
-    setDescription("");
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    setItemsPerPage(5);
+    console.log("Designation handleClear");
   };
 
   const handleReport = () => {
-    // For demo, just alert JSON data
-    alert("Designation Report:\n" + JSON.stringify(data, null, 2));
+    alert("Designation Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Designation</h1>
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("Designation handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
 
-      {/* Form Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Designation */}
-          <div>
-            <label
-              htmlFor="designation"
-              className="block text-sm font-medium mb-1"
-            >
-              Designation
-            </label>
-            <input
-              type="text"
-              id="designation"
-              name="designation"
-              value={designation}
-              onChange={(e) => setDesignation(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter Designation"
-            />
-          </div>
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Designation handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Designation handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
+  };
 
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium mb-1"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              rows={3}
-              placeholder="Enter Description"
-            />
-          </div>
-        </div>
+  const columns: Column[] = [ 
+    {
+      key: "designation",
+      label: "Designation",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "description", label: "Description" },
+  ];
 
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
+  const rowActions = (row: Designation) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit designation ${row.designation}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit designation</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete designation ${row.designation}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete designation</span>
+      </button>
+    </>
+  );
 
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Designation
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Description
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No designations found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.designation}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.description}
-                  </td>
-                  <td className="px-4 py-3 text-center space-x-3">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit designation ${item.designation}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete designation ${item.designation}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label htmlFor="designation" className="block text-sm font-medium mb-1">
+          Designation <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="designation"
+          name="designation"
+          value={form.designation}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter designation"
+          required
         />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Designation
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Designation */}
-              <div>
-                <label
-                  htmlFor="editDesignation"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Designation
-                </label>
-                <input
-                  type="text"
-                  id="editDesignation"
-                  name="designation"
-                  value={editForm.designation}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter Designation"
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="editDescription"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="editDescription"
-                  name="description"
-                  value={editForm.description}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  rows={3}
-                  placeholder="Enter Description"
-                />
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={form.description}
+          onChange={handleInputChange}
+          rows={3}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter description"
+        />
+      </div>
     </div>
   );
-};
 
-export default Designation;
+  return (
+    <PageBase1
+      title="Designation"
+      description="Manage designations for your application."
+      icon="fa fa-id-badge"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Designation" : "Edit Designation"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
+  );
+}

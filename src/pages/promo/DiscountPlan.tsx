@@ -1,18 +1,17 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
 import { PageBase1 } from "@/pages/PageBase1";
-
-const discountTypes = ["Percentage", "Fixed"];
-const statusOptions = ["Active", "Inactive"];
+import { DISCOUNT_TYPES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface DiscountPlan {
   id: number;
   discountPlanName: string;
-  discountType: string;
+  discountType: (typeof DISCOUNT_TYPES)[number];
   discountValue: number;
   startDate: string;
   endDate: string;
-  status: string;
+  status: (typeof STATUSES)[number];
 }
 
 interface Column {
@@ -21,21 +20,16 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
-interface ThemeStyles {
-  selectionBg: string;
-  hoverColor: string;
-}
-
 export default function DiscountPlan() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<DiscountPlan>({
     id: null as number | null,
     discountPlanName: "",
-    discountType: discountTypes[0],
-    discountValue: "",
+    discountType: DISCOUNT_TYPES[0],
+    discountValue: 0,
     startDate: "",
     endDate: "",
-    status: statusOptions[0],
+    status: STATUSES[0],
   });
 
   const [plans, setPlans] = useState<DiscountPlan[]>([]);
@@ -98,26 +92,18 @@ export default function DiscountPlan() {
     setForm({
       id: null,
       discountPlanName: "",
-      discountType: discountTypes[0],
-      discountValue: "",
+      discountType: DISCOUNT_TYPES[0],
+      discountValue: 0,
       startDate: "",
       endDate: "",
-      status: statusOptions[0],
+      status: STATUSES[0],
     });
     console.log("DiscountPlan handleAddClick: Modal opened for add");
   };
 
   const handleEdit = (plan: DiscountPlan) => {
     setFormMode("edit");
-    setForm({
-      id: plan.id,
-      discountPlanName: plan.discountPlanName,
-      discountType: plan.discountType,
-      discountValue: plan.discountValue.toString(),
-      startDate: plan.startDate,
-      endDate: plan.endDate,
-      status: plan.status,
-    });
+    setForm(plan);
     console.log("DiscountPlan handleEdit: Modal opened for edit", { plan });
   };
 
@@ -235,21 +221,7 @@ export default function DiscountPlan() {
     },
     { key: "startDate", label: "Start Date" },
     { key: "endDate", label: "End Date" },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => (
-        <span
-          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+    { key: "status", label: "Status", render: renderStatusBadge },
   ];
 
   const rowActions = (row: DiscountPlan) => (
@@ -273,7 +245,7 @@ export default function DiscountPlan() {
     </>
   );
 
-  const modalForm = (themeStyles: ThemeStyles) => (
+  const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label
@@ -307,7 +279,7 @@ export default function DiscountPlan() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {discountTypes.map((type) => (
+          {DISCOUNT_TYPES.map((type) => (
             <option key={type} value={type}>
               {type}
             </option>
@@ -372,7 +344,7 @@ export default function DiscountPlan() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {statusOptions.map((status) => (
+          {STATUSES.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>

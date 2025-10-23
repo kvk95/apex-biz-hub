@@ -1,40 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
-const statusOptions = ["Active", "Inactive"];
+interface Warehouse {
+  id: number;
+  warehouseName: string;
+  warehouseCode: string;
+  warehousePhone: string;
+  warehouseEmail: string;
+  warehouseAddress: string;
+  warehouseStatus: (typeof STATUSES)[number];
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+}
 
 export default function Warehouses() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Form state for Add Section
-  const [form, setForm] = useState({
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<Warehouse>({
+    id: 0,
     warehouseName: "",
     warehouseCode: "",
     warehousePhone: "",
     warehouseEmail: "",
     warehouseAddress: "",
-    warehouseStatus: statusOptions[0],
+    warehouseStatus: STATUSES[0],
   });
-
-  // Data state
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    warehouseName: "",
-    warehouseCode: "",
-    warehousePhone: "",
-    warehouseEmail: "",
-    warehouseAddress: "",
-    warehouseStatus: statusOptions[0],
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     loadData();
@@ -42,7 +44,7 @@ export default function Warehouses() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("Warehouses");
+    const response = await apiService.get<Warehouse[]>("Warehouses");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -50,568 +52,356 @@ export default function Warehouses() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("Warehouses loadData:", { data: response.result });
   };
 
-  // Handlers for Add Section form inputs
+  const filteredData = useMemo(() => {
+    const result = !search.trim()
+      ? data
+      : data.filter(
+          (warehouse) =>
+            warehouse.warehouseName
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            warehouse.warehouseCode
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            warehouse.warehouseEmail
+              .toLowerCase()
+              .includes(search.toLowerCase())
+        );
+    console.log("Warehouses filteredData:", result, { search });
+    return result;
+  }, [data, search]);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("Warehouses paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
+
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Save handler for Add Section (Add new warehouse)
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.warehouseName.trim() || !form.warehouseCode.trim()) {
-      alert("Warehouse Name and Code are required.");
-      return;
-    }
-    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-    setData((prev) => [
-      {
-        id: newId,
-        warehouseName: form.warehouseName.trim(),
-        warehouseCode: form.warehouseCode.trim(),
-        warehousePhone: form.warehousePhone,
-        warehouseEmail: form.warehouseEmail,
-        warehouseAddress: form.warehouseAddress,
-        warehouseStatus: form.warehouseStatus,
-      },
-      ...prev,
-    ]);
+  const handleAddClick = () => {
+    setFormMode("add");
     setForm({
+      id: 0,
       warehouseName: "",
       warehouseCode: "",
       warehousePhone: "",
       warehouseEmail: "",
       warehouseAddress: "",
-      warehouseStatus: statusOptions[0],
+      warehouseStatus: STATUSES[0],
     });
-    setCurrentPage(1);
+    console.log("Warehouses handleAddClick: Modal opened for add");
   };
 
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        warehouseName: item.warehouseName,
-        warehouseCode: item.warehouseCode,
-        warehousePhone: item.warehousePhone,
-        warehouseEmail: item.warehouseEmail,
-        warehouseAddress: item.warehouseAddress,
-        warehouseStatus: item.warehouseStatus,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
+  const handleEdit = (warehouse: Warehouse) => {
+    setFormMode("edit");
+    setForm(warehouse);
+    console.log("Warehouses handleEdit: Modal opened for edit", { warehouse });
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (!editForm.warehouseName.trim() || !editForm.warehouseCode.trim()) {
-      alert("Warehouse Name and Code are required.");
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.warehouseName.trim() || !form.warehouseCode.trim()) {
+      alert("Please fill all required fields.");
       return;
     }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                warehouseName: editForm.warehouseName.trim(),
-                warehouseCode: editForm.warehouseCode.trim(),
-                warehousePhone: editForm.warehousePhone,
-                warehouseEmail: editForm.warehouseEmail,
-                warehouseAddress: editForm.warehouseAddress,
-                warehouseStatus: editForm.warehouseStatus,
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
+    if (
+      form.warehouseEmail &&
+      !/^[^@]+@[^@]+\.[^@]+$/.test(form.warehouseEmail)
+    ) {
+      alert("Please enter a valid email address.");
+      return;
     }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+    if (
+      form.warehouseEmail &&
+      data.some(
+        (warehouse) =>
+          warehouse.warehouseEmail.toLowerCase() ===
+            form.warehouseEmail.toLowerCase() &&
+          (formMode === "edit" ? warehouse.id !== form.id : true)
+      )
+    ) {
+      alert("Email must be unique.");
+      return;
+    }
+    if (
+      data.some(
+        (warehouse) =>
+          warehouse.warehouseCode.toLowerCase() ===
+            form.warehouseCode.toLowerCase() &&
+          (formMode === "edit" ? warehouse.id !== form.id : true)
+      )
+    ) {
+      alert("Warehouse Code must be unique.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { id: newId, ...form }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== 0) {
+      setData((prev) =>
+        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
+      );
+    }
+    setFormMode(null);
+    console.log("Warehouses handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this warehouse?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+        console.log("Warehouses handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+        console.log("Warehouses handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
+      console.log("Warehouses handleDelete:", { id, totalPages });
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setForm({
-      warehouseName: "",
-      warehouseCode: "",
-      warehousePhone: "",
-      warehouseEmail: "",
-      warehouseAddress: "",
-      warehouseStatus: statusOptions[0],
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    console.log("Warehouses handleClear");
   };
 
   const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+    alert("Warehouse Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("Warehouses handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Warehouses handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Warehouses handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
+    },
+    {
+      key: "warehouseName",
+      label: "Warehouse Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "warehouseCode", label: "Code" },
+    { key: "warehousePhone", label: "Phone" },
+    { key: "warehouseEmail", label: "Email" },
+    { key: "warehouseAddress", label: "Address" }, 
+    { key: "warehouseStatus", label: "Status", render: renderStatusBadge },
+  ];
+
+  const rowActions = (row: Warehouse) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit warehouse ${row.warehouseName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit warehouse</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete warehouse ${row.warehouseName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete warehouse</span>
+      </button>
+    </>
+  );
+
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label
+          htmlFor="warehouseName"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="warehouseName"
+          name="warehouseName"
+          value={form.warehouseName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter warehouse name"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="warehouseCode"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Code <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="warehouseCode"
+          name="warehouseCode"
+          value={form.warehouseCode}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter warehouse code"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="warehousePhone"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Phone
+        </label>
+        <input
+          type="tel"
+          id="warehousePhone"
+          name="warehousePhone"
+          value={form.warehousePhone}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter phone number"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="warehouseEmail"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Email
+        </label>
+        <input
+          type="email"
+          id="warehouseEmail"
+          name="warehouseEmail"
+          value={form.warehouseEmail}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter email address"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="warehouseAddress"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Address
+        </label>
+        <input
+          type="text"
+          id="warehouseAddress"
+          name="warehouseAddress"
+          value={form.warehouseAddress}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter address"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="warehouseStatus"
+          className="block text-sm font-medium mb-1"
+        >
+          Warehouse Status
+        </label>
+        <select
+          id="warehouseStatus"
+          name="warehouseStatus"
+          value={form.warehouseStatus}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Warehouses</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Warehouse</h2>
-        <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Warehouse Name */}
-          <div>
-            <label
-              htmlFor="warehouseName"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="warehouseName"
-              name="warehouseName"
-              value={form.warehouseName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter warehouse name"
-              required
-            />
-          </div>
-
-          {/* Warehouse Code */}
-          <div>
-            <label
-              htmlFor="warehouseCode"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Code <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="warehouseCode"
-              name="warehouseCode"
-              value={form.warehouseCode}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter warehouse code"
-              required
-            />
-          </div>
-
-          {/* Warehouse Phone */}
-          <div>
-            <label
-              htmlFor="warehousePhone"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Phone
-            </label>
-            <input
-              type="tel"
-              id="warehousePhone"
-              name="warehousePhone"
-              value={form.warehousePhone}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter phone number"
-            />
-          </div>
-
-          {/* Warehouse Email */}
-          <div>
-            <label
-              htmlFor="warehouseEmail"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Email
-            </label>
-            <input
-              type="email"
-              id="warehouseEmail"
-              name="warehouseEmail"
-              value={form.warehouseEmail}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter email address"
-            />
-          </div>
-
-          {/* Warehouse Address */}
-          <div className="md:col-span-2">
-            <label
-              htmlFor="warehouseAddress"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Address
-            </label>
-            <textarea
-              id="warehouseAddress"
-              name="warehouseAddress"
-              rows={3}
-              value={form.warehouseAddress}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="Enter address"
-            />
-          </div>
-
-          {/* Warehouse Status */}
-          <div>
-            <label
-              htmlFor="warehouseStatus"
-              className="block text-sm font-medium mb-1"
-            >
-              Warehouse Status
-            </label>
-            <select
-              id="warehouseStatus"
-              name="warehouseStatus"
-              value={form.warehouseStatus}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </form>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Warehouse Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Phone
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Address
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No warehouses found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.warehouseName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.warehouseCode}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.warehousePhone}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.warehouseEmail}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.warehouseAddress}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.warehouseStatus === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {item.warehouseStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit warehouse ${item.warehouseName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete warehouse ${item.warehouseName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Warehouse
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Warehouse Name */}
-              <div>
-                <label
-                  htmlFor="editWarehouseName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editWarehouseName"
-                  name="warehouseName"
-                  value={editForm.warehouseName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter warehouse name"
-                  required
-                />
-              </div>
-
-              {/* Warehouse Code */}
-              <div>
-                <label
-                  htmlFor="editWarehouseCode"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Code <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editWarehouseCode"
-                  name="warehouseCode"
-                  value={editForm.warehouseCode}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter warehouse code"
-                  required
-                />
-              </div>
-
-              {/* Warehouse Phone */}
-              <div>
-                <label
-                  htmlFor="editWarehousePhone"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Phone
-                </label>
-                <input
-                  type="tel"
-                  id="editWarehousePhone"
-                  name="warehousePhone"
-                  value={editForm.warehousePhone}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter phone number"
-                />
-              </div>
-
-              {/* Warehouse Email */}
-              <div>
-                <label
-                  htmlFor="editWarehouseEmail"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Email
-                </label>
-                <input
-                  type="email"
-                  id="editWarehouseEmail"
-                  name="warehouseEmail"
-                  value={editForm.warehouseEmail}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter email address"
-                />
-              </div>
-
-              {/* Warehouse Address */}
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="editWarehouseAddress"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Address
-                </label>
-                <textarea
-                  id="editWarehouseAddress"
-                  name="warehouseAddress"
-                  rows={3}
-                  value={editForm.warehouseAddress}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-                  placeholder="Enter address"
-                />
-              </div>
-
-              {/* Warehouse Status */}
-              <div>
-                <label
-                  htmlFor="editWarehouseStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Warehouse Status
-                </label>
-                <select
-                  id="editWarehouseStatus"
-                  name="warehouseStatus"
-                  value={editForm.warehouseStatus}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Warehouses"
+      description="Manage warehouses for your application."
+      icon="fa fa-warehouse"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Warehouse" : "Edit Warehouse"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
   );
 }

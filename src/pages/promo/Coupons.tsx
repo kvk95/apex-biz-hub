@@ -1,20 +1,19 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
 import { PageBase1 } from "@/pages/PageBase1";
-
-const couponTypes = ["Percentage", "Flat"];
-const couponStatuses = ["Active", "Inactive"];
+import { COUPEN_TYPES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface Coupon {
   id: number;
   couponCode: string;
-  couponType: string;
+  couponType: (typeof COUPEN_TYPES)[number];
   discountAmount: string;
   maxDiscountAmount: string;
   minPurchaseAmount: string;
   startDate: string;
   endDate: string;
-  status: string;
+  status: (typeof STATUSES)[number];
 }
 
 interface Column {
@@ -23,23 +22,18 @@ interface Column {
   render?: (value: any, row: any) => JSX.Element;
 }
 
-interface ThemeStyles {
-  selectionBg: string;
-  hoverColor: string;
-}
-
 export default function Coupons() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
     id: null as number | null,
     couponCode: "",
-    couponType: couponTypes[0],
+    couponType: COUPEN_TYPES[0],
     discountAmount: "",
     maxDiscountAmount: "",
     minPurchaseAmount: "",
     startDate: "",
     endDate: "",
-    status: couponStatuses[0],
+    status: STATUSES[0],
   });
 
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -102,13 +96,13 @@ export default function Coupons() {
     setForm({
       id: null,
       couponCode: "",
-      couponType: couponTypes[0],
+      couponType: COUPEN_TYPES[0],
       discountAmount: "",
       maxDiscountAmount: "",
       minPurchaseAmount: "",
       startDate: "",
       endDate: "",
-      status: couponStatuses[0],
+      status: STATUSES[0],
     });
     console.log("Coupons handleAddClick: Modal opened for add");
   };
@@ -256,21 +250,7 @@ export default function Coupons() {
     },
     { key: "startDate", label: "Start Date" },
     { key: "endDate", label: "End Date" },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => (
-        <span
-          className={`inline-block px-2 py-1 rounded font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+    { key: "status", label: "Status", render: renderStatusBadge },
   ];
 
   const rowActions = (row: Coupon) => (
@@ -294,7 +274,7 @@ export default function Coupons() {
     </>
   );
 
-  const modalForm = (themeStyles: ThemeStyles) => (
+  const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label htmlFor="couponCode" className="block text-sm font-medium mb-1">
@@ -322,7 +302,7 @@ export default function Coupons() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {couponTypes.map((type) => (
+          {COUPEN_TYPES.map((type) => (
             <option key={type} value={type}>
               {type}
             </option>
@@ -423,7 +403,7 @@ export default function Coupons() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {couponStatuses.map((status) => (
+          {STATUSES.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
