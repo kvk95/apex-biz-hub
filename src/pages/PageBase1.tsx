@@ -179,7 +179,7 @@ export function PageBase1({
                 ))}
                 {rowActions && (
                   <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                    Actions
+                    {/*Actions */}
                   </th>
                 )}
               </tr>

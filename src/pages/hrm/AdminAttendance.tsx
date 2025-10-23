@@ -256,7 +256,7 @@ export default function AdminAttendance() {
     <PageBase1
       title="Attendance"
       description="Manage employee attendance records."
-      icon="fa fa-calendar-check"
+      icon="fa fa-user-cog"
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchEmployee}
