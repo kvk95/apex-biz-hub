@@ -135,6 +135,9 @@ function RouteChangeHandler() {
   const location = useLocation();
 
   useEffect(() => {
+     // Scroll to top
+    window.scrollTo(0, 0);
+    
     const parts = location.pathname.split("/").filter(Boolean);
     let page = parts.length > 0 ? parts[parts.length - 1] : "Dashboard";
     page = page.charAt(0).toUpperCase() + page.slice(1);

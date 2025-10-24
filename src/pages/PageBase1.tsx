@@ -286,7 +286,7 @@ export function PageBase1({
                   setFormMode(null);
                   console.log("PageBase1: Modal closed via cancel button");
                 }}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-white font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
                 <i className="fa fa-times me-2"></i> Cancel

@@ -86,12 +86,14 @@ export default function Payslip() {
     setLoading(false);
   };
 
-  const totalSalary = data.salaryDetails?.reduce((acc, cur) => acc + cur.amount, 0) ?? 0;
-  const totalDeductions = data.deductions?.reduce((acc, cur) => acc + cur.amount, 0) ?? 0;
+  const totalSalary =
+    data.salaryDetails?.reduce((acc, cur) => acc + cur.amount, 0) ?? 0;
+  const totalDeductions =
+    data.deductions?.reduce((acc, cur) => acc + cur.amount, 0) ?? 0;
   const netSalary = totalSalary - totalDeductions;
 
   const handleBack = () => {
-    navigate("/employee-salary"); // Adjust route as per your app
+    navigate("/hrm/payroll/salary"); // Adjust route as per your app
   };
 
   const savePayslip = () => {
@@ -110,95 +112,174 @@ export default function Payslip() {
     <PageBase1
       title="Payslip"
       description={data.employee?.payslipMonth || "Loading..."}
-      icon="fa fa-file-invoice" 
-      onRefresh={handleClear} 
+      icon="fa fa-file-invoice"
+      onRefresh={handleClear}
       onReport={generateReport}
-    > 
-      <div className="min-h-screen bg-background">
-        {/* Header Info */}
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-foreground">Payslip</h2>
-          <p className="text-sm text-muted-foreground">{data.employee?.payslipMonth}</p>
-          <p className="text-xs text-muted-foreground">Generated on: October 24, 2025, 12:00 PM IST</p>
+    >
+      <div
+        className="min-h-screen  bg-card rounded shadow-md border border-border p-6"
+        role="region"
+        aria-label="Payslip details"
+      >
+        <div className="flex justify-between items-center px-6 py-3 bg-white   sticky top-0 z-10  ">
+          <h1 className="text-lg font-semibold text-gray-900">
+            Payslip for the Month of{" "}
+            <span className="text-gray-500 font-normal  ">
+              {data.employee?.payslipMonth || "Loading..."}
+            </span>
+            <p className="text-xs text-muted-foreground">
+              Generated on: October 24, 2025, 12:00 PM IST
+            </p>
+          </h1>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleBack}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors"
+            >
+              <i className="fa fa-arrow-left me-2"></i> Back
+            </button>
+            <button
+              onClick={generateReport}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors"
+            >
+              <i className="fa fa-print me-2"></i> Print / Report
+            </button>
+          </div>
         </div>
 
-        {/* Company Info */}
-        <section className="mb-6 p-4 bg-background border border-border rounded-md" aria-label="Company information">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Company Information</h3>
-          <p className="text-foreground font-semibold">{data.company?.name}</p>
-          <p className="text-muted-foreground">{data.company?.addressLine1}</p>
-          <p className="text-muted-foreground">{data.company?.addressLine2}</p>
-          <p className="text-muted-foreground">Phone: {data.company?.phone}</p>
-          <p className="text-muted-foreground">Email: {data.company?.email}</p>
-          <p className="text-muted-foreground">Website: {data.company?.website}</p>
-        </section>
-
         {/* Employee Info */}
-        <section className="mb-6 p-4 bg-background border border-border rounded-md" aria-label="Employee information">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Employee Information</h3>
-          <div className="grid grid-cols-2 gap-4 text-foreground">
-            <div><span className="font-semibold">Name:</span> {data.employee?.name}</div>
-            <div><span className="font-semibold">Employee ID:</span> {data.employee?.employeeId}</div>
-            <div><span className="font-semibold">Designation:</span> {data.employee?.designation}</div>
-            <div><span className="font-semibold">Department:</span> {data.employee?.department}</div>
-            <div><span className="font-semibold">Joining Date:</span> {data.employee?.joiningDate}</div>
+        <section className="mb-2 p-4" aria-label="Employee information">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            <span className="font-semibold">Name:</span> {data.employee?.name}
+          </h3>
+          <div className="grid grid-cols-2 gap-1 text-foreground">
+            <div>
+              <span className="font-semibold">Employee ID:</span>{" "}
+              {data.employee?.employeeId}
+            </div>
+            <div>
+              <span className="font-semibold">Designation:</span>{" "}
+              {data.employee?.designation}
+            </div>
+            <div>
+              <span className="font-semibold">Joining Date:</span>{" "}
+              {data.employee?.joiningDate}
+            </div>
+            <div>
+              <span className="font-semibold">Department:</span>{" "}
+              {data.employee?.department}
+            </div>
           </div>
         </section>
 
-        {/* Salary Details */}
-        <section className="mb-6 p-4 bg-background border border-border rounded-md" aria-label="Salary details">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Salary Details</h3>
-          <table className="w-full text-left">
-            <thead className="bg-muted/20">
-              <tr>
-                <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground">Description</th>
-                <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground text-right">Amount ($)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.salaryDetails?.map(({ id, description, amount }) => (
-                <tr key={id} className="odd:bg-background even:bg-muted/50">
-                  <td className="py-2 px-3 border-b border-border">{description}</td>
-                  <td className="py-2 px-3 border-b border-border text-right font-mono">{amount.toFixed(2)}</td>
+        {/* 3. Earnings & Deductions Tables */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Earnings Table */}
+          <div className="earnings-section border border-gray-300 rounded-lg overflow-hidden">
+            <h3 className="bg-green-100 text-green-800 font-bold py-2 px-4 text-lg">
+              Earnings
+            </h3>
+            <table className="w-full text-left">
+              <thead className="bg-muted/20">
+                <tr>
+                  <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground">
+                    Description
+                  </th>
+                  <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground text-right">
+                    Amount (₹)
+                  </th>
                 </tr>
-              ))}
-              <tr className="bg-muted/20 font-semibold text-foreground">
-                <td className="py-2 px-3 border-t border-border">Total Salary</td>
-                <td className="py-2 px-3 border-t border-border text-right font-mono">{totalSalary.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.salaryDetails?.map(({ id, description, amount }) => (
+                  <tr key={id} className="odd:bg-background even:bg-muted/50">
+                    <td className="py-2 px-3 border-b border-border">
+                      {description}
+                    </td>
+                    <td className="py-2 px-3 border-b border-border text-right font-mono">
+                      {amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-muted/20 font-semibold text-foreground">
+                  <td className="py-2 px-3 border-t border-border">
+                    Total Salary
+                  </td>
+                  <td className="py-2 px-3 border-t border-border text-right font-mono">
+                    {totalSalary.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Deductions Table */}
+          <div className="deductions-section border border-gray-300 rounded-lg overflow-hidden">
+            <h3 className="bg-red-100 text-red-800 font-bold py-2 px-4 text-lg">
+              Deductions
+            </h3>
+            <table className="w-full text-left">
+              <thead className="bg-muted/20">
+                <tr>
+                  <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground">
+                    Description
+                  </th>
+                  <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground text-right">
+                    Amount (₹)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.deductions?.map(({ id, description, amount }) => (
+                  <tr key={id} className="odd:bg-background even:bg-muted/50">
+                    <td className="py-2 px-3 border-b border-border">
+                      {description}
+                    </td>
+                    <td className="py-2 px-3 border-b border-border text-right font-mono">
+                      {amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-muted/20 font-semibold text-foreground">
+                  <td className="py-2 px-3 border-t border-border">
+                    Total Deductions
+                  </td>
+                  <td className="py-2 px-3 border-t border-border text-right font-mono">
+                    {totalDeductions.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        {/* Deductions */}
-        <section className="mb-6 p-4 bg-background border border-border rounded-md" aria-label="Deductions">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Deductions</h3>
-          <table className="w-full text-left">
-            <thead className="bg-muted/20">
-              <tr>
-                <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground">Description</th>
-                <th className="py-2 px-3 border-b border-border font-semibold text-muted-foreground text-right">Amount ($)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.deductions?.map(({ id, description, amount }) => (
-                <tr key={id} className="odd:bg-background even:bg-muted/50">
-                  <td className="py-2 px-3 border-b border-border">{description}</td>
-                  <td className="py-2 px-3 border-b border-border text-right font-mono">{amount.toFixed(2)}</td>
-                </tr>
-              ))}
-              <tr className="bg-muted/20 font-semibold text-foreground">
-                <td className="py-2 px-3 border-t border-border">Total Deductions</td>
-                <td className="py-2 px-3 border-t border-border text-right font-mono">{totalDeductions.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+        {/* 4. Total Summary and Net Pay */}
+        <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 mt-5 border-t border-gray-300">
+          {/* Totals Summary */}
+          <div className="totals-summary text-sm font-semibold space-y-1"> 
+          </div>
 
-        {/* Net Salary */}
-        <section className="p-4 bg-background border border-border rounded-md" aria-label="Net salary">
-          <div className="bg-green-100 border border-green-400 rounded-md px-6 py-4 text-green-900 font-semibold text-xl text-center">
-            Net Salary: ${netSalary.toFixed(2)}
+          {/* Net Pay Highlight */}
+          <div className="net-pay-highlight">
+            <div className="bg-green-600 text-white font-extrabold p-4 rounded-lg shadow-xl flex justify-between items-center">
+              <span className="text-xl uppercase">Net Payable</span>
+              <span className="text-3xl font-mono">
+                ₹ {netSalary.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </footer>
+        <hr className="mt-5 mb-3" />
+        <section className=" text-center" aria-label="Company information">
+          <h3 className="text-lg font-semibold text-foreground">
+            {data.company?.name}
+          </h3>
+          <div className="text-muted-foreground">{data.company?.addressLine1}</div>
+          <div className="text-muted-foreground">{data.company?.addressLine2}</div>
+          <div className="text-muted-foreground">Phone: {data.company?.phone}</div>
+          <div className="text-muted-foreground">Email: {data.company?.email}</div>
+          <div className="text-muted-foreground">
+            Website: {data.company?.website}
           </div>
         </section>
       </div>

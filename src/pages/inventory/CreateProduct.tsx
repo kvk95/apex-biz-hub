@@ -1,782 +1,725 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import {
+  STOCK_STATUSES,
+  DISCOUNT_TYPES,
+  TAX_OPTIONS,
+  TAX_TYPE_OPTIONS,
+  CATEGORIES,
+} from "@/constants/constants";
 
-const categories = [
-  "Electronics",
-  "Accessories",
-  "Footwear",
-  "Clothing",
-  "Home Appliances",
-];
+interface Product {
+  id: number;
+  productName: string;
+  productCode: string;
+  category: string;
+  price: number;
+  stockQuantity: number;
+  description: string;
+  status: (typeof STOCK_STATUSES)[number];
+  productType: "Single Product";
+  quantity: 0;
+  taxType: "";
+  tax: "";
+  discountType: "";
+  discountValue: 0;
+  quantityAlert: 0;
+}
 
-const units = ["Piece", "Pair", "Box", "Packet"];
+const images = [];
 
-export default function CreateProduct() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function ProductDetails() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"create" | "edit" | "view">("create");
+  const [form, setForm] = useState<Product>({
+    id: 0,
+    productName: "",
+    productCode: "",
+    category: "",
+    price: 0,
+    stockQuantity: 0,
+    description: "",
+    status: "In Stock",
+    productType: "Single Product",
+    quantity: 0,
+    taxType: "",
+    tax: "",
+    discountType: "",
+    discountValue: 0,
+    quantityAlert: 0,
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [products, setProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const [formData, setFormData] = useState({
-    productCode: "",
-    productName: "",
-    category: "",
-    unit: "",
-    purchasePrice: "",
-    salePrice: "",
-    stockQty: "",
-    status: "Active",
-  });
-
-  // Edit modal state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    productCode: "",
-    productName: "",
-    category: "",
-    unit: "",
-    purchasePrice: "",
-    salePrice: "",
-    stockQty: "",
-    status: "Active",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("CreateProduct");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setProducts(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    loadData();
-  }, []);
+    if (state?.productRecord) {
+      setForm(state.productRecord);
+      setMode(state.mode === "view" ? "view" : "edit");
+    }
+  }, [state]);
 
-  // Handlers for Add Section form inputs
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]:
+        name === "price" || name === "stockQuantity"
+          ? parseFloat(value) || 0
+          : value,
     }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Save handler for Add Section (Add new product)
-  const handleSave = () => {
-    // Validate required fields (basic)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mode === "view") return;
     if (
-      !formData.productCode.trim() ||
-      !formData.productName.trim() ||
-      !formData.category ||
-      !formData.unit ||
-      !formData.purchasePrice ||
-      !formData.salePrice ||
-      !formData.stockQty
+      !form.productName.trim() ||
+      !form.productCode.trim() ||
+      !form.category ||
+      form.price < 0 ||
+      form.stockQuantity < 0
     ) {
-      alert("Please fill all required fields.");
-      return;
-    }
-
-    const newProduct = {
-      id: products.length ? Math.max(...products.map((p) => p.id)) + 1 : 1,
-      productCode: formData.productCode.trim(),
-      productName: formData.productName.trim(),
-      category: formData.category,
-      unit: formData.unit,
-      purchasePrice: Number(formData.purchasePrice),
-      salePrice: Number(formData.salePrice),
-      stockQty: Number(formData.stockQty),
-      status: formData.status,
-    };
-    setProducts((prev) => [...prev, newProduct]);
-    setFormData({
-      productCode: "",
-      productName: "",
-      category: "",
-      unit: "",
-      purchasePrice: "",
-      salePrice: "",
-      stockQty: "",
-      status: "Active",
-    });
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const product = products.find((p) => p.id === id);
-    if (!product) return;
-    setEditForm({
-      productCode: product.productCode,
-      productName: product.productName,
-      category: product.category,
-      unit: product.unit,
-      purchasePrice: product.purchasePrice.toString(),
-      salePrice: product.salePrice.toString(),
-      stockQty: product.stockQty.toString(),
-      status: product.status,
-    });
-    setEditId(id);
-    setIsEditModalOpen(true);
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.productCode.trim() ||
-      !editForm.productName.trim() ||
-      !editForm.category ||
-      !editForm.unit ||
-      !editForm.purchasePrice ||
-      !editForm.salePrice ||
-      !editForm.stockQty
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (editId !== null) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editId
-            ? {
-                ...p,
-                productCode: editForm.productCode.trim(),
-                productName: editForm.productName.trim(),
-                category: editForm.category,
-                unit: editForm.unit,
-                purchasePrice: Number(editForm.purchasePrice),
-                salePrice: Number(editForm.salePrice),
-                stockQty: Number(editForm.stockQty),
-                status: editForm.status,
-              }
-            : p
-        )
+      alert(
+        "Please fill all required fields and ensure price and stock quantity are non-negative."
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (mode === "create") {
+        await apiService.post("Products", form);
+      } else if (mode === "edit") {
+        await apiService.put(`Products/${form.id}`, form);
+      }
+      navigate("/inventory/products");
+    } catch (err) {
+      setError("Failed to save product. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+  const handleBack = () => {
+    navigate("/inventory/products");
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      if (editId === id) {
-        setEditId(null);
-      }
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= products.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
+  const generateReport = () => {
+    alert(`Product Report:\n\n${JSON.stringify(form, null, 2)}`);
   };
 
-  // Clear button handler (replaces Refresh)
-  const handleClear = () => {
-    setFormData({
-      productCode: "",
-      productName: "",
-      category: "",
-      unit: "",
-      purchasePrice: "",
-      salePrice: "",
-      stockQty: "",
-      status: "Active",
-    });
-    setEditId(null);
-    setCurrentPage(1);
-  };
-
-  const handleReport = () => {
-    alert("Report generation is not implemented in this demo.");
-  };
-
-  // Calculate paginated data using Pagination component props
-  const paginatedData = products.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const isDisabled = mode === "view";
 
   return (
-    <div className="min-h-screen bg-background "> 
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold mb-6">Create Product</h1>
-          <div className="space-x-2">
+    <PageBase1
+      title={
+        mode === "create"
+          ? "Create Product"
+          : mode === "edit"
+          ? "Edit Product"
+          : "View Product"
+      }
+      description={`Manage product details for ${
+        form.productName || "a new product"
+      }`}
+      icon="fa fa-box"
+      onRefresh={() => {
+        if (mode !== "view") {
+          setForm({
+            id: 0,
+            productName: "",
+            productCode: "",
+            category: "",
+            price: 0,
+            stockQuantity: 0,
+            description: "",
+            status: "In Stock",
+          });
+          setMode("create");
+        }
+      }}
+      onReport={generateReport}
+    >
+      <div
+        className="min-h-screen bg-card rounded shadow-md border border-border p-6"
+        role="region"
+        aria-label="Product details"
+      >
+        <div className="flex justify-between items-center px-6 py-3 bg-white sticky top-0 z-10">
+          <h1 className="text-lg font-semibold text-gray-900">
+            {mode === "create"
+              ? "Create New Product"
+              : mode === "edit"
+              ? `Edit Product: ${form.productName}`
+              : `View Product: ${form.productName}`}
+            <p className="text-xs text-muted-foreground">
+              Generated on: October 24, 2025, 4:33 PM IST
+            </p>
+          </h1>
+          <div className="flex space-x-3">
             <button
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Report"
-              type="button"
+              onClick={handleBack}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors"
             >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
+              <i className="fa fa-arrow-left me-2"></i> Back
             </button>
             <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-              type="button"
+              onClick={generateReport}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors"
             >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
+              <i className="fa fa-print me-2"></i> Print / Report
             </button>
           </div>
         </div>
 
-        {/* Form Section (Add Section) - preserved exactly */}
-        <section className="bg-card rounded shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Product Details</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            <div>
-              <label
-                htmlFor="productCode"
-                className="block text-sm font-medium mb-1"
-              >
-                Product Code <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                id="productCode"
-                name="productCode"
-                value={formData.productCode}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter product code"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="productName"
-                className="block text-sm font-medium mb-1"
-              >
-                Product Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                id="productName"
-                name="productName"
-                value={formData.productName}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter product name"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium mb-1"
-              >
-                Category <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              >
-                <option value="" disabled>
-                  Select category
-                </option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="unit"
-                className="block text-sm font-medium mb-1"
-              >
-                Unit <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="unit"
-                name="unit"
-                value={formData.unit}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              >
-                <option value="" disabled>
-                  Select unit
-                </option>
-                {units.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="purchasePrice"
-                className="block text-sm font-medium mb-1"
-              >
-                Purchase Price <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="number"
-                id="purchasePrice"
-                name="purchasePrice"
-                min="0"
-                step="0.01"
-                value={formData.purchasePrice}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter purchase price"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="salePrice"
-                className="block text-sm font-medium mb-1"
-              >
-                Sale Price <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="number"
-                id="salePrice"
-                name="salePrice"
-                min="0"
-                step="0.01"
-                value={formData.salePrice}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter sale price"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="stockQty"
-                className="block text-sm font-medium mb-1"
-              >
-                Stock Quantity <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="number"
-                id="stockQty"
-                name="stockQty"
-                min="0"
-                value={formData.stockQty}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter stock quantity"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1"
-              >
-                Status <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-3 flex space-x-4 pt-4">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                title="Save Product"
-              >
-                <i className="fa fa-save fa-light" aria-hidden="true"></i>
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                title="Clear Form"
-              >
-                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* Products Table Section */}
-        <section className="bg-card rounded shadow py-6">
-          <h2 className="text-xl font-semibold mb-4">Product List</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-24">
-                    Code
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-36">
-                    Category
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-24">
-                    Unit
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-28">
-                    Purchase Price
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-28">
-                    Sale Price
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-24">
-                    Stock Qty
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-28">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground w-32">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={9}
-                      className="text-center px-4 py-6 text-muted-foreground italic"
-                    >
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-                {paginatedData.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {product.productCode}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {product.productName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {product.category}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {product.unit}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">
-                      ${product.purchasePrice.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">
-                      ${product.salePrice.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">
-                      {product.stockQty}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                          product.status === "Active"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                      >
-                        {product.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
-                      <button
-                        onClick={() => handleEdit(product.id)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        aria-label={`Edit product ${product.productName}`}
-                        type="button"
-                      >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
-                        aria-label={`Delete product ${product.productName}`}
-                        type="button"
-                      >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={products.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
-          />
-        </section>
-
-        {/* Edit Modal */}
-        {isEditModalOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-modal-title"
-          >
-            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-              <h2
-                id="edit-modal-title"
-                className="text-xl font-semibold mb-4 text-center"
-              >
-                Edit Product
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label
-                    htmlFor="editProductCode"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Product Code
-                  </label>
-                  <input
-                    type="text"
-                    id="editProductCode"
-                    name="productCode"
-                    value={editForm.productCode}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter product code"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editProductName"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Product Name
-                  </label>
-                  <input
-                    type="text"
-                    id="editProductName"
-                    name="productName"
-                    value={editForm.productName}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter product name"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editCategory"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="editCategory"
-                    name="category"
-                    value={editForm.category}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="" disabled>
-                      Select category
-                    </option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editUnit"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Unit
-                  </label>
-                  <select
-                    id="editUnit"
-                    name="unit"
-                    value={editForm.unit}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="" disabled>
-                      Select unit
-                    </option>
-                    {units.map((unit) => (
-                      <option key={unit} value={unit}>
-                        {unit}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editPurchasePrice"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Purchase Price
-                  </label>
-                  <input
-                    type="number"
-                    id="editPurchasePrice"
-                    name="purchasePrice"
-                    min="0"
-                    step="0.01"
-                    value={editForm.purchasePrice}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter purchase price"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editSalePrice"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Sale Price
-                  </label>
-                  <input
-                    type="number"
-                    id="editSalePrice"
-                    name="salePrice"
-                    min="0"
-                    step="0.01"
-                    value={editForm.salePrice}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter sale price"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editStockQty"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Stock Quantity
-                  </label>
-                  <input
-                    type="number"
-                    id="editStockQty"
-                    name="stockQty"
-                    min="0"
-                    value={editForm.stockQty}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter stock quantity"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="editStatus"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="editStatus"
-                    name="status"
-                    value={editForm.status}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={handleEditCancel}
-                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditSave}
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-lg">
+            {error}
           </div>
         )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information Section */}
+          <section className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
+              Product Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="store"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Store <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="store"
+                  name="store"
+                  value={form.store}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select store"
+                >
+                  <option value="">Select Store</option>
+                  {/* Add store options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="warehouse"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Warehouse <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="warehouse"
+                  name="warehouse"
+                  value={form.warehouse}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select warehouse"
+                >
+                  <option value="">Select Warehouse</option>
+                  {/* Add warehouse options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="productName"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Product Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="productName"
+                  name="productName"
+                  value={form.productName}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Enter product name"
+                  required={!isDisabled}
+                  aria-label="Enter product name"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="slug"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Slug <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="slug"
+                  name="slug"
+                  value={form.slug}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Enter slug"
+                  required={!isDisabled}
+                  aria-label="Enter slug"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="sku" className="block text-sm font-medium mb-1">
+                  SKU <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="sku"
+                  name="sku"
+                  value={form.sku}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Enter SKU"
+                  required={!isDisabled}
+                  aria-label="Enter SKU"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="sellingType"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Selling Type <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="sellingType"
+                  name="sellingType"
+                  value={form.sellingType}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select selling type"
+                >
+                  <option value="">Select Selling Type</option>
+                  {/* Add selling type options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Category <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select product category"
+                >
+                  <option value="">Select Category</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="subCategory"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Sub Category <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="subCategory"
+                  name="subCategory"
+                  value={form.subCategory}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select sub category"
+                >
+                  <option value="">Select Sub Category</option>
+                  {/* Add sub category options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="brand"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Brand <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="brand"
+                  name="brand"
+                  value={form.brand}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select brand"
+                >
+                  <option value="">Select Brand</option>
+                  {/* Add brand options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="barcodeSymbology"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Barcode Symbology <span className="text-destructive">*</span>
+                </label>
+                <select
+                  id="barcodeSymbology"
+                  name="barcodeSymbology"
+                  value={form.barcodeSymbology}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required={!isDisabled}
+                  aria-label="Select barcode symbology"
+                >
+                  <option value="">Select Barcode Symbology</option>
+                  {/* Add barcode symbology options */}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="itemBarcode"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Item Barcode <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="itemBarcode"
+                  name="itemBarcode"
+                  value={form.itemBarcode}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Enter item barcode"
+                  required={!isDisabled}
+                  aria-label="Enter item barcode"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={form.description}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  rows={3}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Enter product description"
+                  aria-label="Enter product description"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Pricing and Inventory Section */}
+          <section className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
+              Pricing and Inventory
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+              <div className="sm:col-span-2">
+                <label className="block text-base font-medium">
+                  Product Type <span className="text-red-600">*</span>
+                </label>
+                <div className="flex items-center gap-8">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="productType"
+                      value="Single Product"
+                      checked={form.productType === "Single Product"}
+                      onChange={handleInputChange}
+                      className="accent-orange-500 w-5 h-5 mr-2"
+                      required
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Single Product
+                    </span>
+                  </label>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="productType"
+                      value="Variable Product"
+                      checked={form.productType === "Variable Product"}
+                      onChange={handleInputChange}
+                      className="accent-gray-400 w-5 h-5 mr-2"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Variable Product
+                    </span>
+                  </label>
+                </div>
+              </div>
+              {/* Grid Inputs */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Quantity <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="quantity"
+                    min={0}
+                    value={form.quantity}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-300"
+                    placeholder="Enter quantity"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Price <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    min={0}
+                    value={form.price}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-300"
+                    placeholder="Enter price"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Tax Type <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    name="taxType"
+                    value={form.taxType}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white"
+                    required
+                  >
+                    <option value="">Select</option>
+                    {TAX_TYPE_OPTIONS.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Tax <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    name="tax"
+                    value={form.tax}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white"
+                    required
+                  >
+                    <option value="">Select</option>
+                    {TAX_OPTIONS.map((tax) => (
+                      <option key={tax} value={tax}>
+                        {tax}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Discount Type <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    name="discountType"
+                    value={form.discountType}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white"
+                    required
+                  >
+                    <option value="">Select</option>
+                    {DISCOUNT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1">
+                    Discount Value <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="discountValue"
+                    min={0}
+                    value={form.discountValue}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-300"
+                    placeholder="Enter discount value"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-base font-medium mb-1">
+                  Quantity Alert <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="quantityAlert"
+                  min={0}
+                  value={form.quantityAlert}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-300"
+                  placeholder="Enter minimum quantity for alert"
+                  required
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="p-6 border border-gray-200 rounded-lg bg-white shadow-sm mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i className="fa fa-image text-[#ce1126]" />
+              Images
+            </h2>
+            <div className="flex items-center space-x-4">
+              <div className="border-dashed border-2 border-gray-300 p-6 w-32 h-32 flex justify-center items-center">
+                <span className="text-gray-400">Add Images</span>
+              </div>
+              <div className="flex space-x-2">
+                <div className="relative w-32 h-32 bg-gray-200">
+                  <img
+                    src="https://via.placeholder.com/150"
+                    alt="product"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs">
+                    X
+                  </button>
+                </div>
+                <div className="relative w-32 h-32 bg-gray-200">
+                  <img
+                    src="https://via.placeholder.com/150"
+                    alt="product"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs">
+                    X
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="p-6 border border-gray-200 rounded-lg bg-white shadow-sm mb-6">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+              Custom Fields
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Warranty *
+                </label>
+                <select className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                  <option>Select</option>
+                  {/* Add options here */}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Manufactured Date *
+                </label>
+                <input
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Manufacturer *
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Expiry On *
+                </label>
+                <input
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </section>
+
+          <div className="flex justify-end gap-4 pt-4 border-t border-gray-300">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors"
+            >
+              <i className="fa fa-arrow-left me-2"></i> Back
+            </button>
+            {!isDisabled && (
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-3 rounded-lg text-sm transition-colors disabled:opacity-50"
+              >
+                <i className="fa fa-save me-2"></i>{" "}
+                {mode === "create" ? "Save" : "Update"}
+              </button>
+            )}
+          </div>
+        </form>
       </div>
-    </div>
+    </PageBase1>
   );
 }

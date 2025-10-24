@@ -9,7 +9,7 @@ export const ROLES = [
   "StoreOwner",
   "HR",
   "Support",
-  "Guest"
+  "Guest",
 ] as const;
 
 export const STATUSES = [
@@ -18,7 +18,7 @@ export const STATUSES = [
   "Pending",
   "Suspended",
   "Archived",
-  "Deleted"
+  "Deleted",
 ] as const;
 
 export const EXPIRED_STATUSES = [
@@ -26,7 +26,7 @@ export const EXPIRED_STATUSES = [
   "Expired",
   "Renewed",
   "Cancelled",
-  "Grace Period"
+  "Grace Period",
 ] as const;
 
 export const STORE_TYPES = [
@@ -42,7 +42,7 @@ export const STORE_TYPES = [
   "Online Store",
   "Franchise",
   "Chain Store",
-  "Pop-up Store"
+  "Pop-up Store",
 ] as const;
 
 export const COUPEN_TYPES = [
@@ -52,7 +52,7 @@ export const COUPEN_TYPES = [
   "Cashback",
   "Free Shipping",
   "Seasonal Offer",
-  "Loyalty Reward"
+  "Loyalty Reward",
 ] as const;
 
 export const DISCOUNT_TYPES = [
@@ -61,7 +61,7 @@ export const DISCOUNT_TYPES = [
   "Tiered",
   "Bulk Purchase",
   "Seasonal",
-  "Member Exclusive"
+  "Member Exclusive",
 ] as const;
 
 export const DEPARTMENTS = [
@@ -74,7 +74,7 @@ export const DEPARTMENTS = [
   "Procurement",
   "Operations",
   "Logistics",
-  "Maintenance"
+  "Maintenance",
 ] as const;
 
 export const PURCHASE_STATUSES = [
@@ -83,7 +83,7 @@ export const PURCHASE_STATUSES = [
   "Partial",
   "Ordered",
   "Cancelled",
-  "Returned"
+  "Returned",
 ] as const;
 
 export const PAYMENT_STATUSES = [
@@ -94,7 +94,7 @@ export const PAYMENT_STATUSES = [
   "Refunded",
   "Overdue",
   "In Progress",
-  "Failed"
+  "Failed",
 ] as const;
 
 export const STOCK_STATUSES = [
@@ -102,7 +102,7 @@ export const STOCK_STATUSES = [
   "Low Stock",
   "Out of Stock",
   "Discontinued",
-  "Pre-Order"
+  "Pre-Order",
 ] as const;
 
 export const ORDER_STATUSES = [
@@ -115,7 +115,7 @@ export const ORDER_STATUSES = [
   "Refunded",
   "Shipped",
   "Delivered",
-  "Partially Fulfilled"
+  "Partially Fulfilled",
 ] as const;
 
 export const LEAVE_STATUSES = [
@@ -126,7 +126,7 @@ export const LEAVE_STATUSES = [
   "Half Day",
   "On Duty",
   "Work From Home",
-  "Holiday"
+  "Holiday",
 ] as const;
 
 export const LEAVE_TYPES = [
@@ -148,9 +148,8 @@ export const LEAVE_APPROVAL_STATUSES = [
   "Escalated",
   "Withdrawn",
   "Deferred",
-  "Auto Approved"
+  "Auto Approved",
 ] as const;
-
 
 export const MONTHS = [
   "January",
@@ -166,3 +165,11 @@ export const MONTHS = [
   "November",
   "December",
 ] as const;
+
+export const ACCOUNT_TYPES = ["Savings", "Current"] as const;
+
+export const TAX_TYPE_OPTIONS = [ "VAT", "GST", "Sales Tax"] as const;
+
+export const TAX_OPTIONS = ["Exclusive", "Inclusive"] as const;
+  
+export const CATEGORIES = ["Computers","Groceries","Electronics","Apparel","Books","Furniture"] as const;

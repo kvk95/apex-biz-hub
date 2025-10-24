@@ -87,12 +87,6 @@
       "subCategory": "Vegetables",
       "description": "Fresh vegetables",
       "status": "Active"
-    },
-    "Beverages",
-    "Snacks",
-    "Dairy",
-    "Bakery",
-    "Frozen",
-    "Produce"
+    } 
   ]
 }
