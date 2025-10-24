@@ -1,49 +1,104 @@
-import { STATUSES, LEAVE_STATUSES } from "@/constants/constants";
+import {
+  STATUSES,
+  LEAVE_STATUSES,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  PURCHASE_STATUSES,
+  STOCK_STATUSES,
+  LEAVE_APPROVAL_STATUSES,
+} from "@/constants/constants";
 
-// Define the colors and styles for each possible status
-const STATUS_STYLES: Record<(typeof STATUSES)[number], string> = {
-  Active: "bg-green-600 text-white dark:bg-green-900 dark:text-green-200",
-  Inactive: "bg-red-500 text-white dark:bg-red-900 dark:text-red-200",
-  // Pending: "bg-yellow-100 text-white dark:bg-yellow-900 dark:text-yellow-200",
+/**
+ * Universal Tailwind color mapping for all known status constants.
+ * Includes dark theme variants for brand consistency.
+ */
+export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
+  // General Statuses
+  Active: "bg-green-600 text-white dark:bg-green-800",
+  Inactive: "bg-red-500 text-white dark:bg-red-800",
+  Pending: "bg-yellow-500 text-white dark:bg-yellow-700",
+  Suspended: "bg-orange-600 text-white dark:bg-orange-800",
+  Archived: "bg-gray-500 text-white dark:bg-gray-700",
+  Deleted: "bg-gray-700 text-white dark:bg-gray-900",
+
+  // Expired
+  Expired: "bg-red-600 text-white dark:bg-red-900",
+  Renewed: "bg-green-500 text-white dark:bg-green-700",
+  Cancelled: "bg-rose-600 text-white dark:bg-rose-800",
+  "Grace Period": "bg-amber-500 text-white dark:bg-amber-700",
+
+  // Leave / Attendance
+  Present: "bg-green-500 text-white dark:bg-green-700",
+  Absent: "bg-red-500 text-white dark:bg-red-700",
+  Leave: "bg-yellow-500 text-white dark:bg-yellow-700",
+  Late: "bg-orange-500 text-white dark:bg-orange-700",
+  "Half Day": "bg-amber-400 text-black dark:bg-amber-700",
+  "On Duty": "bg-cyan-500 text-white dark:bg-cyan-700",
+  "Work From Home": "bg-teal-500 text-white dark:bg-teal-700",
+  Holiday: "bg-blue-400 text-white dark:bg-blue-600",
+
+  // Purchase
+  Received: "bg-green-600 text-white dark:bg-green-800",
+  Ordered: "bg-cyan-600 text-white dark:bg-cyan-800",
+  Partial: "bg-indigo-600 text-white dark:bg-indigo-800",
+  Returned: "bg-rose-500 text-white dark:bg-rose-700",
+
+  // Payment
+  Paid: "bg-green-700 text-white dark:bg-green-900",
+  UnPaid: "bg-red-600 text-white dark:bg-red-800",
+  Due: "bg-amber-600 text-white dark:bg-amber-800",
+  Refunded: "bg-violet-500 text-white dark:bg-violet-700",
+  Overdue: "bg-orange-700 text-white dark:bg-orange-900",
+  "In Progress": "bg-blue-600 text-white dark:bg-blue-800",
+  Failed: "bg-red-700 text-white dark:bg-red-900",
+
+  // Stock
+  "In Stock": "bg-green-600 text-white dark:bg-green-800",
+  "Low Stock": "bg-yellow-400 text-black dark:bg-yellow-700",
+  "Out of Stock": "bg-red-500 text-white dark:bg-red-700",
+  Discontinued: "bg-gray-600 text-white dark:bg-gray-800",
+  "Pre-Order": "bg-indigo-600 text-white dark:bg-indigo-800",
+
+  // Orders
+  Completed: "bg-green-600 text-white dark:bg-green-800",
+  Processing: "bg-blue-500 text-white dark:bg-blue-800",
+  "On Hold": "bg-yellow-600 text-white dark:bg-yellow-800",
+  //Returned: "bg-rose-500 text-white dark:bg-rose-700", // from-above
+  //Refunded: "bg-violet-600 text-white dark:bg-violet-800", // from-above
+  Shipped: "bg-cyan-500 text-white dark:bg-cyan-700",
+  Delivered: "bg-green-500 text-white dark:bg-green-700",
+  "Partially Fulfilled": "bg-indigo-500 text-white dark:bg-indigo-700",
+
+  // Leave Approval Statuses
+  //Pending: "bg-yellow-500 text-white dark:bg-yellow-700",  // from-above
+  Approved: "bg-green-600 text-white dark:bg-green-800",
+  Rejected: "bg-red-500 text-white dark:bg-red-700",
+  //Cancelled: "bg-rose-600 text-white dark:bg-rose-800",  // from-above
+  Forwarded: "bg-blue-400 text-white dark:bg-blue-600",
+  Reviewed: "bg-indigo-500 text-white dark:bg-indigo-700",
+  Escalated: "bg-red-600 text-white dark:bg-red-800",
+  Withdrawn: "bg-gray-500 text-white dark:bg-gray-700",
+  Deferred: "bg-amber-400 text-black dark:bg-amber-700",
+  "Auto Approved": "bg-green-500 text-white dark:bg-green-700",
+  
+  // Default
+  Default: "bg-gray-300 text-gray-900 dark:bg-gray-700 dark:text-gray-200",
 };
 
-export const renderStatusBadge = (
-  value: (typeof STATUSES)[number]
-): JSX.Element => {
+/**
+ * Generalized badge renderer for all status groups.
+ * Accepts any value from STATUSES, ORDER_STATUSES, PAYMENT_STATUSES, etc.
+ */
+export const renderStatusBadge = (value: string): JSX.Element => {
   const classString =
-    STATUS_STYLES[value] ||
-    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+    UNIVERSAL_STATUS_COLORS[value] || UNIVERSAL_STATUS_COLORS.Default;
 
   return (
     <span
-      className={`inline-block px-2 rounded font-semibold whitespace-nowrap ${classString}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded font-semibold whitespace-nowrap ${classString}`}
       style={{ fontSize: "11px" }}
     >
-      &bull; {value}
-    </span>
-  );
-};
-
-const LEAVE_STYLES: Record<(typeof LEAVE_STATUSES)[number], string> = {
-  Present: "bg-green-600 text-white dark:bg-green-900 dark:text-green-200",
-  Absent: "bg-red-500 text-white dark:bg-red-900 dark:text-red-200",
-  Leave: "bg-pink-500 text-white dark:bg-pink-900 dark:text-pink-200",
-  Late: "bg-yellow-500 text-white dark:bg-yellow-900 dark:text-yellow-200",
-};
-
-export const renderLeaveStatusBadge = (
-  value: (typeof LEAVE_STATUSES)[number]
-): JSX.Element => {
-  const classString =
-    LEAVE_STYLES[value] ||
-    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-
-  return (
-    <span
-      className={`inline-block px-2 rounded font-semibold whitespace-nowrap ${classString}`}
-      style={{ fontSize: "11px" }}
-    >
-      &bull; {value}
+      • {value}
     </span>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Pagination } from "@/components/Pagination/Pagination";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -39,6 +38,7 @@ interface PageBase1Props {
   modalForm: () => JSX.Element;
   onFormSubmit: (e: React.FormEvent) => void;
   customFilters?: () => JSX.Element;
+  children?: React.ReactNode;
 }
 
 function adjustColor(hex: string, percent: number): string {
@@ -83,6 +83,7 @@ export function PageBase1({
   modalForm,
   onFormSubmit,
   customFilters,
+  children,
 }: PageBase1Props) {
   const { theme } = useTheme();
   const primaryColor = theme.primaryColor || "#f97316";
@@ -107,7 +108,7 @@ export function PageBase1({
           </div>
         </div>
         <div className="flex-none ml-auto flex gap-2">
-           <button
+          <button
             onClick={onReport}
             className="bg-white hover:bg-gray-300 text-danger py-1 px-3 rounded border transition-colors text-lg"
             type="button"
@@ -146,91 +147,94 @@ export function PageBase1({
         </div>
       </div>
 
-      <section className="bg-card rounded shadow py-6">
-        {customFilters ? (
-          <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-2 p-2">
-            {customFilters()}
-          </div>
-        ) : (
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-4">
-            <input
-              type="text"
-              placeholder="Search"
-              value={search}
-              onChange={onSearchChange}
-              className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Search"
-            />
-          </div>
-        )}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr className="border-b border-border">
-                {tableColumns.map((col) => (
-                  <th
-                    key={col.key}
-                    className={`px-4 py-3 text-sm font-medium text-muted-foreground ${
-                      col.align ? `text-${col.align}` : "text-left"
-                    } ${col.className || ""}`}
-                  >
-                    {col.label}
-                  </th>
-                ))}
-                {rowActions && (
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                    {/*Actions */}
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {tableData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={tableColumns.length + (rowActions ? 1 : 0)}
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No items found.
-                  </td>
+      {tableColumns && (
+        <section className="bg-card rounded shadow py-6">
+          {customFilters ? (
+            <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-2 p-2">
+              {customFilters()}
+            </div>
+          ) : (
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-4">
+              <input
+                type="text"
+                placeholder="Search"
+                value={search}
+                onChange={onSearchChange}
+                className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="Search"
+              />
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr className="border-b border-border">
+                  {tableColumns.map((col) => (
+                    <th
+                      key={col.key}
+                      className={`px-4 py-3 text-sm font-medium text-muted-foreground ${
+                        col.align ? `text-${col.align}` : "text-left"
+                      } ${col.className || ""}`}
+                    >
+                      {col.label}
+                    </th>
+                  ))}
+                  {rowActions && (
+                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                      {/*Actions */}
+                    </th>
+                  )}
                 </tr>
-              ) : (
-                tableData.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                  >
-                    {tableColumns.map((col) => (
-                      <td
-                        key={col.key}
-                        className={`px-4 py-2 text-sm ${
-                          col.align ? `text-${col.align}` : "text-left"
-                        } ${col.className || ""}`}
-                      >
-                        {col.render
-                          ? col.render(row[col.key], row, idx)
-                          : row[col.key]}
-                      </td>
-                    ))}
-                    {rowActions && (
-                      <td className="px-3 py-2 whitespace-nowrap text-right space-x-2">
-                        {rowActions(row)}
-                      </td>
-                    )}
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {tableData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={tableColumns.length + (rowActions ? 1 : 0)}
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      No items found.
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={totalItems}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-        />
-      </section>
+                ) : (
+                  tableData.map((row, idx) => (
+                    <tr
+                      key={row.id}
+                      className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
+                    >
+                      {tableColumns.map((col) => (
+                        <td
+                          key={col.key}
+                          className={`px-4 py-2 text-sm ${
+                            col.align ? `text-${col.align}` : "text-left"
+                          } ${col.className || ""}`}
+                        >
+                          {col.render
+                            ? col.render(row[col.key], row, idx)
+                            : row[col.key]}
+                        </td>
+                      ))}
+                      {rowActions && (
+                        <td className="px-3 py-2 whitespace-nowrap text-right space-x-2">
+                          {rowActions(row)}
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+          />
+        </section>
+      )}
+       {children ? children : <></>}
 
       {formMode && (
         <div

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
 import { LEAVE_STATUSES, DEPARTMENTS } from "@/constants/constants";
-import { renderLeaveStatusBadge } from "@/utils/tableUtils";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface Attendance {
   id: number;
@@ -188,7 +188,7 @@ export default function AdminAttendance() {
       key: "status",
       label: "Status",
       align: "center",
-      render: renderLeaveStatusBadge,
+      render: renderStatusBadge,
     },
   ];
 

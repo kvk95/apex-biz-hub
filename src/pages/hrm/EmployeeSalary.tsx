@@ -1,72 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { PAYMENT_STATUSES, MONTHS } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { useNavigate } from "react-router-dom";
 
-type EmployeeSalaryRecord = {
+interface EmployeeSalaryRecord {
   id: number;
   employeeName: string;
   employeeId: string;
-  month: string;
+  month: typeof MONTHS[number];
   year: string;
   salary: number;
   advance: number;
   deduction: number;
   netSalary: number;
-  paymentStatus: "Paid" | "Unpaid";
-};
+  paymentStatus: typeof PAYMENT_STATUSES[number];
+}
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const years = ["2023", "2022", "2021", "2020"];
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function EmployeeSalary() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Form state for Add Section (preserved exactly)
-  const [employeeName, setEmployeeName] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [salary, setSalary] = useState("");
-  const [advance, setAdvance] = useState("");
-  const [deduction, setDeduction] = useState("");
-  const [netSalary, setNetSalary] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<"Paid" | "Unpaid">("Paid");
-
-  // Data state and API loading state
+  const navigate = useNavigate();
   const [data, setData] = useState<EmployeeSalaryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<EmployeeSalaryRecord>({
+    id: 0,
     employeeName: "",
     employeeId: "",
-    month: "",
-    year: "",
-    salary: "",
-    advance: "",
-    deduction: "",
-    netSalary: "",
-    paymentStatus: "Paid" as "Paid" | "Unpaid",
+    month: MONTHS[0],
+    year: new Date().getFullYear().toString(),
+    salary: 0,
+    advance: 0,
+    deduction: 0,
+    netSalary: 0,
+    paymentStatus: "Paid",
   });
-  const [editId, setEditId] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -82,814 +62,470 @@ export default function EmployeeSalary() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("EmployeeSalary loadData:", { data: response.result });
   };
 
-  // Calculate net salary automatically when salary, advance or deduction changes in Add Section
-  useEffect(() => {
-    const sal = parseFloat(salary) || 0;
-    const adv = parseFloat(advance) || 0;
-    const ded = parseFloat(deduction) || 0;
-    const net = sal - adv - ded;
-    setNetSalary(net > 0 ? net.toFixed(2) : "0.00");
-  }, [salary, advance, deduction]);
+  const filteredData = useMemo(() => {
+    const result = data.filter((record) => {
+      console.log(record);
+      console.log(record.employeeName);
+      const matchesSearch =
+        record.employeeName.toLowerCase().includes(searchText.toLowerCase()) ||
+        record.employeeId.toLowerCase().includes(searchText.toLowerCase());
+      const matchesStatus = !filterStatus || record.paymentStatus === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+    console.log("EmployeeSalary filteredData:", result, { searchText, filterStatus });
+    return result;
+  }, [data, searchText, filterStatus]);
 
-  // Calculate net salary automatically when salary, advance or deduction changes in Edit Modal
-  useEffect(() => {
-    if (isEditModalOpen) {
-      const sal = parseFloat(editForm.salary) || 0;
-      const adv = parseFloat(editForm.advance) || 0;
-      const ded = parseFloat(editForm.deduction) || 0;
-      const net = sal - adv - ded;
-      setEditForm((prev) => ({
-        ...prev,
-        netSalary: net > 0 ? net.toFixed(2) : "0.00",
-      }));
-    }
-  }, [editForm.salary, editForm.advance, editForm.deduction, isEditModalOpen]);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("EmployeeSalary paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers for Add Section form inputs
+  const years = Array.from({ length: 6 }, (_, i) =>
+    (new Date().getFullYear() - i).toString()
+  );
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    switch (name) {
-      case "employeeName":
-        setEmployeeName(value);
-        break;
-      case "employeeId":
-        setEmployeeId(value);
-        break;
-      case "month":
-        setMonth(value);
-        break;
-      case "year":
-        setYear(value);
-        break;
-      case "salary":
-        setSalary(value);
-        break;
-      case "advance":
-        setAdvance(value);
-        break;
-      case "deduction":
-        setDeduction(value);
-        break;
-      case "paymentStatus":
-        setPaymentStatus(value as "Paid" | "Unpaid");
-        break;
-    }
+    setForm((prev) => {
+      const updatedForm = { ...prev, [name]: value };
+      if (["salary", "advance", "deduction"].includes(name)) {
+        const salary = name === "salary" ? parseFloat(value) || 0 : prev.salary;
+        const advance = name === "advance" ? parseFloat(value) || 0 : prev.advance;
+        const deduction = name === "deduction" ? parseFloat(value) || 0 : prev.deduction;
+        updatedForm.netSalary = salary - advance - deduction > 0 ? salary - advance - deduction : 0;
+      }
+      return updatedForm;
+    });
+    console.log("EmployeeSalary handleInputChange:", { name, value });
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Save handler for Add Section (Add new record)
-  const handleSave = () => {
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
-      !employeeName.trim() ||
-      !employeeId.trim() ||
-      !month ||
-      !year ||
-      !salary
+      !form.employeeName.trim() ||
+      !form.employeeId.trim() ||
+      !form.month ||
+      !form.year ||
+      !form.salary
     ) {
       alert("Please fill all required fields.");
       return;
     }
-    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-    const salNum = parseFloat(salary) || 0;
-    const advNum = parseFloat(advance) || 0;
-    const dedNum = parseFloat(deduction) || 0;
-    const netNum = salNum - advNum - dedNum > 0 ? salNum - advNum - dedNum : 0;
-    setData((prev) => [
-      ...prev,
-      {
-        id: newId,
-        employeeName: employeeName.trim(),
-        employeeId: employeeId.trim(),
-        month,
-        year,
-        salary: salNum,
-        advance: advNum,
-        deduction: dedNum,
-        netSalary: netNum,
-        paymentStatus,
-      },
-    ]);
-    // Reset form
-    setEmployeeName("");
-    setEmployeeId("");
-    setMonth("");
-    setYear("");
-    setSalary("");
-    setAdvance("");
-    setDeduction("");
-    setNetSalary("");
-    setPaymentStatus("Paid");
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        employeeName: item.employeeName,
-        employeeId: item.employeeId,
-        month: item.month,
-        year: item.year,
-        salary: item.salary.toString(),
-        advance: item.advance.toString(),
-        deduction: item.deduction.toString(),
-        netSalary: item.netSalary.toFixed(2),
-        paymentStatus: item.paymentStatus,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.employeeName.trim() ||
-      !editForm.employeeId.trim() ||
-      !editForm.month ||
-      !editForm.year ||
-      !editForm.salary
-    ) {
-      alert("Please fill all required fields.");
+    if (form.salary < 0 || form.advance < 0 || form.deduction < 0) {
+      alert("Salary, advance, and deduction must be non-negative.");
       return;
     }
-    if (editId !== null) {
-      const salNum = parseFloat(editForm.salary) || 0;
-      const advNum = parseFloat(editForm.advance) || 0;
-      const dedNum = parseFloat(editForm.deduction) || 0;
-      const netNum = salNum - advNum - dedNum > 0 ? salNum - advNum - dedNum : 0;
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId }]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== 0) {
       setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                employeeName: editForm.employeeName.trim(),
-                employeeId: editForm.employeeId.trim(),
-                month: editForm.month,
-                year: editForm.year,
-                salary: salNum,
-                advance: advNum,
-                deduction: dedNum,
-                netSalary: netNum,
-                paymentStatus: editForm.paymentStatus,
-              }
-            : item
-        )
+        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
+    setFormMode(null);
+    setForm({
+      id: 0,
+      employeeName: "",
+      employeeId: "",
+      month: MONTHS[0],
+      year: new Date().getFullYear().toString(),
+      salary: 0,
+      advance: 0,
+      deduction: 0,
+      netSalary: 0,
+      paymentStatus: "Paid",
+    });
+    console.log("EmployeeSalary handleFormSubmit:", { form, formMode });
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+  const handleEdit = (record: EmployeeSalaryRecord) => {
+    setForm(record);
+    setFormMode("edit");
+    console.log("EmployeeSalary handleEdit:", { record });
   };
 
-  // Delete handler
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
+    if (window.confirm("Are you sure you want to delete this salary record?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if ((currentPage - 1) * itemsPerPage >= data.length - 1 && currentPage > 1) {
+      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
+      console.log("EmployeeSalary handleDelete:", { id });
     }
   };
 
-  // Clear button handler (replaces Refresh)
+  const handleView = (record: EmployeeSalaryRecord) => {
+    alert(`Salary Record:\n\n${JSON.stringify(record, null, 2)}`);
+    console.log("EmployeeSalary handleView:", { record });
+    // Navigate to payslip page and pass the full record via state
+    navigate("/hrm/payroll/payslip", {
+      state: { salaryRecord: record },
+    });
+  };
+
+  const handleDownload = (record: EmployeeSalaryRecord) => {
+    alert(`Downloading salary slip for ${record.employeeName} (${record.month} ${record.year})`);
+    console.log("EmployeeSalary handleDownload:", { record });
+  };
+
   const handleClear = () => {
-    setEmployeeName("");
-    setEmployeeId("");
-    setMonth("");
-    setYear("");
-    setSalary("");
-    setAdvance("");
-    setDeduction("");
-    setNetSalary("");
-    setPaymentStatus("Paid");
-    setEditId(null);
+    setSearchText("");
+    setFilterStatus("");
     setCurrentPage(1);
+    setFormMode(null);
+    setForm({
+      id: 0,
+      employeeName: "",
+      employeeId: "",
+      month: MONTHS[0],
+      year: new Date().getFullYear().toString(),
+      salary: 0,
+      advance: 0,
+      deduction: 0,
+      netSalary: 0,
+      paymentStatus: "Paid",
+    });
+    loadData();
+    console.log("EmployeeSalary handleClear");
   };
 
   const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+    alert("Salary Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("EmployeeSalary handleReport:", { filteredData });
   };
 
-  // Paginated data slice using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      align: "left",
+      render: (_, __, idx) => <span>{(currentPage - 1) * itemsPerPage + (idx ?? 0) + 1}</span>,
+    },
+    {
+      key: "employeeName",
+      label: "Employee Name",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "employeeId", label: "Employee ID", align: "left" },
+    { key: "month", label: "Month", align: "left" },
+    { key: "year", label: "Year", align: "left" },
+    {
+      key: "salary",
+      label: "Salary",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
+    {
+      key: "advance",
+      label: "Advance",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
+    {
+      key: "deduction",
+      label: "Deduction",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
+    {
+      key: "netSalary",
+      label: "Net Salary",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
+    { key: "paymentStatus", label: "Payment Status", align: "center", render: renderStatusBadge }, 
+  ];
+
+  const rowActions = (row: EmployeeSalaryRecord) => (
+    <div className="flex justify-center gap-2">
+      <button
+        onClick={() => handleView(row)}
+className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        aria-label={`View salary for ${row.employeeName}`}
+        type="button"
+      >
+        <i className="fa fa-eye" aria-hidden="true"></i>
+      </button>
+      <button
+        onClick={() => handleDownload(row)}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        aria-label={`Download salary slip for ${row.employeeName}`}
+        type="button"
+      >
+        <i className="fa fa-download" aria-hidden="true"></i>
+      </button> 
+<button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit  ${row.employeeName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete  ${row.employeeName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>      
+    </div>
+  );
+
+  const customFilters = () => (
+    <div className="flex flex-row gap-2 mb-4 flex-wrap">
+      <input
+        type="text"
+        placeholder="Search Name/ID"
+        value={searchText}
+        onChange={(e) => {
+          setSearchText(e.target.value);
+          setCurrentPage(1);
+          console.log("EmployeeSalary handleSearchChange:", { searchText: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by employee name or ID"
+      />
+      <select
+        value={filterStatus}
+        onChange={(e) => {
+          setFilterStatus(e.target.value);
+          setCurrentPage(1);
+          console.log("EmployeeSalary handleFilterStatusChange:", { filterStatus: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by payment status"
+      >
+        <option value="">All Status</option>
+        {PAYMENT_STATUSES.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+          Employee Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="employeeName"
+          name="employeeName"
+          value={form.employeeName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter employee name"
+          required
+          aria-label="Enter employee name"
+        />
+      </div>
+      <div>
+        <label htmlFor="employeeId" className="block text-sm font-medium mb-1">
+          Employee ID <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="employeeId"
+          name="employeeId"
+          value={form.employeeId}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter employee ID"
+          required
+          aria-label="Enter employee ID"
+        />
+      </div>
+      <div>
+        <label htmlFor="month" className="block text-sm font-medium mb-1">
+          Month <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="month"
+          name="month"
+          value={form.month}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+          aria-label="Select month"
+        >
+          <option value="">Select Month</option>
+          {MONTHS.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="year" className="block text-sm font-medium mb-1">
+          Year <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="year"
+          name="year"
+          value={form.year}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+          aria-label="Select year"
+        >
+          <option value="">Select Year</option>
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="salary" className="block text-sm font-medium mb-1">
+          Salary <span className="text-destructive">*</span>
+        </label>
+        <input
+          type="number"
+          id="salary"
+          name="salary"
+          min={0}
+          step="0.01"
+          value={form.salary}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter salary"
+          required
+          aria-label="Enter salary"
+        />
+      </div>
+      <div>
+        <label htmlFor="advance" className="block text-sm font-medium mb-1">
+          Advance
+        </label>
+        <input
+          type="number"
+          id="advance"
+          name="advance"
+          min={0}
+          step="0.01"
+          value={form.advance}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter advance"
+          aria-label="Enter advance"
+        />
+      </div>
+      <div>
+        <label htmlFor="deduction" className="block text-sm font-medium mb-1">
+          Deduction
+        </label>
+        <input
+          type="number"
+          id="deduction"
+          name="deduction"
+          min={0}
+          step="0.01"
+          value={form.deduction}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter deduction"
+          aria-label="Enter deduction"
+        />
+      </div>
+      <div>
+        <label htmlFor="netSalary" className="block text-sm font-medium mb-1">
+          Net Salary
+        </label>
+        <input
+          type="text"
+          id="netSalary"
+          name="netSalary"
+          value={form.netSalary.toFixed(2)}
+          readOnly
+          className="w-full border border-input rounded px-3 py-2 bg-background/50 focus:outline-none cursor-not-allowed"
+          aria-label="Net salary (auto-calculated)"
+        />
+      </div>
+      <div>
+        <label htmlFor="paymentStatus" className="block text-sm font-medium mb-1">
+          Payment Status <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="paymentStatus"
+          name="paymentStatus"
+          value={form.paymentStatus}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+          aria-label="Select payment status"
+        >
+          <option value="">Select Status</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">Employee Salary</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Employee Name */}
-          <div>
-            <label
-              htmlFor="employeeName"
-              className="block text-sm font-medium mb-1"
-            >
-              Employee Name
-            </label>
-            <input
-              id="employeeName"
-              name="employeeName"
-              type="text"
-              value={employeeName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Employee Name"
-              required
-            />
-          </div>
-
-          {/* Employee ID */}
-          <div>
-            <label
-              htmlFor="employeeId"
-              className="block text-sm font-medium mb-1"
-            >
-              Employee ID
-            </label>
-            <input
-              id="employeeId"
-              name="employeeId"
-              type="text"
-              value={employeeId}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Employee ID"
-              required
-            />
-          </div>
-
-          {/* Month */}
-          <div>
-            <label
-              htmlFor="month"
-              className="block text-sm font-medium mb-1"
-            >
-              Month
-            </label>
-            <select
-              id="month"
-              name="month"
-              value={month}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              <option value="" disabled>
-                Select Month
-              </option>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Year */}
-          <div>
-            <label
-              htmlFor="year"
-              className="block text-sm font-medium mb-1"
-            >
-              Year
-            </label>
-            <select
-              id="year"
-              name="year"
-              value={year}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              <option value="" disabled>
-                Select Year
-              </option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Salary */}
-          <div>
-            <label
-              htmlFor="salary"
-              className="block text-sm font-medium mb-1"
-            >
-              Salary
-            </label>
-            <input
-              id="salary"
-              name="salary"
-              type="number"
-              min={0}
-              step="0.01"
-              value={salary}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Salary"
-              required
-            />
-          </div>
-
-          {/* Advance */}
-          <div>
-            <label
-              htmlFor="advance"
-              className="block text-sm font-medium mb-1"
-            >
-              Advance
-            </label>
-            <input
-              id="advance"
-              name="advance"
-              type="number"
-              min={0}
-              step="0.01"
-              value={advance}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Advance"
-            />
-          </div>
-
-          {/* Deduction */}
-          <div>
-            <label
-              htmlFor="deduction"
-              className="block text-sm font-medium mb-1"
-            >
-              Deduction
-            </label>
-            <input
-              id="deduction"
-              name="deduction"
-              type="number"
-              min={0}
-              step="0.01"
-              value={deduction}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Deduction"
-            />
-          </div>
-
-          {/* Net Salary (readonly) */}
-          <div>
-            <label
-              htmlFor="netSalary"
-              className="block text-sm font-medium mb-1"
-            >
-              Net Salary
-            </label>
-            <input
-              id="netSalary"
-              name="netSalary"
-              type="text"
-              value={netSalary}
-              readOnly
-              className="w-full border border-input rounded px-3 py-2 bg-background cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Net Salary"
-            />
-          </div>
-
-          {/* Payment Status */}
-          <div>
-            <label
-              htmlFor="paymentStatus"
-              className="block text-sm font-medium mb-1"
-            >
-              Payment Status
-            </label>
-            <select
-              id="paymentStatus"
-              name="paymentStatus"
-              value={paymentStatus}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              <option value="Paid">Paid</option>
-              <option value="Unpaid">Unpaid</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Employee Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Employee ID
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Month
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Year
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Salary
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Advance
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Deduction
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Net Salary
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Payment Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={11}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No records found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((record, idx) => (
-                <tr
-                  key={record.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {record.employeeName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {record.employeeId}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {record.month}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {record.year}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${record.salary.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${record.advance.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${record.deduction.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${record.netSalary.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        record.paymentStatus === "Paid"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {record.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(record.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit record ${record.employeeName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(record.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete record ${record.employeeName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Employee Salary
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Employee Name */}
-              <div>
-                <label
-                  htmlFor="editEmployeeName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Employee Name
-                </label>
-                <input
-                  type="text"
-                  id="editEmployeeName"
-                  name="employeeName"
-                  value={editForm.employeeName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Employee Name"
-                />
-              </div>
-
-              {/* Employee ID */}
-              <div>
-                <label
-                  htmlFor="editEmployeeId"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Employee ID
-                </label>
-                <input
-                  type="text"
-                  id="editEmployeeId"
-                  name="employeeId"
-                  value={editForm.employeeId}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Employee ID"
-                />
-              </div>
-
-              {/* Month */}
-              <div>
-                <label
-                  htmlFor="editMonth"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Month
-                </label>
-                <select
-                  id="editMonth"
-                  name="month"
-                  value={editForm.month}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="" disabled>
-                    Select Month
-                  </option>
-                  {months.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Year */}
-              <div>
-                <label
-                  htmlFor="editYear"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Year
-                </label>
-                <select
-                  id="editYear"
-                  name="year"
-                  value={editForm.year}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="" disabled>
-                    Select Year
-                  </option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Salary */}
-              <div>
-                <label
-                  htmlFor="editSalary"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Salary
-                </label>
-                <input
-                  type="number"
-                  id="editSalary"
-                  name="salary"
-                  min={0}
-                  step="0.01"
-                  value={editForm.salary}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Salary"
-                />
-              </div>
-
-              {/* Advance */}
-              <div>
-                <label
-                  htmlFor="editAdvance"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Advance
-                </label>
-                <input
-                  type="number"
-                  id="editAdvance"
-                  name="advance"
-                  min={0}
-                  step="0.01"
-                  value={editForm.advance}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Advance"
-                />
-              </div>
-
-              {/* Deduction */}
-              <div>
-                <label
-                  htmlFor="editDeduction"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Deduction
-                </label>
-                <input
-                  type="number"
-                  id="editDeduction"
-                  name="deduction"
-                  min={0}
-                  step="0.01"
-                  value={editForm.deduction}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Deduction"
-                />
-              </div>
-
-              {/* Net Salary (readonly) */}
-              <div>
-                <label
-                  htmlFor="editNetSalary"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Net Salary
-                </label>
-                <input
-                  type="text"
-                  id="editNetSalary"
-                  name="netSalary"
-                  value={editForm.netSalary}
-                  readOnly
-                  className="w-full border border-input rounded px-3 py-2 bg-background cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Net Salary"
-                />
-              </div>
-
-              {/* Payment Status */}
-              <div>
-                <label
-                  htmlFor="editPaymentStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Payment Status
-                </label>
-                <select
-                  id="editPaymentStatus"
-                  name="paymentStatus"
-                  value={editForm.paymentStatus}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="Paid">Paid</option>
-                  <option value="Unpaid">Unpaid</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Employee Salary"
+      description="Manage employee salary records."
+      icon="fa fa fa-rupee-sign"
+      onAddClick={() => {
+        setForm({
+          id: 0,
+          employeeName: "",
+          employeeId: "",
+          month: MONTHS[0],
+          year: new Date().getFullYear().toString(),
+          salary: 0,
+          advance: 0,
+          deduction: 0,
+          netSalary: 0,
+          paymentStatus: "Paid",
+        });
+        setFormMode("add");
+      }}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={searchText}
+      onSearchChange={(e) => {
+        setSearchText(e.target.value);
+        setCurrentPage(1);
+        console.log("EmployeeSalary handleSearchChange:", { searchText: e.target.value });
+      }}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Salary" : "Edit Salary"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      customFilters={customFilters}
+    />
   );
 }
