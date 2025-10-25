@@ -1,50 +1,54 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { STORES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
-const stores = ["Main Store", "Outlet 1", "Outlet 2", "Outlet 3"];
-const statuses = ["All", "Completed", "Pending"];
+interface StockTransferItem {
+  id: number;
+  date: string;
+  referenceNo: string;
+  fromStore: string;
+  toStore: string;
+  product: string;
+  quantity: number;
+  status: string;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: StockTransferItem) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function StockTransfer() {
-  // Pagination state
+  const [data, setData] = useState<StockTransferItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-
-  // Filters and form state
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [filterFromStore, setFilterFromStore] = useState("");
   const [filterToStore, setFilterToStore] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [searchRef, setSearchRef] = useState("");
-
-  // Form inputs for new stock transfer
-  const [formDate, setFormDate] = useState("");
-  const [formReferenceNo, setFormReferenceNo] = useState("");
-  const [formFromStore, setFormFromStore] = useState("");
-  const [formToStore, setFormToStore] = useState("");
-  const [formProduct, setFormProduct] = useState("");
-  const [formQuantity, setFormQuantity] = useState("");
-  const [formStatus, setFormStatus] = useState("Pending");
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<StockTransferItem>({
+    id: 0,
     date: "",
     referenceNo: "",
     fromStore: "",
     toStore: "",
     product: "",
-    quantity: "",
+    quantity: 0,
     status: "Pending",
   });
-  const [editId, setEditId] = useState<number | null>(null);
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("StockTransfer");
+    const response = await apiService.get<StockTransferItem[]>("StockTransfer");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -54,681 +58,296 @@ export default function StockTransfer() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filtered and searched data memoized
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchFromStore = filterFromStore
-        ? item.fromStore === filterFromStore
-        : true;
-      const matchToStore = filterToStore ? item.toStore === filterToStore : true;
-      const matchStatus =
-        filterStatus === "All" ? true : item.status === filterStatus;
-      const matchRef = searchRef
-        ? item.referenceNo.toLowerCase().includes(searchRef.toLowerCase())
-        : true;
-      return matchFromStore && matchToStore && matchStatus && matchRef;
+      const matchFromStore = !filterFromStore || item.fromStore === filterFromStore;
+      const matchToStore = !filterToStore || item.toStore === filterToStore;
+      const matchStatus = item.status === "Pending" || item.status === "Completed"; // Default filter behavior
+      return matchFromStore && matchToStore && matchStatus;
     });
-  }, [data, filterFromStore, filterToStore, filterStatus, searchRef]);
+  }, [data, filterFromStore, filterToStore]);
 
-  // Handlers for Add Section form inputs
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { id, value } = e.target;
-    switch (id) {
-      case "date":
-        setFormDate(value);
-        break;
-      case "referenceNo":
-        setFormReferenceNo(value);
-        break;
-      case "fromStore":
-        setFormFromStore(value);
-        break;
-      case "toStore":
-        setFormToStore(value);
-        break;
-      case "product":
-        setFormProduct(value);
-        break;
-      case "quantity":
-        setFormQuantity(value);
-        break;
-      case "status":
-        setFormStatus(value);
-        break;
-      default:
-        break;
-    }
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: ["quantity"].includes(name) ? parseInt(value) || 0 : value,
+    }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [id]: value }));
-  };
-
-  // Save handler for Add Section (Add new stock transfer)
-  const handleSave = () => {
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (
-      !formDate ||
-      !formReferenceNo.trim() ||
-      !formFromStore ||
-      !formToStore ||
-      !formProduct.trim() ||
-      !formQuantity
+      !form.date ||
+      !form.referenceNo.trim() ||
+      !form.fromStore ||
+      !form.toStore ||
+      !form.product.trim() ||
+      form.quantity <= 0
     ) {
-      alert("Please fill all fields.");
+      alert("Please fill all fields with valid data (quantity must be positive).");
       return;
     }
-    const newEntry = {
-      id: data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1,
-      date: formDate,
-      referenceNo: formReferenceNo.trim(),
-      fromStore: formFromStore,
-      toStore: formToStore,
-      product: formProduct.trim(),
-      quantity: Number(formQuantity),
-      status: formStatus,
-    };
-    setData([newEntry, ...data]);
-    // Reset form
-    setFormDate("");
-    setFormReferenceNo("");
-    setFormFromStore("");
-    setFormToStore("");
-    setFormProduct("");
-    setFormQuantity("");
-    setFormStatus("Pending");
-    setCurrentPage(1);
+    if (form.fromStore === form.toStore) {
+      alert("From Store and To Store cannot be the same.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [{ ...form, id: newId }, ...prev]);
+      setCurrentPage(1);
+    } else if (formMode === "edit" && form.id !== 0) {
+      setData((prev) =>
+        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
+      );
+    }
+    setFormMode(null);
+    setForm({
+      id: 0,
+      date: "",
+      referenceNo: "",
+      fromStore: "",
+      toStore: "",
+      product: "",
+      quantity: 0,
+      status: "Pending",
+    });
   };
 
-  // Open edit modal and populate edit form
   const handleEdit = (id: number) => {
     const item = data.find((d) => d.id === id);
     if (item) {
-      setEditForm({
-        date: item.date,
-        referenceNo: item.referenceNo,
-        fromStore: item.fromStore,
-        toStore: item.toStore,
-        product: item.product,
-        quantity: item.quantity.toString(),
-        status: item.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
+      setForm(item);
+      setFormMode("edit");
     }
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.date ||
-      !editForm.referenceNo.trim() ||
-      !editForm.fromStore ||
-      !editForm.toStore ||
-      !editForm.product.trim() ||
-      !editForm.quantity
-    ) {
-      alert("Please fill all fields.");
-      return;
-    }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                date: editForm.date,
-                referenceNo: editForm.referenceNo.trim(),
-                fromStore: editForm.fromStore,
-                toStore: editForm.toStore,
-                product: editForm.product.trim(),
-                quantity: Number(editForm.quantity),
-                status: editForm.status,
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this transfer?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
-  // Delete handler (no delete button in original destination, so no delete functionality added)
-
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
     setFilterFromStore("");
     setFilterToStore("");
-    setFilterStatus("All");
-    setSearchRef("");
     setCurrentPage(1);
   };
 
-  function handleReport() {
-    alert("Report generation is not implemented in this demo.");
-  }
+  const handleReport = () => {
+    alert("Stock Transfer Report:\n\n" + JSON.stringify(filteredData, null, 2));
+  };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const columns: Column[] = [
+    { key: "date", label: "Date", align: "left" },
+    { key: "referenceNo", label: "Reference No", align: "left" },
+    { key: "fromStore", label: "From Store", align: "left" },
+    { key: "toStore", label: "To Store", align: "left" },
+    { key: "product", label: "Product", align: "left" },
+    { key: "quantity", label: "Quantity", align: "right", render: (v) => `${v}` },
+    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+     
+  ];
+
+  const rowActions = (row: StockTransferItem) => (
+    <>
+      <button
+        onClick={() => handleEdit(row.id)}
+        aria-label={`Edit stock transfer ${row.referenceNo}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete stock transfer ${row.referenceNo}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
+
+  const customFilters = () => (
+    <div className="flex flex-row gap-2 mb-4 flex-wrap items-center">
+      <select
+        value={filterFromStore}
+        onChange={(e) => {
+          setFilterFromStore(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="From Store"
+      >
+        <option value="">From Store</option>
+        {STORES.map((store) => (
+          <option key={store} value={store}>
+            {store}
+          </option>
+        ))}
+      </select>
+      <select
+        value={filterToStore}
+        onChange={(e) => {
+          setFilterToStore(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="To Store"
+      >
+        <option value="">To Store</option>
+        {STORES.map((store) => (
+          <option key={store} value={store}>
+            {store}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Date <span className="text-destructive">*</span></label>
+        <input
+          type="date"
+          name="date"
+          value={form.date}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Reference No <span className="text-destructive">*</span></label>
+        <input
+          type="text"
+          name="referenceNo"
+          value={form.referenceNo}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          placeholder="Enter reference no"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">From Store <span className="text-destructive">*</span></label>
+        <select
+          name="fromStore"
+          value={form.fromStore}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          required
+        >
+          <option value="" disabled>Select store</option>
+          {STORES.map((store) => (
+            <option key={store} value={store}>{store}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">To Store <span className="text-destructive">*</span></label>
+        <select
+          name="toStore"
+          value={form.toStore}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          required
+        >
+          <option value="" disabled>Select store</option>
+          {STORES.map((store) => (
+            <option key={store} value={store}>{store}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Product <span className="text-destructive">*</span></label>
+        <input
+          type="text"
+          name="product"
+          value={form.product}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          placeholder="Enter product name"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Quantity <span className="text-destructive">*</span></label>
+        <input
+          type="number"
+          name="quantity"
+          min={1}
+          value={form.quantity}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          placeholder="Enter quantity"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Status <span className="text-destructive">*</span></label>
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          required
+        >
+          {STATUSES.filter((s) => s !== "All").map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">Stock Transfer</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Stock Transfer</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          noValidate
-        >
-          <div>
-            <label
-              htmlFor="date"
-              className="block text-sm font-medium mb-1"
-            >
-              Date
-            </label>
-            <input
-              type="date"
-              id="date"
-              value={formDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="referenceNo"
-              className="block text-sm font-medium mb-1"
-            >
-              Reference No
-            </label>
-            <input
-              type="text"
-              id="referenceNo"
-              value={formReferenceNo}
-              onChange={handleInputChange}
-              placeholder="Enter reference no"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="fromStore"
-              className="block text-sm font-medium mb-1"
-            >
-              From Store
-            </label>
-            <select
-              id="fromStore"
-              value={formFromStore}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              <option value="" disabled>
-                Select store
-              </option>
-              {stores.map((store) => (
-                <option key={store} value={store}>
-                  {store}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="toStore"
-              className="block text-sm font-medium mb-1"
-            >
-              To Store
-            </label>
-            <select
-              id="toStore"
-              value={formToStore}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              <option value="" disabled>
-                Select store
-              </option>
-              {stores.map((store) => (
-                <option key={store} value={store}>
-                  {store}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="product"
-              className="block text-sm font-medium mb-1"
-            >
-              Product
-            </label>
-            <input
-              type="text"
-              id="product"
-              value={formProduct}
-              onChange={handleInputChange}
-              placeholder="Enter product name"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="quantity"
-              className="block text-sm font-medium mb-1"
-            >
-              Quantity
-            </label>
-            <input
-              type="number"
-              id="quantity"
-              min={1}
-              value={formQuantity}
-              onChange={handleInputChange}
-              placeholder="Enter quantity"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              value={formStatus}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            >
-              {statuses
-                .filter((s) => s !== "All")
-                .map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="md:col-span-4 flex justify-end items-end">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Filters and Actions */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Stock Transfer List</h2>
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0 mb-4">
-          <input
-            type="text"
-            placeholder="Search Reference No"
-            value={searchRef}
-            onChange={(e) => setSearchRef(e.target.value)}
-            className="border border-input rounded px-3 py-2 w-full md:w-1/4 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <select
-            value={filterFromStore}
-            onChange={(e) => setFilterFromStore(e.target.value)}
-            className="border border-input rounded px-3 py-2 w-full md:w-1/5 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">From Store (All)</option>
-            {stores.map((store) => (
-              <option key={store} value={store}>
-                {store}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filterToStore}
-            onChange={(e) => setFilterToStore(e.target.value)}
-            className="border border-input rounded px-3 py-2 w-full md:w-1/5 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">To Store (All)</option>
-            {stores.map((store) => (
-              <option key={store} value={store}>
-                {store}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="border border-input rounded px-3 py-2 w-full md:w-1/6 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            title="Clear Filters"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            title="Generate Report"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Reference No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  From Store
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  To Store
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Product
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Quantity
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No stock transfer records found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                  >
-                    <td className="px-4 py-2 whitespace-nowrap">{item.date}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.referenceNo}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.fromStore}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.toStore}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.product}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-right">{item.quantity}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                          item.status === "Completed"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-center space-x-2 whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(item.id)}
-                        aria-label={`Edit stock transfer ${item.referenceNo}`}
-                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-                      >
-                        <i className="fa fa-edit fa-light" aria-hidden="true"></i>
-                        <span className="sr-only">Edit record</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Stock Transfer
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="date"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Date
-                </label>
-                <input
-                  type="date"
-                  id="date"
-                  value={editForm.date}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="referenceNo"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Reference No
-                </label>
-                <input
-                  type="text"
-                  id="referenceNo"
-                  value={editForm.referenceNo}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="fromStore"
-                  className="block text-sm font-medium mb-1"
-                >
-                  From Store
-                </label>
-                <select
-                  id="fromStore"
-                  value={editForm.fromStore}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="" disabled>
-                    Select store
-                  </option>
-                  {stores.map((store) => (
-                    <option key={store} value={store}>
-                      {store}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="toStore"
-                  className="block text-sm font-medium mb-1"
-                >
-                  To Store
-                </label>
-                <select
-                  id="toStore"
-                  value={editForm.toStore}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="" disabled>
-                    Select store
-                  </option>
-                  {stores.map((store) => (
-                    <option key={store} value={store}>
-                      {store}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="product"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Product
-                </label>
-                <input
-                  type="text"
-                  id="product"
-                  value={editForm.product}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="quantity"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  id="quantity"
-                  min={1}
-                  value={editForm.quantity}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statuses
-                    .filter((s) => s !== "All")
-                    .map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Stock Transfer"
+      description="Manage stock transfers between stores."
+      icon="fa fa-exchange-alt"
+      onAddClick={() => {
+        setForm({
+          id: 0,
+          date: new Date().toISOString().slice(0, 10), // Today: 2025-10-25
+          referenceNo: "",
+          fromStore: "",
+          toStore: "",
+          product: "",
+          quantity: 0,
+          status: "Pending",
+        });
+        setFormMode("add");
+      }}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Stock Transfer" : "Edit Stock Transfer"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      customFilters={customFilters} 
+    />
   );
 }

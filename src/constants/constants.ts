@@ -172,4 +172,50 @@ export const TAX_TYPE_OPTIONS = [ "VAT", "GST", "Sales Tax"] as const;
 
 export const TAX_OPTIONS = ["Exclusive", "Inclusive"] as const;
   
+//from screen - to be removed later
 export const CATEGORIES = ["Computers","Groceries","Electronics","Apparel","Books","Furniture"] as const;
+
+//from screen - to be removed later
+export const UNITS = ["Piece", "Box", "Packet", "Kg"] as const;
+
+export const SUPPLIERS = [
+  "All Suppliers",
+  "Apple Inc.",
+  "Samsung",
+  "Sony",
+  "Dell",
+  "Logitech",
+  "Canon",
+  "HP",
+  "Bose",
+  "Microsoft",
+  "Google",
+  "JBL",
+] as const;
+
+export const WAREHOUSES = ["Main Warehouse", "Secondary Warehouse", "Remote Warehouse"] as const;
+
+export const STORES = ["Main Store", "Outlet 1", "Outlet 2", "Outlet 3"] as const;
+
+export const PAYMENT_TYPES = ["Cash", "Cheque"] as const;
+
+export const EXPENSE_HEADS = [
+  "Office Rent",
+  "Electricity Bill",
+  "Internet",
+  "Stationery",
+  "Travel",
+  "Maintenance",
+  "Software Subscription",
+  "Cleaning",
+  "Miscellaneous",
+  "Snacks",
+  "Printing",
+  "Courier",
+] as const;
+
+export const INCOME_CATEGORIES = ["All", "Sales", "Service"] as const;
+
+export const ACCOUNTS = ["Cash", "Bank"] as const;
+
+export const CURRENCIES = ["USD", "INR", "EUR"] as const;

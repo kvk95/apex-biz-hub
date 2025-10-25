@@ -53,14 +53,14 @@ function MenuItemComponent({
   const sidebarHsl = theme.sidebarColor ?? "0 0% 100%";
   const sidebarLightness = parseFloat(sidebarHsl.split(" ")[2]);
   // Use a different hover color if the sidebar is dark
-  const hoverBgClass = sidebarLightness < 50 
-    ? "hover:bg-white/10" // Lighter hover for dark backgrounds
-    : "hover:bg-[hsl(var(--primary)/0.1)]"; // Default for light backgrounds
-  
+  const hoverBgClass =
+    sidebarLightness < 50
+      ? "hover:bg-white/10" // Lighter hover for dark backgrounds
+      : "hover:bg-[hsl(var(--primary)/0.1)]"; // Default for light backgrounds
+
   // Determine if the item text should be light (if sidebar is dark)
   const isSidebarDark = sidebarLightness < 50;
-  const defaultTextColor = isSidebarDark ? 'text-white' : 'text-gray-800';
-
+  const defaultTextColor = isSidebarDark ? "text-white" : "text-gray-800";
 
   if (item.items && item.items.length > 0) {
     return (
@@ -167,6 +167,9 @@ export function AppSidebar() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const { theme } = useTheme();
 
+  // Get sidebar open/collapsed state
+  const isOpen = state === "expanded";
+
   useEffect(() => {
     fetch("/data/menuItems.json")
       .then((res) => res.json())
@@ -226,31 +229,40 @@ export function AppSidebar() {
       ? "hsl(0 0% 98%)" // Light text for dark sidebar
       : "hsl(240 10% 3.9%)"; // Dark text for light sidebar
 
-
   return (
     <Sidebar
       collapsible="icon"
       className="border-r border-gray-200"
       // Apply primary sidebar color and border from theme to the main wrapper
-      style={sidebarStyle} 
+      style={sidebarStyle}
     >
       {/* 2. Apply theme-based background and remove fixed 'bg-white' from SidebarContent */}
-      <SidebarContent 
-        className="flex flex-col"
-        style={sidebarStyle} 
-      >
+      <SidebarContent className="flex flex-col" style={sidebarStyle}>
         {/* 3. Apply theme-based background and text color to the sticky header */}
         <div
           className="h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 px-4"
-          style={{ 
+          style={{
             backgroundColor: `hsl(${sidebarHsl})`,
             color: contentTextColor,
             // Ensure border is visible against the sidebar color
-            borderColor: sidebarLightness < 50 ? 'hsl(0 0% 30%)' : 'hsl(240 5% 90%)' 
+            borderColor:
+              sidebarLightness < 50 ? "hsl(0 0% 30%)" : "hsl(240 5% 90%)",
           }}
         >
-          <h1 className="font-bold text-xl" style={{ color: contentTextColor }}>
-            NyaBuy POS
+          <h1
+            className="font-bold text-xl flex items-center"
+            style={{ color: contentTextColor }}
+          >       
+            <i
+                className="fa fa-shopping-bag text-2xl"
+                aria-hidden="true"
+                style={{ color: contentTextColor }}
+              />
+            {isOpen ? (
+              <span className="ml-3">NyaBuy POS</span>
+            ) : (
+              ""
+            )}
           </h1>
         </div>
         <div className="overflow-y-auto flex-1 custom-scroll1">

@@ -129,7 +129,7 @@ export default function ProductDetails() {
       description={`Manage product details for ${
         form.productName || "a new product"
       }`}
-      icon="fa fa-box"
+      icon="fa fa-plus-square"
       onRefresh={() => {
         if (mode !== "view") {
           setForm({

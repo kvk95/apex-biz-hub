@@ -135,12 +135,6 @@
       "unitCost": 24,
       "totalCost": 528,
       "reason": "Lost"
-    },
-    "Damaged",
-    "Expired",
-    "Lost",
-    "Theft",
-    "Adjustment",
-    "Other"
+    } 
   ]
 }

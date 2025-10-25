@@ -1,39 +1,58 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { WAREHOUSES } from "@/constants/constants";
 
-const reasons = ["Damaged", "Expired", "Lost", "Theft", "Adjustment", "Other"];
+interface StockAdjustmentItem {
+  id: number;
+  productName: string;
+  sku: string;
+  stockInHand: number;
+  stockAdjusted: number;
+  stockAfterAdjustment: number;
+  unitCost: number;
+  totalCost: number;
+  notes?: string; // Added to replace Reason
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: StockAdjustmentItem) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 const StockAdjustment: React.FC = () => {
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(6);
-
-  // Data state
-  const [rows, setRows] = useState([]);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<StockAdjustmentItem[]>([]);
+  const [rows, setRows] = useState<StockAdjustmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Form state
-  const [adjustmentDate, setAdjustmentDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState<StockAdjustmentItem>({
+    id: 0,
+    productName: "",
+    sku: "",
+    stockInHand: 0,
+    stockAdjusted: 0,
+    stockAfterAdjustment: 0,
+    unitCost: 0,
+    totalCost: 0,
+    notes: "",
   });
-  const [referenceNo, setReferenceNo] = useState("REF-123456");
-  const [warehouse, setWarehouse] = useState("Main Warehouse");
-  const [note, setNote] = useState("");
 
-  // Modal state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editRow, setEditRow] = useState(null);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("StockAdjustment");
+    const response = await apiService.get<StockAdjustmentItem[]>("StockAdjustment");
     if (response.status.code === "S") {
-      setData(response.result);
-      setRows(response.result);
+      setData(response.result.map((item) => ({ ...item, notes: item.notes || "" })));
+      setRows(response.result.map((item) => ({ ...item, notes: item.notes || "" })));
       setError(null);
     } else {
       setError(response.status.description);
@@ -41,20 +60,163 @@ const StockAdjustment: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) =>
+      row.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
 
-  // Paginated data
   const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return rows.slice(start, start + itemsPerPage);
-  }, [currentPage, rows, itemsPerPage]);
+    return filteredRows.slice(start, start + itemsPerPage);
+  }, [filteredRows, currentPage, itemsPerPage]);
 
-  // Handlers
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const newForm = {
+        ...prev,
+        [name]: ["stockAdjusted", "unitCost", "totalCost", "stockInHand"].includes(name)
+          ? parseFloat(value) || 0
+          : value,
+      };
+      if (name === "stockAdjusted") {
+        newForm.stockAfterAdjustment = prev.stockInHand + (parseFloat(value) || 0);
+        newForm.totalCost = newForm.stockAfterAdjustment * prev.unitCost;
+      } else if (name === "unitCost") {
+        newForm.totalCost = prev.stockAfterAdjustment * (parseFloat(value) || 0);
+      }
+      return newForm;
+    });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.productName.trim() || !form.sku.trim()) {
+      alert("Product Name and SKU are required.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
+      setData((prev) => [...prev, { ...form, id: newId }]);
+      setRows((prev) => [...prev, { ...form, id: newId }]);
+      const totalPages = Math.ceil((filteredRows.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== 0) {
+      setData((prev) =>
+        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
+      );
+      setRows((prev) =>
+        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
+      );
+    }
+    setFormMode(null);
+    setForm({
+      id: 0,
+      productName: "",
+      sku: "",
+      stockInHand: 0,
+      stockAdjusted: 0,
+      stockAfterAdjustment: 0,
+      unitCost: 0,
+      totalCost: 0,
+      notes: "",
+    });
+  };
+
+  const handleEdit = (row: StockAdjustmentItem) => {
+    setForm(row);
+    setFormMode("edit");
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this adjustment?")) {
+      setData((prev) => prev.filter((d) => d.id !== id));
+      setRows((prev) => prev.filter((d) => d.id !== id));
+      if ((currentPage - 1) * itemsPerPage >= filteredRows.length - 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  const handleClear = () => {
+    setRows(data);
+    setCurrentPage(1);
+    // Reset form fields to initial state
+    setForm({
+      id: 0,
+      productName: "",
+      sku: "",
+      stockInHand: 0,
+      stockAdjusted: 0,
+      stockAfterAdjustment: 0,
+      unitCost: 0,
+      totalCost: 0,
+      notes: "",
+    });
+  };
+
+  const handleReport = () => {
+    alert("Stock Adjustment Report:\n\n" + JSON.stringify(filteredRows, null, 2));
+  };
+
+  const showNote = (row: StockAdjustmentItem) => {
+    alert(row.notes || "No notes available.");
+  };
+
+  const columns: Column[] = [
+    { key: "productName", label: "Product Name", align: "left" },
+    { key: "sku", label: "SKU", align: "left" },
+    { key: "stockInHand", label: "Stock In Hand", align: "right" },
+    { key: "stockAdjusted", label: "Stock Adjusted", align: "right", render: (v, row) => (
+      <input
+        type="number"
+        value={v}
+        onChange={(e) => handleStockAdjustedChange(row.id, e.target.value)}
+        className="w-20 border border-input rounded px-2 py-1 text-right bg-background focus:ring-2 focus:ring-ring"
+        min={-row.stockInHand}
+        title="Enter stock adjustment (negative or positive)"
+      />
+    )},
+    { key: "stockAfterAdjustment", label: "Stock After Adjustment", align: "right" },
+    { key: "unitCost", label: "Unit Cost", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    { key: "totalCost", label: "Total Cost", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+
+  ];
+
+  const rowActions = (row: StockAdjustmentItem) => (
+    <>
+    <button
+        onClick={() => showNote(row)}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center"
+      >
+        <i className="fa fa-sticky-note" aria-hidden="true"></i>
+        <span className="sr-only">View Notes</span>
+      </button>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.productName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.productName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
+
   const handleStockAdjustedChange = (id: number, value: string) => {
-    const val = parseInt(value, 10);
-    if (isNaN(val)) return;
+    const val = parseInt(value, 10) || 0;
     setRows((prev) =>
       prev.map((r) =>
         r.id === id
@@ -69,410 +231,165 @@ const StockAdjustment: React.FC = () => {
     );
   };
 
-  const handleReasonChange = (id: number, value: string) => {
-    setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, reason: value } : r))
-    );
-  };
+  const customFilters = () => (
+    <div className="flex flex-row gap-2 flex-wrap items-center">
+      <input
+        type="text"
+        placeholder="Search Product Name or SKU"
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search Product Name or SKU"
+      />
+    </div>
+  );
 
-  const handleClear = () => {
-    setRows(data);
-    setAdjustmentDate(new Date().toISOString().slice(0, 10));
-    setReferenceNo("REF-123456");
-    setWarehouse("Main Warehouse");
-    setNote("");
-    setCurrentPage(1);
-  };
-
-  const handleSave = () => {
-    alert("Stock adjustment saved successfully!");
-  };
-
-  const handleReport = () => {
-    alert("Report generated!");
-  };
-
-  const handleEdit = (row) => {
-    setEditRow(row);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditSave = () => {
-    if (!editRow) return;
-    setRows((prev) =>
-      prev.map((r) => (r.id === editRow.id ? { ...editRow } : r))
-    );
-    setIsEditModalOpen(false);
-  };
-
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false);
-    setEditRow(null);
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        {/* Page Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-lg font-semibold text-muted-foreground">
-            Stock Adjustment
-          </h1>
-          <div className="flex gap-3">
-            <button
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Report"
-              type="button"
-            >
-              <i className="fa fa-file-text fa-light mr-2" aria-hidden="true"></i>
-              Report
-            </button>
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-              type="button"
-            >
-              <i className="fa fa-refresh fa-light mr-2" aria-hidden="true"></i>
-              Clear
-            </button>
-          </div>
-        </div>
-
-        {/* Adjustment Info Section */}
-        <section className="bg-card rounded shadow p-6 mb-6">
-          <form className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label
-                htmlFor="adjustmentDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Adjustment Date
-              </label>
-              <input
-                id="adjustmentDate"
-                type="date"
-                value={adjustmentDate}
-                onChange={(e) => setAdjustmentDate(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="referenceNo"
-                className="block text-sm font-medium mb-1"
-              >
-                Reference No
-              </label>
-              <input
-                id="referenceNo"
-                type="text"
-                value={referenceNo}
-                onChange={(e) => setReferenceNo(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="warehouse"
-                className="block text-sm font-medium mb-1"
-              >
-                Warehouse
-              </label>
-              <select
-                id="warehouse"
-                value={warehouse}
-                onChange={(e) => setWarehouse(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option>Main Warehouse</option>
-                <option>Secondary Warehouse</option>
-                <option>Remote Warehouse</option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="note"
-                className="block text-sm font-medium mb-1"
-              >
-                Note
-              </label>
-              <textarea
-                id="note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={1}
-                className="w-full border border-input rounded px-3 py-2 bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-          </form>
-        </section>
-
-        {/* Stock Adjustment Table */}
-        <section className="bg-card rounded shadow py-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                    Product Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                    SKU
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                    Stock In Hand
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                    Stock Adjusted
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                    Stock After Adjustment
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                    Unit Cost
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                    Total Cost
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                    Reason
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRows.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={9}
-                      className="text-center px-4 py-6 text-muted-foreground italic"
-                    >
-                      No records found.
-                    </td>
-                  </tr>
-                )}
-                {paginatedRows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                  >
-                    <td className="px-4 py-2">{row.productName}</td>
-                    <td className="px-4 py-2">{row.sku}</td>
-                    <td className="px-4 py-2 text-right">{row.stockInHand}</td>
-                    <td className="px-4 py-2 text-right">
-                      <input
-                        type="number"
-                        value={row.stockAdjusted}
-                        onChange={(e) =>
-                          handleStockAdjustedChange(row.id, e.target.value)
-                        }
-                        className="w-20 border border-input rounded px-2 py-1 text-right bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                        min={-row.stockInHand}
-                        title="Enter stock adjustment (negative or positive)"
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {row.stockAfterAdjustment}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      ₹{row.unitCost.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      ₹{row.totalCost.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2">
-                      <select
-                        value={row.reason}
-                        onChange={(e) => handleReasonChange(row.id, e.target.value)}
-                        className="border border-input rounded px-2 py-1 w-full bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        {reasons.map((reason) => (
-                          <option key={reason} value={reason}>
-                            {reason}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-2 text-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(row)}
-                        aria-label={`Edit ${row.productName}`}
-                        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-                      >
-                        <i className="fa fa-edit fa-light" aria-hidden="true"></i>
-                        <span className="sr-only">Edit record</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={rows.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
-          />
-        </section>
-
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 mt-4">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            title="Save"
-          >
-            <i className="fa fa-save fa-light mr-2" aria-hidden="true"></i>
-            Save
-          </button>
-        </div>
-
-        {/* Edit Modal */}
-        {isEditModalOpen && editRow && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-modal-title"
-          >
-            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-              <h2
-                id="edit-modal-title"
-                className="text-xl font-semibold mb-4 text-center"
-              >
-                Edit Stock Adjustment
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Product Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editRow.productName}
-                    onChange={(e) =>
-                      setEditRow({ ...editRow, productName: e.target.value })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">SKU</label>
-                  <input
-                    type="text"
-                    value={editRow.sku}
-                    onChange={(e) =>
-                      setEditRow({ ...editRow, sku: e.target.value })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Stock In Hand
-                  </label>
-                  <input
-                    type="number"
-                    value={editRow.stockInHand}
-                    onChange={(e) =>
-                      setEditRow({
-                        ...editRow,
-                        stockInHand: parseInt(e.target.value, 10),
-                      })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Stock Adjusted
-                  </label>
-                  <input
-                    type="number"
-                    value={editRow.stockAdjusted}
-                    onChange={(e) =>
-                      setEditRow({
-                        ...editRow,
-                        stockAdjusted: parseInt(e.target.value, 10),
-                        stockAfterAdjustment:
-                          editRow.stockInHand + parseInt(e.target.value, 10),
-                        totalCost:
-                          (editRow.stockInHand + parseInt(e.target.value, 10)) *
-                          editRow.unitCost,
-                      })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Unit Cost
-                  </label>
-                  <input
-                    type="number"
-                    value={editRow.unitCost}
-                    onChange={(e) =>
-                      setEditRow({
-                        ...editRow,
-                        unitCost: parseFloat(e.target.value),
-                        totalCost:
-                          editRow.stockAfterAdjustment *
-                          parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Reason
-                  </label>
-                  <select
-                    value={editRow.reason}
-                    onChange={(e) =>
-                      setEditRow({ ...editRow, reason: e.target.value })
-                    }
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {reasons.map((reason) => (
-                      <option key={reason} value={reason}>
-                        {reason}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={handleEditCancel}
-                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditSave}
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Product Name <span className="text-destructive">*</span></label>
+        <input
+          type="text"
+          name="productName"
+          value={form.productName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          placeholder="Enter product name"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">SKU <span className="text-destructive">*</span></label>
+        <input
+          type="text"
+          name="sku"
+          value={form.sku}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          placeholder="Enter SKU"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Stock In Hand</label>
+        <input
+          type="number"
+          name="stockInHand"
+          value={form.stockInHand}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Stock Adjusted</label>
+        <input
+          type="number"
+          name="stockAdjusted"
+          value={form.stockAdjusted}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Unit Cost</label>
+        <input
+          type="number"
+          step="0.01"
+          name="unitCost"
+          value={form.unitCost}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Notes</label>
+        <textarea
+          name="notes"
+          value={form.notes || ""}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring resize-y"
+          placeholder="Enter notes"
+        />
       </div>
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Stock Adjustment"
+      description="Manage stock adjustments."
+      icon="fa fa fa-sliders-h"
+      onAddClick={() => {
+        setForm({
+          id: 0,
+          productName: "",
+          sku: "",
+          stockInHand: 0,
+          stockAdjusted: 0,
+          stockAfterAdjustment: 0,
+          unitCost: 0,
+          totalCost: 0,
+          notes: "",
+        });
+        setFormMode("add");
+      }}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredRows.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedRows}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Stock Adjustment" : "Edit Stock Adjustment"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      customFilters={customFilters}
+      customHeaderContent={
+        <div className="flex justify-end gap-3">
+          <input
+            type="date"
+            value={new Date().toISOString().slice(0, 10)} // Current date: 2025-10-25
+            onChange={(e) => {/* Handle date change if needed */}}
+            className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
+            aria-label="Adjustment Date"
+          />
+          <input
+            type="text"
+            value="REF-123456"
+            onChange={(e) => {/* Handle reference change if needed */}}
+            className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
+            aria-label="Reference No"
+          />
+          <select
+            value="Main Warehouse"
+            onChange={(e) => {/* Handle warehouse change if needed */}}
+            className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
+            aria-label="Warehouse"
+          >
+            {WAREHOUSES.map((w) => (
+              <option key={w} value={w}>{w}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value=""
+            onChange={(e) => {/* Handle note change if needed */}}
+            className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
+            aria-label="Note"
+            placeholder="Note"
+          />
+        </div>
+      }
+       
+    />
   );
 };
 
