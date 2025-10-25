@@ -197,7 +197,7 @@ export const WAREHOUSES = ["Main Warehouse", "Secondary Warehouse", "Remote Ware
 
 export const STORES = ["Main Store", "Outlet 1", "Outlet 2", "Outlet 3"] as const;
 
-export const PAYMENT_TYPES = ["Cash", "Cheque"] as const;
+export const PAYMENT_TYPES = ["Cash", "Cheque", "Cheque", "Bank Transfer",] as const;
 
 export const EXPENSE_HEADS = [
   "Office Rent",
@@ -219,3 +219,4 @@ export const INCOME_CATEGORIES = ["All", "Sales", "Service"] as const;
 export const ACCOUNTS = ["Cash", "Bank"] as const;
 
 export const CURRENCIES = ["USD", "INR", "EUR"] as const;
+ 

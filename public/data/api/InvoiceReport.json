@@ -3,27 +3,7 @@
     "code": "S",
     "description": ""
   },
-  "result": [
-    "All",
-    "John Doe",
-    "Jane Smith",
-    "Acme Corp",
-    "Nyainfo Technologies",
-    "Customer A",
-    "Customer B",
-    "All",
-    "Paid",
-    "Unpaid",
-    "Partial",
-    "All",
-    "Paid",
-    "Unpaid",
-    "Partial",
-    "All",
-    "Cash",
-    "Credit Card",
-    "Cheque",
-    "Bank Transfer",
+  "result": [ 
     {
       "id": 1,
       "invoiceNo": "INV-0001",

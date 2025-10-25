@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
 interface SaleRecord {
   date: string;
@@ -14,10 +14,28 @@ interface SaleRecord {
   total: number;
 }
 
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: SaleRecord) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
+
 const SalesReport: React.FC = () => {
   const [data, setData] = useState<SaleRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [customer, setCustomer] = useState<string>("");
+  const [product, setProduct] = useState<string>("");
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -31,19 +49,6 @@ const SalesReport: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filters states
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [customer, setCustomer] = useState<string>("");
-  const [product, setProduct] = useState<string>("");
-  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
-  // Filtered data based on inputs
   const filteredData = useMemo(() => {
     return data.filter((record) => {
       if (startDate && record.date < startDate) return false;
@@ -56,18 +61,15 @@ const SalesReport: React.FC = () => {
     });
   }, [startDate, endDate, customer, product, data]);
 
-  // Pagination calculations
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  // Reset page when filters or pageSize change
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [startDate, endDate, customer, product, itemsPerPage]);
 
-  // Handlers for buttons
   const handleClear = () => {
     setStartDate("");
     setEndDate("");
@@ -85,179 +87,77 @@ const SalesReport: React.FC = () => {
     alert("Report generation is not implemented in this demo.");
   };
 
+  const columns: Column[] = [
+    { key: "date", label: "Date", align: "left" },
+    { key: "invoice", label: "Invoice", align: "left" },
+    { key: "customer", label: "Customer", align: "left" },
+    { key: "product", label: "Product", align: "left" },
+    { key: "qty", label: "Qty", align: "right", render: (v) => v.toString() },
+    { key: "price", label: "Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    { key: "discount", label: "Discount", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    { key: "tax", label: "Tax", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    { key: "total", label: "Total", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+  ];
+
+  const customFilters = () => (
+    <form onSubmit={(e) => e.preventDefault()} className="flex flex-wrap gap-2 mb-4 items-center">
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+      <input
+        type="text"
+        value={customer}
+        onChange={(e) => setCustomer(e.target.value)}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        placeholder="Customer"
+      />
+      <input
+        type="text"
+        value={product}
+        onChange={(e) => setProduct(e.target.value)}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        placeholder="Product"
+      />
+      <select
+        value={itemsPerPage}
+        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {[5, 10, 15].map((size) => (
+          <option key={size} value={size}>
+            {size}
+          </option>
+        ))}
+      </select>
+    </form>
+  );
+
   return (
-    <div className="min-h-screen bg-background">
-      
-      <h1 className="text-lg font-semibold mb-6">Sales Report</h1>
-
-      {/* Filters Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-          }}
-          className="grid grid-cols-1 md:grid-cols-5 gap-6"
-        >
-          {/* Date From */}
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium mb-1">
-              Date From
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Date To */}
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
-              Date To
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Customer */}
-          <div>
-            <label htmlFor="customer" className="block text-sm font-medium mb-1">
-              Customer
-            </label>
-            <input
-              type="text"
-              id="customer"
-              placeholder="Customer Name"
-              value={customer}
-              onChange={(e) => setCustomer(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Product */}
-          <div>
-            <label htmlFor="product" className="block text-sm font-medium mb-1">
-              Product
-            </label>
-            <input
-              type="text"
-              id="product"
-              placeholder="Product Name"
-              value={product}
-              onChange={(e) => setProduct(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Page Size */}
-          <div>
-            <label htmlFor="itemsPerPage" className="block text-sm font-medium mb-1">
-              Items per page
-            </label>
-            <select
-              id="itemsPerPage"
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {[5, 10, 15].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </form>
-
-        {/* Action Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-        </div>
-      </section>
-
-      {/* Sales Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Product</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Qty</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Price</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Discount</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tax</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center px-4 py-6 text-muted-foreground italic">
-                    No records found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((record, idx) => (
-                  <tr
-                    key={`${record.invoice}-${idx}`}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">{record.date}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{record.invoice}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{record.customer}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{record.product}</td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">{record.qty}</td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.price.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.discount.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.tax.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-foreground text-right">${record.total.toFixed(2)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-    </div>
+    <PageBase1
+      title="Sales Report"
+      description="View and filter sales report records."
+      icon="fa fa-chart-line"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      onSave={handleSave}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      customFilters={customFilters}
+    />
   );
 };
 
