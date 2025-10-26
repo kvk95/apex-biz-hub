@@ -240,7 +240,7 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col" style={sidebarStyle}>
         {/* 3. Apply theme-based background and text color to the sticky header */}
         <div
-          className="h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 px-4"
+            className={`h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 ${isOpen ? "px-4" : "pe-1"}`}
           style={{
             backgroundColor: `hsl(${sidebarHsl})`,
             color: contentTextColor,
@@ -249,21 +249,21 @@ export function AppSidebar() {
               sidebarLightness < 50 ? "hsl(0 0% 30%)" : "hsl(240 5% 90%)",
           }}
         >
-          <h1
-            className="font-bold text-xl flex items-center"
-            style={{ color: contentTextColor }}
-          >       
-            <i
-                className="fa fa-shopping-bag text-2xl"
-                aria-hidden="true"
-                style={{ color: contentTextColor }}
-              />
-            {isOpen ? (
-              <span className="ml-3">NyaBuy POS</span>
-            ) : (
-              ""
-            )}
-          </h1>
+          {isOpen ? (
+            <img
+              src="/assets/images/logo1.png"
+              alt="NyaBuy"
+              className=" "
+              style={{ width: "150px", height: "40px" }}
+            />
+          ) : (
+            <img
+              src="/assets/images/logo2.png"
+              alt="NyaBuy"
+              className="h1 w1"
+              style={{ width: "40px", height: "40px" }}
+            />
+          )}
         </div>
         <div className="overflow-y-auto flex-1 custom-scroll1">
           <SidebarMenu>
