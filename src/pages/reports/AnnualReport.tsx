@@ -77,7 +77,7 @@ export default function AnnualReport() {
   }, [filteredData, currentPage, itemsPerPage]);
 
   const handleClear = () => {
-    setYear("2025")
+    setYear("2025");
     setBranch("all");
     setCurrentPage(1);
     loadData();

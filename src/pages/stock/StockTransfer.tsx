@@ -318,7 +318,7 @@ export default function StockTransfer() {
     <PageBase1
       title="Stock Transfer"
       description="Manage stock transfers between stores."
-      icon="fa fa-exchange-alt"
+      icon="fa fa-truck"
       onAddClick={() => {
         setForm({
           id: 0,
