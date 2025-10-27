@@ -31,6 +31,7 @@ interface PageBase1Props {
   onPageSizeChange: (size: number) => void;
   tableColumns: Column[];
   tableData: any[];
+  tableFooter?: () => JSX.Element;
   rowActions?: (row: any) => JSX.Element; // Made optional
   formMode: "add" | "edit" | null;
   setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | null>>;
@@ -76,6 +77,7 @@ export function PageBase1({
   onPageSizeChange,
   tableColumns,
   tableData,
+  tableFooter,
   rowActions,
   formMode,
   setFormMode,
@@ -146,7 +148,6 @@ export function PageBase1({
           )}
         </div>
       </div>
-
       {tableColumns && (
         <section className="bg-card rounded shadow py-6">
           {customFilters ? (
@@ -223,6 +224,7 @@ export function PageBase1({
                   ))
                 )}
               </tbody>
+              {tableFooter ? tableFooter() : <></>}
             </table>
           </div>
           <Pagination
@@ -234,7 +236,8 @@ export function PageBase1({
           />
         </section>
       )}
-       {children ? children : <></>}
+      {children ? children : <></>}
+      
 
       {formMode && (
         <div

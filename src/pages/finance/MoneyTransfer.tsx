@@ -188,7 +188,7 @@ export default function MoneyTransfer() {
         setCurrentPage(currentPage - 1);
       }
     }
-  }; 
+  };
 
   const handleClear = () => {
     setForm(initialFormState);
@@ -232,24 +232,27 @@ export default function MoneyTransfer() {
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
-      </button> 
+      </button>
     </>
   );
 
   const customFilters = () => (
-    <div className="flex flex-row justify-between mb-4 items-center">
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search Customers"
-      />
-      <div className="flex gap-2">
+    <div className="flex  justify-between items-center w-full">
+      <div className="flex-1">
+        <input
+          type="text"
+          placeholder="Search"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Search Customers"
+        />
+      </div>
+
+      <div className="flex-none gap-2 flex">
         <select
           value={filterStatus}
           onChange={(e) => {
