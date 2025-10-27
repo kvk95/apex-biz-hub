@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
+import { CATEGORIES , STATUSES } from "@/constants/constants";
 
 interface ProductRecord {
   id: number;
@@ -19,17 +20,7 @@ interface Column {
   label: string;
   render?: (value: any, row: any, idx?: number) => JSX.Element;
   align?: "left" | "center" | "right";
-}
-
-const CATEGORIES = [
-  "All Categories",
-  "Mobile",
-  "Laptop",
-  "Accessories",
-  "Wearable",
-  "Camera",
-];
-const STATUSES = ["All Status", "Active", "Inactive"];
+}  
 const BRANDS = ["All Brands", "Brand A", "Brand B", "Brand C"];
 
 export default function Products() {

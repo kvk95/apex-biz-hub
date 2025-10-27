@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
 
-export function AppNavbar() {
+export function AppNavbar({ isPosPage }) {
   const [language, setLanguage] = useState("EN");
   const { theme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -52,7 +52,6 @@ export function AppNavbar() {
       };
     }
   `;
-
   const toggleFullscreen = () => {
     if (!isFullscreen) {
       document.documentElement
@@ -64,14 +63,20 @@ export function AppNavbar() {
           console.error("Failed to enter fullscreen:", err);
         });
     } else {
-      document
-        .exitFullscreen()
-        .then(() => {
-          setIsFullscreen(false);
-        })
-        .catch((err) => {
-          console.error("Failed to exit fullscreen:", err);
-        });
+      // Only exit fullscreen if currently in fullscreen mode
+      if (document.fullscreenElement) {
+        document
+          .exitFullscreen()
+          .then(() => {
+            setIsFullscreen(false);
+          })
+          .catch((err) => {
+            console.error("Failed to exit fullscreen:", err);
+          });
+      } else {
+        // Not in fullscreen, ensure state is synced
+        setIsFullscreen(false);
+      }
     }
   };
 
@@ -82,26 +87,59 @@ export function AppNavbar() {
         className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background px-6"
         style={headerStyle}
       >
-        <SidebarTrigger
-          className="h-8 w-8 absolute bg-primary text-white hover:bg-primary-dark"
-          style={{ left: "-13px", width: "25px", height: "25px", fontSize: "11px" }}
-        />
+        {!isPosPage ? (
+          <SidebarTrigger
+            className="h-8 w-8 absolute bg-primary text-white hover:bg-primary-dark"
+            style={{
+              left: "-13px",
+              width: "25px",
+              height: "25px",
+              fontSize: "11px",
+            }}
+          />
+        ) : (
+          <>
+            <img
+              src="/assets/images/logo1.png"
+              alt="NyaBuy"
+              className=" "
+              style={{ width: "150px", height: "40px" }}
+            />
+          </>
+        )}
 
         <div className="flex flex-1 items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <i className="fa-light fa-magnifying-glass absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
-            </div>
-            <input
-              type="search"
-              placeholder="Search products, orders, customers..."
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              style={inputBgStyle}
-            />
-          </div>
+          {!isPosPage && (
+            <>
+              <div className="relative flex-1 max-w-md">
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <i className="fa-light fa-magnifying-glass absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+                </div>
+                <input
+                  type="search"
+                  placeholder="Search products, orders, customers..."
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  style={inputBgStyle}
+                />
+              </div>{" "}
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
+          {isPosPage && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/")}
+                className="bg-gray-500 text-white hover:bg-primary hover:text-primary-foreground p-2"
+              >
+                <i className="fa fa-dashboard "></i>
+                Dashboard
+              </Button>
+            </>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -115,74 +153,77 @@ export function AppNavbar() {
             )}
           </Button>
 
-          <ThemeCustomizer />
+          {!isPosPage && (
+            <>
+              <ThemeCustomizer />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="pt-2 hover:bg-primary hover:text-primary-foreground"
-              >
-                <i className="fa fa-globe fa-light h-5 w-5"></i>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover">
-              <DropdownMenuLabel>Language</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLanguage("EN")}>
-                English {language === "EN" && "✓"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("TA")}>
-                தமிழ் {language === "TA" && "✓"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="pt-2 hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <i className="fa fa-globe fa-light h-5 w-5"></i>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover">
+                  <DropdownMenuLabel>Language</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLanguage("EN")}>
+                    English {language === "EN" && "✓"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage("TA")}>
+                    தமிழ் {language === "TA" && "✓"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative pt-2 hover:bg-primary hover:text-primary-foreground"
-              >
-                <i className="fa fa-bell fa-light h-5 w-5"></i>
-                <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs bg-destructive">
-                  2
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 bg-popover">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Notifications</span>
-                <Badge variant="secondary">2 New</Badge>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {notifications.map((notification) => (
-                <DropdownMenuItem
-                  key={notification.id}
-                  className="flex flex-col items-start p-3"
-                >
-                  <div className="flex w-full items-start justify-between">
-                    <p className={notification.unread ? "font-medium" : ""}>
-                      {notification.title}
-                    </p>
-                    {notification.unread && (
-                      <span className="h-2 w-2 rounded-full bg-primary"></span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {notification.time}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                View All
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative pt-2 hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <i className="fa fa-bell fa-light h-5 w-5"></i>
+                    <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs bg-destructive">
+                      2
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 bg-popover">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>Notifications</span>
+                    <Badge variant="secondary">2 New</Badge>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.map((notification) => (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      className="flex flex-col items-start p-3"
+                    >
+                      <div className="flex w-full items-start justify-between">
+                        <p className={notification.unread ? "font-medium" : ""}>
+                          {notification.title}
+                        </p>
+                        {notification.unread && (
+                          <span className="h-2 w-2 rounded-full bg-primary"></span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {notification.time}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="justify-center text-primary">
+                    View All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -214,19 +255,25 @@ export function AppNavbar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/settings/general/profile")}>
+              <DropdownMenuItem
+                onClick={() => navigate("/settings/general/profile")}
+              >
                 <i className="fa fa-user-circle fa-light me-2"></i> Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings/website/system")}>
+              <DropdownMenuItem
+                onClick={() => navigate("/settings/website/system")}
+              >
                 <i className="fa fa-cog fa-light me-2"></i> Settings
               </DropdownMenuItem>
-              <DropdownMenuItem><i className="fa fa-life-ring fa-light me-2"></i> Help & Support</DropdownMenuItem>
+              <DropdownMenuItem>
+                <i className="fa fa-life-ring fa-light me-2"></i> Help & Support
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => navigate("/logout")}
               >
-               <i className="fa fa-sign-out-alt fa-light me-2"></i> Logout
+                <i className="fa fa-sign-out-alt fa-light me-2"></i> Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
