@@ -1,8 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
-type Product = {
+import { CATEGORIES } from "@/constants/constants";
+ 
+const BRANDS = [
+  "All",
+  "Apple",
+  "Samsung",
+  "Sony",
+  "Dell",
+  "Logitech",
+  "HP",
+  "Canon",
+  "Nike",
+  "Adidas",
+  "KitchenAid",
+  "Bose",
+  "Microsoft",
+]; // Replace with BRANDS from constants.ts if available
+
+interface Product {
   productCode: string;
   productName: string;
   category: string;
@@ -11,20 +29,33 @@ type Product = {
   unit: string;
   alertQuantity: number;
   quantity: number;
-};
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function ProductQuantityAlert() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Pagination state
+  const [productCode, setProductCode] = useState("");
+  const [productName, setProductName] = useState("");
+  const [category, setCategory] = useState("All");
+  const [brand, setBrand] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("ProductQuantityAlert");
+    const response = await apiService.get<Product[]>("ProductQuantityAlert");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -32,237 +63,187 @@ export default function ProductQuantityAlert() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("ProductQuantityAlert loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = data.filter((item) => {
+      const matchProductCode = productCode
+        ? item.productCode.toLowerCase().includes(productCode.toLowerCase())
+        : true;
+      const matchProductName = productName
+        ? item.productName.toLowerCase().includes(productName.toLowerCase())
+        : true;
+      const matchCategory = category !== "All" ? item.category === category : true;
+      const matchBrand = brand !== "All" ? item.brand === brand : true;
+      const matchAlert = item.quantity <= item.alertQuantity;
+      return matchProductCode && matchProductName && matchCategory && matchBrand && matchAlert;
+    });
+    console.log("ProductQuantityAlert filteredData:", result, {
+      productCode,
+      productName,
+      category,
+      brand,
+    });
+    return result;
+  }, [data, productCode, productName, category, brand]);
 
-  // Filtered products that are below alert quantity
-  const alertProducts = data.filter(
-    (p: Product) => p.quantity <= p.alertQuantity
-  );
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("ProductQuantityAlert paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Current page products slice
-  const currentProducts = alertProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Handlers for pagination buttons
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setItemsPerPage(size);
-  };
-
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
+    setProductCode("");
+    setProductName("");
+    setCategory("All");
+    setBrand("All");
     setCurrentPage(1);
+    loadData();
+    console.log("ProductQuantityAlert handleClear");
   };
+
+  const handleReport = () => {
+    alert("Product Quantity Alert Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("ProductQuantityAlert handleReport:", { filteredData });
+  };
+
+  const columns: Column[] = [
+    { key: "productCode", label: "Product Code", align: "left" },
+    {
+      key: "productName",
+      label: "Product Name",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "category", label: "Category", align: "left" },
+    { key: "subCategory", label: "Sub Category", align: "left" },
+    { key: "brand", label: "Brand", align: "left" },
+    { key: "unit", label: "Unit", align: "left" },
+    { key: "alertQuantity", label: "Alert Quantity", align: "right" },
+    { key: "quantity", label: "Quantity", align: "right" },
+  ];
+
+  const tableFooter = () => (
+    <tfoot className="bg-muted font-semibold text-foreground">
+      <tr>
+        <td className="px-4 py-3 text-right" colSpan={6}>
+          Total
+        </td>
+        <td className="px-4 py-3 text-right">{filteredData
+          .reduce((acc, cur) => acc + cur.alertQuantity, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
+        <td className="px-4 py-3 text-right">{filteredData
+          .reduce((acc, cur) => acc + cur.quantity, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
+      </tr>
+    </tfoot>
+  );
+
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="text"
+        placeholder="Product Code"
+        value={productCode}
+        onChange={(e) => {
+          setProductCode(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductQuantityAlert handleProductCodeChange:", {
+            productCode: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by product code"
+      />
+      <input
+        type="text"
+        placeholder="Product Name"
+        value={productName}
+        onChange={(e) => {
+          setProductName(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductQuantityAlert handleProductNameChange:", {
+            productName: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by product name"
+      />
+      <select
+        value={category}
+        onChange={(e) => {
+          setCategory(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductQuantityAlert handleCategoryChange:", {
+            category: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by category"
+      >
+        <option value="All">All Categories</option>
+        {CATEGORIES.slice(1).map((cat) => (
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+      <select
+        value={brand}
+        onChange={(e) => {
+          setBrand(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductQuantityAlert handleBrandChange:", {
+            brand: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by brand"
+      >
+        <option value="All">All Brands</option>
+        {BRANDS.slice(1).map((b) => (
+          <option key={b} value={b}>
+            {b}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">Product Quantity Alert</h1>
-
-      {/* Search & Action Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form className="flex flex-wrap items-center gap-4">
-          {/* Product Code */}
-          <div>
-            <label
-              htmlFor="productCode"
-              className="block text-sm font-medium mb-1"
-            >
-              Product Code
-            </label>
-            <input
-              id="productCode"
-              type="text"
-              placeholder="Enter Product Code"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Product Name */}
-          <div>
-            <label
-              htmlFor="productName"
-              className="block text-sm font-medium mb-1"
-            >
-              Product Name
-            </label>
-            <input
-              id="productName"
-              type="text"
-              placeholder="Enter Product Name"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium mb-1"
-            >
-              Category
-            </label>
-            <select
-              id="category"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select Category
-              </option>
-              <option>Electronics</option>
-              <option>Computers</option>
-              <option>Office Equipment</option>
-              <option>Photography</option>
-              <option>Footwear</option>
-              <option>Home Appliances</option>
-              <option>Gaming</option>
-            </select>
-          </div>
-
-          {/* Brand */}
-          <div>
-            <label
-              htmlFor="brand"
-              className="block text-sm font-medium mb-1"
-            >
-              Brand
-            </label>
-            <select
-              id="brand"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select Brand
-              </option>
-              <option>Apple</option>
-              <option>Samsung</option>
-              <option>Sony</option>
-              <option>Dell</option>
-              <option>Logitech</option>
-              <option>HP</option>
-              <option>Canon</option>
-              <option>Nike</option>
-              <option>Adidas</option>
-              <option>KitchenAid</option>
-              <option>Bose</option>
-              <option>Microsoft</option>
-            </select>
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Search"
-            >
-              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded shadow"
-              title="Save"
-            >
-              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold px-4 py-2 rounded shadow"
-              title="Report"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Product Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Product Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Sub Category
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Brand
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Unit
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Alert Quantity
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Quantity
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentProducts.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No products matching alert criteria.
-                  </td>
-                </tr>
-              )}
-              {currentProducts.map((product: Product) => (
-                <tr key={product.productCode} className="hover:bg-muted/50 transition-colors text-sm text-gray-500">
-                  <td className="px-4 py-2">{product.productCode}</td>
-                  <td className="px-4 py-2">{product.productName}</td>
-                  <td className="px-4 py-2">{product.category}</td>
-                  <td className="px-4 py-2">{product.subCategory}</td>
-                  <td className="px-4 py-2">{product.brand}</td>
-                  <td className="px-4 py-2">{product.unit}</td>
-                  <td className="px-4 py-2 text-right">{product.alertQuantity}</td>
-                  <td className="px-4 py-2 text-right">{product.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={alertProducts.length}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      </section>
-    </div>
+    <PageBase1
+      title="Product Quantity Alert"
+      description="View products with quantities at or below alert levels."
+      icon="fa fa-bell"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={productName}
+      onSearchChange={(e) => {
+        setProductName(e.target.value);
+        setCurrentPage(1);
+        console.log("ProductQuantityAlert handleProductNameChange:", {
+          productName: e.target.value,
+        });
+      }}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

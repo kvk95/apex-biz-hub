@@ -1,27 +1,42 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
-const TAX_RATES = ["All", "5%", "6%", "7%", "8%", "9%", "10%", "11%", "12%"];
+const TAX_RATES = ["All", "5%", "6%", "7%", "8%", "9%", "10%", "11%", "12%"]; // Replace with TAX_RATES from constants.ts if available
+
+interface TaxRecord {
+  date: string;
+  invoiceNo: string;
+  customer: string;
+  taxRate: string;
+  taxAmount: number;
+  totalAmount: number;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function TaxReport() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<TaxRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Filter states
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedTaxRate, setSelectedTaxRate] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Load data
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("TaxReport");
+    const response = await apiService.get<TaxRecord[]>("TaxReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -29,229 +44,158 @@ export default function TaxReport() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("TaxReport loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filtered data
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    const result = data.filter((item) => {
       const itemDate = new Date(item.date);
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
-
-      if (start && itemDate < start) return false;
-      if (end && itemDate > end) return false;
-      if (selectedTaxRate !== "All" && item.taxRate !== selectedTaxRate)
-        return false;
-
-      return true;
+      const matchStartDate = start ? itemDate >= start : true;
+      const matchEndDate = end ? itemDate <= end : true;
+      const matchTaxRate = selectedTaxRate !== "All" ? item.taxRate === selectedTaxRate : true;
+      return matchStartDate && matchEndDate && matchTaxRate;
     });
+    console.log("TaxReport filteredData:", result, {
+      startDate,
+      endDate,
+      selectedTaxRate,
+    });
+    return result;
   }, [data, startDate, endDate, selectedTaxRate]);
 
-  // Paginated data
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("TaxReport paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Totals for footer
-  const totalTaxAmount = filteredData.reduce(
-    (sum, item) => sum + item.taxAmount,
-    0
-  );
-  const totalAmount = filteredData.reduce(
-    (sum, item) => sum + item.totalAmount,
-    0
-  );
-
-  // Handlers
-  function handleReset() {
+  const handleClear = () => {
     setStartDate("");
     setEndDate("");
     setSelectedTaxRate("All");
     setCurrentPage(1);
-  }
+    loadData();
+    console.log("TaxReport handleClear");
+  };
+
+  const handleReport = () => {
+    alert("Tax Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("TaxReport handleReport:", { filteredData });
+  };
+
+  const columns: Column[] = [
+    { key: "date", label: "Date", align: "left" },
+    {
+      key: "invoiceNo",
+      label: "Invoice No",
+      align: "left",
+      render: (value) => <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">{value}</span>,
+    },
+    { key: "customer", label: "Customer", align: "left" },
+    { key: "taxRate", label: "Tax Rate", align: "right" },
+    {
+      key: "taxAmount",
+      label: "Tax Amount",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "totalAmount",
+      label: "Total Amount",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+  ];
+
+  const tableFooter = () => (
+    <tfoot className="bg-muted font-semibold text-foreground">
+      <tr>
+        <td className="px-4 py-3 text-right" colSpan={4}>
+          Totals
+        </td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((sum, item) => sum + item.taxAmount, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((sum, item) => sum + item.totalAmount, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+      </tr>
+    </tfoot>
+  );
+
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="date"
+        placeholder="Start Date"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value);
+          setCurrentPage(1);
+          console.log("TaxReport handleStartDateChange:", { startDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by start date"
+      />
+      <input
+        type="date"
+        placeholder="End Date"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value);
+          setCurrentPage(1);
+          console.log("TaxReport handleEndDateChange:", { endDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by end date"
+      />
+      <select
+        value={selectedTaxRate}
+        onChange={(e) => {
+          setSelectedTaxRate(e.target.value);
+          setCurrentPage(1);
+          console.log("TaxReport handleTaxRateChange:", { selectedTaxRate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by tax rate"
+      >
+        {TAX_RATES.map((rate) => (
+          <option key={rate} value={rate}>
+            {rate}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-
-      <h1 className="text-lg font-semibold mb-6">Tax Report</h1>
-
-      {/* Filter Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
-        >
-          {/* Start Date */}
-          <div>
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Tax Rate */}
-          <div>
-            <label
-              htmlFor="taxRate"
-              className="block text-sm font-medium mb-1"
-            >
-              Tax Rate
-            </label>
-            <select
-              id="taxRate"
-              name="taxRate"
-              value={selectedTaxRate}
-              onChange={(e) => setSelectedTaxRate(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {TAX_RATES.map((rate) => (
-                <option key={rate} value={rate}>
-                  {rate}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Invoice No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Customer
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Tax Rate
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Tax Amount
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Total Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No records found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={`${item.invoiceNo}-${idx}`}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.invoiceNo}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.customer}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    {item.taxRate}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${item.taxAmount.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-foreground">
-                    ${item.totalAmount.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-muted/50 font-semibold text-foreground">
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right">
-                  Totals:
-                </td>
-                <td className="px-4 py-3 text-right">
-                  ${totalTaxAmount.toFixed(2)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  ${totalAmount.toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-    </div>
+    <PageBase1
+      title="Tax Report"
+      description="View and filter tax records."
+      icon="fa fa-file-invoice-dollar"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search=""
+      onSearchChange={() => {}} // No text-based search field
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

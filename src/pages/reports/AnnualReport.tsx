@@ -1,32 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+
+const YEARS = ["2025","2024","2023", "2022", "2021", "2020"]; // Replace with YEARS from constants.ts if available
+const BRANCHES = [
+  { value: "all", label: "All Branches" },
+  { value: "ny", label: "New York" },
+  { value: "la", label: "Los Angeles" },
+  { value: "chi", label: "Chicago" },
+]; // Replace with BRANCHES from constants.ts if available
+
+interface AnnualRecord {
+  id: number;
+  customer: string;
+  orders: number;
+  totalSpent: number;
+  lastPurchase: string;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function AnnualReport() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<AnnualRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [year, setYear] = useState("2023");
+  const [year, setYear] = useState("2025");
   const [branch, setBranch] = useState("all");
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    customer: "",
-    orders: "",
-    totalSpent: "",
-    lastPurchase: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("AnnualReport");
+    const response = await apiService.get<AnnualRecord[]>("AnnualReport"); 
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -34,187 +48,152 @@ export default function AnnualReport() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("AnnualReport loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = data.filter((item) => {
+      const itemYear = new Date(item.lastPurchase).getFullYear().toString();
+      const matchYear = year !== "" ? itemYear === year : true;
+      const matchBranch = branch !== "all" ? item.branch === branch : true;
+      return matchYear && matchBranch;
+    });
+    console.log("AnnualReport filteredData:", result, { year, branch });
+    return result;
+  }, [data, year, branch]);
 
-  // Open edit modal and populate edit form if edit icon/button exists
-  // Check if edit icon/button exists in original destination: no edit icon/button present, so no edit modal trigger needed
-  // But instructions say: If no edit icon/button exists, do not add or modify edit controls.
-  // So we skip edit modal functionality and controls.
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("AnnualReport paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setYear(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleBranchChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setBranch(e.target.value);
-    setCurrentPage(1);
-  };
-
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setYear("2023");
+    setYear("2025")
     setBranch("all");
     setCurrentPage(1);
+    loadData();
+    console.log("AnnualReport handleClear");
   };
 
   const handleReport = () => {
-    alert("Report generated for year " + year + " and branch " + branch);
+    alert("Annual Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("AnnualReport handleReport:", { filteredData });
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const columns: Column[] = [
+    {
+      key: "customer",
+      label: "Customer",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "orders", label: "Orders", align: "left" },
+    {
+      key: "totalSpent",
+      label: "Total Spent",
+      align: "left",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "lastPurchase",
+      label: "Last Purchase",
+      align: "left",
+      render: (value) =>
+        new Date(value).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+  ];
+
+  const tableFooter = () => {
+    const totals = filteredData.reduce(
+      (acc, item) => ({
+        orders: acc.orders + item.orders,
+        totalSpent: acc.totalSpent + item.totalSpent,
+      }),
+      { orders: 0, totalSpent: 0 }
+    );
+
+    return (
+      <tfoot className="bg-muted font-semibold text-foreground">
+        <tr>
+          <td className="px-4 py-3 text-left">Totals</td>
+          <td className="px-4 py-3 text-left">{totals.orders}</td>
+          <td className="px-4 py-3 text-left">
+            ₹{totals.totalSpent.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+          <td className="px-4 py-3 text-left"></td>
+        </tr>
+      </tfoot>
+    );
+  };
+
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <select
+        value={year}
+        onChange={(e) => {
+          setYear(e.target.value);
+          setCurrentPage(1);
+          console.log("AnnualReport handleYearChange:", { year: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by year"
+      >
+        {YEARS.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+      <select
+        value={branch}
+        onChange={(e) => {
+          setBranch(e.target.value);
+          setCurrentPage(1);
+          console.log("AnnualReport handleBranchChange:", { branch: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by branch"
+      >
+        {BRANCHES.map((b) => (
+          <option key={b.value} value={b.value}>
+            {b.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Annual Report</h1>
-
-      {/* Filters Section (preserve structure but apply source styling) */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div>
-            <label
-              htmlFor="year"
-              className="block text-sm font-medium mb-1"
-            >
-              Select Year
-            </label>
-            <select
-              id="year"
-              value={year}
-              onChange={handleYearChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-              <option value="2020">2020</option>
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="branch"
-              className="block text-sm font-medium mb-1"
-            >
-              Select Branch
-            </label>
-            <select
-              id="branch"
-              value={branch}
-              onChange={handleBranchChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="all">All Branches</option>
-              <option value="ny">New York</option>
-              <option value="la">Los Angeles</option>
-              <option value="chi">Chicago</option>
-            </select>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Generate Report
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Summary Cards Section */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        {/* Summary cards cannot be rendered without data from API, so omitted here */}
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6 px-6">
-        <h2 className="text-xl font-semibold mb-4 text-foreground">
-          Top Customers
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-border">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Customer
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Orders
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Total Spent
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Last Purchase
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No customers found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((row: any, idx) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {row.customer}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {row.orders}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {row.totalSpent}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {new Date(row.lastPurchase).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-    </div>
+    <PageBase1
+      title="Annual Report"
+      description="View and filter annual customer records."
+      icon="fa fa-calendar-alt"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search=""
+      onSearchChange={() => {}} // No text-based search field
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

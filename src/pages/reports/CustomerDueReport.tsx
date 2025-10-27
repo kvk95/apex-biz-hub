@@ -1,12 +1,27 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+
+interface CustomerDueData {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  dueAmount: number;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function CustomerDueReport() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CustomerDueData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [searchName, setSearchName] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
   const [searchEmail, setSearchEmail] = useState("");
@@ -16,9 +31,13 @@ export default function CustomerDueReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("CustomerDueReport");
+    const response = await apiService.get<CustomerDueData[]>("CustomerDueReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -26,303 +45,222 @@ export default function CustomerDueReport() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("CustomerDueReport loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filter customers based on search fields
-  const filteredCustomers = useMemo(() => {
-    return data.filter((c: any) => {
-      const matchName = c.name.toLowerCase().includes(searchName.toLowerCase());
-      const matchPhone = c.phone
-        .toLowerCase()
-        .includes(searchPhone.toLowerCase());
-      const matchEmail = c.email
-        .toLowerCase()
-        .includes(searchEmail.toLowerCase());
-      const matchAddress = c.address
-        .toLowerCase()
-        .includes(searchAddress.toLowerCase());
+  const filteredData = useMemo(() => {
+    const result = data.filter((item) => {
+      const matchName = item.name.toLowerCase().includes(searchName.toLowerCase());
+      const matchPhone = item.phone.toLowerCase().includes(searchPhone.toLowerCase());
+      const matchEmail = item.email.toLowerCase().includes(searchEmail.toLowerCase());
+      const matchAddress = item.address.toLowerCase().includes(searchAddress.toLowerCase());
       const dueFromNum = parseFloat(searchDueFrom);
       const dueToNum = parseFloat(searchDueTo);
-      const matchDueFrom = isNaN(dueFromNum) ? true : c.dueAmount >= dueFromNum;
-      const matchDueTo = isNaN(dueToNum) ? true : c.dueAmount <= dueToNum;
-      return (
-        matchName &&
-        matchPhone &&
-        matchEmail &&
-        matchAddress &&
-        matchDueFrom &&
-        matchDueTo
-      );
+      const matchDueFrom = isNaN(dueFromNum) ? true : item.dueAmount >= dueFromNum;
+      const matchDueTo = isNaN(dueToNum) ? true : item.dueAmount <= dueToNum;
+      return matchName && matchPhone && matchEmail && matchAddress && matchDueFrom && matchDueTo;
     });
-  }, [
-    data,
-    searchName,
-    searchPhone,
-    searchEmail,
-    searchAddress,
-    searchDueFrom,
-    searchDueTo,
-  ]);
+    console.log("CustomerDueReport filteredData:", result, {
+      searchName,
+      searchPhone,
+      searchEmail,
+      searchAddress,
+      searchDueFrom,
+      searchDueTo,
+    });
+    return result;
+  }, [data, searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
 
-  // Paginated data
-  const paginatedCustomers = filteredCustomers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("CustomerDueReport paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Reset page when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    searchName,
-    searchPhone,
-    searchEmail,
-    searchAddress,
-    searchDueFrom,
-    searchDueTo,
-  ]);
-
-  // Handlers
-  const handleReset = () => {
+  const handleClear = () => {
     setSearchName("");
     setSearchPhone("");
     setSearchEmail("");
     setSearchAddress("");
     setSearchDueFrom("");
     setSearchDueTo("");
-  };
-
-  const handleClear = () => {
-    handleReset();
     setCurrentPage(1);
+    loadData();
+    console.log("CustomerDueReport handleClear");
   };
 
   const handleReport = () => {
-    alert("Report generated (placeholder)");
+    alert("Customer Due Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("CustomerDueReport handleReport:", { filteredData });
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6"> Customer Due Report </h1>
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      align: "left",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
+    },
+    {
+      key: "name",
+      label: "Customer Name",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    { key: "phone", label: "Phone", align: "left" },
+    { key: "email", label: "Email", align: "left" },
+    { key: "address", label: "Address", align: "left" },
+    {
+      key: "dueAmount",
+      label: "Due Amount",
+      align: "right",
+      render: (value) => (
+        <span className="text-red-600 font-semibold">{`₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`}</span>
+      ),
+    },
+  ];
 
-      {/* Filter Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6"
-          aria-label="Filter Customer Due Report"
-        >
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
-              Customer Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter name"
-            />
-          </div>
+  const tableFooter = () => (
+    <tfoot className="bg-muted font-semibold text-foreground">
+      <tr>
+        <td className="px-4 py-3 text-right" colSpan={5}>
+          Total
+        </td>
+        <td className="px-4 py-3 text-right text-red-600 font-semibold">{`₹${filteredData
+          .reduce((acc, cur) => acc + cur.dueAmount, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+      </tr>
+    </tfoot>
+  );
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1">
-              Phone
-            </label>
-            <input
-              id="phone"
-              type="text"
-              value={searchPhone}
-              onChange={(e) => setSearchPhone(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter phone"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter email"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium mb-1">
-              Address
-            </label>
-            <input
-              id="address"
-              type="text"
-              value={searchAddress}
-              onChange={(e) => setSearchAddress(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter address"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="dueFrom" className="block text-sm font-medium mb-1">
-              Due Amount From
-            </label>
-            <input
-              id="dueFrom"
-              type="number"
-              min="0"
-              step="0.01"
-              value={searchDueFrom}
-              onChange={(e) => setSearchDueFrom(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Min due"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="dueTo" className="block text-sm font-medium mb-1">
-              Due Amount To
-            </label>
-            <input
-              id="dueTo"
-              type="number"
-              min="0"
-              step="0.01"
-              value={searchDueTo}
-              onChange={(e) => setSearchDueTo(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Max due"
-            />
-          </div>
-
-          {/* Buttons row spanning full width */}
-          <div className="md:col-span-3 lg:col-span-6 flex flex-wrap gap-3 mt-2">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Search"
-            >
-              <i className="fa fa-search fa-light" aria-hidden="true"></i>{" "}
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Reset"
-            >
-              <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Clear"
-            >
-              <i className="fa fa-eraser fa-light" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500 ml-auto"
-              aria-label="Generate Report"
-            >
-              <i className="fa fa-file-alt fa-light" aria-hidden="true"></i>{" "}
-              Report
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Customer Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Phone
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Address
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Due Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedCustomers.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-6 text-center text-muted-foreground italic"
-                  >
-                    No customers found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedCustomers.map((customer: any, idx: number) => (
-                  <tr
-                    key={customer.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {customer.name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {customer.phone}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {customer.email}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {customer.address}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-red-600 font-semibold">
-                      ${customer.dueAmount.toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredCustomers.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="text"
+        placeholder="Customer Name"
+        value={searchName}
+        onChange={(e) => {
+          setSearchName(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchNameChange:", {
+            searchName: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by customer name"
+      />
+      <input
+        type="text"
+        placeholder="Phone"
+        value={searchPhone}
+        onChange={(e) => {
+          setSearchPhone(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchPhoneChange:", {
+            searchPhone: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by phone"
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={searchEmail}
+        onChange={(e) => {
+          setSearchEmail(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchEmailChange:", {
+            searchEmail: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by email"
+      />
+      <input
+        type="text"
+        placeholder="Address"
+        value={searchAddress}
+        onChange={(e) => {
+          setSearchAddress(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchAddressChange:", {
+            searchAddress: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by address"
+      />
+      <input
+        type="number"
+        placeholder="Min Due"
+        value={searchDueFrom}
+        onChange={(e) => {
+          setSearchDueFrom(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchDueFromChange:", {
+            searchDueFrom: e.target.value,
+          });
+        }}
+        min="0"
+        step="0.01"
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by minimum due amount"
+      />
+      <input
+        type="number"
+        placeholder="Max Due"
+        value={searchDueTo}
+        onChange={(e) => {
+          setSearchDueTo(e.target.value);
+          setCurrentPage(1);
+          console.log("CustomerDueReport handleSearchDueToChange:", {
+            searchDueTo: e.target.value,
+          });
+        }}
+        min="0"
+        step="0.01"
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by maximum due amount"
+      />
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Customer Due Report"
+      description="View and filter customer due records."
+      icon="fa fa-user-clock"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={searchName}
+      onSearchChange={(e) => {
+        setSearchName(e.target.value);
+        setCurrentPage(1);
+        console.log("CustomerDueReport handleSearchNameChange:", {
+          searchName: e.target.value,
+        });
+      }}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

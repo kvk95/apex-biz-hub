@@ -1,19 +1,44 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { PAYMENT_STATUSES , PAYMENT_TYPES} from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
-const paymentStatusOptions = ["All", "Paid", "Unpaid"];
-const paymentMethodOptions = ["All", "Cash", "Credit Card", "Bank Transfer"];
+interface Income {
+  date: string;
+  invoiceNo: string;
+  customer: string;
+  paymentStatus: "Paid" | "Unpaid";
+  paymentMethod: string;
+  totalAmount: number;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 const IncomeReport: React.FC = () => {
-  // API state
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("All");
+  const [paymentMethod, setPaymentMethod] = useState("All");
+  const [searchInvoice, setSearchInvoice] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("IncomeReport");
+    const response = await apiService.get<Income[]>("IncomeReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -21,313 +46,193 @@ const IncomeReport: React.FC = () => {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("IncomeReport loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filters state
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [paymentStatus, setPaymentStatus] = useState<string>("All");
-  const [paymentMethod, setPaymentMethod] = useState<string>("All");
-  const [searchInvoice, setSearchInvoice] = useState<string>("");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
-
-  // Filtered data based on filters
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      // Filter by date range
-      if (startDate && item.date < startDate) return false;
-      if (endDate && item.date > endDate) return false;
-
-      // Filter by payment status
-      if (paymentStatus !== "All" && item.paymentStatus !== paymentStatus)
-        return false;
-
-      // Filter by payment method
-      if (paymentMethod !== "All" && item.paymentMethod !== paymentMethod)
-        return false;
-
-      // Filter by invoice no search (case insensitive)
-      if (
-        searchInvoice.trim() !== "" &&
-        !item.invoiceNo.toLowerCase().includes(searchInvoice.toLowerCase())
-      )
-        return false;
-
-      return true;
+    const result = data.filter((item) => {
+      const matchStartDate = startDate ? item.date >= startDate : true;
+      const matchEndDate = endDate ? item.date <= endDate : true;
+      const matchPaymentStatus = paymentStatus !== "All" ? item.paymentStatus === paymentStatus : true;
+      const matchPaymentMethod = paymentMethod !== "All" ? item.paymentMethod === paymentMethod : true;
+      const matchInvoice = searchInvoice
+        ? item.invoiceNo.toLowerCase().includes(searchInvoice.toLowerCase())
+        : true;
+      return matchStartDate && matchEndDate && matchPaymentStatus && matchPaymentMethod && matchInvoice;
     });
+    console.log("IncomeReport filteredData:", result, {
+      startDate,
+      endDate,
+      paymentStatus,
+      paymentMethod,
+      searchInvoice,
+    });
+    return result;
   }, [data, startDate, endDate, paymentStatus, paymentMethod, searchInvoice]);
 
-  // Pagination calculations
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("IncomeReport paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers
-  const handleResetFilters = () => {
+  const handleClear = () => {
     setStartDate("");
     setEndDate("");
     setPaymentStatus("All");
     setPaymentMethod("All");
     setSearchInvoice("");
     setCurrentPage(1);
-  };
-
-  const handleClear = () => {
-    handleResetFilters();
-  };
-
-  const handleRefresh = () => {
     loadData();
-    handleResetFilters();
+    console.log("IncomeReport handleClear");
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > Math.ceil(filteredData.length / itemsPerPage))
-      return;
-    setCurrentPage(page);
+  const handleReport = () => {
+    alert("Income Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("IncomeReport handleReport:", { filteredData });
   };
 
-  const handlePageSizeChange = (size: number) => {
-    setItemsPerPage(size);
-    setCurrentPage(1);
-  };
+  const columns: Column[] = [
+    { key: "date", label: "Date", align: "left" },
+    {
+      key: "invoiceNo",
+      label: "Invoice No",
+      align: "left",
+      render: (value) => <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">{value}</span>,
+    },
+    { key: "customer", label: "Customer", align: "left" }, 
+    {
+      key: "paymentStatus",
+      label: "Payment Status",
+      align: "center",
+      render: renderStatusBadge,
+    },    
+    { key: "paymentMethod", label: "Payment Method", align: "left" },
+    {
+      key: "totalAmount",
+      label: "Total Amount",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+  ];
+
+  const tableFooter = () => (
+    <tfoot className="bg-muted font-semibold text-foreground">
+      <tr>
+        <td className="px-4 py-3 text-right" colSpan={5}>
+          Total
+        </td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((acc, cur) => acc + cur.totalAmount, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+      </tr>
+    </tfoot>
+  );
+
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="date"
+        placeholder="Date From"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value);
+          setCurrentPage(1);
+          console.log("IncomeReport handleStartDateChange:", { startDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by start date"
+      />
+      <input
+        type="date"
+        placeholder="Date To"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value);
+          setCurrentPage(1);
+          console.log("IncomeReport handleEndDateChange:", { endDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by end date"
+      />
+      <select
+        value={paymentStatus}
+        onChange={(e) => {
+          setPaymentStatus(e.target.value);
+          setCurrentPage(1);
+          console.log("IncomeReport handlePaymentStatusChange:", { paymentStatus: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by payment status"
+      >
+        {PAYMENT_STATUSES.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+      <select
+        value={paymentMethod}
+        onChange={(e) => {
+          setPaymentMethod(e.target.value);
+          setCurrentPage(1);
+          console.log("IncomeReport handlePaymentMethodChange:", { paymentMethod: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by payment method"
+      >
+        {PAYMENT_TYPES.map((method) => (
+          <option key={method} value={method}>
+            {method}
+          </option>
+        ))}
+      </select>
+      <input
+        type="text"
+        placeholder="Invoice No"
+        value={searchInvoice}
+        onChange={(e) => {
+          setSearchInvoice(e.target.value);
+          setCurrentPage(1);
+          console.log("IncomeReport handleSearchInvoiceChange:", { searchInvoice: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by invoice number"
+      />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-
-      <h1 className="text-lg font-semibold mb-6">Income Report</h1>
-
-      <div className="max-w-7xl mx-auto bg-card rounded shadow-lg p-6"> 
-        {/* Filters Section */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-          className="mb-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
-            {/* Date From */}
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Date From
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Select start date"
-              />
-            </div>
-
-            {/* Date To */}
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Date To
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
-            {/* Payment Status */}
-            <div>
-              <label
-                htmlFor="paymentStatus"
-                className="block text-sm font-medium mb-1"
-              >
-                Payment Status
-              </label>
-              <select
-                id="paymentStatus"
-                value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {paymentStatusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Payment Method */}
-            <div>
-              <label
-                htmlFor="paymentMethod"
-                className="block text-sm font-medium mb-1"
-              >
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {paymentMethodOptions.map((method) => (
-                  <option key={method} value={method}>
-                    {method}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Invoice No Search */}
-            <div>
-              <label
-                htmlFor="searchInvoice"
-                className="block text-sm font-medium mb-1"
-              >
-                Invoice No
-              </label>
-              <input
-                type="text"
-                id="searchInvoice"
-                placeholder="Search Invoice No"
-                value={searchInvoice}
-                onChange={(e) => setSearchInvoice(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-6 flex space-x-3">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
-            </button>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Refresh
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-trash fa-light" aria-hidden="true"></i> Clear
-            </button>
-          </div>
-        </form>
-
-        {/* Table Section */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Invoice No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Customer
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Payment Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Payment Method
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Total Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No records found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((item, idx) => (
-                  <tr
-                    key={item.invoiceNo}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.date}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground font-mono text-blue-600">
-                      {item.invoiceNo}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.customer}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.paymentStatus === "Paid"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
-                      >
-                        {item.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.paymentMethod}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
-                      ${item.totalAmount.toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      </div>
-    </div>
+    <PageBase1
+      title="Income Report"
+      description="View and filter income records."
+      icon="fa fa-coins"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={searchInvoice}
+      onSearchChange={(e) => {
+        setSearchInvoice(e.target.value);
+        setCurrentPage(1);
+        console.log("IncomeReport handleSearchInvoiceChange:", { searchInvoice: e.target.value });
+      }}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 };
 

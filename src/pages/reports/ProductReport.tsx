@@ -1,41 +1,46 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+import { UNITS,CATEGORIES } from "@/constants/constants";
+ 
+interface ProductData {
+  productCode: string;
+  productName: string;
+  category: string;
+  unit: string;
+  purchasePrice: number;
+  salePrice: number;
+  stockQty: number;
+  stockValue: number;
+}
 
-const categories = [
-  "All",
-  "Mobile",
-  "Laptop",
-  "Accessories",
-  "Monitor",
-  "Camera",
-  "Tablet",
-];
-
-const units = ["PCS", "Box", "Kg", "Liter"];
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function ProductReport() {
-  // Filters state
+  const [data, setData] = useState<ProductData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [productCode, setProductCode] = useState("");
   const [productName, setProductName] = useState("");
   const [category, setCategory] = useState("All");
   const [unit, setUnit] = useState("PCS");
   const [minStock, setMinStock] = useState("");
   const [maxStock, setMaxStock] = useState("");
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state (only if edit icon/button exists - none here, so omitted)
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("ProductReport");
+    const response = await apiService.get<ProductData[]>("ProductReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -43,43 +48,56 @@ export default function ProductReport() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("ProductReport loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Filter and search logic
   const filteredData = useMemo(() => {
-    return data
-      .filter((p) =>
-        productCode.trim()
-          ? p.productCode.toLowerCase().includes(productCode.trim().toLowerCase())
-          : true
-      )
-      .filter((p) =>
-        productName.trim()
-          ? p.productName.toLowerCase().includes(productName.trim().toLowerCase())
-          : true
-      )
-      .filter((p) => (category === "All" ? true : p.category === category))
-      .filter((p) => (unit ? p.unit === unit : true))
-      .filter((p) =>
-        minStock.trim() ? p.stockQty >= Number(minStock) : true
-      )
-      .filter((p) =>
-        maxStock.trim() ? p.stockQty <= Number(maxStock) : true
+    const result = data.filter((item) => {
+      const matchProductCode = productCode.trim()
+        ? item.productCode.toLowerCase().includes(productCode.trim().toLowerCase())
+        : true;
+      const matchProductName = productName.trim()
+        ? item.productName.toLowerCase().includes(productName.trim().toLowerCase())
+        : true;
+      const matchCategory = category === "All" ? true : item.category === category;
+      const matchUnit = unit ? item.unit === unit : true;
+      const matchMinStock = minStock.trim() ? item.stockQty >= Number(minStock) : true;
+      const matchMaxStock = maxStock.trim() ? item.stockQty <= Number(maxStock) : true;
+      return (
+        matchProductCode &&
+        matchProductName &&
+        matchCategory &&
+        matchUnit &&
+        matchMinStock &&
+        matchMaxStock
       );
+    });
+    console.log("ProductReport filteredData:", result, {
+      productCode,
+      productName,
+      category,
+      unit,
+      minStock,
+      maxStock,
+    });
+    return result;
   }, [data, productCode, productName, category, unit, minStock, maxStock]);
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("ProductReport paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
-  // Handlers
-  const handleReset = () => {
+  const handleClear = () => {
     setProductCode("");
     setProductName("");
     setCategory("All");
@@ -87,216 +105,208 @@ export default function ProductReport() {
     setMinStock("");
     setMaxStock("");
     setCurrentPage(1);
+    loadData();
+    console.log("ProductReport handleClear");
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      
-      <h1 className="text-lg font-semibold mb-6">Product Report</h1>
+  const handleReport = () => {
+    alert("Product Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("ProductReport handleReport:", { filteredData });
+  };
 
-      {/* Filter Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6"
-          aria-label="Product report filters"
-        >
-          {/* Product Code */}
-          <div>
-            <label htmlFor="productCode" className="block text-sm font-medium mb-1">
-              Product Code
-            </label>
-            <input
-              id="productCode"
-              type="text"
-              value={productCode}
-              onChange={(e) => setProductCode(e.target.value)}
-              placeholder="Enter product code"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+  const columns: Column[] = [
+    {
+      key: "productCode",
+      label: "Product Code",
+      align: "left",
+    },
+    {
+      key: "productName",
+      label: "Product Name",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    {
+      key: "category",
+      label: "Category",
+      align: "left",
+    },
+    {
+      key: "unit",
+      label: "Unit",
+      align: "left",
+    },
+    {
+      key: "purchasePrice",
+      label: "Purchase Price",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "salePrice",
+      label: "Sale Price",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "stockQty",
+      label: "Stock Qty",
+      align: "right",
+    },
+    {
+      key: "stockValue",
+      label: "Stock Value",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+  ];
 
-          {/* Product Name */}
-          <div>
-            <label htmlFor="productName" className="block text-sm font-medium mb-1">
-              Product Name
-            </label>
-            <input
-              id="productName"
-              type="text"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              placeholder="Enter product name"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+  const tableFooter = () => (
+    <tfoot className="bg-muted font-semibold text-foreground">
+      <tr>
+        <td className="px-4 py-3 text-right" colSpan={4}>
+          Total
+        </td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((acc, cur) => acc + cur.purchasePrice, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((acc, cur) => acc + cur.salePrice, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+        <td className="px-4 py-3 text-right">{filteredData
+          .reduce((acc, cur) => acc + cur.stockQty, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
+        <td className="px-4 py-3 text-right">{`₹${filteredData
+          .reduce((acc, cur) => acc + cur.stockValue, 0)
+          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+      </tr>
+    </tfoot>
+  );
 
-          {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium mb-1">
-              Category
-            </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Unit */}
-          <div>
-            <label htmlFor="unit" className="block text-sm font-medium mb-1">
-              Unit
-            </label>
-            <select
-              id="unit"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {units.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Min Stock */}
-          <div>
-            <label htmlFor="minStock" className="block text-sm font-medium mb-1">
-              Min Stock Qty
-            </label>
-            <input
-              id="minStock"
-              type="number"
-              min={0}
-              value={minStock}
-              onChange={(e) => setMinStock(e.target.value)}
-              placeholder="Min stock quantity"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Max Stock */}
-          <div>
-            <label htmlFor="maxStock" className="block text-sm font-medium mb-1">
-              Max Stock Qty
-            </label>
-            <input
-              id="maxStock"
-              type="number"
-              min={0}
-              value={maxStock}
-              onChange={(e) => setMaxStock(e.target.value)}
-              placeholder="Max stock quantity"
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3 md:col-span-6 lg:col-span-6">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Search products"
-            >
-              <i className="fa fa-magnifying-glass fa-light"></i> Search
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Clear filters"
-            >
-              <i className="fa fa-refresh fa-light"></i> Clear
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Product Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Product Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Unit
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Purchase Price
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Sale Price
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Stock Qty
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Stock Value
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No products found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((p) => (
-                  <tr
-                    key={p.productCode}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">{p.productCode}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{p.productName}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{p.category}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{p.unit}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">${p.purchasePrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">${p.salePrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{p.stockQty}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">${p.stockValue.toFixed(2)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="text"
+        placeholder="Product Code"
+        value={productCode}
+        onChange={(e) => {
+          setProductCode(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleProductCodeChange:", {
+            productCode: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by product code"
+      />
+      <input
+        type="text"
+        placeholder="Product Name"
+        value={productName}
+        onChange={(e) => {
+          setProductName(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleProductNameChange:", {
+            productName: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search by product name"
+      />
+      <select
+        value={category}
+        onChange={(e) => {
+          setCategory(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleCategoryChange:", {
+            category: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by category"
+      >
+        {CATEGORIES.map((cat) => (
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+      <select
+        value={unit}
+        onChange={(e) => {
+          setUnit(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleUnitChange:", {
+            unit: e.target.value,
+          });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by unit"
+      >
+        <option value="">All Units</option>
+        {UNITS.map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        placeholder="Min Stock Qty"
+        value={minStock}
+        onChange={(e) => {
+          setMinStock(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleMinStockChange:", {
+            minStock: e.target.value,
+          });
+        }}
+        min="0"
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by minimum stock quantity"
+      />
+      <input
+        type="number"
+        placeholder="Max Stock Qty"
+        value={maxStock}
+        onChange={(e) => {
+          setMaxStock(e.target.value);
+          setCurrentPage(1);
+          console.log("ProductReport handleMaxStockChange:", {
+            maxStock: e.target.value,
+          });
+        }}
+        min="0"
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by maximum stock quantity"
+      />
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Product Report"
+      description="View and filter product records."
+      icon="fa fa-cube"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={productName}
+      onSearchChange={(e) => {
+        setProductName(e.target.value);
+        setCurrentPage(1);
+        console.log("ProductReport handleProductNameChange:", {
+          productName: e.target.value,
+        });
+      }}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

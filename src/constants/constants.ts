@@ -214,7 +214,7 @@ export const EXPENSE_HEADS = [
   "Courier",
 ] as const;
 
-export const INCOME_CATEGORIES = ["All", "Sales", "Service"] as const;
+export const INCOME_CATEGORIES = [ "Sales", "Service"] as const;
 
 export const ACCOUNTS = ["Cash", "Bank"] as const;
 

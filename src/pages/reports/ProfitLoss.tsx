@@ -1,20 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
+
+interface ProfitLossRecord {
+  id: string;
+  date: string;
+  totalSales: number;
+  totalPurchase: number;
+  expense: number;
+  profitLoss: number;
+}
+
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => JSX.Element;
+  align?: "left" | "center" | "right";
+}
 
 export default function ProfitLoss() {
+  const [data, setData] = useState<ProfitLossRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("ProfitLoss");
+    const response = await apiService.get<ProfitLossRecord[]>("ProfitLoss");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -22,243 +41,165 @@ export default function ProfitLoss() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("ProfitLoss loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const filteredData = useMemo(() => {
+    const result = data.filter((item) => {
+      const itemDate = new Date(item.date);
+      const start = fromDate ? new Date(fromDate) : null;
+      const end = toDate ? new Date(toDate) : null;
+      const matchStartDate = start ? itemDate >= start : true;
+      const matchEndDate = end ? itemDate <= end : true;
+      return matchStartDate && matchEndDate;
+    });
+    console.log("ProfitLoss filteredData:", result, { fromDate, toDate });
+    return result;
+  }, [data, fromDate, toDate]);
 
-  // Filter data by date range if set
-  const filteredData = data.filter((item: any) => {
-    if (fromDate && new Date(item.date) < new Date(fromDate)) return false;
-    if (toDate && new Date(item.date) > new Date(toDate)) return false;
-    return true;
-  });
-
-  // Pagination logic
-  const pagedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Calculate totals for displayed page
-  const totals = pagedData.reduce(
-    (acc, item) => {
-      acc.totalSales += item.totalSales;
-      acc.totalPurchase += item.totalPurchase;
-      acc.expense += item.expense;
-      acc.profitLoss += item.profitLoss;
-      return acc;
-    },
-    { totalSales: 0, totalPurchase: 0, expense: 0, profitLoss: 0 }
-  );
-
-  // Handlers
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("ProfitLoss paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
 
   const handleClear = () => {
     setFromDate("");
     setToDate("");
     setCurrentPage(1);
+    loadData();
+    console.log("ProfitLoss handleClear");
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      
-      <h1 className="text-lg font-semibold mb-6">Profit Loss</h1> 
+  const handleReport = () => {
+    alert("Profit Loss Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    console.log("ProfitLoss handleReport:", { filteredData });
+  };
 
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Clear"
-            title="Clear"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Save"
-            title="Save"
-            onClick={() => alert("Save functionality not implemented")}
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Report"
-            title="Report"
-            onClick={() => alert("Report functionality not implemented")}
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </div>
+  const columns: Column[] = [
+    {
+      key: "date",
+      label: "Date",
+      align: "left",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    {
+      key: "totalSales",
+      label: "Total Sales",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "totalPurchase",
+      label: "Total Purchase",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "expense",
+      label: "Expense",
+      align: "right",
+      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    },
+    {
+      key: "profitLoss",
+      label: "Profit / Loss",
+      align: "right",
+      render: (value) => (
+        <span className={`font-semibold ${value >= 0 ? "text-green-600" : "text-red-600"}`}>
+          ₹{Math.abs(value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      ),
+    },
+  ];
 
-      {/* Filter Section */}
-      <form
-        onSubmit={handleSearch}
-        className="bg-card rounded shadow p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-6 items-end"
-        aria-label="Filter Profit Loss"
-      >
-        <div>
-          <label
-            htmlFor="fromDate"
-            className="block text-sm font-medium mb-1"
-          >
-            From Date
-          </label>
-          <input
-            type="date"
-            id="fromDate"
-            name="fromDate"
-            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            aria-required="false"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="toDate"
-            className="block text-sm font-medium mb-1"
-          >
-            To Date
-          </label>
-          <input
-            type="date"
-            id="toDate"
-            name="toDate"
-            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            aria-required="false"
-          />
-        </div>
-        <div className="md:col-span-2 flex gap-3">
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Search"
-          >
-            <i className="fa fa-search fa-light" aria-hidden="true"></i> Search
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Reset"
-          >
-            <i className="fa fa-undo fa-light" aria-hidden="true"></i> Reset
-          </button>
-        </div>
-      </form>
+  const tableFooter = () => {
+    const totals = filteredData.reduce(
+      (acc, item) => ({
+        totalSales: acc.totalSales + item.totalSales,
+        totalPurchase: acc.totalPurchase + item.totalPurchase,
+        expense: acc.expense + item.expense,
+        profitLoss: acc.profitLoss + item.profitLoss,
+      }),
+      { totalSales: 0, totalPurchase: 0, expense: 0, profitLoss: 0 }
+    );
 
-      {/* Table Section */}
-      <div className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Total Sales
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Total Purchase
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Expense
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Profit / Loss
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pagedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No data available for selected date range.
-                  </td>
-                </tr>
-              )}
-              {pagedData.map((item: any, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right">
-                    {item.totalSales.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right">
-                    {item.totalPurchase.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground text-right">
-                    {item.expense.toLocaleString()}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-sm text-right font-semibold ${
-                      item.profitLoss >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {item.profitLoss.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            {/* Footer Totals */}
-            {pagedData.length > 0 && (
-              <tfoot className="bg-muted/50 font-semibold text-foreground">
-                <tr>
-                  <td className="px-4 py-3 text-left">Total</td>
-                  <td className="px-4 py-3 text-right">
-                    {totals.totalSales.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {totals.totalPurchase.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {totals.expense.toLocaleString()}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-right ${
-                      totals.profitLoss >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {totals.profitLoss.toLocaleString()}
-                  </td>
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
+    return (
+      <tfoot className="bg-muted font-semibold text-foreground">
+        <tr>
+          <td className="px-4 py-3 text-left">Total</td>
+          <td className="px-4 py-3 text-right">
+            ₹{totals.totalSales.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+          <td className="px-4 py-3 text-right">
+            ₹{totals.totalPurchase.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+          <td className="px-4 py-3 text-right">
+            ₹{totals.expense.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+          <td className={`px-4 py-3 text-right ${totals.profitLoss >= 0 ? "text-green-600" : "text-red-600"}`}>
+            ₹{Math.abs(totals.profitLoss).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+        </tr>
+      </tfoot>
+    );
+  };
 
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </div>
+  const customFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <input
+        type="date"
+        placeholder="From Date"
+        value={fromDate}
+        onChange={(e) => {
+          setFromDate(e.target.value);
+          setCurrentPage(1);
+          console.log("ProfitLoss handleFromDateChange:", { fromDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by from date"
+      />
+      <input
+        type="date"
+        placeholder="To Date"
+        value={toDate}
+        onChange={(e) => {
+          setToDate(e.target.value);
+          setCurrentPage(1);
+          console.log("ProfitLoss handleToDateChange:", { toDate: e.target.value });
+        }}
+        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Filter by to date"
+      />
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Profit Loss Report"
+      description="View and filter profit and loss records."
+      icon="fa fa-balance-scale"
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search=""
+      onSearchChange={() => {}} // No text-based search field
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      tableFooter={tableFooter}
+      customFilters={customFilters}
+    />
   );
 }

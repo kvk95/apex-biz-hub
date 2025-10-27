@@ -8,70 +8,70 @@
       "id": 1,
       "customer": "John Doe",
       "orders": 15,
-      "totalSpent": "$1,250.25",
+      "totalSpent": "1,250.25",
       "lastPurchase": "2025-10-08"
     },
     {
       "id": 2,
       "customer": "Alice Smith",
       "orders": 12,
-      "totalSpent": "$980.36",
+      "totalSpent": "980.36",
       "lastPurchase": "2025-10-03"
     },
     {
       "id": 3,
       "customer": "Robert Johnson",
       "orders": 10,
-      "totalSpent": "$875.50",
+      "totalSpent": "875.50",
       "lastPurchase": "2025-10-07"
     },
     {
       "id": 4,
       "customer": "Emma Wilson",
       "orders": 10,
-      "totalSpent": "$750.25",
+      "totalSpent": "750.25",
       "lastPurchase": "2025-10-05"
     },
     {
       "id": 5,
       "customer": "Michael Brown",
       "orders": 7,
-      "totalSpent": "$620.75",
+      "totalSpent": "620.75",
       "lastPurchase": "2025-10-09"
     },
     {
       "id": 6,
       "customer": "Linda Taylor",
       "orders": 6,
-      "totalSpent": "$580.00",
+      "totalSpent": "580.00",
       "lastPurchase": "2025-10-06"
     },
     {
       "id": 7,
       "customer": "James Anderson",
       "orders": 5,
-      "totalSpent": "$450.00",
+      "totalSpent": "450.00",
       "lastPurchase": "2025-10-04"
     },
     {
       "id": 8,
       "customer": "Patricia Martinez",
       "orders": 4,
-      "totalSpent": "$400.00",
+      "totalSpent": "400.00",
       "lastPurchase": "2025-10-02"
     },
     {
       "id": 9,
       "customer": "David Lee",
       "orders": 3,
-      "totalSpent": "$350.00",
+      "totalSpent": "350.00",
       "lastPurchase": "2025-10-01"
     },
     {
       "id": 10,
       "customer": "Barbara Harris",
       "orders": 2,
-      "totalSpent": "$300.00",
+      "totalSpent": "300.00",
       "lastPurchase": "2025-09-30"
     }
   ]
