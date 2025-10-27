@@ -138,7 +138,7 @@ export const LEAVE_TYPES = [
   "Unpaid Leave",
 ] as const;
 
-export const LEAVE_APPROVAL_STATUSES = [
+export const APPROVAL_STATUSES = [
   "Pending",
   "Approved",
   "Rejected",
@@ -168,7 +168,7 @@ export const MONTHS = [
 
 export const ACCOUNT_TYPES = ["Savings", "Current"] as const;
 
-export const TAX_TYPE_OPTIONS = [ "VAT", "GST", "Sales Tax"] as const;
+export const TAX_TYPES = [ "VAT", "GST", "Sales Tax"] as const;
 
 export const TAX_OPTIONS = ["Exclusive", "Inclusive"] as const;
   
@@ -220,3 +220,5 @@ export const ACCOUNTS = ["Cash", "Bank"] as const;
 
 export const CURRENCIES = ["USD", "INR", "EUR"] as const;
  
+
+export const COUNTRIES = ["India"] as const;

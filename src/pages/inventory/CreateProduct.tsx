@@ -6,7 +6,7 @@ import {
   STOCK_STATUSES,
   DISCOUNT_TYPES,
   TAX_OPTIONS,
-  TAX_TYPE_OPTIONS,
+  TAX_TYPES,
   CATEGORIES,
 } from "@/constants/constants";
 
@@ -537,7 +537,7 @@ export default function ProductDetails() {
                     required
                   >
                     <option value="">Select</option>
-                    {TAX_TYPE_OPTIONS.map((type) => (
+                    {TAX_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>

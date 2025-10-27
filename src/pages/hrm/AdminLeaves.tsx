@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
-import { LEAVE_TYPES, LEAVE_APPROVAL_STATUSES } from "@/constants/constants";
+import { LEAVE_TYPES, APPROVAL_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface LeaveRecord {
@@ -12,7 +12,7 @@ interface LeaveRecord {
   toDate: string;
   noOfDays: number;
   reason: string;
-  status: typeof LEAVE_APPROVAL_STATUSES[number];
+  status: typeof APPROVAL_STATUSES[number];
 }
 
 interface Column {
@@ -246,7 +246,7 @@ export default function AdminLeaves() {
         aria-label="Filter by status"
       >
         <option value="">All Status</option>
-        {LEAVE_APPROVAL_STATUSES.map((s) => (
+        {APPROVAL_STATUSES.map((s) => (
           <option key={s} value={s}>{s}</option>
         ))}
       </select>
@@ -364,7 +364,7 @@ export default function AdminLeaves() {
           required
           aria-label="Select status"
         >
-          {LEAVE_APPROVAL_STATUSES.map((s) => (
+          {APPROVAL_STATUSES.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>

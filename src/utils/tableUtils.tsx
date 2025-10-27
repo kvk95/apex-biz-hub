@@ -5,7 +5,7 @@ import {
   PAYMENT_STATUSES,
   PURCHASE_STATUSES,
   STOCK_STATUSES,
-  LEAVE_APPROVAL_STATUSES,
+  APPROVAL_STATUSES,
 } from "@/constants/constants";
 
 /**

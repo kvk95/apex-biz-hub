@@ -11,7 +11,9 @@
       "price": 1200,
       "stock": 15,
       "status": "Active",
-      "image": "/assets/images/products/1.png"
+      "image": "/assets/images/products/1.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 2,
@@ -20,7 +22,9 @@
       "price": 1100,
       "stock": 10,
       "status": "Active",
-      "image": "/assets/images/products/2.png"
+      "image": "/assets/images/products/2.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 3,
@@ -29,7 +33,9 @@
       "price": 350,
       "stock": 25,
       "status": "Active",
-      "image": "/assets/images/products/3.png"
+      "image": "/assets/images/products/3.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 4,
@@ -38,7 +44,9 @@
       "price": 2500,
       "stock": 5,
       "status": "Active",
-      "image": "/assets/images/products/4.png"
+      "image": "/assets/images/products/4.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 5,
@@ -47,7 +55,9 @@
       "price": 1400,
       "stock": 8,
       "status": "Inactive",
-      "image": "/assets/images/products/5.png"
+      "image": "/assets/images/products/5.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 6,
@@ -56,7 +66,9 @@
       "price": 100,
       "stock": 30,
       "status": "Active",
-      "image": "/assets/images/products/6.png"
+      "image": "/assets/images/products/6.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 7,
@@ -65,7 +77,9 @@
       "price": 400,
       "stock": 20,
       "status": "Active",
-      "image": "/assets/images/products/7.png"
+      "image": "/assets/images/products/7.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 8,
@@ -74,7 +88,9 @@
       "price": 900,
       "stock": 12,
       "status": "Active",
-      "image": "/assets/images/products/8.png"
+      "image": "/assets/images/products/8.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 9,
@@ -83,7 +99,9 @@
       "price": 280,
       "stock": 18,
       "status": "Inactive",
-      "image": "/assets/images/products/9.png"
+      "image": "/assets/images/products/9.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 10,
@@ -92,7 +110,9 @@
       "price": 1600,
       "stock": 7,
       "status": "Active",
-      "image": "/assets/images/products/10.png"
+      "image": "/assets/images/products/10.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 11,
@@ -101,7 +121,9 @@
       "price": 350,
       "stock": 14,
       "status": "Active",
-      "image": "/assets/images/products/11.png"
+      "image": "/assets/images/products/11.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 12,
@@ -110,7 +132,9 @@
       "price": 2500,
       "stock": 4,
       "status": "Active",
-      "image": "/assets/images/products/12.png"
+      "image": "/assets/images/products/12.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 13,
@@ -119,7 +143,9 @@
       "price": 3000,
       "stock": 3,
       "status": "Inactive",
-      "image": "/assets/images/products/13.png"
+      "image": "/assets/images/products/13.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 14,
@@ -128,7 +154,9 @@
       "price": 2800,
       "stock": 6,
       "status": "Active",
-      "image": "/assets/images/products/14.png"
+      "image": "/assets/images/products/14.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     },
     {
       "id": 15,
@@ -137,7 +165,9 @@
       "price": 120,
       "stock": 22,
       "status": "Active",
-      "image": "/assets/images/products/15.png"
+      "image": "/assets/images/products/15.png",
+      "sku": "SHU-001",
+      "code": "PD-1001"
     }
   ]
 }
