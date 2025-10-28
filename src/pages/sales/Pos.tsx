@@ -322,15 +322,15 @@ export default function Pos1() {
                       </span>
                     </div>
                     <div className="p-2 flex flex-col flex-grow">
-                      <p className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {p.category}
-                      </p>
-                      <p
+                      </div>
+                      <div
                         className="font-medium text-sm truncate"
                         title={p.productName}
                       >
                         {p.productName}
-                      </p>
+                      </div>
                       <div className="flex justify-between items-center mt-2">
                         <span className="font-bold text-primary">
                           ₹{p.price.toFixed(2)}

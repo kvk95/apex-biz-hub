@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES } from "@/constants/constants";
@@ -8,7 +9,7 @@ interface CategoryRecord {
   id: number;
   categoryName: string;
   description: string;
-  status: typeof EXPIRED_STATUSES[number];
+  status: (typeof EXPIRED_STATUSES)[number];
 }
 
 interface Column {
@@ -19,6 +20,8 @@ interface Column {
 }
 
 export default function Category() {
+  const { state } = useLocation();
+
   const [data, setData] = useState<CategoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,20 @@ export default function Category() {
     description: "",
     status: EXPIRED_STATUSES[0],
   });
+
+  useEffect(() => {
+    console.log(state?.mode);
+    if (state?.mode === "create") {
+      state.mode = null; // Clear mode after use
+      setForm({
+        id: 0,
+        categoryName: "",
+        description: "",
+        status: EXPIRED_STATUSES[0],
+      });
+      setFormMode("add");
+    }
+  }, [state]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -104,7 +121,10 @@ export default function Category() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -136,7 +156,12 @@ export default function Category() {
       render: (value) => <span className="font-semibold">{value}</span>,
     },
     { key: "description", label: "Description", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: CategoryRecord) => (
@@ -184,7 +209,9 @@ export default function Category() {
       >
         <option value="">All Status</option>
         {EXPIRED_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
       </select>
     </div>
@@ -193,7 +220,10 @@ export default function Category() {
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label htmlFor="categoryName" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="categoryName"
+          className="block text-sm font-medium mb-1"
+        >
           Category Name <span className="text-destructive">*</span>
         </label>
         <input
@@ -238,7 +268,9 @@ export default function Category() {
         >
           <option value="">Select Status</option>
           {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>

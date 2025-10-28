@@ -10,16 +10,88 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
+
+const addnewItems = [
+  { name: "Category", icon: "fa-tags", key: "/inventory/categories" },
+  { name: "Product", icon: "fa-boxes", key: "/inventory/products/create" },
+  { name: "Sale", icon: "fa-globe", key: "/sales/online-orders" },
+  { name: "User", icon: "fa-user", key: "/peoples/customers" },
+  { name: "Supplier", icon: "fa-truck", key: "/peoples/suppliers" },
+  { name: "Sales Return", icon: "fa-undo-alt", key: "/sales/return" },
+];
+
+export function DropdownTable({ dropdownOpen, setDropdownOpen }) {
+  const navigate = useNavigate();
+  const dropdownRef = useRef();
+
+  // Optional: click outside to close
+  useEffect(() => {
+    function handleClick(event) {
+      if (
+        dropdownOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [dropdownOpen, setDropdownOpen]);
+
+  return (
+    <div
+      ref={dropdownRef}
+      id="dropdownRadioHelper"
+      className={`z-10 absolute left-100 -top-10 mt-0 ${
+        dropdownOpen ? "" : "hidden"
+      } bg-white rounded shadow w-[400px]  `}
+      style={{ top: "100%" }} // Ensures it appears just below the button
+    >
+      <table className="w-full table-fixed">
+        <tbody>
+          {/* 2 rows */}
+          {[0, 1].map((row) => (
+            <tr key={row}>
+              {/* 3 cols in each row */}
+              {addnewItems.slice(row * 3, row * 3 + 3).map((item) => (
+                <td key={item.key} className="p-1 align-top items-center justify-center border last:border-0">
+                  <button
+                    className=" items-center justify-center w-full p-3 rounded hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate(`${item.key}`, {
+                        state: { mode: "create" },
+                      });
+                    }
+                  }
+                  >
+                    <i
+                      className={`fa ${item.icon} text-xl mr-2 selected_color_text`}
+                    />
+                    <br/>
+                    <span className="font-medium">{item.name}</span>
+                  </button>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function AppNavbar({ isPosPage }) {
   const [language, setLanguage] = useState("EN");
   const { theme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -127,6 +199,24 @@ export function AppNavbar({ isPosPage }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {!isPosPage && (
+            <>
+              <button
+                id="dropdownRadioHelperButton"
+                className="selected_color hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                type="button"
+                onClick={() => setDropdownOpen((v) => !v)}
+              >
+                <i className="fa fa-plus-circle me-2 "></i>Add New{" "}
+                <i className="fa fa-chevron-down ms-2"></i>
+              </button>
+              <DropdownTable
+                dropdownOpen={dropdownOpen}
+                setDropdownOpen={setDropdownOpen}
+              />
+            </>
+          )}
+
           {isPosPage && (
             <>
               <Button
@@ -136,6 +226,19 @@ export function AppNavbar({ isPosPage }) {
               >
                 <i className="fa fa-dashboard "></i>
                 Dashboard
+              </Button>
+            </>
+          )}
+
+          {!isPosPage && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/sales/pos1")}
+                className="bg-gray-800 text-white hover:bg-primary hover:text-primary-foreground py-2 px-3 text-xs"
+              >
+                <i className="fa fa-cash-register"></i>
+                POS
               </Button>
             </>
           )}
@@ -187,9 +290,9 @@ export function AppNavbar({ isPosPage }) {
                     className="relative pt-2 hover:bg-primary hover:text-primary-foreground"
                   >
                     <i className="fa fa-bell fa-light h-5 w-5"></i>
-                    <Badge className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center p-0">
+                    <Badge className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center p">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
-                      <span className="relative inline-flex size-3 rounded-full bg-sky-500 text-white text-xs">
+                      <span className="relative inline-flex size-3 rounded-full bg-sky-500 text-white text-xs items-center justify-between">
                         2
                       </span>
                     </Badge>

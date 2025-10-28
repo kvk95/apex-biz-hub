@@ -162,6 +162,10 @@ All colors MUST be HSL.
     color: white;
 }
 
+.selected_color_text {
+    color: hsl(var(--primary)); 
+}
+
 .font-poppins {
   font-family: "Poppins", sans-serif;
 }
