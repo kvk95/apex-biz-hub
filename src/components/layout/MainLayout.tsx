@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 export function MainLayout() {
   // Inside MainLayout
   const location = useLocation();
-  const isPosPage = location.pathname.includes("/pos");
+  const isPosPage = location.pathname.includes("/pos1");
 
   return (
     <ThemeProvider>

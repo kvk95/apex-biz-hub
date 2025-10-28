@@ -228,7 +228,7 @@ const App = () => {
                 <Route path="sales/invoices" element={<Invoices />} />
                 <Route path="sales/return" element={<SalesReturn />} />
                 <Route path="sales/quotations" element={<Quotation />} />
-                <Route path="sales/pos" element={<Pos />} />
+                <Route path="sales/pos1" element={<Pos />} />
 
                 {/* Promo */}
                 <Route path="promo/coupons" element={<Coupons />} />
