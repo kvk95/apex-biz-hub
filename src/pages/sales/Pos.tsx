@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { Pagination } from "@/components/Pagination/Pagination";
-import { STATUSES, EXPIRED_STATUSES } from "@/constants/constants";
+import {
+  STATUSES,
+  EXPIRED_STATUSES,
+  PAYMENT_TYPES,
+  PAYMENT_STATUSES,
+} from "@/constants/constants";
 
-// Interfaces from provided code
+// Interfaces
 interface ProductRecord {
   id: number;
   productName: string;
@@ -36,64 +41,74 @@ interface CategoryRecord {
 }
 
 export default function Pos1() {
-  const [products, setProducts] = useState<ProductRecord[]>([]);
+  const [products, setProducts] = useState<
+    (ProductRecord & { quantity?: number })[]
+  >([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Pagination state for customers and products
+  // Pagination
   const [customerPage, setCustomerPage] = useState(1);
   const [customerItemsPerPage, setCustomerItemsPerPage] = useState(10);
   const [productPage, setProductPage] = useState(1);
   const [productItemsPerPage, setProductItemsPerPage] = useState(10);
 
-  // Modal editing state for products (assuming edit exists for products)
+  // Search & Filter
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [customerSearch, setCustomerSearch] = useState("");
+
+  // Cart & Payment
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
+  const [discount, setDiscount] = useState(0);
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [paymentStatus, setPaymentStatus] = useState("Paid");
+
+  // Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Placeholder for product search/filtering (logic would be needed for a real filter)
-  const [productSearch, setProductSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-
+  // Load Data
   const loadData = async () => {
     setLoading(true);
     try {
-      const [productsResponse, customersResponse, categoriesResponse] =
-        await Promise.all([
-          apiService.get<ProductRecord[]>("Products"),
-          apiService.get<Customer[]>("Customers"),
-          apiService.get<CategoryRecord[]>("Category"),
-        ]);
-      if (productsResponse.status.code === "S") {
-        setProducts(productsResponse.result || []);
-      } else {
-        setError(
-          productsResponse.status.description || "Failed to load products."
-        );
-      }
-      if (customersResponse.status.code === "S") {
-        setCustomers(customersResponse.result || []);
-      } else {
+      const [prodRes, custRes, catRes] = await Promise.all([
+        apiService.get<ProductRecord[]>("Products"),
+        apiService.get<Customer[]>("Customers"),
+        apiService.get<CategoryRecord[]>("Category"),
+      ]);
+
+      if (prodRes.status.code === "S") {
+        setProducts((prodRes.result || []).map((p) => ({ ...p, quantity: 0 })));
+      } else setError(prodRes.status.description || "Failed to load products.");
+
+      if (custRes.status.code === "S") {
+        setCustomers(custRes.result || []);
+      } else
         setError((prev) =>
           prev
-            ? `${prev}\nFailed to load customers: ${customersResponse.status.description}`
-            : `Failed to load customers: ${customersResponse.status.description}`
+            ? `${prev}\n${custRes.status.description}`
+            : custRes.status.description
         );
-      }
-      if (categoriesResponse.status.code === "S") {
-        setCategories(categoriesResponse.result || []);
-      } else {
+
+      if (catRes.status.code === "S") {
+        setCategories(catRes.result || []);
+      } else
         setError((prev) =>
           prev
-            ? `${prev}\nFailed to load categories: ${categoriesResponse.status.description}`
-            : `Failed to load categories: ${categoriesResponse.status.description}`
+            ? `${prev}\n${catRes.status.description}`
+            : catRes.status.description
         );
-      }
-      setError(null); // Clear error if all succeed
+
+      setError(null);
     } catch (err) {
-      setError("An error occurred while loading data.");
+      setError("Failed to load data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -103,95 +118,71 @@ export default function Pos1() {
     loadData();
   }, []);
 
-  // Customer selection and search
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
-
-  // Product list state (copy from data.products for editing quantities)
-  // Already handled by setProducts above
-
-  // Payment and discount states
-  const [discount, setDiscount] = useState(0);
-  const [paidAmount, setPaidAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("Cash");
-  const [paymentStatus, setPaymentStatus] = useState("Paid");
-
-  // Sync products state when data changes
   useEffect(() => {
-    if (products.length > 0) {
-      setProducts(products); // Ensure products are set initially
-    }
     if (customers.length > 0 && !selectedCustomer) {
       setSelectedCustomer(customers[0]);
     }
-  }, [products, customers, selectedCustomer]);
+  }, [customers, selectedCustomer]);
 
-  // Filter customers by search
-  const filteredCustomers = (customers || []).filter((c) =>
+  // Filters
+  const filteredCustomers = customers.filter((c) =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
-  // Paginated customers and products using Pagination component logic
-  const pagedCustomers = filteredCustomers.slice(
-    (customerPage - 1) * customerItemsPerPage,
-    customerPage * customerItemsPerPage
+  const filteredProducts = products.filter(
+    (p) =>
+      (selectedCategory === "All" || p.category === selectedCategory) &&
+      p.productName.toLowerCase().includes(productSearch.toLowerCase())
   );
-  const pagedProducts = products.slice(
+
+  const pagedFilteredProducts = filteredProducts.slice(
     (productPage - 1) * productItemsPerPage,
     productPage * productItemsPerPage
   );
 
-  // Calculate totals
-  const subtotal = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
+  // Calculations
+  const cartItems = products.filter((p) => (p.quantity || 0) > 0);
+  const subtotal = cartItems.reduce(
+    (sum, p) => sum + p.price * (p.quantity || 0),
+    0
+  );
   const discountAmount = (subtotal * discount) / 100;
   const total = subtotal - discountAmount;
   const dueAmount = total - paidAmount;
 
   // Handlers
-  const handleCustomerSelect = (customer: any) => {
-    setSelectedCustomer(customer);
+  const handleAddToCart = (id: number) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, quantity: (p.quantity || 0) + 1 } : p
+      )
+    );
   };
 
   const handleQuantityChange = (id: number, qty: number) => {
-    if (qty < 1) return;
+    if (qty < 0) return;
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, quantity: qty } : p))
     );
   };
 
-  const handleDiscountChange = (val: number) => {
-    if (val < 0) val = 0;
-    if (val > 100) val = 100;
-    setDiscount(val);
+  const handleRemoveFromCart = (id: number) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, quantity: 0 } : p))
+    );
   };
 
-  const handlePaidAmountChange = (val: number) => {
-    if (val < 0) val = 0;
-    if (val > total) val = total;
-    setPaidAmount(val);
-  };
-
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
+    setProducts((prev) => prev.map((p) => ({ ...p, quantity: 0 })));
     setDiscount(0);
     setPaidAmount(0);
     setPaymentMethod("Cash");
     setPaymentStatus("Paid");
-    if (products.length > 0) setProducts(products);
-    if (customers.length > 0) setSelectedCustomer(customers[0]);
-    setCustomerPage(1);
-    setProductPage(1);
     setCustomerSearch("");
+    setProductPage(1);
+    setSelectedCustomer(customers[0] || null);
   };
 
-  // Report handler
-  const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify({ customers, products }, null, 2));
-  };
-
-  // Edit modal handlers (assuming edit icon/button exists on product rows)
   const handleEdit = (id: number) => {
     const item = products.find((p) => p.id === id);
     if (item) {
@@ -201,225 +192,154 @@ export default function Pos1() {
     }
   };
 
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev: any) => ({ ...prev, [name]: value }));
-  };
-
   const handleEditSave = () => {
-    if (!editForm) return;
-    // Basic validation for quantity and price (optional)
-    if (editForm.quantity < 1 || editForm.price < 0 || !editForm.name?.trim()) {
-      alert("Please fill all required fields correctly.");
+    if (!editForm || editId === null) return;
+    if (
+      !editForm.productName?.trim() ||
+      editForm.price < 0 ||
+      editForm.quantity < 0
+    ) {
+      alert("Please fill all fields correctly.");
       return;
     }
-    if (editId !== null) {
-      setProducts((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                name: editForm.name.trim(),
-                price: Number(editForm.price),
-                quantity: Number(editForm.quantity),
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditId(null);
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === editId
+          ? { ...p, ...editForm, productName: editForm.productName.trim() }
+          : p
+      )
+    );
     setIsEditModalOpen(false);
+    setEditId(null);
   };
-
-  // Simple filter to show the concept
-  const filteredProducts = products.filter(
-    (p) =>
-      (selectedCategory === "All" || p.category === selectedCategory) &&
-      p.productName.toLowerCase().includes(productSearch.toLowerCase())
-  );
-
-  // Paginated products will now use filteredProducts
-  const pagedFilteredProducts = filteredProducts.slice(
-    (productPage - 1) * productItemsPerPage,
-    productPage * productItemsPerPage
-  );
 
   return (
-    // Removed max-w to utilize full available space
-    <div className=" h-[calc(100vh-200px)] w-full bg-muted/20 " > 
-      {/* --- Header (kept simple as Navbar now handles main functions) --- */}
-      {/* <header
-        className="mb-4 flex justify-end items-center"
-        style={{ marginTop: "1px" }}
-      >         
-      </header>*/}
-
-      {/* --- Main POS Grid: Product Selection (Left) vs. Order Management (Right) --- */}
-      <div className="grid grid-cols-12 gap-2 h-[calc(100vh-130px)]">
-        {/* 🚀 Left Panel: Product Selection (col-span-8 to maximize product visibility) */}
-        <section className="col-span-8 bg-card rounded-sm shadow-sm py-2 flex flex-col space-y-4 overflow-y-auto  ">
-          {/* Top Row: Search and Category Tabs */}
-          <div className="flex flex-col space-y-3 px-2">
-            {/* Categories/Tags (Horizontal Scrollable) */}
-            <div className="flex space-x-2 overflow-x-auto ">
-              {["All", ...categories].map((catOrName) => {
-                // Handle "All" as special case (string)
-                if (typeof catOrName === "string") {
-                  return (
-                    <button
-                      key={catOrName}
-                      onClick={() => {
-                        setSelectedCategory(catOrName);
-                        setProductPage(1);
-                      }}
-                      className={`flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-2 me-2 mb-2  dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
-                        selectedCategory === catOrName
-                          ? "selected_color"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                      type="button"
-                    >
-                      {catOrName}
-                    </button>
-                  );
-                }
-
-                // Actual category object with image
+    <div className="h-[calc(100vh-75px)] w-full bg-muted/20 flex flex-col">
+      {/* Main Grid */}
+      <div className="flex-1 grid grid-cols-12 gap-3 p-1 overflow-hidden">
+        {/* Left: Product Selection */}
+        <section className="col-span-8 bg-card rounded-lg shadow-sm flex flex-col overflow-hidden">
+          {/* Search & Categories */}
+          <div className="p-3 space-y-3 border-b">
+            {/* Categories */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {["All", ...categories.map((c) => c.categoryName)].map((name) => {
+                const cat = categories.find((c) => c.categoryName === name);
+                const isAll = name === "All";
                 return (
                   <button
-                    key={catOrName.categoryName}
+                    key={name}
                     onClick={() => {
-                      setSelectedCategory(catOrName.categoryName);
+                      setSelectedCategory(name);
                       setProductPage(1);
-                    }} 
-                    className={`relative flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-1 me-2 mb-1 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
-                      selectedCategory === catOrName.categoryName
-                        ? "selected_color"
-                        : "bg-white text-muted-foreground hover:bg-muted/80"
-                    }`}
-                    type="button"
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-sm border transition-all whitespace-nowrap
+                      ${
+                        selectedCategory === name
+                          ? "bg-primary text-white border-primary shadow-sm"
+                          : "bg-white text-muted-foreground border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
-                    {/* Category image */}
-                    {/* {catOrName.image && (
+                    {!isAll && cat?.image ? (
                       <img
-                        src={catOrName.image}
-                        alt={catOrName.categoryName}
-                        className="inline-block w-5 h-4 mr-2 rounded"
-                      />
-                    )}  */}
-
-                    <img
-                        src={catOrName.image}
-                        alt={catOrName.categoryName}
-                        className="relative inline-block w-5 h-5 mr-2 rounded-sm" 
+                        src={cat.image}
+                        alt={name}
+                        className="w-4 h-4 rounded object-cover"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          target.nextSibling?.classList.remove("hidden");
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (
+                            e.target as HTMLImageElement
+                          ).nextElementSibling?.classList.remove("hidden");
                         }}
                       />
-                    <i className="fa fa-tags text-sm text-gray-400 me-2 hidden"></i>  
-                    <span className="py-2">{catOrName.categoryName}</span>
+                    ) : null}
+                    <i
+                      className={`fa fa-tags text-xs ${
+                        !isAll && cat?.image ? "hidden" : ""
+                      }`}
+                    />
+                    <span>{name}</span>
                   </button>
-                   
                 );
               })}
             </div>
 
-            {/* Product Search */}
-            <div className="w-full relative px-2">
-              <i className="fa fa-search fa-light absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"></i>
+            {/* Search */}
+            <div className="relative">
+              <i className="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
               <input
                 type="text"
-                placeholder="Search Product or Scan Barcode"
+                placeholder="Search product or scan barcode..."
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
-                className=" text-xs border border-input rounded-lg px-4 pl-10 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
 
-          {/* Product List as Cards (Main Scroll Area) */}
-          <div className="flex-1 overflow-y-auto pr-2 px-2">
+          {/* Product Grid */}
+          <div className="flex-1 overflow-y-auto p-3">
             {loading ? (
-              <div className="text-center py-10 text-xl text-primary font-semibold">
-                <i className="fa fa-spinner fa-spin mr-2"></i> Loading
-                Products...
+              <div className="text-center py-12">
+                <i className="fa fa-spinner fa-spin text-2xl text-primary" />
+                <p className="mt-2 text-muted-foreground">
+                  Loading products...
+                </p>
               </div>
             ) : error ? (
-              <div className="text-center py-10 text-destructive text-lg">
-                Error: {error}
-              </div>
+              <div className="text-center py-12 text-destructive">{error}</div>
             ) : pagedFilteredProducts.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground italic">
-                No products found for this category/search.
+              <div className="text-center py-12 text-muted-foreground italic">
+                No products found.
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {pagedFilteredProducts.map((p) => (
                   <div
                     key={p.id}
-                    className="bg-background border border-border rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col justify-between"
+                    className="bg-white rounded-lg border overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
                   >
-                    {/* Card Image Placeholder */}
-                    <div className="relative w-full h-36 bg-gray-200 flex items-center justify-center">
+                    <div className="relative h-32 bg-gray-100 flex items-center justify-center">
                       <img
                         src={p.image}
                         alt={p.productName}
-                        className="h-full w-full object-fit " 
+                        className="h-full w-full object-contain"
                         onError={(e) => {
-
-                          /* donot remove.. nedd for future reference
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          target.nextSibling?.classList.remove("hidden");*/
-
-                          const target = e.target as HTMLImageElement;
-                          const triedFallback = target.getAttribute("data-fallback-tried");
-
-                          if (!triedFallback && p.category) {
-                            target.setAttribute("data-fallback-tried", "true");
-                            target.src = `/assets/images/categories/${p.category.toLowerCase()}.png`;
+                          const img = e.target as HTMLImageElement;
+                          const tried = img.getAttribute("data-fallback");
+                          if (!tried && p.category) {
+                            img.setAttribute("data-fallback", "true");
+                            img.src = `/assets/images/categories/${p.category.toLowerCase()}.png`;
                           } else {
-                            target.style.display = "none";
-                            target.nextSibling?.classList.remove("hidden");
+                            img.style.display = "none";
+                            img.nextElementSibling?.classList.remove("hidden");
                           }
                         }}
                       />
-                      <i className="fa fa-box-open fa-3x text-gray-400 hidden absolute"></i>
-                      <span className="absolute top-1 right-1 text-xs font-semibold px-2 py-0.5 text-white bg-primary  rounded">
+                      <i className="fa fa-box-open fa-3x text-gray-400 hidden absolute" />
+                      <span className="absolute top-1 right-1 bg-primary text-white text-xs px-2 py-0.5 rounded">
                         {p.stock} Qty
                       </span>
                     </div>
                     <div className="p-2 flex flex-col flex-grow">
-                      <div className="flex justify-between items-end mt-auto text-xs">{p.category}</div>
-                      
+                      <p className="text-xs text-muted-foreground">
+                        {p.category}
+                      </p>
                       <p
-                        className="text-sm font-semibold truncate mb-1"
+                        className="font-medium text-sm truncate"
                         title={p.productName}
                       >
                         {p.productName}
                       </p>
-                      <div className="flex justify-between items-end mt-auto">
-                        <span className="text-sm font-bold text-primary">
-                          ${p.price.toFixed(2)}
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-bold text-primary">
+                          ₹{p.price.toFixed(2)}
                         </span>
                         <button
-                          onClick={() =>
-                            handleQuantityChange(p.id, p.quantity + 1)
-                          } // Simulate Add
-                          className="text-xs px-2 py-1 bg-green-500 text-white rounded-full hover:bg-primary/90 transition-colors shadow"
-                          aria-label={`Add ${p.productName} to cart`}
-                          type="button"
+                          onClick={() => handleAddToCart(p.id)}
+                          className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded-full transition-colors"
                         >
-                          <i className="fa fa-plus "></i>
+                          <i className="fa fa-plus" />
                         </button>
                       </div>
                     </div>
@@ -429,7 +349,8 @@ export default function Pos1() {
             )}
           </div>
 
-          {/* Product Pagination */} 
+          {/* Pagination */}
+          <div className="p-2 border-t">
             <Pagination
               currentPage={productPage}
               itemsPerPage={productItemsPerPage}
@@ -439,51 +360,37 @@ export default function Pos1() {
                 setProductItemsPerPage(size);
                 setProductPage(1);
               }}
-            /> 
+            />
+          </div>
         </section>
 
-        {/* 💳 Right Panel: Order Details (col-span-4) */}
-        <section className="col-span-4 bg-card rounded-sm shadow-sm p-4 flex flex-col space-y-4 overflow-y-auto">
-          {/* 1. Pending Order List (Top Row) - Placeholder */}
-          <div className="border-b pb-3 mb-3">
-            <h3 className="text-base font-semibold text-muted-foreground mb-2">
-              Current Order
-            </h3>
-            <div className="flex space-x-2">
-              <div className="flex-1 p-2 border border-primary bg-primary/10 rounded-lg text-center font-bold text-primary">
-                Order #1234
+        {/* Right: Order Summary */}
+        <section className="col-span-4 bg-card rounded-lg shadow-sm flex flex-col overflow-y-auto">
+          <div className="p-3 border-b">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold">Current Order #1234</h3>
+              <div className="flex gap-1">
+                <button className="p-1.5 bg-yellow-400 rounded hover:bg-yellow-500">
+                  <i className="fa fa-plus text-xs" />
+                </button>
+                <button className="p-1.5 bg-blue-400 rounded hover:bg-blue-500">
+                  <i className="fa fa-pause text-xs" />
+                </button>
               </div>
-              <button
-                type="button"
-                className="p-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors shadow"
-                onClick={() => alert("New Order")}
-              >
-                <i className="fa fa-plus fa-light"></i> New
-              </button>
-              <button
-                type="button"
-                className="p-2 bg-blue-400 text-black rounded-lg hover:bg-blue-500 transition-colors shadow"
-                onClick={() => alert("Hold Order")}
-              >
-                <i className="fa fa-pause fa-light"></i> Hold
-              </button>
             </div>
           </div>
 
-          {/* 2. Customer Type & Details */}
-          <div className="space-y-3 border-b pb-3">
-            <h3 className="text-base font-semibold text-muted-foreground">
-              Customer Details
-            </h3>
+          {/* Customer */}
+          <div className="p-3 border-b space-y-2">
             <select
-              className="w-full border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               value={selectedCustomer?.id || ""}
               onChange={(e) => {
-                const customer = customers.find(
+                const cust = customers.find(
                   (c) => c.id === Number(e.target.value)
                 );
-                if (customer) handleCustomerSelect(customer);
+                if (cust) setSelectedCustomer(cust);
               }}
+              className="w-full text-sm border rounded px-2 py-1.5"
             >
               <option value="" disabled>
                 Select Customer
@@ -494,207 +401,238 @@ export default function Pos1() {
                 </option>
               ))}
             </select>
-            <div className="p-3 border border-dashed border-border rounded-lg bg-muted/50">
-              {selectedCustomer ? (
-                <>
-                  <p className="font-semibold">{selectedCustomer.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedCustomer.phone} | {selectedCustomer.address}
-                  </p>
-                </>
-              ) : (
-                <p className="text-muted-foreground italic text-sm">
-                  No customer selected
+            {selectedCustomer && (
+              <div className="text-xs p-2 bg-muted/50 rounded border border-dashed">
+                <p className="font-medium">{selectedCustomer.name}</p>
+                <p className="text-muted-foreground">
+                  {selectedCustomer.phone} | {selectedCustomer.address}
                 </p>
-              )}
-            </div>
-          </div>
-
-          {/* 3. Order List (Cart) */}
-          <div className="flex-1 overflow-y-auto space-y-3 pr-2 border-b pb-4">
-            <h3 className="text-base font-semibold text-muted-foreground">
-              Order Items ({products.length})
-            </h3>
-            {products.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground italic">
-                Add products to start an order.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {products.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-2 border rounded-lg bg-background"
-                  >
-                    <div className="flex items-center space-x-2">
-                      {/* Product Image/Icon */}
-                      <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center text-sm">
-                        <i className="fa fa-tags fa-light"></i>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium leading-tight">
-                          {p.productName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          ${p.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {/* Quantity Input */}
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-10 text-center border border-input rounded text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        value={p.quantity}
-                        onChange={(e) =>
-                          handleQuantityChange(p.id, Number(e.target.value))
-                        }
-                      />
-                      {/* Total Price */}
-                      <span className="text-sm font-semibold w-12 text-right">
-                        ${(p.price * p.quantity).toFixed(2)}
-                      </span>
-                      {/* Remove Icon */}
-                      <button
-                        onClick={() =>
-                          setProducts((prev) =>
-                            prev.filter((item) => item.id !== p.id)
-                          )
-                        }
-                        className="text-destructive hover:text-destructive/80 p-1 rounded transition-colors"
-                        aria-label={`Remove ${p.productName}`}
-                        type="button"
-                      >
-                        <i className="fa fa-trash fa-light"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>
 
-          {/* 4. Total/Subtotal/Tax/Shipping Rates */}
-          <div className="space-y-2 border-b pb-4">
-            {/* Subtotal */}
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
+          {/* Cart Items */}
+          <div className="flex-1 overflow-y-auto1 p-3 space-y-2">
+            <h3 className="font-medium text-sm">
+              Order Items ({cartItems.length})
+            </h3>
+            {cartItems.length === 0 ? (
+              <>
+                <div
+                  className="flex items-center p-2 items-center justify-center mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800"
+                  role="alert"
+                >
+                  <i className="fa fa-shopping-cart fa-light me-2 text-lg"></i>
+                  <span className="sr-only">Info</span>
+                  <div>
+                    <span className="font-medium">Cart is empty</span> !
+                  </div>
+                </div>
+              </>
+            ) : (
+              cartItems.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-2 p-2 bg-background rounded border text-xs"
+                >
+                  <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                    <img
+                      src={p.image}
+                      alt={p.productName}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        const tried = img.getAttribute("data-fallback");
+                        if (!tried && p.category) {
+                          img.setAttribute("data-fallback", "true");
+                          img.src = `/assets/images/categories/${p.category.toLowerCase()}.png`;
+                        } else {
+                          img.style.display = "none";
+                          img.nextElementSibling?.classList.remove("hidden");
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold truncate">{p.productName}</div>
+                    <div className="text-muted-foreground">
+                      ₹{p.price.toFixed(2)}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={p.quantity || 0}
+                    onChange={(e) =>
+                      handleQuantityChange(p.id, Number(e.target.value))
+                    }
+                    className="w-12 text-center border rounded"
+                  />
+                  <span className="w-16 text-right font-medium">
+                    ₹{(p.price * (p.quantity || 0)).toFixed(2)}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveFromCart(p.id)}
+                    className="text-destructive hover:text-destructive/80"
+                  >
+                    <i className="fa fa-trash" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
 
-            {/* Discount */}
-            <div className="flex justify-between items-center text-sm">
-              <label htmlFor="discount" className="text-muted-foreground">
-                Discount (%):
-              </label>
-              <div className="flex items-center space-x-1">
-                <input
-                  id="discount"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={discount}
-                  onChange={(e) => handleDiscountChange(Number(e.target.value))}
-                  className="w-12 text-center border border-input rounded px-1 py-0.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <span className="text-red-500 font-medium">
-                  (-${discountAmount.toFixed(2)})
-                </span>
-              </div>
-            </div>
-
-            {/* Total */}
-            <div className="flex justify-between font-bold text-xl text-primary pt-2">
-              <label>TOTAL:</label>
-              <span>${total.toFixed(2)}</span>
+          <div
+            className="flex items-center p-6 mb-4 mx-3 text-sm  border-t-4 border-yellow-300 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+            role="alert"
+          >
+            <i className="fa fa-info-circle mr-1 text-3xl me-4" />
+            <span className="sr-only">Info</span>
+            <div>
+              <span className="font-medium">Flat $10 Discount Applied!</span>{" "}
+              You have received a flat discount on this order.
             </div>
           </div>
 
-          {/* 5. Payment Methods & Checkout */}
-          <div className="space-y-3">
-            {/* Payment Method & Status */}
-            <div className="grid grid-cols-2 gap-3">
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              >
-                <option>Cash</option>
-                <option>Card</option>
-                <option>Mobile Payment</option>
-              </select>
-              <select
-                value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                className="w-full border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              >
-                <option>Paid</option>
-                <option>Unpaid</option>
-                <option>Partial</option>
-              </select>
-            </div>
-
-            {/* Paid/Due Amount */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col">
-                <label
-                  htmlFor="paidAmount"
-                  className="text-xs font-medium text-muted-foreground mb-1"
+          <div className="p-3 border-b space-y-3 flex border-t">
+            <div className="grid grid-cols-3 gap-2 justify-between flex-1">
+              <div>
+                <div className="text-xs font-medium">Order Tax</div>
+                <select
+                  className="w-full text-sm border rounded px-2 py-1.5"
+                  onChange={(e) => alert("Tax updated!")}
                 >
-                  Paid Amount
-                </label>
+                  <option>10%</option>
+                  <option>15%</option>
+                  <option>20%</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-xs font-medium">Shipping</div>
+                <select
+                  className="w-full text-sm border rounded px-2 py-1.5"
+                  onChange={(e) => alert("Shipping updated!")}
+                >
+                  <option>Standard</option>
+                  <option>Express</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-xs font-medium">Discount</div>
+                <select
+                  className="w-full text-sm border rounded px-2 py-1.5"
+                  onChange={(e) => alert("Discount updated!")}
+                >
+                  <option>5%</option>
+                  <option>10%</option>
+                  <option>Flat $10</option>
+                </select>
+              </div>
+            </div>
+            {/* Discount Alert */}
+          </div>
+
+          {/* Totals */}
+          <div className="p-3 border-t space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <label>Discount (%):</label>
+              <div className="flex items-center gap-1">
                 <input
-                  id="paidAmount"
                   type="number"
-                  min={0}
-                  max={total}
+                  min="0"
+                  max="100"
+                  value={discount}
+                  onChange={(e) =>
+                    setDiscount(
+                      Math.min(100, Math.max(0, Number(e.target.value)))
+                    )
+                  }
+                  className="w-12 text-center border rounded text-xs"
+                />
+                <span className="text-red-600">
+                  (-₹{discountAmount.toFixed(2)})
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-between font-bold text-lg text-primary pt-1">
+              <span>TOTAL:</span>
+              <span>₹{total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Payment */}
+          <div className="p-3 space-y-3 border-t">
+            <div className="grid grid-cols-2 gap-2 justify-between flex-1">
+              <div>
+                <label className="text-xs block mb-1">Payment Mode</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="text-xs border rounded px-2 py-1.5 w-full"
+                >
+                            {PAYMENT_TYPES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs block mb-1">Payment Status</label>
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  className="text-xs border rounded px-2 py-1.5 w-full"
+                >
+
+                            {PAYMENT_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs block mb-1">Paid</label>
+                <input
+                  type="number"
                   value={paidAmount}
                   onChange={(e) =>
-                    handlePaidAmountChange(Number(e.target.value))
+                    setPaidAmount(
+                      Math.min(total, Math.max(0, Number(e.target.value)))
+                    )
                   }
-                  className="w-full border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary font-semibold"
+                  className="w-full border rounded px-2 py-1.5 text-sm font-medium text-right"
                 />
               </div>
-              <div className="flex flex-col">
-                <label className="text-xs font-medium text-muted-foreground mb-1">
-                  Due Amount
-                </label>
+              <div>
+                <label className="text-xs block mb-1">Due</label>
                 <div
-                  className={`w-full border border-input rounded-lg px-3 py-2 text-lg font-bold ${
+                  className={`w-full text-right py-1.5 rounded font-bold text-lg ${
                     dueAmount > 0
-                      ? "text-red-500 bg-red-50"
+                      ? "text-red-600 bg-red-50"
                       : "text-green-600 bg-green-50"
                   }`}
                 >
-                  ${dueAmount.toFixed(2)}
+                  ₹ {dueAmount.toFixed(2)}
                 </div>
               </div>
             </div>
-
-            {/* Checkout Buttons */}
-            <div className="flex space-x-3 pt-3">
+            <div className="flex gap-2">
               <button
-                type="button"
                 onClick={handleClear}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-3 rounded-lg shadow-md transition-colors"
+                className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground py-2 rounded font-medium text-sm"
               >
-                <i className="fa fa-times fa-light" aria-hidden="true"></i>{" "}
                 Clear
               </button>
               <button
-                type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert("Sale finalized!");
-                }}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-3 rounded-lg shadow-md transition-colors"
+                onClick={() => alert("Sale finalized!")}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded font-medium text-sm"
               >
-                <i
-                  className="fa fa-cash-register fa-light"
-                  aria-hidden="true"
-                ></i>{" "}
                 Finalize Sale
               </button>
             </div>
@@ -702,155 +640,98 @@ export default function Pos1() {
         </section>
       </div>
 
-      <footer
-        className="mt-2 flex justify-center items-center bg-white p-2  gap-2"
-        style={{ marginTop: "1px" }}
-      >
-        <button
-          type="button"
-          className="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Viewing Hold")}
-        >
-          <i className="fa fa-pause fa-light me-1" aria-hidden="true"></i> Hold
-        </button>
-        <button
-          type="button"
-          className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Viewing Void")}
-        >
-          <i className="fa fa-trash fa-light me-1" aria-hidden="true"></i> Void
-          Orders
-        </button>
-        <button
-          type="button"
-          className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Viewing Payment")}
-        >
-          <i className="fa fa-money-bill fa-light me-1" aria-hidden="true"></i>{" "}
-          Payment
-        </button>
-        <button
-          type="button"
-          className="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Viewing Orders")}
-        >
-          <i
-            className="fa fa-cart-shopping fa-light me-1"
-            aria-hidden="true"
-          ></i>{" "}
-          View Orders
-        </button>
-        <button
-          type="button"
-          className="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Reset")}
-        >
-          <i className="fa fa-undo fa-light me-1" aria-hidden="true"></i> Reset
-        </button>
-        <button
-          type="button"
-          className="text-white bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded px-3 py-2 text-xs text-center"
-          onClick={() => alert("Viewing Transactions")}
-        >
-          <i
-            className="fa fa-exchange-alt fa-light me-1"
-            aria-hidden="true"
-          ></i>
-          Transactions
-        </button>
+      {/* Footer */}
+      <footer className="p-2 bg-white border-t flex justify-center gap-2 flex-wrap">
+        {[
+          { icon: "fa-pause", label: "Hold", color: "from-red-400 to-red-600" },
+          {
+            icon: "fa-trash",
+            label: "Void",
+            color: "from-blue-500 to-blue-700",
+          },
+          {
+            icon: "fa-money-bill",
+            label: "Payment",
+            color: "from-teal-400 to-teal-600",
+          },
+          {
+            icon: "fa-cart-shopping",
+            label: "Orders",
+            color: "from-lime-200 to-lime-500 text-gray-900",
+          },
+          {
+            icon: "fa-undo",
+            label: "Reset",
+            color: "from-purple-500 to-purple-700",
+          },
+          {
+            icon: "fa-exchange-alt",
+            label: "Transactions",
+            color: "from-pink-400 to-pink-600",
+          },
+        ].map((btn, i) => (
+          <button
+            key={i}
+            onClick={() => alert(`${btn.label} clicked`)}
+            className={`bg-gradient-to-r ${btn.color} hover:bg-gradient-to-br text-white font-medium text-xs px-3 py-1.5 rounded shadow-sm transition-all`}
+          >
+            <i className={`fa ${btn.icon} me-1`} /> {btn.label}
+          </button>
+        ))}
       </footer>
 
-      {/* --- Edit Modal (kept as is) --- */}
+      {/* Edit Modal */}
       {isEditModalOpen && editForm && (
-        // ... (Edit Modal JSX remains the same) ...
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          {/* ... Modal Content ... */}
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Product
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Product Name */}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <h2 className="text-xl font-bold mb-4 text-center">Edit Product</h2>
+            <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label
-                  htmlFor="editName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Product Name
-                </label>
+                <label className="block text-sm font-medium mb-1">Name</label>
                 <input
-                  type="text"
-                  id="editName"
-                  name="name"
-                  value={editForm.name}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter product name"
+                  name="productName"
+                  value={editForm.productName || ""}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, productName: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2 text-sm"
                 />
               </div>
-
-              {/* Price */}
               <div>
-                <label
-                  htmlFor="editPrice"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Price
-                </label>
+                <label className="block text-sm font-medium mb-1">Price</label>
                 <input
                   type="number"
-                  id="editPrice"
                   name="price"
-                  min={0}
-                  value={editForm.price}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter price"
+                  value={editForm.price || 0}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, price: Number(e.target.value) })
+                  }
+                  className="w-full border rounded px-3 py-2 text-sm"
                 />
               </div>
-
-              {/* Quantity */}
               <div>
-                <label
-                  htmlFor="editQuantity"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Quantity
-                </label>
+                <label className="block text-sm font-medium mb-1">Stock</label>
                 <input
                   type="number"
-                  id="editQuantity"
-                  name="quantity"
-                  min={1}
-                  value={editForm.quantity}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter quantity"
+                  name="stock"
+                  value={editForm.stock || 0}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, stock: Number(e.target.value) })
+                  }
+                  className="w-full border rounded px-3 py-2 text-sm"
                 />
               </div>
             </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 border rounded text-sm font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
+                className="px-4 py-2 bg-primary text-white rounded text-sm font-medium"
               >
                 Save
               </button>
