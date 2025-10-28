@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 export function MainLayout() {
   // Inside MainLayout
   const location = useLocation();
-  const isPosPage = location.pathname.startsWith("/pos");
+  const isPosPage = location.pathname.includes("/pos");
 
   return (
     <ThemeProvider>
@@ -17,7 +17,7 @@ export function MainLayout() {
           {!isPosPage && <AppSidebar />}
           <div className="flex flex-1 flex-col">
             <AppNavbar isPosPage={isPosPage} />
-            <main className="flex-1 bg-muted/30 p-6">
+            <main className={`flex-1 bg-muted/30 ${isPosPage ? "p-1" : "p-4"}`}>
               <Outlet />
             </main>
           </div>

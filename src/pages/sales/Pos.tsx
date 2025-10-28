@@ -32,6 +32,7 @@ interface CategoryRecord {
   categoryName: string;
   description: string;
   status: (typeof EXPIRED_STATUSES)[number];
+  image: string;
 }
 
 export default function Pos1() {
@@ -252,70 +253,89 @@ export default function Pos1() {
 
   return (
     // Removed max-w to utilize full available space
-    <div className=" h-[calc(100vh-200px)] w-full bg-muted/20 p-1">
+    <div className=" h-[calc(100vh-200px)] w-full bg-muted/20 " > 
       {/* --- Header (kept simple as Navbar now handles main functions) --- */}
-      <header
+      {/* <header
         className="mb-4 flex justify-end items-center"
         style={{ marginTop: "1px" }}
-      >
-        <div className="flex space-x-3">
-          {/* Placeholder for Pending Orders quick view */}
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            onClick={() => alert("Viewing Pending Orders")}
-          >
-            <i className="fa fa-clock fa-light" aria-hidden="true"></i> Pending
-            Orders
-          </button>
-        </div>
-      </header>
+      >         
+      </header>*/}
 
       {/* --- Main POS Grid: Product Selection (Left) vs. Order Management (Right) --- */}
-      <div className="grid grid-cols-12 gap-4 h-[calc(100vh-200px)] ">
+      <div className="grid grid-cols-12 gap-2 h-[calc(100vh-130px)]">
         {/* 🚀 Left Panel: Product Selection (col-span-8 to maximize product visibility) */}
-        <section className="col-span-8 bg-card rounded-lg shadow-xl p-4 flex flex-col space-y-4 overflow-y-auto  ">
+        <section className="col-span-8 bg-card rounded-sm shadow-sm py-2 flex flex-col space-y-4 overflow-y-auto  ">
           {/* Top Row: Search and Category Tabs */}
-          <div className="flex flex-col space-y-3">
+          <div className="flex flex-col space-y-3 px-2">
+            {/* Categories/Tags (Horizontal Scrollable) */}
+            <div className="flex space-x-2 overflow-x-auto ">
+              {["All", ...categories].map((catOrName) => {
+                // Handle "All" as special case (string)
+                if (typeof catOrName === "string") {
+                  return (
+                    <button
+                      key={catOrName}
+                      onClick={() => {
+                        setSelectedCategory(catOrName);
+                        setProductPage(1);
+                      }}
+                      className={`flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-2 me-2 mb-2  dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
+                        selectedCategory === catOrName
+                          ? "selected_color"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                      type="button"
+                    >
+                      {catOrName}
+                    </button>
+                  );
+                }
+
+                // Actual category object with image
+                return (
+                  <button
+                    key={catOrName.categoryName}
+                    onClick={() => {
+                      setSelectedCategory(catOrName.categoryName);
+                      setProductPage(1);
+                    }}
+                    className={`flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-1 me-2 mb-1 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
+                      selectedCategory === catOrName.categoryName
+                        ? "selected_color"
+                        : "bg-white text-muted-foreground hover:bg-muted/80"
+                    }`}
+                    type="button"
+                  >
+                    {/* Category image */}
+                    {catOrName.image && (
+                      <img
+                        src={catOrName.image}
+                        alt={catOrName.categoryName}
+                        className="inline-block w-5 h-4 mr-2 rounded"
+                      />
+                    )}
+                    {/* Category name */}
+                    {catOrName.categoryName}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Product Search */}
-            <div className="w-full relative">
+            <div className="w-full relative px-2">
               <i className="fa fa-search fa-light absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"></i>
               <input
                 type="text"
                 placeholder="Search Product or Scan Barcode"
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
-                className="w-full border border-input rounded-lg px-3 pl-10 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                className=" text-xs border border-input rounded-lg px-4 pl-10 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-base"
               />
-            </div>
-
-            {/* Categories/Tags (Horizontal Scrollable) */}
-            {/* Categories/Tags (Horizontal Scrollable) */}
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {["All", ...categories.map((cat) => cat.categoryName)].map(
-                (cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      setSelectedCategory(cat);
-                      setProductPage(1); // Reset product pagination on category change
-                    }}
-                    className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                      selectedCategory === cat
-                        ? "bg-primary text-primary-foreground shadow"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                    type="button"
-                  >
-                    {cat}
-                  </button>
-                )
-              )}
             </div>
           </div>
 
           {/* Product List as Cards (Main Scroll Area) */}
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div className="flex-1 overflow-y-auto pr-2 px-2">
             {loading ? (
               <div className="text-center py-10 text-xl text-primary font-semibold">
                 <i className="fa fa-spinner fa-spin mr-2"></i> Loading
@@ -382,8 +402,7 @@ export default function Pos1() {
             )}
           </div>
 
-          {/* Product Pagination */}
-          <div className="flex justify-center border-t pt-4">
+          {/* Product Pagination */} 
             <Pagination
               currentPage={productPage}
               itemsPerPage={productItemsPerPage}
@@ -393,12 +412,11 @@ export default function Pos1() {
                 setProductItemsPerPage(size);
                 setProductPage(1);
               }}
-            />
-          </div>
+            /> 
         </section>
 
         {/* 💳 Right Panel: Order Details (col-span-4) */}
-        <section className="col-span-4 bg-card rounded-lg shadow-xl p-4 flex flex-col space-y-4 overflow-y-auto">
+        <section className="col-span-4 bg-card rounded-sm shadow-sm p-4 flex flex-col space-y-4 overflow-y-auto">
           {/* 1. Pending Order List (Top Row) - Placeholder */}
           <div className="border-b pb-3 mb-3">
             <h3 className="text-base font-semibold text-muted-foreground mb-2">
@@ -656,6 +674,64 @@ export default function Pos1() {
           </div>
         </section>
       </div>
+
+      <footer
+        className="mt-2 flex justify-center items-center bg-white p-2  gap-2"
+        style={{ marginTop: "1px" }}
+      >
+        <button
+          type="button"
+          className="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Viewing Hold")}
+        >
+          <i className="fa fa-pause fa-light me-1" aria-hidden="true"></i> Hold
+        </button>
+        <button
+          type="button"
+          className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Viewing Void")}
+        >
+          <i className="fa fa-trash fa-light me-1" aria-hidden="true"></i> Void
+          Orders
+        </button>
+        <button
+          type="button"
+          className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Viewing Payment")}
+        >
+          <i className="fa fa-money-bill fa-light me-1" aria-hidden="true"></i>{" "}
+          Payment
+        </button>
+        <button
+          type="button"
+          className="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Viewing Orders")}
+        >
+          <i
+            className="fa fa-cart-shopping fa-light me-1"
+            aria-hidden="true"
+          ></i>{" "}
+          View Orders
+        </button>
+        <button
+          type="button"
+          className="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Reset")}
+        >
+          <i className="fa fa-undo fa-light me-1" aria-hidden="true"></i> Reset
+        </button>
+        <button
+          type="button"
+          className="text-white bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded px-3 py-2 text-xs text-center"
+          onClick={() => alert("Viewing Transactions")}
+        >
+          <i
+            className="fa fa-exchange-alt fa-light me-1"
+            aria-hidden="true"
+          ></i>
+          Transactions
+        </button>
+      </footer>
 
       {/* --- Edit Modal (kept as is) --- */}
       {isEditModalOpen && editForm && (

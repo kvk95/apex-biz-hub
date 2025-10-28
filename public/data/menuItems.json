@@ -65,12 +65,7 @@
     ]
   },
   {
-    "title": "POS",
-    "icon": "fa fa-cash-register",
-    "items": [
-      { "title": "POS 1", "url": "/pos/pos-1", "icon": "fa fa-desktop" },
-      { "title": "POS 2", "url": "/pos/pos-2", "icon": "fa fa-laptop" }
-    ]
+    "title": "POS", "url": "/sales/pos", "icon": "fa fa-cash-register" 
   },
   {
     "title": "Promo",

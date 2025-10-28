@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
-import { CATEGORIES , STATUSES } from "@/constants/constants";
+import { CATEGORIES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface ProductRecord {
   id: number;
@@ -20,7 +21,7 @@ interface Column {
   label: string;
   render?: (value: any, row: any, idx?: number) => JSX.Element;
   align?: "left" | "center" | "right";
-}  
+}
 const BRANDS = ["All Brands", "Brand A", "Brand B", "Brand C"];
 
 export default function Products() {
@@ -35,19 +36,20 @@ export default function Products() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<ProductRecord[]>("Products");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-    };
     loadData();
   }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<ProductRecord[]>("Products");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -132,18 +134,8 @@ export default function Products() {
       key: "status",
       label: "Status",
       align: "center",
-      render: (value) => (
-        <span
-          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-            value === "Active"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
+      render: renderStatusBadge,
+    }, 
   ];
 
   const rowActions = (row: ProductRecord) => (
@@ -176,7 +168,7 @@ export default function Products() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-2 ">
       <input
         type="text"
         placeholder="Search Product"

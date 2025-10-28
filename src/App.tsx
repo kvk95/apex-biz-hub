@@ -82,7 +82,7 @@ import SupplierReport from "./pages/reports/SupplierReport";
 import TaxReport from "./pages/reports/TaxReport";
 import Invoices from "./pages/sales/Invoices";
 import OnlineOrders from "./pages/sales/OnlineOrders";
-import Pos1 from "./pages/sales/Pos1";
+import Pos from "./pages/sales/Pos";
 import PosOrders from "./pages/sales/PosOrders";
 import Quotation from "./pages/sales/Quotation";
 import SalesReturn from "./pages/sales/SalesReturn";
@@ -228,8 +228,7 @@ const App = () => {
                 <Route path="sales/invoices" element={<Invoices />} />
                 <Route path="sales/return" element={<SalesReturn />} />
                 <Route path="sales/quotations" element={<Quotation />} />
-                <Route path="pos/pos-1" element={<Pos1 />} />
-                <Route path="pos/pos-2" element={<Pos1 />} />
+                <Route path="sales/pos" element={<Pos />} />
 
                 {/* Promo */}
                 <Route path="promo/coupons" element={<Coupons />} />

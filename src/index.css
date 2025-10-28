@@ -2,7 +2,7 @@
 /****** Utils ******/
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap"); 
+@import url("https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -157,6 +157,11 @@ All colors MUST be HSL.
   }
 }
 
+.selected_color {
+    background-color: hsl(var(--primary));
+    color: white;
+}
+
 .font-poppins {
   font-family: "Poppins", sans-serif;
 }
@@ -263,38 +268,12 @@ ul {
   list-style: none;
 }
 
-.custom-scroll1 {
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-}
-
-/* Target scrollbar for this specific div in WebKit browsers */
-.custom-scroll1::-webkit-scrollbar {
-  width: 3px;
-}
-
-.custom-scroll1::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 10px;
-}
-
-.custom-scroll1::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
-}
-
-.custom-scroll1::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 .glass-holder {
   background: url('/assets/images/login2.jpg') center/cover no-repeat;
   height: 100vh;
   justify-content: center;
   align-items: center;
 }
-
-
 
 /* Glassmorphism card */
 .glass-card {
@@ -322,7 +301,7 @@ ul {
   padding: 8px 10px 8px 30px;
 }
 
-.sidebarOuter  i {
+.sidebarOuter i {
   color: #646B72;
 }
 
@@ -331,4 +310,36 @@ table.min-w-full thead th {
   background-color: #F9FAFB;
   color: #1B2850;
   text-align: center;
+}
+
+
+
+::-webkit-scrollbar {
+  width: 5px;
+  scrollbar-color: #ccc transparent;
+  height:5px;
+  cursor:drag;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 5px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: hsl(var(--primary));
+}
+
+/* Target scrollbar for this specific div in WebKit browsers */
+.sidebar-scroll1::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-scroll1::-webkit-scrollbar-thumb {
+  background: #ddd;
+}
+
+.sidebar-scroll1::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

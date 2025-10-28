@@ -265,7 +265,7 @@ export function AppSidebar() {
             />
           )}
         </div>
-        <div className="overflow-y-auto flex-1 custom-scroll1">
+        <div className="overflow-y-auto flex-1 sidebar-scroll1">
           <SidebarMenu>
             {menuItems.map((item) => (
               <MenuItemComponent

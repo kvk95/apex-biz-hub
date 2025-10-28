@@ -8,49 +8,127 @@
       "id": 1,
       "categoryName": "Beverages",
       "description": "Soft drinks, coffees, teas, beers, and ales",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 2,
       "categoryName": "Condiments",
       "description": "Sweet and savory sauces, relishes, spreads, and seasonings",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 3,
       "categoryName": "Confections",
       "description": "Desserts, candies, and sweet breads",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 4,
       "categoryName": "Dairy Products",
       "description": "Cheeses",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 5,
       "categoryName": "Grains/Cereals",
       "description": "Breads, crackers, pasta, and cereal",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 6,
       "categoryName": "Meat/Poultry",
       "description": "Prepared meats",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 7,
       "categoryName": "Produce",
       "description": "Dried fruit and bean curd",
-      "status": "Inactive"
+      "status": "Inactive",
+      "image": "/assets/images/categories/category.png"
     },
     {
       "id": 8,
       "categoryName": "Seafood",
       "description": "Seaweed and fish",
-      "status": "Active"
-    }
+      "status": "Active",
+      "image": "/assets/images/categories/category.png"
+    },
+    {
+    "id": 9,
+    "categoryName": "Snacks",
+    "description": "Chips, nuts, popcorn, and other snack foods",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 10,
+    "categoryName": "Frozen Foods",
+    "description": "Frozen vegetables, ready meals, and desserts",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 11,
+    "categoryName": "Bakery",
+    "description": "Cakes, pastries, and bread",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 12,
+    "categoryName": "Health & Beauty",
+    "description": "Cosmetics, skincare, and personal care products",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 13,
+    "categoryName": "Household",
+    "description": "Cleaning supplies, paper goods, and home essentials",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 14,
+    "categoryName": "Tobacco",
+    "description": "Cigarettes, cigars, and other tobacco products",
+    "status": "Inactive",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 15,
+    "categoryName": "Pet Supplies",
+    "description": "Pet food, toys, and accessories",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 16,
+    "categoryName": "Electronics",
+    "description": "Small electronics, gadgets, and accessories",
+    "status": "Inactive",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 17,
+    "categoryName": "Cleaning Supplies",
+    "description": "Detergents, sanitizers, and cleaning tools",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  },
+  {
+    "id": 18,
+    "categoryName": "Office Supplies",
+    "description": "Stationery, paper, pens, and other office essentials",
+    "status": "Active",
+      "image": "/assets/images/categories/category.png"
+  }
   ]
 }
