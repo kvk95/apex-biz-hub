@@ -1,682 +1,328 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  Plus,
+  Search,
+  FileText,
+  FileSpreadsheet,
+  RefreshCcw,
+  ChevronDown,
+} from "lucide-react";
 import { apiService } from "@/services/ApiService";
+import AddSalesModal from "./AddSalesModal";
 import { Pagination } from "@/components/Pagination/Pagination";
 
-const paymentMethods = ["All", "Credit Card", "Paypal", "Cash"];
-const statuses = ["All", "Pending", "Completed", "Cancelled"];
+interface OrderItem {
+  productId: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  tax: number;
+  total: number;
+}
 
-export default function OnlineOrders() {
-  const [data, setData] = useState([]);
+interface Totals {
+  subTotal: number;
+  tax: number;
+  discount: number;
+  shipping: number;
+  grandTotal: number;
+  paid?: number;
+  due?: number;
+}
+
+interface Order {
+  id: number;
+  orderId: string;
+  orderType: string;
+  date: string;
+  customerId: number;
+  customerName: string;
+  supplierId: number;
+  supplierName?: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  status: string;
+  items: OrderItem[];
+  totals: Totals;
+}
+
+const OnlineOrders: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
+  const [selectedSort, setSelectedSort] = useState("All Time");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("OnlineOrders");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
+  // ✅ Fetch Online Orders
+  const fetchOrders = async () => {
+    try {
+      const response = await apiService.get<any>("Online_Pos_Orders");
+      if (response.status.code === "S") {
+        const onlineOrders = response.result.filter(
+          (o: any) => o.orderType === "ONLINE"
+        );
+        setOrders(onlineOrders);
+        setFilteredOrders(onlineOrders);
+      }
+    } catch (error) {
+      console.error("Failed to load Online orders:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
+    fetchOrders();
   }, []);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ✅ Filter + Search Logic
+  useEffect(() => {
+    let data = [...orders];
 
-  // Filters state
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [filterPayment, setFilterPayment] = useState("All");
-  const [searchOrderId, setSearchOrderId] = useState("");
-  const [searchCustomer, setSearchCustomer] = useState("");
-
-  // Sorting state
-  const [sortField, setSortField] = useState<keyof (typeof data)[0] | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    orderId: "",
-    customer: "",
-    date: "",
-    status: "",
-    paymentMethod: "",
-    total: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  // Filtered and sorted data memoized
-  const filteredData = useMemo(() => {
-    let filtered = [...data];
-
-    if (filterStatus !== "All") {
-      filtered = filtered.filter((o) => o.status === filterStatus);
-    }
-    if (filterPayment !== "All") {
-      filtered = filtered.filter((o) => o.paymentMethod === filterPayment);
-    }
-    if (searchOrderId.trim() !== "") {
-      filtered = filtered.filter((o) =>
-        o.orderId.toLowerCase().includes(searchOrderId.toLowerCase())
-      );
-    }
-    if (searchCustomer.trim() !== "") {
-      filtered = filtered.filter((o) =>
-        o.customer.toLowerCase().includes(searchCustomer.toLowerCase())
+    if (searchTerm.trim() !== "") {
+      data = data.filter(
+        (o) =>
+          o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          o.orderId?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (sortField) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
-        if (typeof aVal === "string") aVal = aVal.toLowerCase();
-        if (typeof bVal === "string") bVal = bVal.toLowerCase();
-
-        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-        return 0;
-      });
+    if (selectedCustomer !== "All") {
+      data = data.filter((o) => o.customerName === selectedCustomer);
     }
 
-    return filtered;
-  }, [data, filterStatus, filterPayment, searchOrderId, searchCustomer, sortField, sortDirection]);
-
-  // Calculate paginated data using Pagination component props
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Handlers
-  const handleSort = (field: keyof (typeof data)[0]) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
+    if (selectedStatus !== "All") {
+      data = data.filter((o) => o.status === selectedStatus);
     }
-  };
 
-  const handleClear = () => {
-    setFilterStatus("All");
-    setFilterPayment("All");
-    setSearchOrderId("");
-    setSearchCustomer("");
-    setSortField(null);
-    setSortDirection("asc");
+    if (selectedPaymentStatus !== "All") {
+      data = data.filter((o) => o.paymentStatus === selectedPaymentStatus);
+    }
+
+    // Sorting Logic (example)
+    if (selectedSort === "Last 7 Days") {
+      const now = new Date();
+      const last7 = new Date();
+      last7.setDate(now.getDate() - 7);
+      data = data.filter((o) => new Date(o.date) >= last7);
+    } else if (selectedSort === "This Month") {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      data = data.filter((o) => new Date(o.date) >= start);
+    }
+
+    setFilteredOrders(data);
     setCurrentPage(1);
+  }, [
+    searchTerm,
+    selectedCustomer,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedSort,
+    orders,
+  ]);
+
+  // ✅ Add New Order
+  const handleAddOrder = (newOrder: Order) => {
+    setOrders((prev) => [newOrder, ...prev]);
+    setFilteredOrders((prev) => [newOrder, ...prev]);
   };
 
-  const handleReport = () => {
-    alert("Report generated for current filtered orders.");
-  };
+  // ✅ Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        orderId: item.orderId,
-        customer: item.customer,
-        date: item.date.slice(0, 10),
-        status: item.status,
-        paymentMethod: item.paymentMethod,
-        total: item.total.toString(),
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
+  // ✅ Derived Customer List
+  const customerOptions = ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))];
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.orderId.trim() ||
-      !editForm.customer.trim() ||
-      !editForm.date ||
-      !editForm.status ||
-      !editForm.paymentMethod ||
-      !editForm.total
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                orderId: editForm.orderId.trim(),
-                customer: editForm.customer.trim(),
-                date: editForm.date,
-                status: editForm.status,
-                paymentMethod: editForm.paymentMethod,
-                total: Number(editForm.total),
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
-    }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
+  if (loading) return <p className="p-4 text-gray-600">Loading...</p>;
 
   return (
-    <> 
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto bg-card rounded shadow p-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-lg font-semibold mb-4 md:mb-0 text-foreground">
-              Online Orders
-            </h1>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleReport}
-                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-                aria-label="Generate Report"
-              >
-                <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-              </button>
-              <button
-                onClick={handleClear}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-                aria-label="Clear"
-              >
-                <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-              </button>
-            </div>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* 🔹 Header Section */}
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-800">Online Orders</h1>
+          <p className="text-sm text-gray-500">Manage Your Online Orders</p>
+        </div>
 
-          {/* Filters Section */}
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6"
-            aria-label="Filter Orders Form"
+        <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
+            onClick={() => console.log("TODO: Export PDF")}
           >
-            <div>
-              <label
-                htmlFor="orderId"
-                className="block text-sm font-medium mb-1 text-muted-foreground"
-              >
-                Order ID
-              </label>
-              <input
-                id="orderId"
-                type="text"
-                value={searchOrderId}
-                onChange={(e) => setSearchOrderId(e.target.value)}
-                placeholder="Search Order ID"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="customer"
-                className="block text-sm font-medium mb-1 text-muted-foreground"
-              >
-                Customer
-              </label>
-              <input
-                id="customer"
-                type="text"
-                value={searchCustomer}
-                onChange={(e) => setSearchCustomer(e.target.value)}
-                placeholder="Search Customer"
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1 text-muted-foreground"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="paymentMethod"
-                className="block text-sm font-medium mb-1 text-muted-foreground"
-              >
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={filterPayment}
-                onChange={(e) => setFilterPayment(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {paymentMethods.map((method) => (
-                  <option key={method} value={method}>
-                    {method}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
+            <FileText size={16} /> PDF
+          </button>
+          <button
+            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
+            onClick={() => console.log("TODO: Export Excel")}
+          >
+            <FileSpreadsheet size={16} /> Excel
+          </button>
+          <button
+            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
+            onClick={fetchOrders}
+          >
+            <RefreshCcw size={16} /> Refresh
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600"
+          >
+            <Plus className="w-4 h-4" /> Add Order
+          </button>
+        </div>
+      </div>
 
-          {/* Orders Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("orderId")}
-                    aria-sort={
-                      sortField === "orderId"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Order ID"
-                  >
-                    Order ID{" "}
-                    {sortField === "orderId" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("customer")}
-                    aria-sort={
-                      sortField === "customer"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Customer"
-                  >
-                    Customer{" "}
-                    {sortField === "customer" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("date")}
-                    aria-sort={
-                      sortField === "date"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Date"
-                  >
-                    Date{" "}
-                    {sortField === "date" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("status")}
-                    aria-sort={
-                      sortField === "status"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Status"
-                  >
-                    Status{" "}
-                    {sortField === "status" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-left text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("paymentMethod")}
-                    aria-sort={
-                      sortField === "paymentMethod"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Payment Method"
-                  >
-                    Payment Method{" "}
-                    {sortField === "paymentMethod" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="cursor-pointer px-4 py-3 text-right text-sm font-medium text-muted-foreground select-none"
-                    onClick={() => handleSort("total")}
-                    aria-sort={
-                      sortField === "total"
-                        ? sortDirection === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Sort by Total"
-                  >
-                    Total{" "}
-                    {sortField === "total" && (
-                      <i
-                        className={`fa fa-sort-${sortDirection === "asc" ? "up" : "down"} ml-1 fa-light`}
-                        aria-hidden="true"
-                      ></i>
-                    )}
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="text-center px-4 py-6 text-muted-foreground italic"
-                    >
-                      No orders found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((order, idx) => (
-                    <tr
-                      key={order.id}
-                      className="border-b border-border hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm text-primary">
-                        {order.orderId}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {order.customer}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {new Date(order.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                            order.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : order.status === "Completed"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
-                          aria-label={`Status: ${order.status}`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {order.paymentMethod}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-semibold text-foreground">
-                        ${order.total.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm space-x-3">
-                        <button
-                          type="button"
-                          className="text-primary hover:text-primary/80 transition-colors"
-                          aria-label={`Edit order ${order.orderId}`}
-                          onClick={() => handleEdit(order.id)}
-                        >
-                          <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="text-primary hover:text-primary/80 transition-colors"
-                          aria-label={`View details for order ${order.orderId}`}
-                          onClick={() =>
-                            alert(`Viewing details for order ${order.orderId}`)
-                          }
-                        >
-                          <i className="fa fa-eye fa-light" aria-hidden="true"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredData.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
+      {/* 🔹 Filters Row */}
+      <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by Customer or Order ID..."
+            className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring focus:ring-blue-100"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        {/* Edit Modal */}
-        {isEditModalOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-modal-title"
-          >
-            <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-              <h2
-                id="edit-modal-title"
-                className="text-xl font-semibold mb-4 text-center"
-              >
-                Edit Order
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label
-                    htmlFor="editOrderId"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Order ID
-                  </label>
-                  <input
-                    type="text"
-                    id="editOrderId"
-                    name="orderId"
-                    value={editForm.orderId}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter order ID"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="editCustomer"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Customer
-                  </label>
-                  <input
-                    type="text"
-                    id="editCustomer"
-                    name="customer"
-                    value={editForm.customer}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter customer name"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="editDate"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    id="editDate"
-                    name="date"
-                    value={editForm.date}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="editStatus"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="editStatus"
-                    name="status"
-                    value={editForm.status}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {statuses
-                      .filter((s) => s !== "All")
-                      .map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="editPaymentMethod"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Payment Method
-                  </label>
-                  <select
-                    id="editPaymentMethod"
-                    name="paymentMethod"
-                    value={editForm.paymentMethod}
-                    onChange={handleEditInputChange}
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {paymentMethods
-                      .filter((m) => m !== "All")
-                      .map((method) => (
-                        <option key={method} value={method}>
-                          {method}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="editTotal"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Total
-                  </label>
-                  <input
-                    type="number"
-                    id="editTotal"
-                    name="total"
-                    value={editForm.total}
-                    onChange={handleEditInputChange}
-                    min={0}
-                    step="0.01"
-                    className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter total amount"
-                  />
-                </div>
-              </div>
+        <select
+          className="border px-3 py-2 rounded-lg text-sm"
+          value={selectedCustomer}
+          onChange={(e) => setSelectedCustomer(e.target.value)}
+        >
+          {customerOptions.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
 
-              {/* Modal Buttons */}
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={handleEditCancel}
-                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditSave}
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <select
+          className="border px-3 py-2 rounded-lg text-sm"
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+        >
+          <option>All</option>
+          <option>Pending</option>
+          <option>Completed</option>
+          <option>Cancelled</option>
+        </select>
+
+        <select
+          className="border px-3 py-2 rounded-lg text-sm"
+          value={selectedPaymentStatus}
+          onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+        >
+          <option>All</option>
+          <option>Paid</option>
+          <option>Partial</option>
+          <option>Unpaid</option>
+        </select>
+
+        <select
+          className="border px-3 py-2 rounded-lg text-sm"
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value)}
+        >
+          <option>All Time</option>
+          <option>Last 7 Days</option>
+          <option>This Month</option>
+        </select>
       </div>
-    </>
+
+      {/* 🔹 Orders Grid */}
+      <div className="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table className="w-full border text-sm">
+          <thead className="bg-gray-100 text-gray-700">
+            <tr>
+              <th className="px-4 py-2 text-left">Customer</th>
+              <th className="px-4 py-2 text-left">Reference</th>
+              <th className="px-4 py-2 text-left">Date</th>
+              <th className="px-4 py-2 text-left">Status</th>
+              <th className="px-4 py-2 text-right">Grand Total ($)</th>
+              <th className="px-4 py-2 text-right">Paid ($)</th>
+              <th className="px-4 py-2 text-right">Due ($)</th>
+              <th className="px-4 py-2 text-left">Payment Status</th>
+              <th className="px-4 py-2 text-left">Biller</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y">
+            {currentOrders.length > 0 ? (
+              currentOrders.map((order) => {
+                const paid = order.totals.paid ?? order.totals.grandTotal * 0.8;
+                const due = order.totals.grandTotal - paid;
+
+                return (
+                  <tr key={order.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2">{order.customerName}</td>
+                    <td className="px-4 py-2">{order.orderId}</td>
+                    <td className="px-4 py-2">{order.date}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${order.status === "Completed"
+                            ? "bg-green-100 text-green-700"
+                            : order.status === "Pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      ${order.totals.grandTotal.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-2 text-right">${paid.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right">${due.toFixed(2)}</td>
+                    <td className="px-4 py-2">{order.paymentStatus}</td>
+                    <td className="px-4 py-2">{order.supplierName || "-"}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={9}
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  No Online Orders Found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 🔹 Pagination */}
+      {filteredOrders.length > itemsPerPage && (
+        <Pagination
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          totalItems={filteredOrders.length}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
+
+      {/* 🔹 Add Modal */}
+      <AddSalesModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleAddOrder}
+        orderType="ONLINE"
+      />
+    </div>
   );
-}
+};
+
+export default OnlineOrders;
