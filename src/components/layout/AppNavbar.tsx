@@ -187,8 +187,11 @@ export function AppNavbar({ isPosPage }) {
                     className="relative pt-2 hover:bg-primary hover:text-primary-foreground"
                   >
                     <i className="fa fa-bell fa-light h-5 w-5"></i>
-                    <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs bg-destructive">
-                      2
+                    <Badge className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center p-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
+                      <span className="relative inline-flex size-3 rounded-full bg-sky-500 text-white text-xs">
+                        2
+                      </span>
                     </Badge>
                   </Button>
                 </DropdownMenuTrigger>

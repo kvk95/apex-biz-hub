@@ -298,8 +298,8 @@ export default function Pos1() {
                     onClick={() => {
                       setSelectedCategory(catOrName.categoryName);
                       setProductPage(1);
-                    }}
-                    className={`flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-1 me-2 mb-1 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
+                    }} 
+                    className={`relative flex-shrink-0 border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded text-xs px-3 py-1 me-2 mb-1 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 ${
                       selectedCategory === catOrName.categoryName
                         ? "selected_color"
                         : "bg-white text-muted-foreground hover:bg-muted/80"
@@ -307,16 +307,28 @@ export default function Pos1() {
                     type="button"
                   >
                     {/* Category image */}
-                    {catOrName.image && (
+                    {/* {catOrName.image && (
                       <img
                         src={catOrName.image}
                         alt={catOrName.categoryName}
                         className="inline-block w-5 h-4 mr-2 rounded"
                       />
-                    )}
-                    {/* Category name */}
-                    {catOrName.categoryName}
+                    )}  */}
+
+                    <img
+                        src={catOrName.image}
+                        alt={catOrName.categoryName}
+                        className="relative inline-block w-5 h-5 mr-2 rounded-sm" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          target.nextSibling?.classList.remove("hidden");
+                        }}
+                      />
+                    <i className="fa fa-tags text-sm text-gray-400 me-2 hidden"></i>  
+                    <span className="py-2">{catOrName.categoryName}</span>
                   </button>
+                   
                 );
               })}
             </div>
@@ -357,23 +369,38 @@ export default function Pos1() {
                     className="bg-background border border-border rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col justify-between"
                   >
                     {/* Card Image Placeholder */}
-                    <div className="relative w-full h-24 bg-gray-200 flex items-center justify-center">
+                    <div className="relative w-full h-36 bg-gray-200 flex items-center justify-center">
                       <img
                         src={p.image}
                         alt={p.productName}
-                        className="w-full h-full object-contain max-w-24"
+                        className="h-full w-full object-fit " 
                         onError={(e) => {
+
+                          /* donot remove.. nedd for future reference
                           const target = e.target as HTMLImageElement;
                           target.style.display = "none";
-                          target.nextSibling?.classList.remove("hidden");
+                          target.nextSibling?.classList.remove("hidden");*/
+
+                          const target = e.target as HTMLImageElement;
+                          const triedFallback = target.getAttribute("data-fallback-tried");
+
+                          if (!triedFallback && p.category) {
+                            target.setAttribute("data-fallback-tried", "true");
+                            target.src = `/assets/images/categories/${p.category.toLowerCase()}.png`;
+                          } else {
+                            target.style.display = "none";
+                            target.nextSibling?.classList.remove("hidden");
+                          }
                         }}
                       />
                       <i className="fa fa-box-open fa-3x text-gray-400 hidden absolute"></i>
-                      <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 bg-green-500 text-white rounded">
+                      <span className="absolute top-1 right-1 text-xs font-semibold px-2 py-0.5 text-white bg-primary  rounded">
                         {p.stock} Qty
                       </span>
                     </div>
-                    <div className="p-3 flex flex-col flex-grow">
+                    <div className="p-2 flex flex-col flex-grow">
+                      <div className="flex justify-between items-end mt-auto text-xs">{p.category}</div>
+                      
                       <p
                         className="text-sm font-semibold truncate mb-1"
                         title={p.productName}
@@ -381,18 +408,18 @@ export default function Pos1() {
                         {p.productName}
                       </p>
                       <div className="flex justify-between items-end mt-auto">
-                        <span className="text-lg font-bold text-primary">
+                        <span className="text-sm font-bold text-primary">
                           ${p.price.toFixed(2)}
                         </span>
                         <button
                           onClick={() =>
                             handleQuantityChange(p.id, p.quantity + 1)
                           } // Simulate Add
-                          className="text-sm px-3 py-1 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow"
+                          className="text-xs px-2 py-1 bg-green-500 text-white rounded-full hover:bg-primary/90 transition-colors shadow"
                           aria-label={`Add ${p.productName} to cart`}
                           type="button"
                         >
-                          <i className="fa fa-plus fa-light"></i>
+                          <i className="fa fa-plus "></i>
                         </button>
                       </div>
                     </div>

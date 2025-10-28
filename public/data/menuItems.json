@@ -61,12 +61,10 @@
       },
       { "title": "Invoices", "url": "/sales/invoices", "icon": "fa fa-file-invoice" },
       { "title": "Sales Return", "url": "/sales/return", "icon": "fa fa-undo-alt" },
-      { "title": "Quotation", "url": "/sales/quotations", "icon": "fa fa-file-signature" }
+      { "title": "Quotation", "url": "/sales/quotations", "icon": "fa fa-file-signature" },
+      { "title": "POS", "url": "/sales/pos", "icon": "fa fa-cash-register" }
     ]
-  },
-  {
-    "title": "POS", "url": "/sales/pos", "icon": "fa fa-cash-register" 
-  },
+  }, 
   {
     "title": "Promo",
     "icon": "fa fa-gift",
