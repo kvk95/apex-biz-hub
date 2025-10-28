@@ -73,7 +73,7 @@ export default function OnlineOrders() {
 
   const loadData = async () => {
     try {
-      const response = await apiService.get<any>("Online_Pos_Orders");
+      const response = await apiService.get<any>("OnlinePosOrders");
       if (response.status.code === "S") {
         const onlineOrders = response.result.filter((o: any) => o.orderType === "ONLINE");
         setOrders(onlineOrders);
@@ -234,10 +234,10 @@ export default function OnlineOrders() {
       render: (value) => (
         <span
           className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Completed"
-              ? "bg-green-100 text-green-700"
-              : value === "Pending"
-                ? "bg-yellow-100 text-yellow-700"
-                : "bg-gray-100 text-gray-600"
+            ? "bg-green-100 text-green-700"
+            : value === "Pending"
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-gray-100 text-gray-600"
             }`}
         >
           {value}
