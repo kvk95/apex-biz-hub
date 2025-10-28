@@ -1,15 +1,7 @@
-import React, { useEffect, useState } from "react";
-import {
-  Plus,
-  Search,
-  FileText,
-  FileSpreadsheet,
-  RefreshCcw,
-  ChevronDown,
-} from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
+import { PageBase1 } from "@/pages/PageBase1";
 import AddSalesModal from "./AddSalesModal";
-import { Pagination } from "@/components/Pagination/Pagination";
 
 interface OrderItem {
   productId: number;
@@ -48,281 +40,336 @@ interface Order {
   totals: Totals;
 }
 
-const OnlineOrders: React.FC = () => {
+/* -------------------------------------------------
+   Column definition – matches the updated render type
+   ------------------------------------------------- */
+interface Column {
+  key: string;
+  label: string;
+  render?: (value: any, row: any, idx?: number) => React.ReactNode;
+  align?: "left" | "center" | "right";
+  className?: string;
+}
+
+/* -------------------------------------------------
+   OnlineOrders component
+   ------------------------------------------------- */
+export default function OnlineOrders() {
+  /* ---------- state ---------- */
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
   const [selectedSort, setSelectedSort] = useState("All Time");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // ✅ Fetch Online Orders
-  const fetchOrders = async () => {
+  /* ---------- load data ---------- */
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     try {
       const response = await apiService.get<any>("Online_Pos_Orders");
       if (response.status.code === "S") {
-        const onlineOrders = response.result.filter(
-          (o: any) => o.orderType === "ONLINE"
-        );
+        const onlineOrders = response.result.filter((o: any) => o.orderType === "ONLINE");
         setOrders(onlineOrders);
-        setFilteredOrders(onlineOrders);
+        console.log("OnlineOrders loadData:", { data: onlineOrders });
       }
     } catch (error) {
       console.error("Failed to load Online orders:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  /* ---------- filtering ---------- */
+  const filteredData = useMemo(() => {
+    let result = [...orders];
 
-  // ✅ Filter + Search Logic
-  useEffect(() => {
-    let data = [...orders];
-
-    if (searchTerm.trim() !== "") {
-      data = data.filter(
+    if (search.trim()) {
+      result = result.filter(
         (o) =>
-          o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          o.orderId?.toLowerCase().includes(searchTerm.toLowerCase())
+          o.customerName.toLowerCase().includes(search.toLowerCase()) ||
+          o.orderId.toLowerCase().includes(search.toLowerCase())
       );
     }
 
-    if (selectedCustomer !== "All") {
-      data = data.filter((o) => o.customerName === selectedCustomer);
-    }
+    if (selectedCustomer !== "All") result = result.filter((o) => o.customerName === selectedCustomer);
+    if (selectedStatus !== "All") result = result.filter((o) => o.status === selectedStatus);
+    if (selectedPaymentStatus !== "All") result = result.filter((o) => o.paymentStatus === selectedPaymentStatus);
 
-    if (selectedStatus !== "All") {
-      data = data.filter((o) => o.status === selectedStatus);
-    }
-
-    if (selectedPaymentStatus !== "All") {
-      data = data.filter((o) => o.paymentStatus === selectedPaymentStatus);
-    }
-
-    // Sorting Logic (example)
     if (selectedSort === "Last 7 Days") {
-      const now = new Date();
       const last7 = new Date();
-      last7.setDate(now.getDate() - 7);
-      data = data.filter((o) => new Date(o.date) >= last7);
+      last7.setDate(last7.getDate() - 7);
+      result = result.filter((o) => new Date(o.date) >= last7);
     } else if (selectedSort === "This Month") {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      data = data.filter((o) => new Date(o.date) >= start);
+      result = result.filter((o) => new Date(o.date) >= start);
     }
 
-    setFilteredOrders(data);
-    setCurrentPage(1);
-  }, [
-    searchTerm,
-    selectedCustomer,
-    selectedStatus,
-    selectedPaymentStatus,
-    selectedSort,
-    orders,
-  ]);
+    console.log("OnlineOrders filteredData:", result, {
+      search,
+      selectedCustomer,
+      selectedStatus,
+      selectedPaymentStatus,
+      selectedSort,
+    });
+    return result;
+  }, [orders, search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort]);
 
-  // ✅ Add New Order
-  const handleAddOrder = (newOrder: Order) => {
-    setOrders((prev) => [newOrder, ...prev]);
-    setFilteredOrders((prev) => [newOrder, ...prev]);
+  /* ---------- pagination ---------- */
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("OnlineOrders paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  const customerOptions = useMemo(() => ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))], [orders]);
+
+  /* ---------- handlers ---------- */
+  const handleAddClick = () => {
+    setIsModalOpen(true);
+    console.log("OnlineOrders handleAddClick: Opening AddSalesModal");
   };
 
-  // ✅ Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const handleAddOrder = (newOrder: Order) => {
+    setOrders((prev) => [newOrder, ...prev]);
+    setIsModalOpen(false);
+    const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+    setCurrentPage(totalPages);
+    console.log("OnlineOrders handleAddOrder:", { newOrder });
+  };
 
-  // ✅ Derived Customer List
-  const customerOptions = ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))];
+  const handleClear = () => {
+    loadData();
+    setSearch("");
+    setSelectedCustomer("All");
+    setSelectedStatus("All");
+    setSelectedPaymentStatus("All");
+    setSelectedSort("All Time");
+    setCurrentPage(1);
+    console.log("OnlineOrders handleClear");
+  };
 
-  if (loading) return <p className="p-4 text-gray-600">Loading...</p>;
+  const handleReport = () => {
+    alert("Online Orders Report:\n\n" + JSON.stringify(orders, null, 2));
+  };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("OnlineOrders handleSearchChange:", { search: e.target.value, currentPage: 1 });
+  };
+
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("OnlineOrders handlePageChange:", { page, totalPages, currentPage });
+    } else {
+      console.warn("OnlineOrders handlePageChange: Invalid page", { page, totalPages, currentPage });
+    }
+  };
+
+  /* ---------- row actions (edit / delete) ---------- */
+  const rowActions = (row: Order) => (
+    <>
+      {/* Edit opens the same modal – you can pass the row if you want to pre-fill */}
+      <button
+        onClick={() => {
+          setIsModalOpen(true);
+          console.log("OnlineOrders rowActions: Edit clicked", { row });
+        }}
+        aria-label={`Edit order ${row.orderId}`}
+        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
+        title="Edit"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit order</span>
+      </button>
+
+      <button
+        onClick={() => {
+          if (window.confirm("Are you sure you want to delete this order?")) {
+            setOrders((prev) => prev.filter((o) => o.id !== row.id));
+            console.log("OnlineOrders rowActions: Delete confirmed", { id: row.id });
+          }
+        }}
+        aria-label={`Delete order ${row.orderId}`}
+        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
+        title="Delete"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete order</span>
+      </button>
+    </>
+  );
+
+  /* ---------- table columns ---------- */
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
+      align: "center",
+      className: "w-12",
+    },
+    { key: "customerName", label: "Customer" },
+    { key: "orderId", label: "Reference" },
+    { key: "date", label: "Date" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Completed"
+              ? "bg-green-100 text-green-700"
+              : value === "Pending"
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-gray-100 text-gray-600"
+            }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      key: "grandTotal", // Simplified key (no dots needed since we access manually)
+      label: "Grand Total ($)",
+      render: (_, row) => `$${Number(row.totals.grandTotal || 0).toFixed(2)}`,
+      align: "right",
+    },
+    {
+      key: "paid",
+      label: "Paid ($)",
+      render: (_, row) => {
+        const paid = row.totals.paid ?? row.totals.grandTotal * 0.8;
+        return `$${Number(paid || 0).toFixed(2)}`;
+      },
+      align: "right",
+    },
+    {
+      key: "due",
+      label: "Due ($)",
+      render: (_, row) => {
+        const paid = row.totals.paid ?? row.totals.grandTotal * 0.8;
+        const due = row.totals.grandTotal - paid;
+        return `$${Number(due || 0).toFixed(2)}`;
+      },
+      align: "right",
+    },
+    { key: "paymentStatus", label: "Payment Status" },
+    {
+      key: "supplierName",
+      label: "Biller",
+      render: (value) => value || "-",
+    },
+  ];
+
+  /* ---------- custom filters (search + dropdowns) ---------- */
+  const customFilters = () => (
+    <>
+      <input
+        type="text"
+        placeholder="Search by Customer or Order ID..."
+        value={search}
+        onChange={handleSearchChange}
+        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search"
+      />
+      <select
+        value={selectedCustomer}
+        onChange={(e) => setSelectedCustomer(e.target.value)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {customerOptions.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+      <select
+        value={selectedStatus}
+        onChange={(e) => setSelectedStatus(e.target.value)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <option>All</option>
+        <option>Pending</option>
+        <option>Completed</option>
+        <option>Cancelled</option>
+      </select>
+      <select
+        value={selectedPaymentStatus}
+        onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <option>All</option>
+        <option>Paid</option>
+        <option>Partial</option>
+        <option>Unpaid</option>
+      </select>
+      <select
+        value={selectedSort}
+        onChange={(e) => setSelectedSort(e.target.value)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <option>All Time</option>
+        <option>Last 7 Days</option>
+        <option>This Month</option>
+      </select>
+    </>
+  );
+
+  /* ---------- render ---------- */
   return (
-    <div className="p-6 space-y-6">
-      {/* 🔹 Header Section */}
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Online Orders</h1>
-          <p className="text-sm text-gray-500">Manage Your Online Orders</p>
-        </div>
+    <>
+      <PageBase1
+        title="Online Orders"
+        description="Manage Your Online Orders"
+        icon="fa-light fa-shopping-cart"
+        onAddClick={handleAddClick}
+        onRefresh={handleClear}
+        onReport={handleReport}
+        search={search}
+        onSearchChange={handleSearchChange}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredData.length}
+        onPageChange={handlePageChange}
+        onPageSizeChange={setItemsPerPage}
+        tableColumns={columns}
+        tableData={paginatedData}
+        rowActions={rowActions}
+        customFilters={customFilters}
+        /* ---- modal-related props are optional, we just pass undefined ---- */
+        formMode={undefined}
+        setFormMode={undefined}
+        modalTitle={undefined}
+        modalForm={undefined}
+        onFormSubmit={undefined}
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
-            onClick={() => console.log("TODO: Export PDF")}
-          >
-            <FileText size={16} /> PDF
-          </button>
-          <button
-            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
-            onClick={() => console.log("TODO: Export Excel")}
-          >
-            <FileSpreadsheet size={16} /> Excel
-          </button>
-          <button
-            className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
-            onClick={fetchOrders}
-          >
-            <RefreshCcw size={16} /> Refresh
-          </button>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600"
-          >
-            <Plus className="w-4 h-4" /> Add Order
-          </button>
-        </div>
-      </div>
-
-      {/* 🔹 Filters Row */}
-      <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by Customer or Order ID..."
-            className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring focus:ring-blue-100"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <select
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={selectedCustomer}
-          onChange={(e) => setSelectedCustomer(e.target.value)}
-        >
-          {customerOptions.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-
-        <select
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-        >
-          <option>All</option>
-          <option>Pending</option>
-          <option>Completed</option>
-          <option>Cancelled</option>
-        </select>
-
-        <select
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={selectedPaymentStatus}
-          onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-        >
-          <option>All</option>
-          <option>Paid</option>
-          <option>Partial</option>
-          <option>Unpaid</option>
-        </select>
-
-        <select
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={selectedSort}
-          onChange={(e) => setSelectedSort(e.target.value)}
-        >
-          <option>All Time</option>
-          <option>Last 7 Days</option>
-          <option>This Month</option>
-        </select>
-      </div>
-
-      {/* 🔹 Orders Grid */}
-      <div className="overflow-x-auto bg-white shadow-sm rounded-lg">
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="px-4 py-2 text-left">Customer</th>
-              <th className="px-4 py-2 text-left">Reference</th>
-              <th className="px-4 py-2 text-left">Date</th>
-              <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-right">Grand Total ($)</th>
-              <th className="px-4 py-2 text-right">Paid ($)</th>
-              <th className="px-4 py-2 text-right">Due ($)</th>
-              <th className="px-4 py-2 text-left">Payment Status</th>
-              <th className="px-4 py-2 text-left">Biller</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y">
-            {currentOrders.length > 0 ? (
-              currentOrders.map((order) => {
-                const paid = order.totals.paid ?? order.totals.grandTotal * 0.8;
-                const due = order.totals.grandTotal - paid;
-
-                return (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">{order.customerName}</td>
-                    <td className="px-4 py-2">{order.orderId}</td>
-                    <td className="px-4 py-2">{order.date}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${order.status === "Completed"
-                            ? "bg-green-100 text-green-700"
-                            : order.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      ${order.totals.grandTotal.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2 text-right">${paid.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-right">${due.toFixed(2)}</td>
-                    <td className="px-4 py-2">{order.paymentStatus}</td>
-                    <td className="px-4 py-2">{order.supplierName || "-"}</td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td
-                  colSpan={9}
-                  className="text-center py-6 text-gray-500 text-sm"
-                >
-                  No Online Orders Found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 🔹 Pagination */}
-      {filteredOrders.length > itemsPerPage && (
-        <Pagination
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          totalItems={filteredOrders.length}
-          itemsPerPage={itemsPerPage}
-        />
-      )}
-
-      {/* 🔹 Add Modal */}
+      {/* Your existing, fully-functional modal */}
       <AddSalesModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          console.log("OnlineOrders: AddSalesModal closed");
+        }}
         onSave={handleAddOrder}
         orderType="ONLINE"
       />
-    </div>
+    </>
   );
-};
-
-export default OnlineOrders;
+}
