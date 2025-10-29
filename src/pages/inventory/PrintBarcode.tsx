@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { Pagination } from "@/components/Pagination/Pagination";
 import { STOCK_STATUSES } from "@/constants/constants"; // Using for status if relevant
 import { renderStatusBadge } from "@/utils/tableUtils";

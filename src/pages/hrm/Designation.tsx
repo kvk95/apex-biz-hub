@@ -1,17 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface Designation {
   id: number;
   designation: string;
   description: string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
 }
 
 export default function Designation() {

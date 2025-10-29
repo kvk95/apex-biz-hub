@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface Product {
   productId: number;
@@ -21,14 +21,6 @@ interface SalesReturn {
   paidAmount: number;
   dueAmount: number;
   status: string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => React.ReactNode;
-  align?: "left" | "center" | "right";
-  className?: string;
 }
 
 export default function SalesReturn() {

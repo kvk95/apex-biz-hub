@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 const YEARS = ["2025","2024","2023", "2022", "2021", "2020"]; // Replace with YEARS from constants.ts if available
 const BRANCHES = [
@@ -16,13 +16,6 @@ interface AnnualRecord {
   orders: number;
   totalSpent: number;
   lastPurchase: string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function AnnualReport() {

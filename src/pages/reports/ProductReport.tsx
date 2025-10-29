@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { UNITS,CATEGORIES } from "@/constants/constants";
  
 interface ProductData {
@@ -12,13 +12,6 @@ interface ProductData {
   salePrice: number;
   stockQty: number;
   stockValue: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function ProductReport() {

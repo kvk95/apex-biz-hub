@@ -1,6 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { COUPEN_TYPES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -14,12 +14,6 @@ interface Coupon {
   startDate: string;
   endDate: string;
   status: (typeof STATUSES)[number];
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any) => JSX.Element;
 }
 
 export default function Coupons() {

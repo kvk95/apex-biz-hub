@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface SaleRecord {
   date: string;
@@ -12,13 +12,6 @@ interface SaleRecord {
   discount: number;
   tax: number;
   total: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: SaleRecord) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const SalesReport: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -11,11 +11,6 @@ interface Department {
   status: typeof STATUSES[number];
 }
 
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-}
 
 export default function Departments() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);

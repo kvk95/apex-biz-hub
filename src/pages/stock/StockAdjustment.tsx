@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { WAREHOUSES } from "@/constants/constants";
 
 interface StockAdjustmentItem {
@@ -13,13 +13,6 @@ interface StockAdjustmentItem {
   unitCost: number;
   totalCost: number;
   notes?: string; // Added to replace Reason
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: StockAdjustmentItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const StockAdjustment: React.FC = () => {

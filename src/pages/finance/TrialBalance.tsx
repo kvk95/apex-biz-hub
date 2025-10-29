@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 // Use the provided constant
 const accountsOptions = [
@@ -28,13 +28,6 @@ interface TrialBalanceItem {
   accountName: string;
   debit: number;
   credit: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: TrialBalanceItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const TrialBalance: React.FC = () => {

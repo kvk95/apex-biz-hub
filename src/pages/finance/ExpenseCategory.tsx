@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -10,13 +10,6 @@ type ExpenseCategory = {
   description: string;
   status: (typeof STATUSES)[number];
 };
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: ExpenseCategory) => JSX.Element;
-  align?: "left" | "center" | "right";
-}
 
 export default function ExpenseCategory() {
   const [data, setData] = useState<ExpenseCategory[]>([]);

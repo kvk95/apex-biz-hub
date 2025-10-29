@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface ProfitLossRecord {
   id: string;
@@ -9,13 +9,6 @@ interface ProfitLossRecord {
   totalPurchase: number;
   expense: number;
   profitLoss: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function ProfitLoss() {

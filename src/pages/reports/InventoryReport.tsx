@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES, STATUSES } from "@/constants/constants";
 
 export const BRANDS = ["All Brands", "Apple", "Samsung", "Sony", "Dell", "Logitech", "Canon", "Bose", "Microsoft", "Google", "JBL", "HP", "Fitbit"] as const;
@@ -17,13 +17,6 @@ interface InventoryItem {
   totalValue: number;
   status: string;
   date?: string; // Added to support date filtering; confirm if this exists
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: InventoryItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const InventoryReport: React.FC = () => {

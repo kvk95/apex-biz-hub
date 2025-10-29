@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { ACCOUNT_TYPES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -14,13 +14,6 @@ interface BankAccount {
   openingBalance: number;
   currentBalance: number;
   status: "Active" | "Inactive";
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: BankAccount) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function BankAccounts() {

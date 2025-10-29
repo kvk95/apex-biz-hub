@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -9,13 +9,6 @@ interface IncomeCategoryItem {
   incomeCategory: string;
   description: string;
   status: "Active" | "Inactive";
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: IncomeCategoryItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const IncomeCategory: React.FC = () => {

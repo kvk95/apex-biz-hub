@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { CURRENCIES, STATUSES } from "@/constants/constants";
 
 interface Customer {
@@ -25,13 +25,6 @@ interface FormData {
   amount: string;
   currency: string;
   description: string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: Customer) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function MoneyTransfer() {

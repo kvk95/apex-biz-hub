@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES } from "@/constants/constants";
 
 interface SoldStockItem {
@@ -13,13 +13,6 @@ interface SoldStockItem {
   totalPrice: number;
   customerName: string;
   date: string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: SoldStockItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const SoldStock: React.FC = () => {

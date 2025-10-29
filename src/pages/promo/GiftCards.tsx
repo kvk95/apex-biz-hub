@@ -1,6 +1,6 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useMemo, useState } from "react";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -12,12 +12,6 @@ interface GiftCard {
   expiryDate: string;
   balance: number;
   status: (typeof EXPIRED_STATUSES)[number];
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
 }
 
 export default function GiftCards() {

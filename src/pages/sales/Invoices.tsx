@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface Invoice {
   id: number;
@@ -10,15 +10,7 @@ interface Invoice {
   dueDate: string;
   amount: number;
   status: "Paid" | "Pending" | "Overdue";
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => React.ReactNode;
-  align?: "left" | "center" | "right";
-  className?: string;
-}
+} 
 
 export default function Invoices() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);

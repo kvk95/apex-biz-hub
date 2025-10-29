@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface AccountStatementItem {
   id: number; // Assumed for uniqueness
@@ -14,13 +14,6 @@ interface AccountStatementItem {
   credit: number;
   balance: number;
   customer?: string; // Optional, based on previous filter logic
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: AccountStatementItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const AccountStatement: React.FC = () => {

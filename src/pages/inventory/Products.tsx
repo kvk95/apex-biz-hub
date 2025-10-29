@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -16,12 +16,6 @@ interface ProductRecord {
   image: string;
 }
 
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
-}
 const BRANDS = ["All Brands", "Brand A", "Brand B", "Brand C"];
 
 export default function Products() {

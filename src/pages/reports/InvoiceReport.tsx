@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import {   PAYMENT_STATUSES, PAYMENT_TYPES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -31,13 +31,6 @@ interface InvoiceItem {
   paymentStatus: string;
   paymentMethod: string;
   total: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: InvoiceItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const InvoiceReport: React.FC = () => { 

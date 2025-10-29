@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface CashFlowItem {
   id: number;
@@ -11,13 +11,6 @@ interface CashFlowItem {
   income: number;
   expense: number;
   balance: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: CashFlowItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const CashFlow: React.FC = () => {

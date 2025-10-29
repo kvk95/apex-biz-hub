@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 interface StockHistoryItem {
   date: string;
@@ -14,13 +14,6 @@ interface StockHistoryItem {
   stockQty: number;
   unitPrice: number;
   totalPrice: number;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: StockHistoryItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
  
 const SUPPLIERS = [

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import AddSalesModal from "./AddSalesModal";
 
 interface OrderItem {
@@ -39,18 +39,7 @@ interface Order {
   items: OrderItem[];
   totals: Totals;
 }
-
-/* -------------------------------------------------
-   Column definition – matches the updated render type
-   ------------------------------------------------- */
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => React.ReactNode;
-  align?: "left" | "center" | "right";
-  className?: string;
-}
-
+ 
 /* -------------------------------------------------
    OnlineOrders component
    ------------------------------------------------- */

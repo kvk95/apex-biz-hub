@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
 // Placeholder constant (to be adjusted based on actual data or requirements)
 export const PAYMENT_METHODS = ["All", "Cash", "Credit Card", "Cheque", "Bank Transfer"] as const;
@@ -13,13 +13,6 @@ interface BalanceSheetItem {
   debit: number;
   credit: number;
   paymentMethod:string;
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: BalanceSheetItem) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 const BalanceSheet: React.FC = () => {

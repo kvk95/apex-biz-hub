@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { LEAVE_TYPES, APPROVAL_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -13,13 +13,6 @@ interface LeaveRecord {
   noOfDays: number;
   reason: string;
   status: typeof APPROVAL_STATUSES[number];
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
 }
 
 export default function AdminLeaves() {
