@@ -254,3 +254,6 @@ export const SORT_OPTIONS = [
 ] as const;
 
 export const ORDER_TYPES = ["ONLINE", "POS"] as const;
+
+export const RETURN_STATUSES = ["Pending", "Paid"] as const;
+export const PAYMENT_STATUS_OPTIONS = ["All", "Paid", "Partial", "Unpaid"] as const;

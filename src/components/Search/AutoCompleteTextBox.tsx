@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   AutoCompleteTextBox – reusable for Product, Customer, etc.
-   ------------------------------------------------- */
 import React, {
     useState,
     useEffect,
@@ -12,31 +9,21 @@ import { SearchInput } from "./SearchInput";
 
 export interface AutoCompleteItem {
     id: number;
-    /** The field that will be shown in the dropdown and in the input after selection */
     display: string;
-    /** Optional extra data you want to show next to the name (e.g. SKU, price…) */
     extra?: Record<string, any>;
 }
 
-/* ------------------------------------------------- */
 interface AutoCompleteTextBoxProps<T extends AutoCompleteItem> {
-    /** Current value shown in the input */
     value: string;
-    /** Called while the user types – you must filter the list yourself */
     onSearch: (query: string) => void;
-    /** Called when the user selects an item */
     onSelect: (item: T) => void;
-    /** Full list of items (already filtered by you) */
     items: T[];
-    /** Placeholder for the search input */
     placeholder?: string;
-    /** How many items to show at once (default 8) */
     maxVisible?: number;
-    /** Optional render function for a custom row */
     renderItem?: (item: T, highlighted: boolean) => React.ReactNode;
+    disabled?: boolean;
 }
 
-/* ------------------------------------------------- */
 export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
     value,
     onSearch,
@@ -45,6 +32,7 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
     placeholder = "Search…",
     maxVisible = 8,
     renderItem,
+    disabled = false,
 }: AutoCompleteTextBoxProps<T>) => {
     const [inputValue, setInputValue] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
@@ -52,39 +40,35 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
     const containerRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    /* ---- sync parent value ------------------------------------------------ */
     useEffect(() => setInputValue(value), [value]);
 
-    /* ---- keep highlight in bounds ------------------------------------------ */
     const visible = items.slice(0, maxVisible);
     useEffect(() => {
-        setHighlightedIndex(isOpen && visible.length > 0 ? 0 : -1);
-    }, [isOpen, visible.length]);
+        setHighlightedIndex(!disabled && isOpen && visible.length > 0 ? 0 : -1);
+    }, [isOpen, visible.length, disabled]);
 
-    /* ---- auto‑scroll to highlighted item ----------------------------------- */
     useEffect(() => {
         const el = itemRefs.current[highlightedIndex];
         if (el) el.scrollIntoView({ block: "nearest" });
     }, [highlightedIndex]);
 
-    /* ---- search handler ---------------------------------------------------- */
     const handleSearch = (query: string) => {
+        if (disabled) return;
         setInputValue(query);
         onSearch(query);
         setIsOpen(true);
     };
 
-    /* ---- selection handler ------------------------------------------------- */
     const selectItem = (item: T) => {
+        if (disabled) return;
         setInputValue(item.display);
         onSelect(item);
         setIsOpen(false);
         setHighlightedIndex(-1);
     };
 
-    /* ---- keyboard navigation ----------------------------------------------- */
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (!isOpen) return;
+        if (disabled || !isOpen) return;
 
         switch (e.key) {
             case "ArrowDown":
@@ -111,7 +95,6 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
         }
     };
 
-    /* ---- click outside ----------------------------------------------------- */
     useEffect(() => {
         const handler = (ev: MouseEvent) => {
             if (
@@ -133,7 +116,6 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
             );
     }, []);
 
-    /* ---- default row rendering -------------------------------------------- */
     const defaultRender = (item: T, highlighted: boolean) => {
         const extra = item.extra
             ? Object.entries(item.extra)
@@ -157,13 +139,14 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
                 placeholder={placeholder}
                 value={inputValue}
                 onSearch={handleSearch}
-                onFocus={() => setIsOpen(true)}
-                onBlur={() => setIsOpen(false)}
+                onFocus={() => !disabled && setIsOpen(true)}
+                onBlur={() => !disabled && setIsOpen(false)}
                 onKeyDown={handleKeyDown}
                 debounce={300}
+                disabled={disabled}
             />
 
-            {isOpen && inputValue && visible.length > 0 && (
+            {!disabled && isOpen && inputValue && visible.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                     {visible.map((it, idx) => (
                         <div
@@ -173,7 +156,9 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
                             onClick={() => selectItem(it)}
                             onMouseEnter={() => setHighlightedIndex(idx)}
                         >
-                            {renderItem ? renderItem(it, idx === highlightedIndex) : defaultRender(it, idx === highlightedIndex)}
+                            {renderItem
+                                ? renderItem(it, idx === highlightedIndex)
+                                : defaultRender(it, idx === highlightedIndex)}
                         </div>
                     ))}
                 </div>

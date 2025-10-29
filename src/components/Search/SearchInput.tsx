@@ -1,4 +1,3 @@
-// src/components/Search/SearchInput.tsx
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 
@@ -11,6 +10,7 @@ interface SearchInputProps {
   onFocus?: () => void;
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
 export function SearchInput({
@@ -22,24 +22,18 @@ export function SearchInput({
   onFocus,
   onBlur,
   onKeyDown,
+  disabled = false,
 }: SearchInputProps) {
   const [query, setQuery] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // -----------------------------------------------------------------
-  // 1. Sync the external `value` (when the parent clears the field)
-  // -----------------------------------------------------------------
   useEffect(() => {
     setQuery(value);
   }, [value]);
 
-  // -----------------------------------------------------------------
-  // 2. Debounced search – **only one timer ever runs**
-  // -----------------------------------------------------------------
   useEffect(() => {
-    // Skip debounce if query matches external value (e.g. after selection)
-    if (query === value) return;
+    if (disabled || query === value) return;
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
@@ -50,12 +44,8 @@ export function SearchInput({
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [query, debounce, onSearch, value]);
+  }, [query, debounce, onSearch, value, disabled]);
 
-
-  // -----------------------------------------------------------------
-  // 3. Click‑through / focus handling
-  // -----------------------------------------------------------------
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
@@ -70,11 +60,12 @@ export function SearchInput({
         onFocus={onFocus}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        className="pl-10"
+        disabled={disabled}
+        className={`pl-10 ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         autoComplete="off"
         onMouseDown={(e) => {
           e.stopPropagation();
-          inputRef.current?.focus();
+          if (!disabled) inputRef.current?.focus();
         }}
       />
     </div>

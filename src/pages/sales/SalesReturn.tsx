@@ -1,15 +1,70 @@
+/* -------------------------------------------------
+   Sales Returns – matches Invoices/Billers exactly
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import {
+  RETURN_STATUSES,
+  PAYMENT_STATUS_OPTIONS,
+  SORT_OPTIONS,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  ORDER_TYPES,
+} from "@/constants/constants";
 
-interface Product {
+type Product = {
   productId: number;
   productName: string;
   sku: string;
   price: number;
-}
+};
 
-interface SalesReturn {
+type Customer = {
+  id: number;
+  name: string;
+};
+
+type OrderItem = {
+  productId: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  tax: number;
+  total: number;
+};
+
+type Totals = {
+  subTotal: number;
+  tax: number;
+  discount: number;
+  shipping: number;
+  grandTotal: number;
+  paid?: number;
+  due?: number;
+};
+
+type Order = {
+  id: number;
+  orderId: string;
+  orderType: (typeof ORDER_TYPES)[number];
+  date: string;
+  customerId: number;
+  customerName: string;
+  supplierId: number;
+  supplierName?: string;
+  paymentMethod: string;
+  paymentStatus: (typeof PAYMENT_STATUSES)[number];
+  status: (typeof ORDER_STATUSES)[number];
+  items: OrderItem[];
+  totals: Totals;
+};
+
+type SalesReturn = {
   id: number;
   productName: string;
   productId: number;
@@ -20,11 +75,27 @@ interface SalesReturn {
   totalAmount: number;
   paidAmount: number;
   dueAmount: number;
-  status: string;
-}
+  status: (typeof RETURN_STATUSES)[number];
+};
 
 export default function SalesReturn() {
+  /* ---------- state ---------- */
+  const [salesReturns, setSalesReturns] = useState<SalesReturn[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState<(typeof RETURN_STATUSES)[number] | "All">("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUS_OPTIONS)[number]>("All");
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Recently Added");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     id: null as number | null,
     productId: 0,
@@ -37,49 +108,34 @@ export default function SalesReturn() {
     totalAmount: "",
     paidAmount: "",
     dueAmount: "",
-    status: "Pending",
+    status: "Pending" as (typeof RETURN_STATUSES)[number],
   });
 
-  const [returns, setReturns] = useState<SalesReturn[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [search, setSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
-  const [selectedSort, setSelectedSort] = useState("Recently Added");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Load Sales Returns + Products from OnlinePosOrders
+  /* ---------- load data ---------- */
   useEffect(() => {
-    loadSalesReturns();
-    loadProductsFromPosOrders();
+    loadData();
   }, []);
 
-  const loadSalesReturns = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await apiService.get<SalesReturn[]>("SalesReturn");
-      if (response.status.code === "S") {
-        setReturns(response.result);
-        console.log("SalesReturn loadSalesReturns:", response.result);
-      }
-    } catch (error) {
-      console.error("Failed to load sales returns:", error);
-    }
-  };
+      const [returnRes, posRes] = await Promise.all([
+        apiService.get<SalesReturn[]>("SalesReturn"),
+        apiService.get<Order[]>("OnlineOrders"),
+      ]);
 
-  const loadProductsFromPosOrders = async () => {
-    try {
-      const response = await apiService.get<any>("OnlinePosOrders"); // keep any – we’ll cast below
-      if (response.status.code === "S") {
-        // Flatten all items from every order
-        const allItems: {
-          productId: number;
-          productName: string;
-          sku: string;
-          price: number;
-        }[] = response.result.flatMap((order: any) =>
-          (order.items || []).map((item: any) => ({
+      if (returnRes.status.code === "S") {
+        setSalesReturns(returnRes.result);
+        console.log("SalesReturn loadData salesReturns:", returnRes.result);
+      }
+
+      if (posRes.status.code === "S") {
+        const loadedOrders: Order[] = posRes.result;
+        setOrders(loadedOrders);
+
+        // Extract unique products
+        const allItems: Product[] = loadedOrders.flatMap((order) =>
+          order.items.map((item): Product => ({
             productId: item.productId,
             productName: item.productName,
             sku: item.sku,
@@ -87,21 +143,58 @@ export default function SalesReturn() {
           }))
         );
 
-        // Remove duplicates by productId
         const uniqueProducts: Product[] = Array.from(
           new Map(allItems.map((item) => [item.productId, item])).values()
         );
 
         setProducts(uniqueProducts);
-        console.log("SalesReturn loadProductsFromPosOrders:", uniqueProducts);
+        setFilteredProducts(uniqueProducts);
+
+        // Extract all customers (will be filtered later)
+        const uniqueCustomers: Customer[] = Array.from(
+          new Map(loadedOrders.map((o) => [o.customerId, { id: o.customerId, name: o.customerName }])).values()
+        );
+
+        setFilteredCustomers(uniqueCustomers);
+        console.log("SalesReturn loadData products:", uniqueProducts);
+        console.log("SalesReturn loadData all customers:", uniqueCustomers);
       }
-    } catch (error) {
-      console.error("Failed to load products from POS orders:", error);
+
+      setError(null);
+    } catch (err) {
+      setError("Failed to load data.");
+      console.error("SalesReturn loadData error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ---------- customers for selected product ---------- */
+  const customersForSelectedProduct = useMemo((): Customer[] => {
+    if (!form.productId || orders.length === 0) return [];
+
+    const matchingOrders = orders.filter((order) =>
+      order.items.some((item) => item.productId === form.productId)
+    );
+
+    return Array.from(
+      new Map(matchingOrders.map((o) => [o.customerId, { id: o.customerId, name: o.customerName }])).values()
+    );
+  }, [form.productId, orders]);
+
+  /* ---------- update filtered customers when product changes ---------- */
+  useEffect(() => {
+    if (!form.productId) {
+      setForm((prev) => ({ ...prev, customer: "" }));
+      setFilteredCustomers([]);
+    } else {
+      setFilteredCustomers(customersForSelectedProduct);
+    }
+  }, [form.productId, customersForSelectedProduct]);
+
+  /* ---------- filtering ---------- */
   const filteredData = useMemo(() => {
-    let result = [...returns];
+    let result = [...salesReturns];
 
     if (search.trim()) {
       result = result.filter(
@@ -113,8 +206,13 @@ export default function SalesReturn() {
       );
     }
 
-    if (selectedCustomer !== "All") result = result.filter((r) => r.customer === selectedCustomer);
-    if (selectedStatus !== "All") result = result.filter((r) => r.status === selectedStatus);
+    if (selectedCustomer !== "All") {
+      result = result.filter((r) => r.customer === selectedCustomer);
+    }
+
+    if (selectedStatus !== "All") {
+      result = result.filter((r) => r.status === selectedStatus);
+    }
 
     if (selectedPaymentStatus !== "All") {
       result = result.filter((r) => {
@@ -145,10 +243,16 @@ export default function SalesReturn() {
       });
     }
 
-    console.log("SalesReturn filteredData:", result);
+    console.log("SalesReturn filteredData:", result, {
+      search,
+      selectedCustomer,
+      selectedStatus,
+      selectedPaymentStatus,
+      selectedSort,
+    });
     return result;
   }, [
-    returns,
+    salesReturns,
     search,
     selectedCustomer,
     selectedStatus,
@@ -156,44 +260,27 @@ export default function SalesReturn() {
     selectedSort,
   ]);
 
+  /* ---------- pagination ---------- */
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
-    return filteredData.slice(start, end);
+    const result = filteredData.slice(start, end);
+    console.log("SalesReturn paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredData.length,
+    });
+    return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(() => ["All", ...Array.from(new Set(returns.map((r) => r.customer)))], [returns]);
-  const statusOptions = useMemo(() => ["All", ...Array.from(new Set(returns.map((r) => r.status)))], [returns]);
+  /* ---------- derived options ---------- */
+  const customerOptions = useMemo(() => {
+    return ["All", ...Array.from(new Set(salesReturns.map((r) => r.customer)))];
+  }, [salesReturns]);
 
-  const handleProductSelect = (product: Product) => {
-    setForm((prev) => ({
-      ...prev,
-      productId: product.productId,
-      productName: product.productName,
-      sku: product.sku,
-      price: product.price,
-      totalAmount: product.price.toString(),
-      dueAmount: (product.price - parseFloat(prev.paidAmount || "0")).toString(),
-    }));
-    console.log("SalesReturn handleProductSelect:", product);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => {
-      const updated = { ...prev, [name]: value };
-
-      // Auto-update due when total or paid changes
-      if (name === "totalAmount" || name === "paidAmount") {
-        const total = parseFloat(updated.totalAmount) || 0;
-        const paid = parseFloat(updated.paidAmount) || 0;
-        updated.dueAmount = (total - paid).toFixed(2);
-      }
-
-      return updated;
-    });
-  };
-
+  /* ---------- handlers ---------- */
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
@@ -229,32 +316,95 @@ export default function SalesReturn() {
       dueAmount: ret.dueAmount.toString(),
       status: ret.status,
     });
-    console.log("SalesReturn handleEdit:", ret);
+    console.log("SalesReturn handleEdit:", { ret });
+  };
+
+  const handleProductSearch = (query: string) => {
+    const filtered = products.filter(
+      (p) =>
+        p.productName.toLowerCase().includes(query.toLowerCase()) ||
+        p.sku.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+    setForm((prev) => ({ ...prev, productName: query }));
+    console.log("SalesReturn handleProductSearch:", { query, count: filtered.length });
+  };
+
+  const handleProductSelect = (item: AutoCompleteItem & { sku: string; price: number }) => {
+    const product = products.find((p) => p.productId === item.id)!;
+    setForm((prev) => {
+      const total = product.price;
+      const paid = parseFloat(prev.paidAmount || "0");
+      const due = total - paid;
+      return {
+        ...prev,
+        productId: product.productId,
+        productName: product.productName,
+        sku: product.sku,
+        price: product.price,
+        totalAmount: total.toFixed(2),
+        dueAmount: due >= 0 ? due.toFixed(2) : "0.00",
+        customer: "", // Reset customer
+      };
+    });
+    setFilteredProducts(products);
+    console.log("SalesReturn handleProductSelect:", { product });
+  };
+
+  const handleCustomerSearch = (query: string) => {
+    const filtered = customersForSelectedProduct.filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+    setForm((prev) => ({ ...prev, customer: query }));
+    console.log("SalesReturn handleCustomerSearch:", { query, count: filtered.length });
+  };
+
+  const handleCustomerSelect = (item: AutoCompleteItem) => {
+    setForm((prev) => ({ ...prev, customer: item.display }));
+    setFilteredCustomers(customersForSelectedProduct);
+    console.log("SalesReturn handleCustomerSelect:", { item });
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "totalAmount" || name === "paidAmount") {
+        const total = parseFloat(updated.totalAmount) || 0;
+        const paid = parseFloat(updated.paidAmount) || 0;
+        updated.dueAmount = (total - paid).toFixed(2);
+      }
+      return updated;
+    });
+    console.log("SalesReturn handleFormChange:", { name, value });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const total = parseFloat(form.totalAmount);
-    const paid = parseFloat(form.paidAmount);
-    const due = total - paid;
 
     if (
       !form.productName ||
       !form.invoiceNo.trim() ||
       !form.customer.trim() ||
       !form.date ||
-      isNaN(total) ||
-      total <= 0
+      !form.totalAmount ||
+      parseFloat(form.totalAmount) <= 0
     ) {
       alert("Please fill all required fields with valid values.");
       return;
     }
 
+    const total = parseFloat(form.totalAmount);
+    const paid = parseFloat(form.paidAmount || "0");
+    const due = total - paid;
+
     const newReturn: SalesReturn = {
-      id: formMode === "add" ? (returns.length ? Math.max(...returns.map((r) => r.id)) + 1 : 1) : form.id!,
+      id: formMode === "add"
+        ? (salesReturns.length ? Math.max(...salesReturns.map((r) => r.id)) + 1 : 1)
+        : form.id!,
       productId: form.productId,
-      productName: form.productName,
+      productName: form.productName.trim(),
       sku: form.sku,
       invoiceNo: form.invoiceNo.trim(),
       date: form.date,
@@ -266,49 +416,64 @@ export default function SalesReturn() {
     };
 
     if (formMode === "add") {
-      setReturns((prev) => [newReturn, ...prev]);
-      setCurrentPage(Math.ceil((filteredData.length + 1) / itemsPerPage));
-    } else {
-      setReturns((prev) => prev.map((r) => (r.id === newReturn.id ? newReturn : r)));
+      setSalesReturns((prev) => [newReturn, ...prev]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit") {
+      setSalesReturns((prev) => prev.map((r) => (r.id === newReturn.id ? newReturn : r)));
     }
 
     setFormMode(null);
-    console.log("SalesReturn handleFormSubmit:", newReturn);
+    console.log("SalesReturn handleFormSubmit:", { newReturn, formMode });
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Delete this return?")) {
-      setReturns((prev) => prev.filter((r) => r.id !== id));
-      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
-      if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
-      else if (totalPages === 0) setCurrentPage(1);
+    if (window.confirm("Are you sure you want to delete this return?")) {
+      setSalesReturns((prev) => prev.filter((r) => r.id !== id));
+      const totalItemsAfterDelete = filteredData.length - 1;
+      const totalPages = Math.ceil(totalItemsAfterDelete / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+      }
+      console.log("SalesReturn handleDelete:", { id, totalPages });
     }
   };
 
   const handleClear = () => {
-    loadSalesReturns();
+    loadData();
     setSearch("");
     setSelectedCustomer("All");
     setSelectedStatus("All");
     setSelectedPaymentStatus("All");
     setSelectedSort("Recently Added");
     setCurrentPage(1);
+    console.log("SalesReturn handleClear");
   };
 
   const handleReport = () => {
-    alert("Sales Returns Report:\n\n" + JSON.stringify(returns, null, 2));
+    alert("Sales Returns Report:\n\n" + JSON.stringify(salesReturns, null, 2));
+    console.log("SalesReturn handleReport");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
+    console.log("SalesReturn handleSearchChange:", { search: e.target.value });
   };
 
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("SalesReturn handlePageChange:", { page, totalPages });
+    } else {
+      console.warn("Invalid page", { page, totalPages, currentPage });
+    }
   };
 
+  /* ---------- table columns ---------- */
   const columns: Column[] = [
     {
       key: "index",
@@ -318,19 +483,15 @@ export default function SalesReturn() {
       className: "w-12",
     },
     { key: "productName", label: "Product" },
+    { key: "sku", label: "SKU" },
+    { key: "invoiceNo", label: "Invoice No" },
     { key: "date", label: "Date" },
     { key: "customer", label: "Customer" },
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-            }`}
-        >
-          {value}
-        </span>
-      ),
+      render: renderStatusBadge,
+      align: "center",
     },
     {
       key: "totalAmount",
@@ -352,35 +513,42 @@ export default function SalesReturn() {
     },
     {
       key: "paymentStatus",
-      label: "Payment Status",
+      label: "Payment",
       render: (_, row) =>
         row.paidAmount === row.totalAmount
           ? "Paid"
           : row.paidAmount > 0
             ? "Partial"
             : "Unpaid",
+      align: "center",
     },
   ];
 
+  /* ---------- row actions ---------- */
   const rowActions = (row: SalesReturn) => (
     <>
       <button
         onClick={() => handleEdit(row)}
-        className="text-gray-700 hover:text-primary p-1"
+        aria-label={`Edit return ${row.invoiceNo}`}
+        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
         title="Edit"
       >
-        <i className="fa fa-edit"></i>
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
       </button>
       <button
         onClick={() => handleDelete(row.id)}
-        className="text-gray-700 hover:text-red-600 p-1"
+        aria-label={`Delete return ${row.invoiceNo}`}
+        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
         title="Delete"
       >
-        <i className="fa fa-trash-can-xmark"></i>
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
       </button>
     </>
   );
 
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
     <>
       <input
@@ -388,86 +556,95 @@ export default function SalesReturn() {
         placeholder="Search by Product, SKU, Invoice, Customer..."
         value={search}
         onChange={handleSearchChange}
-        className="border rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Search"
       />
       <select
         value={selectedCustomer}
         onChange={(e) => setSelectedCustomer(e.target.value)}
-        className="border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         {customerOptions.map((c) => (
-          <option key={c} value={c}>{c}</option>
+          <option key={c} value={c}>
+            {c}
+          </option>
         ))}
       </select>
       <select
         value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value)}
-        className="border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        onChange={(e) => setSelectedStatus(e.target.value as any)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {statusOptions.map((s) => (
-          <option key={s} value={s}>{s}</option>
+        <option>All</option>
+        {RETURN_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
       </select>
       <select
         value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-        className="border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option>All</option>
-        <option>Paid</option>
-        <option>Partial</option>
-        <option>Unpaid</option>
+        {PAYMENT_STATUS_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value)}
-        className="border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        onChange={(e) => setSelectedSort(e.target.value as any)}
+        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option>Recently Added</option>
-        <option>Ascending</option>
-        <option>Descending</option>
-        <option>Last 7 Days</option>
-        <option>Last Month</option>
+        {SORT_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
     </>
   );
 
+  /* ---------- modal form ---------- */
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Product Autocomplete */}
+      {/* Product AutoComplete */}
       <div className="md:col-span-3">
         <label className="block text-sm font-medium mb-1">Product *</label>
-        <div className="relative">
-          <input
-            type="text"
-            value={form.productName}
-            onChange={(e) => {
-              setForm((prev) => ({ ...prev, productName: e.target.value }));
-            }}
-            placeholder="Type to search product..."
-            className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          {form.productName && products.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
-              {products
-                .filter((p) =>
-                  p.productName.toLowerCase().includes(form.productName.toLowerCase()) ||
-                  p.sku.toLowerCase().includes(form.productName.toLowerCase())
-                )
-                .slice(0, 10)
-                .map((p) => (
-                  <div
-                    key={p.productId}
-                    onClick={() => handleProductSelect(p)}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between"
-                  >
-                    <span>{p.productName}</span>
-                    <span className="text-sm text-gray-500">{p.sku} | ${p.price}</span>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+        <AutoCompleteTextBox
+          value={form.productName}
+          onSearch={handleProductSearch}
+          onSelect={handleProductSelect}
+          items={filteredProducts.map((p) => ({
+            id: p.productId,
+            display: p.productName,
+            sku: p.sku,
+            price: p.price,
+          }))}
+          placeholder="Search product by name or SKU..."
+        />
+      </div>
+
+      {/* Customer AutoComplete (filtered by product) */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Customer *</label>
+        <AutoCompleteTextBox
+          value={form.customer}
+          onSearch={handleCustomerSearch}
+          onSelect={handleCustomerSelect}
+          items={filteredCustomers.map((c) => ({
+            id: c.id,
+            display: c.name,
+          }))}
+          placeholder={
+            form.productId
+              ? "Search customer who bought this product..."
+              : "Select a product first"
+          }
+          disabled={!form.productId}
+        />
       </div>
 
       <div>
@@ -476,86 +653,84 @@ export default function SalesReturn() {
           type="text"
           name="invoiceNo"
           value={form.invoiceNo}
-          onChange={handleInputChange}
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          onChange={handleFormChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Customer *</label>
-        <input
-          type="text"
-          name="customer"
-          value={form.customer}
-          onChange={handleInputChange}
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-        />
-      </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Date *</label>
         <input
           type="date"
           name="date"
           value={form.date}
-          onChange={handleInputChange}
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          onChange={handleFormChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Total Amount *</label>
         <input
           type="number"
           name="totalAmount"
           value={form.totalAmount}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           min="0"
           step="0.01"
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Paid Amount</label>
         <input
           type="number"
           name="paidAmount"
           value={form.paidAmount}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           min="0"
           step="0.01"
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Due Amount</label>
         <input
           type="text"
           value={form.dueAmount}
           readOnly
-          className="w-full border rounded px-3 py-2 bg-gray-50 text-gray-600"
+          className="w-full border border-input rounded px-3 py-2 bg-gray-50 text-gray-600"
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Status</label>
         <select
           name="status"
           value={form.status}
-          onChange={handleInputChange}
-          className="w-full border rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          onChange={handleFormChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option>Pending</option>
-          <option>Paid</option>
+          {RETURN_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
       </div>
     </div>
   );
 
+  /* ---------- render ---------- */
   return (
     <PageBase1
       title="Sales Returns"
-      description="Manage Your Sales Returns"
+      description="Manage sales returns from POS orders"
       icon="fa-light fa-arrow-rotate-left"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
