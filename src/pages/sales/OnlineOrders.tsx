@@ -39,7 +39,7 @@ interface Order {
   items: OrderItem[];
   totals: Totals;
 }
- 
+
 /* -------------------------------------------------
    OnlineOrders component
    ------------------------------------------------- */
@@ -62,9 +62,9 @@ export default function OnlineOrders() {
 
   const loadData = async () => {
     try {
-      const response = await apiService.get<any>("OnlinePosOrders");
+      const response = await apiService.get<any>("OnlineOrders");
       if (response.status.code === "S") {
-        const onlineOrders = response.result.filter((o: any) => o.orderType === "ONLINE");
+        const onlineOrders = response.result;
         setOrders(onlineOrders);
         console.log("OnlineOrders loadData:", { data: onlineOrders });
       }

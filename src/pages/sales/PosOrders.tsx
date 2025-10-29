@@ -38,7 +38,7 @@ interface Order {
   status: string;
   items: OrderItem[];
   totals: Totals;
-} 
+}
 
 export default function PosOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -57,9 +57,9 @@ export default function PosOrders() {
 
   const loadData = async () => {
     try {
-      const response = await apiService.get<any>("OnlinePosOrders");
+      const response = await apiService.get<any>("PosOrders");
       if (response.status.code === "S") {
-        const posOrders = response.result.filter((o: any) => o.orderType === "POS");
+        const posOrders = response.result;
         setOrders(posOrders);
         console.log("PosOrders loadData:", { data: posOrders });
       }

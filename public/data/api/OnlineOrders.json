@@ -6,111 +6,253 @@
   "result": [
     {
       "id": 1,
-      "orderId": "OD12345",
-      "customer": "John Doe",
-      "date": "2023-09-10",
-      "status": "Pending",
-      "paymentMethod": "Credit Card",
-      "total": 125.0
+      "orderId": "S001",
+      "orderType": "ONLINE",
+      "date": "2025-10-01",
+      "customerId": 1,
+      "supplierId": 1,
+      "customerName": "John Doe",
+      "paymentMethod": "Cash",
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "Apple iPhone 14 Pro Max",
+          "sku": "SHU-001",
+          "quantity": 1,
+          "price": 1200,
+          "discount": 0,
+          "tax": 18,
+          "total": 1200
+        },
+        {
+          "productId": 2,
+          "productName": "Samsung Galaxy S23",
+          "sku": "SHU-002",
+          "quantity": 2,
+          "price": 800,
+          "discount": 5,
+          "tax": 18,
+          "total": 1520
+        }
+      ],
+      "totals": {
+        "subTotal": 2720,
+        "tax": 36,
+        "discount": 5,
+        "shipping": 20,
+        "grandTotal": 2771
+      }
     },
     {
       "id": 2,
-      "orderId": "OD12346",
-      "customer": "Jane Smith",
-      "date": "2023-09-11",
-      "status": "Completed",
-      "paymentMethod": "Paypal",
-      "total": 89.99
+      "orderId": "S002",
+      "orderType": "ONLINE",
+      "date": "2025-10-10",
+      "customerId": 2,
+      "supplierId": 1,
+      "customerName": "Jane Smith",
+      "paymentMethod": "Credit Card",
+      "status": "Pending",
+      "items": [
+        {
+          "productId": 3,
+          "productName": "Sony WH-1000XM5",
+          "sku": "SHU-003",
+          "quantity": 1,
+          "price": 400,
+          "discount": 10,
+          "tax": 18,
+          "total": 428
+        }
+      ],
+      "totals": {
+        "subTotal": 400,
+        "tax": 18,
+        "discount": 10,
+        "shipping": 5,
+        "grandTotal": 413
+      }
     },
     {
       "id": 3,
-      "orderId": "OD12347",
-      "customer": "Michael Johnson",
-      "date": "2023-09-12",
-      "status": "Cancelled",
+      "orderId": "S003",
+      "orderType": "ONLINE",
+      "date": "2025-10-03",
+      "customerId": 3,
+      "supplierId": 1,
+      "customerName": "Carlos Ruiz",
       "paymentMethod": "Cash",
-      "total": 45.5
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 4,
+          "productName": "Apple MacBook Pro 16\"",
+          "sku": "SHU-004",
+          "quantity": 1,
+          "price": 2500,
+          "discount": 0,
+          "tax": 18,
+          "total": 2500
+        }
+      ],
+      "totals": {
+        "subTotal": 2500,
+        "tax": 18,
+        "discount": 0,
+        "shipping": 30,
+        "grandTotal": 2548
+      }
     },
     {
       "id": 4,
-      "orderId": "OD12348",
-      "customer": "Emily Davis",
-      "date": "2023-09-13",
-      "status": "Pending",
-      "paymentMethod": "Credit Card",
-      "total": 230.0
+      "orderId": "S004",
+      "orderType": "ONLINE",
+      "date": "2025-10-04",
+      "customerId": 4,
+      "supplierId": 1,
+      "customerName": "Anna Müller",
+      "paymentMethod": "PayPal",
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 6,
+          "productName": "Logitech MX Master 3 Mouse",
+          "sku": "SHU-006",
+          "quantity": 2,
+          "price": 100,
+          "discount": 5,
+          "tax": 18,
+          "total": 190
+        }
+      ],
+      "totals": {
+        "subTotal": 200,
+        "tax": 18,
+        "discount": 5,
+        "shipping": 10,
+        "grandTotal": 223
+      }
     },
     {
       "id": 5,
-      "orderId": "OD12349",
-      "customer": "William Brown",
-      "date": "2023-09-14",
-      "status": "Completed",
-      "paymentMethod": "Paypal",
-      "total": 150.75
+      "orderId": "S005",
+      "orderType": "ONLINE",
+      "date": "2025-10-05",
+      "customerId": 5,
+      "supplierId": 1,
+      "customerName": "Liu Wei",
+      "paymentMethod": "Cash",
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 7,
+          "productName": "Apple Watch Series 7",
+          "sku": "SHU-007",
+          "quantity": 1,
+          "price": 400,
+          "discount": 0,
+          "tax": 18,
+          "total": 400
+        }
+      ],
+      "totals": {
+        "subTotal": 400,
+        "tax": 18,
+        "discount": 0,
+        "shipping": 5,
+        "grandTotal": 423
+      }
     },
     {
       "id": 6,
-      "orderId": "OD12350",
-      "customer": "Olivia Wilson",
-      "date": "2023-09-15",
+      "orderId": "S006",
+      "orderType": "ONLINE",
+      "date": "2025-10-06",
+      "customerId": 6,
+      "supplierId": 1,
+      "customerName": "Fatima Al Farsi",
+      "paymentMethod": "Credit Card",
       "status": "Pending",
-      "paymentMethod": "Cash",
-      "total": 99.99
+      "items": [
+        {
+          "productId": 8,
+          "productName": "Google Pixel 7 Pro",
+          "sku": "SHU-008",
+          "quantity": 1,
+          "price": 900,
+          "discount": 10,
+          "tax": 18,
+          "total": 918
+        }
+      ],
+      "totals": {
+        "subTotal": 900,
+        "tax": 18,
+        "discount": 10,
+        "shipping": 10,
+        "grandTotal": 918
+      }
     },
     {
       "id": 7,
-      "orderId": "OD12351",
-      "customer": "James Taylor",
-      "date": "2023-09-16",
-      "status": "Completed",
-      "paymentMethod": "Credit Card",
-      "total": 175.0
+      "orderId": "S007",
+      "orderType": "ONLINE",
+      "date": "2025-10-07",
+      "customerId": 7,
+      "supplierId": 1,
+      "customerName": "Mohamed Salah",
+      "paymentMethod": "Cash",
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 9,
+          "productName": "Bose QuietComfort Earbuds",
+          "sku": "SHU-009",
+          "quantity": 1,
+          "price": 280,
+          "discount": 0,
+          "tax": 18,
+          "total": 280
+        }
+      ],
+      "totals": {
+        "subTotal": 280,
+        "tax": 18,
+        "discount": 0,
+        "shipping": 5,
+        "grandTotal": 303
+      }
     },
     {
       "id": 8,
-      "orderId": "OD12352",
-      "customer": "Sophia Martinez",
-      "date": "2023-09-17",
-      "status": "Cancelled",
-      "paymentMethod": "Paypal",
-      "total": 60.0
-    },
-    {
-      "id": 9,
-      "orderId": "OD12353",
-      "customer": "Benjamin Anderson",
-      "date": "2023-09-18",
-      "status": "Pending",
-      "paymentMethod": "Cash",
-      "total": 120.0
-    },
-    {
-      "id": 10,
-      "orderId": "OD12354",
-      "customer": "Isabella Thomas",
-      "date": "2023-09-19",
-      "status": "Completed",
+      "orderId": "S008",
+      "orderType": "ONLINE",
+      "date": "2025-10-08",
+      "customerId": 8,
+      "supplierId": 1,
+      "customerName": "Sofia Rossi",
       "paymentMethod": "Credit Card",
-      "total": 200.0
-    },
-    {
-      "id": 11,
-      "orderId": "OD12355",
-      "customer": "Daniel Jackson",
-      "date": "2023-09-20",
-      "status": "Pending",
-      "paymentMethod": "Paypal",
-      "total": 80.0
-    },
-    {
-      "id": 12,
-      "orderId": "OD12356",
-      "customer": "Mia White",
-      "date": "2023-09-21",
-      "status": "Completed",
-      "paymentMethod": "Cash",
-      "total": 140.0
+      "status": "Paid",
+      "items": [
+        {
+          "productId": 10,
+          "productName": "Microsoft Surface Laptop 5",
+          "sku": "SHU-010",
+          "quantity": 1,
+          "price": 1600,
+          "discount": 50,
+          "tax": 18,
+          "total": 1550
+        }
+      ],
+      "totals": {
+        "subTotal": 1600,
+        "tax": 18,
+        "discount": 50,
+        "shipping": 20,
+        "grandTotal": 1588
+      }
     }
   ]
 }

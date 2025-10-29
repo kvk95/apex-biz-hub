@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, PlusCircle, Trash2 } from "lucide-react";
 import { apiService } from "@/services/ApiService";
-import SearchableDropdown from "@/components/Search/SearchableDropdown";
+import { ProductSearchCell } from "@/components/Search/ProductSearchCell";
+import { Product } from "@/types/Product";
 
 interface Customer {
     id: number;
@@ -11,15 +11,6 @@ interface Customer {
 interface Supplier {
     id: number;
     supplierName: string;
-}
-
-interface Product {
-    id: number;
-    productName: string;
-    sku: string;
-    price: number;
-    tax: number;
-    discount: number;
 }
 
 interface SaleItem {
@@ -52,6 +43,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [saleItems, setSaleItems] = useState<SaleItem[]>([
         {
             productId: 0,
@@ -88,7 +80,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 if (res?.status?.code === "S") setSuppliers(res.result);
             });
             apiService.get<any>("Products").then((res) => {
-                if (res?.status?.code === "S") setProducts(res.result);
+                if (res?.status?.code === "S") {
+                    setProducts(res.result);
+                    setFilteredProducts(res.result);
+                }
             });
         } else {
             resetForm();
@@ -122,6 +117,21 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         setErrors({});
     };
 
+    /** ------------------- PRODUCT SEARCH ------------------- **/
+    const handleProductSearch = (query: string, index: number) => {
+        const filtered = products.filter(
+            (p) =>
+                p.productName.toLowerCase().includes(query.toLowerCase()) ||
+                p.sku.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+
+        const updated = [...saleItems];
+        updated[index].productName = query;
+        updated[index].productId = 0;           // Clear selection while typing
+        setSaleItems(updated);
+    };
+
     /** ------------------- ITEM LOGIC ------------------- **/
     const addItem = () => {
         setSaleItems([
@@ -143,14 +153,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     const removeItem = (index: number) =>
         setSaleItems(saleItems.filter((_, i) => i !== index));
 
-    const handleProductChange = (index: number, productId: number) => {
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-
+    const handleProductSelect = (index: number, product: Product) => {
         const updated = [...saleItems];
-        const price = Number(product.price) || 0,
-            discount = Number(product.discount) || 0,
-            tax = Number(product.tax) || 0;
+        const price = Number(product.price) || 0;
+        const discount = Number(product.discount) || 0;
+        const tax = Number(product.tax) || 0;
         const quantity = updated[index].quantity || 1;
 
         const subtotal = price * quantity;
@@ -161,7 +168,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
         updated[index] = {
             ...updated[index],
-            productId: product.id,
+            productId: product.id,           // This was missing!
             productName: product.productName,
             sku: product.sku,
             price,
@@ -172,6 +179,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         };
 
         setSaleItems(updated);
+        setFilteredProducts(products); // Reset filter
     };
 
     const handleItemChange = (
@@ -184,10 +192,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         updated[index][field] = numericValue;
 
         const product = updated[index];
-        const price = Number(product.price) || 0,
-            quantity = Number(product.quantity) || 0,
-            discount = Number(product.discount) || 0,
-            tax = Number(product.tax) || 0;
+        const price = Number(product.price) || 0;
+        const quantity = Number(product.quantity) || 0;
+        const discount = Number(product.discount) || 0;
+        const tax = Number(product.tax) || 0;
 
         const subtotal = price * quantity;
         const discountAmount = (subtotal * discount) / 100;
@@ -222,6 +230,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         if (!formData.date) newErrors.date = "Date is required";
         if (!formData.supplierId) newErrors.supplierId = "Supplier is required";
 
+        // This now works because productId is set
         const emptyProducts = saleItems.filter((i) => !i.productId || i.productId === 0);
         if (emptyProducts.length > 0)
             newErrors.items = "Product is required for all rows";
@@ -232,7 +241,6 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         return Object.keys(newErrors).length === 0;
     };
 
-
     /** ------------------- SAVE ------------------- **/
     const handleSave = () => {
         if (!validate()) return;
@@ -240,8 +248,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         const customerName =
             customers.find((c) => c.id === Number(formData.customerId))?.name || "";
         const supplierName =
-            suppliers.find((s) => s.id === Number(formData.supplierId))?.supplierName ||
-            "";
+            suppliers.find((s) => s.id === Number(formData.supplierId))?.supplierName || "";
 
         const newOrder = {
             id: Date.now(),
@@ -272,7 +279,6 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     const handleFormChange = (field: string, value: any) => {
         setFormData({ ...formData, [field]: value });
         if (errors[field]) {
-            // Clear specific error once the user starts editing/typing
             const newErrors = { ...errors };
             delete newErrors[field];
             setErrors(newErrors);
@@ -290,66 +296,52 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <h2 className="text-lg font-semibold text-gray-800">
                         Add {orderType === "POS" ? "POS" : "Online"} Sale
                     </h2>
-                    <button onClick={onClose}>
-                        <X className="w-5 h-5 text-gray-600 hover:text-red-600" />
+                    <button onClick={onClose} className="text-gray-600 hover:text-red-600">
+                        <i className="fa fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
 
                 {/* Customer, Date, Supplier */}
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                    {/* Customer */}
                     <div>
                         <label className="text-sm font-medium">Customer Name *</label>
                         <select
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.customerId ? "border-red-500" : ""
-                                }`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.customerId ? "border-red-500" : ""}`}
                             value={formData.customerId}
                             onChange={(e) => handleFormChange("customerId", e.target.value)}
                         >
                             <option value="">Select</option>
                             {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
+                                <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
-                        {errors.customerId && (
-                            <p className="text-xs text-red-500">{errors.customerId}</p>
-                        )}
+                        {errors.customerId && <p className="text-xs text-red-500">{errors.customerId}</p>}
                     </div>
 
-                    {/* Date */}
                     <div>
                         <label className="text-sm font-medium">Date *</label>
                         <input
                             type="date"
                             value={formData.date}
                             onChange={(e) => handleFormChange("date", e.target.value)}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.date ? "border-red-500" : ""
-                                }`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.date ? "border-red-500" : ""}`}
                         />
                         {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
                     </div>
 
-                    {/* Supplier */}
                     <div>
                         <label className="text-sm font-medium">Supplier *</label>
                         <select
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.supplierId ? "border-red-500" : ""
-                                }`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.supplierId ? "border-red-500" : ""}`}
                             value={formData.supplierId}
                             onChange={(e) => handleFormChange("supplierId", e.target.value)}
                         >
                             <option value="">Select</option>
                             {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.supplierName}
-                                </option>
+                                <option key={s.id} value={s.id}>{s.supplierName}</option>
                             ))}
                         </select>
-                        {errors.supplierId && (
-                            <p className="text-xs text-red-500">{errors.supplierId}</p>
-                        )}
+                        {errors.supplierId && <p className="text-xs text-red-500">{errors.supplierId}</p>}
                     </div>
                 </div>
 
@@ -371,14 +363,12 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <tbody>
                         {saleItems.map((item, idx) => (
                             <tr key={idx} className="border-t">
-                                <td className="px-3 py-2">
-                                    <SearchableDropdown
-                                        options={products.map((p) => ({
-                                            id: p.id,
-                                            label: p.productName,
-                                        }))}
-                                        value={item.productId}
-                                        onChange={(val) => handleProductChange(idx, val)}
+                                <td className="px-3 py-2 relative">
+                                    <ProductSearchCell
+                                        value={item.productName}
+                                        onSearch={(query) => handleProductSearch(query, idx)}
+                                        onSelect={(product) => handleProductSelect(idx, product)}
+                                        products={filteredProducts}
                                     />
                                 </td>
                                 <td className="text-center">{item.sku || "-"}</td>
@@ -386,30 +376,27 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                     <input
                                         type="number"
                                         value={item.quantity}
-                                        onChange={(e) =>
-                                            handleItemChange(idx, "quantity", e.target.value)
-                                        }
+                                        onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
                                         className="border rounded px-2 py-1 w-16 text-right"
+                                        min="1"
                                     />
                                 </td>
                                 <td>
                                     <input
                                         type="number"
                                         value={item.price}
-                                        onChange={(e) =>
-                                            handleItemChange(idx, "price", e.target.value)
-                                        }
+                                        onChange={(e) => handleItemChange(idx, "price", e.target.value)}
                                         className="border rounded px-2 py-1 w-20 text-right"
+                                        step="0.01"
                                     />
                                 </td>
                                 <td>
                                     <input
                                         type="number"
                                         value={item.discount}
-                                        onChange={(e) =>
-                                            handleItemChange(idx, "discount", e.target.value)
-                                        }
+                                        onChange={(e) => handleItemChange(idx, "discount", e.target.value)}
                                         className="border rounded px-2 py-1 w-20 text-right"
+                                        step="0.01"
                                     />
                                 </td>
                                 <td>
@@ -418,6 +405,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         value={item.tax}
                                         onChange={(e) => handleItemChange(idx, "tax", e.target.value)}
                                         className="border rounded px-2 py-1 w-20 text-right"
+                                        step="0.01"
                                     />
                                 </td>
                                 <td className="text-right pr-3">{item.taxAmount.toFixed(2)}</td>
@@ -427,7 +415,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         onClick={() => removeItem(idx)}
                                         className="text-red-500 hover:text-red-700"
                                     >
-                                        <Trash2 size={16} />
+                                        <i className="fa fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -435,15 +423,13 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     </tbody>
                 </table>
 
-                {errors.items && (
-                    <p className="text-xs text-red-500 mb-2">{errors.items}</p>
-                )}
+                {errors.items && <p className="text-xs text-red-500 mb-2">{errors.items}</p>}
 
                 <button
                     onClick={addItem}
                     className="flex items-center text-blue-600 hover:text-blue-800 text-sm mb-4"
                 >
-                    <PlusCircle className="w-4 h-4 mr-1" /> Add Product
+                    <i className="fa fa-plus-circle mr-1" aria-hidden="true"></i> Add Product
                 </button>
 
                 {/* Totals */}
@@ -469,10 +455,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                             <input
                                 type="number"
                                 value={formData[f as "orderTax" | "discount" | "shipping"]}
-                                onChange={(e) =>
-                                    handleFormChange(f, Number(e.target.value))
-                                }
+                                onChange={(e) => handleFormChange(f, Number(e.target.value))}
                                 className="w-full border rounded-lg px-3 py-2 text-sm"
+                                step="0.01"
                             />
                         </div>
                     ))}
