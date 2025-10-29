@@ -1,14 +1,31 @@
 /* -------------------------------------------------
-   AddSalesModal
+   AddSalesModal – 100% standardized + autocomplete
    ------------------------------------------------- */
 import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { ProductSearchCell } from "@/components/Search/ProductSearchCell";
+import { AutoCompleteTextBox } from "@/components/Search/AutoCompleteTextBox";
 import { Product } from "@/types/Product";
 import {
     ORDER_STATUSES,
     ORDER_TYPES,
 } from "@/constants/constants";
+
+type CustomerOption = {
+    id: number;
+    display: string;
+};
+
+type ProductOption = {
+    id: number;
+    display: string;
+    extra: { SKU: string; Price: string };
+};
+
+const CustomerAutoComplete =
+    AutoCompleteTextBox<CustomerOption>;
+
+const ProducAutoComplete =
+    AutoCompleteTextBox<ProductOption>;
 
 type Customer = {
     id: number;
@@ -39,7 +56,12 @@ interface AddSalesModalProps {
     orderType: (typeof ORDER_TYPES)[number];
 }
 
-type NumericSaleItemField = "quantity" | "price" | "discount" | "tax" | "total";
+type NumericSaleItemField =
+    | "quantity"
+    | "price"
+    | "discount"
+    | "tax"
+    | "total";
 
 const AddSalesModal: React.FC<AddSalesModalProps> = ({
     isOpen,
@@ -49,9 +71,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 }) => {
     /* ---------- state ---------- */
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
     const [saleItems, setSaleItems] = useState<SaleItem[]>([
         {
             productId: 0,
@@ -68,6 +92,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
     const [formData, setFormData] = useState({
         customerId: "",
+        customerName: "",               // <-- NEW
         date: "",
         supplierId: "",
         orderTax: 0,
@@ -95,6 +120,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
                 if (custRes?.status?.code === "S") {
                     setCustomers(custRes.result);
+                    setFilteredCustomers(custRes.result);
                     console.log("AddSalesModal fetch Customers:", custRes.result);
                 }
                 if (suppRes?.status?.code === "S") {
@@ -118,8 +144,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     const resetForm = () => {
         setFormData({
             customerId: "",
-            supplierId: "",
+            customerName: "",
             date: "",
+            supplierId: "",
             orderTax: 0,
             discount: 0,
             shipping: 0,
@@ -142,7 +169,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         console.log("AddSalesModal resetForm");
     };
 
-    /* ---------- product search ---------- */
+    /* ---------- product autocomplete ---------- */
     const handleProductSearch = (query: string, index: number) => {
         const filtered = products.filter(
             (p) =>
@@ -155,7 +182,57 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         updated[index].productName = query;
         updated[index].productId = 0;
         setSaleItems(updated);
-        console.log("AddSalesModal handleProductSearch:", { query, index });
+        console.log("AddSalesModal product search:", { query, index });
+    };
+
+    const handleProductSelect = (index: number, product: Product) => {
+        const updated = [...saleItems];
+        const price = Number(product.price) || 0;
+        const discount = Number(product.discount) || 0;
+        const tax = Number(product.tax) || 0;
+        const quantity = updated[index].quantity || 1;
+
+        const subtotal = price * quantity;
+        const discountAmt = (subtotal * discount) / 100;
+        const taxable = subtotal - discountAmt;
+        const taxAmt = (taxable * tax) / 100;
+        const total = taxable + taxAmt;
+
+        updated[index] = {
+            ...updated[index],
+            productId: product.id,
+            productName: product.productName,
+            sku: product.sku,
+            price,
+            discount,
+            tax,
+            taxAmount: parseFloat(taxAmt.toFixed(2)),
+            total: parseFloat(total.toFixed(2)),
+        };
+
+        setSaleItems(updated);
+        setFilteredProducts(products);
+        console.log("AddSalesModal product select:", { index, product });
+    };
+
+    /* ---------- customer autocomplete ---------- */
+    const handleCustomerSearch = (query: string) => {
+        const filtered = customers.filter((c) =>
+            c.name.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredCustomers(filtered);
+        setFormData((prev) => ({ ...prev, customerName: query }));
+        console.log("AddSalesModal customer search:", { query });
+    };
+
+    const handleCustomerSelect = (sel: { id: number; display: string }) => {
+        setFormData((prev) => ({
+            ...prev,
+            customerId: sel.id.toString(),
+            customerName: sel.display,
+        }));
+        setFilteredCustomers(customers);
+        console.log("AddSalesModal customer select:", sel);
     };
 
     /* ---------- item logic ---------- */
@@ -182,94 +259,57 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         console.log("AddSalesModal removeItem:", { index });
     };
 
-    const handleProductSelect = (index: number, product: Product) => {
-        const updated = [...saleItems];
-        const price = Number(product.price) || 0;
-        const discount = Number(product.discount) || 0;
-        const tax = Number(product.tax) || 0;
-        const quantity = updated[index].quantity || 1;
-
-        const subtotal = price * quantity;
-        const discountAmount = (subtotal * discount) / 100;
-        const taxable = subtotal - discountAmount;
-        const taxAmount = (taxable * tax) / 100;
-        const total = taxable + taxAmount;
-
-        updated[index] = {
-            ...updated[index],
-            productId: product.id,
-            productName: product.productName,
-            sku: product.sku,
-            price,
-            discount,
-            tax,
-            taxAmount: parseFloat(taxAmount.toFixed(2)),
-            total: parseFloat(total.toFixed(2)),
-        };
-
-        setSaleItems(updated);
-        setFilteredProducts(products);
-        console.log("AddSalesModal handleProductSelect:", { index, product });
-    };
-
     const handleItemChange = (
         index: number,
         field: NumericSaleItemField,
         value: string
     ) => {
         const updated = [...saleItems];
-        const numericValue = Number(value) || 0;
-        updated[index][field] = numericValue;
+        const numeric = Number(value) || 0;
+        updated[index][field] = numeric;
 
-        const product = updated[index];
-        const price = Number(product.price) || 0;
-        const quantity = Number(product.quantity) || 0;
-        const discount = Number(product.discount) || 0;
-        const tax = Number(product.tax) || 0;
+        const p = updated[index];
+        const subtotal = p.price * p.quantity;
+        const discAmt = (subtotal * p.discount) / 100;
+        const taxable = subtotal - discAmt;
+        const taxAmt = (taxable * p.tax) / 100;
+        const total = taxable + taxAmt;
 
-        const subtotal = price * quantity;
-        const discountAmount = (subtotal * discount) / 100;
-        const taxable = subtotal - discountAmount;
-        const taxAmount = (taxable * tax) / 100;
-        const total = taxable + taxAmount;
-
-        updated[index].taxAmount = parseFloat(taxAmount.toFixed(2));
+        updated[index].taxAmount = parseFloat(taxAmt.toFixed(2));
         updated[index].total = parseFloat(total.toFixed(2));
 
         setSaleItems(updated);
-        console.log("AddSalesModal handleItemChange:", { index, field, value });
+        console.log("AddSalesModal item change:", { index, field, value });
     };
 
     /* ---------- totals ---------- */
     const totals = {
-        subTotal: saleItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
+        subTotal: saleItems.reduce((s, i) => s + i.price * i.quantity, 0),
         orderTax: formData.orderTax,
         discount: formData.discount,
         shipping: formData.shipping,
     };
-
     const taxAmount = (totals.subTotal * totals.orderTax) / 100;
     const discountAmount = (totals.subTotal * totals.discount) / 100;
-    const grandTotal =
-        totals.subTotal - discountAmount + taxAmount + totals.shipping;
+    const grandTotal = totals.subTotal - discountAmount + taxAmount + totals.shipping;
 
     /* ---------- validation ---------- */
     const validate = () => {
-        const newErrors: { [key: string]: string } = {};
+        const e: { [k: string]: string } = {};
 
-        if (!formData.customerId) newErrors.customerId = "Customer is required";
-        if (!formData.date) newErrors.date = "Date is required";
-        if (!formData.supplierId) newErrors.supplierId = "Supplier is required";
+        if (!formData.customerId) e.customerId = "Customer is required";
+        if (!formData.date) e.date = "Date is required";
+        if (!formData.supplierId) e.supplierId = "Supplier is required";
 
-        const emptyProducts = saleItems.filter((i) => !i.productId || i.productId === 0);
-        if (emptyProducts.length > 0)
-            newErrors.items = "Product is required for all rows";
+        const empty = saleItems.filter((i) => !i.productId);
+        if (empty.length) e.items = "Product is required for all rows";
 
-        if (!formData.status) newErrors.status = "Status required";
-
-        setErrors(newErrors);
-        console.log("AddSalesModal validate:", { valid: Object.keys(newErrors).length === 0, newErrors });
-        return Object.keys(newErrors).length === 0;
+        setErrors(e);
+        console.log("AddSalesModal validate:", {
+            valid: Object.keys(e).length === 0,
+            errors: e,
+        });
+        return Object.keys(e).length === 0;
     };
 
     /* ---------- save ---------- */
@@ -277,9 +317,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         if (!validate()) return;
 
         const customerName =
-            customers.find((c) => c.id === Number(formData.customerId))?.name || "";
+            customers.find((c) => c.id === Number(formData.customerId))?.name ?? "";
         const supplierName =
-            suppliers.find((s) => s.id === Number(formData.supplierId))?.supplierName || "";
+            suppliers.find((s) => s.id === Number(formData.supplierId))?.supplierName ?? "";
 
         const newOrder = {
             id: Date.now(),
@@ -304,17 +344,17 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
         onSave(newOrder);
         onClose();
-        console.log("AddSalesModal handleSave:", { newOrder });
+        console.log("AddSalesModal saved:", newOrder);
     };
 
     const handleFormChange = (field: string, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         if (errors[field]) {
-            const newErrors = { ...errors };
-            delete newErrors[field];
-            setErrors(newErrors);
+            const newE = { ...errors };
+            delete newE[field];
+            setErrors(newE);
         }
-        console.log("AddSalesModal handleFormChange:", { field, value });
+        console.log("AddSalesModal form change:", { field, value });
     };
 
     if (!isOpen) return null;
@@ -328,49 +368,60 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <h2 className="text-lg font-semibold text-gray-800">
                         Add {orderType === "POS" ? "POS" : "Online"} Sale
                     </h2>
-                    <button onClick={onClose} className="text-gray-600 hover:text-red-600">
+                    <button
+                        onClick={onClose}
+                        className="text-gray-600 hover:text-red-600"
+                    >
                         <i className="fa fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
 
-                {/* Customer, Date, Supplier */}
+                {/* Customer / Date / Supplier */}
                 <div className="grid grid-cols-3 gap-4 mb-4">
+                    {/* ---------- Customer Autocomplete ---------- */}
                     <div>
                         <label className="text-sm font-medium">Customer Name *</label>
-                        <select
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.customerId ? "border-red-500" : ""}`}
-                            value={formData.customerId}
-                            onChange={(e) => handleFormChange("customerId", e.target.value)}
-                        >
-                            <option value="">Select</option>
-                            {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                        {
+                            (
+                                <CustomerAutoComplete
+                                    value={formData.customerName}
+                                    onSearch={handleCustomerSearch}
+                                    onSelect={handleCustomerSelect}
+                                    items={filteredCustomers.map((c) => ({
+                                        id: c.id,
+                                        display: c.name,
+                                    }))}
+                                    placeholder="Search customer..."
+                                />
+                            ) as React.ReactElement
+                        }
                         {errors.customerId && (
                             <p className="text-xs text-red-500">{errors.customerId}</p>
                         )}
                     </div>
 
+
+                    {/* ---------- Date ---------- */}
                     <div>
                         <label className="text-sm font-medium">Date *</label>
                         <input
                             type="date"
                             value={formData.date}
                             onChange={(e) => handleFormChange("date", e.target.value)}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.date ? "border-red-500" : ""}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.date ? "border-red-500" : ""
+                                }`}
                         />
                         {errors.date && (
                             <p className="text-xs text-red-500">{errors.date}</p>
                         )}
                     </div>
 
+                    {/* ---------- Supplier ---------- */}
                     <div>
                         <label className="text-sm font-medium">Supplier *</label>
                         <select
-                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.supplierId ? "border-red-500" : ""}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-sm ${errors.supplierId ? "border-red-500" : ""
+                                }`}
                             value={formData.supplierId}
                             onChange={(e) => handleFormChange("supplierId", e.target.value)}
                         >
@@ -387,7 +438,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     </div>
                 </div>
 
-                {/* Product Table */}
+                {/* ---------- Product Table ---------- */}
                 <table className="w-full border text-sm mb-3">
                     <thead className="bg-gray-100">
                         <tr>
@@ -405,15 +456,30 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <tbody>
                         {saleItems.map((item, idx) => (
                             <tr key={idx} className="border-t">
+                                {/* ---------- Product Autocomplete ---------- */}
                                 <td className="px-3 py-2 relative">
-                                    <ProductSearchCell
-                                        value={item.productName}
-                                        onSearch={(query) => handleProductSearch(query, idx)}
-                                        onSelect={(product) => handleProductSelect(idx, product)}
-                                        products={filteredProducts}
-                                    />
+                                    {
+                                        (
+                                            <ProducAutoComplete
+                                                value={item.productName}
+                                                onSearch={(q) => handleProductSearch(q, idx)}
+                                                onSelect={(sel) => {
+                                                    const prod = products.find((p) => p.id === sel.id);
+                                                    if (prod) handleProductSelect(idx, prod);
+                                                }}
+                                                items={filteredProducts.map((p) => ({
+                                                    id: p.id,
+                                                    display: p.productName,
+                                                    extra: { SKU: p.sku, Price: `$${p.price}` },
+                                                }))}
+                                                placeholder="Search product..."
+                                            />
+                                        ) as React.ReactElement
+                                    }
                                 </td>
+
                                 <td className="text-center">{item.sku || "-"}</td>
+
                                 <td>
                                     <input
                                         type="number"
@@ -425,6 +491,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         min="1"
                                     />
                                 </td>
+
                                 <td>
                                     <input
                                         type="number"
@@ -436,6 +503,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         step="0.01"
                                     />
                                 </td>
+
                                 <td>
                                     <input
                                         type="number"
@@ -447,6 +515,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         step="0.01"
                                     />
                                 </td>
+
                                 <td>
                                     <input
                                         type="number"
@@ -458,10 +527,13 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                         step="0.01"
                                     />
                                 </td>
+
                                 <td className="text-right pr-3">
                                     {item.taxAmount.toFixed(2)}
                                 </td>
+
                                 <td className="text-right pr-3">{item.total.toFixed(2)}</td>
+
                                 <td className="text-center">
                                     <button
                                         onClick={() => removeItem(idx)}
@@ -487,7 +559,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     Product
                 </button>
 
-                {/* Totals */}
+                {/* ---------- Totals ---------- */}
                 <div className="grid grid-cols-2 gap-6 mt-4">
                     <div></div>
                     <div className="bg-gray-50 rounded-lg p-4 text-right space-y-2 text-sm">
@@ -500,7 +572,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     </div>
                 </div>
 
-                {/* Footer Inputs */}
+                {/* ---------- Footer Inputs ---------- */}
                 <div className="grid grid-cols-4 gap-4 mt-6">
                     {["orderTax", "discount", "shipping"].map((f) => (
                         <div key={f}>
@@ -509,9 +581,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                             </label>
                             <input
                                 type="number"
-                                value={
-                                    formData[f as "orderTax" | "discount" | "shipping"]
-                                }
+                                value={formData[f as "orderTax" | "discount" | "shipping"]}
                                 onChange={(e) =>
                                     handleFormChange(f, Number(e.target.value))
                                 }
@@ -520,6 +590,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                             />
                         </div>
                     ))}
+
                     <div>
                         <label className="text-sm font-medium">Status *</label>
                         <select
@@ -538,7 +609,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     </div>
                 </div>
 
-                {/* Footer Buttons */}
+                {/* ---------- Footer Buttons ---------- */}
                 <div className="mt-6 flex justify-end gap-3 border-t pt-3">
                     <button
                         onClick={onClose}

@@ -1,53 +1,97 @@
+/* -------------------------------------------------
+   Invoices – matches OnlineOrders/PosOrders exactly
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import {
+  PAYMENT_STATUSES,
+  SORT_OPTIONS,
+} from "@/constants/constants";
 
-interface Invoice {
+type CustomerOption = {
+  id: number;
+  display: string;
+};
+
+type CustomerForAuto = AutoCompleteItem;
+
+type Customer = {
+  id: number;
+  name: string;
+};
+
+type Invoice = {
   id: number;
   invoiceNo: string;
   customer: string;
+  customerId: number;
   date: string;
   dueDate: string;
   amount: number;
-  status: "Paid" | "Pending" | "Overdue";
-} 
+  status: (typeof PAYMENT_STATUSES)[number];
+};
 
 export default function Invoices() {
+  /* ---------- state ---------- */
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState<(typeof PAYMENT_STATUSES)[number] | "All">("All");
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Recently Added");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     id: null as number | null,
     invoiceNo: "",
+    customerId: "",
     customer: "",
     date: "",
     dueDate: "",
     amount: "",
-    status: "Pending" as "Paid" | "Pending" | "Overdue",
+    status: "Pending" as (typeof PAYMENT_STATUSES)[number],
   });
 
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [search, setSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedSort, setSelectedSort] = useState("Recently Added");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  /* ---------- load data ---------- */
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await apiService.get<Invoice[]>("Invoices");
-      if (response.status.code === "S") {
-        setInvoices(response.result);
-        console.log("Invoices loadData:", { data: response.result });
+      const [invRes, custRes] = await Promise.all([
+        apiService.get<Invoice[]>("Invoices"),
+        apiService.get<Customer[]>("Customers"),
+      ]);
+
+      if (invRes.status.code === "S") {
+        setInvoices(invRes.result);
+        console.log("Invoices loadData invoices:", invRes.result);
       }
-    } catch (error) {
-      console.error("Failed to load invoices:", error);
+      if (custRes.status.code === "S") {
+        setCustomers(custRes.result);
+        setFilteredCustomers(custRes.result);
+        console.log("Invoices loadData customers:", custRes.result);
+      }
+      setError(null);
+    } catch (err) {
+      setError("Failed to load data.");
+      console.error("Invoices loadData error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ---------- filtering ---------- */
   const filteredData = useMemo(() => {
     let result = [...invoices];
 
@@ -67,7 +111,6 @@ export default function Invoices() {
       result = result.filter((i) => i.status === selectedStatus);
     }
 
-    // Sorting
     if (selectedSort === "Recently Added") {
       result.sort((a, b) => b.id - a.id);
     } else if (selectedSort === "Ascending") {
@@ -75,9 +118,8 @@ export default function Invoices() {
     } else if (selectedSort === "Descending") {
       result.sort((a, b) => b.amount - a.amount);
     } else if (selectedSort === "Last 7 Days") {
-      const now = new Date();
       const last7 = new Date();
-      last7.setDate(now.getDate() - 7);
+      last7.setDate(last7.getDate() - 7);
       result = result.filter((i) => new Date(i.date) >= last7);
     } else if (selectedSort === "Last Month") {
       const now = new Date();
@@ -98,6 +140,7 @@ export default function Invoices() {
     return result;
   }, [invoices, search, selectedCustomer, selectedStatus, selectedSort]);
 
+  /* ---------- pagination ---------- */
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
@@ -112,27 +155,25 @@ export default function Invoices() {
     return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
+  /* ---------- derived options ---------- */
   const customerOptions = useMemo(() => {
     return ["All", ...Array.from(new Set(invoices.map((i) => i.customer)))];
   }, [invoices]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
+  /* ---------- handlers ---------- */
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
       id: null,
       invoiceNo: `INV-${Date.now()}`,
+      customerId: "",
       customer: "",
       date: new Date().toISOString().split("T")[0],
       dueDate: "",
       amount: "",
-      status: "Pending",
+      status: "Pending" as (typeof PAYMENT_STATUSES)[number],
     });
-    console.log("Invoices handleAddClick: Modal opened for add");
+    console.log("Invoices handleAddClick");
   };
 
   const handleEdit = (invoice: Invoice) => {
@@ -140,13 +181,38 @@ export default function Invoices() {
     setForm({
       id: invoice.id,
       invoiceNo: invoice.invoiceNo,
+      customerId: invoice.customerId.toString(),
       customer: invoice.customer,
       date: invoice.date,
       dueDate: invoice.dueDate,
       amount: invoice.amount.toString(),
       status: invoice.status,
     });
-    console.log("Invoices handleEdit: Modal opened for edit", { invoice });
+    console.log("Invoices handleEdit:", { invoice });
+  };
+
+  /* handlers */
+  const handleCustomerSearch = (query: string) => {
+    const filtered = customers.filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+    setForm((prev) => ({ ...prev, customer: query, customerId: "" }));
+  };
+
+  const handleCustomerSelect = (cust: CustomerForAuto) => {
+    setForm((prev) => ({
+      ...prev,
+      customerId: cust.id.toString(),
+      customer: cust.display,
+    }));
+    setFilteredCustomers(customers);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    console.log("Invoices handleFormChange:", { name, value });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -154,7 +220,7 @@ export default function Invoices() {
 
     if (
       !form.invoiceNo.trim() ||
-      !form.customer.trim() ||
+      !form.customerId ||
       !form.date ||
       !form.dueDate ||
       !form.amount ||
@@ -174,6 +240,7 @@ export default function Invoices() {
       id: formMode === "add" ? (invoices.length ? Math.max(...invoices.map((i) => i.id)) + 1 : 1) : form.id!,
       invoiceNo: form.invoiceNo.trim(),
       customer: form.customer.trim(),
+      customerId: Number(form.customerId),
       date: form.date,
       dueDate: form.dueDate,
       amount,
@@ -189,7 +256,7 @@ export default function Invoices() {
     }
 
     setFormMode(null);
-    console.log("Invoices handleFormSubmit:", { form, formMode });
+    console.log("Invoices handleFormSubmit:", { newInvoice, formMode });
   };
 
   const handleDelete = (id: number) => {
@@ -202,7 +269,7 @@ export default function Invoices() {
       } else if (totalPages === 0) {
         setCurrentPage(1);
       }
-      console.log("Invoices handleDelete:", { id, totalPages, currentPage });
+      console.log("Invoices handleDelete:", { id, totalPages });
     }
   };
 
@@ -218,24 +285,26 @@ export default function Invoices() {
 
   const handleReport = () => {
     alert("Invoices Report:\n\n" + JSON.stringify(invoices, null, 2));
+    console.log("Invoices handleReport");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("Invoices handleSearchChange:", { search: e.target.value, currentPage: 1 });
+    console.log("Invoices handleSearchChange:", { search: e.target.value });
   };
 
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
-      console.log("Invoices handlePageChange:", { page, totalPages, currentPage });
+      console.log("Invoices handlePageChange:", { page, totalPages });
     } else {
-      console.warn("Invoices handlePageChange: Invalid page", { page, totalPages, currentPage });
+      console.warn("Invalid page", { page, totalPages, currentPage });
     }
   };
 
+  /* ---------- table columns ---------- */
   const columns: Column[] = [
     {
       key: "index",
@@ -257,22 +326,12 @@ export default function Invoices() {
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Paid"
-              ? "bg-green-100 text-green-800"
-              : value === "Pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
-            }`}
-        >
-          {value}
-        </span>
-      ),
+      render: renderStatusBadge,
       align: "center",
     },
   ];
 
+  /* ---------- row actions ---------- */
   const rowActions = (row: Invoice) => (
     <>
       <button
@@ -282,7 +341,7 @@ export default function Invoices() {
         title="Edit"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit invoice</span>
+        <span className="sr-only">Edit</span>
       </button>
       <button
         onClick={() => handleDelete(row.id)}
@@ -291,11 +350,12 @@ export default function Invoices() {
         title="Delete"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete invoice</span>
+        <span className="sr-only">Delete</span>
       </button>
     </>
   );
 
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
     <>
       <input
@@ -319,28 +379,31 @@ export default function Invoices() {
       </select>
       <select
         value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value)}
+        onChange={(e) => setSelectedStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option>All</option>
-        <option>Paid</option>
-        <option>Pending</option>
-        <option>Overdue</option>
+        {PAYMENT_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value)}
+        onChange={(e) => setSelectedSort(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option>Recently Added</option>
-        <option>Ascending</option>
-        <option>Descending</option>
-        <option>Last 7 Days</option>
-        <option>Last Month</option>
+        {SORT_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
     </>
   );
 
+  /* ---------- modal form ---------- */
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
@@ -349,73 +412,89 @@ export default function Invoices() {
           type="text"
           name="invoiceNo"
           value={form.invoiceNo}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Customer *</label>
-        <input
-          type="text"
-          name="customer"
-          value={form.customer}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-        />
+        {
+          (
+            <AutoCompleteTextBox
+              value={form.customer}
+              onSearch={handleCustomerSearch}
+              onSelect={handleCustomerSelect}
+              items={filteredCustomers.map((c) => ({
+                id: c.id,
+                display: c.name,
+              }))}
+              placeholder="Search customer..."
+            />
+          ) as React.ReactElement<
+            typeof AutoCompleteTextBox<CustomerOption>
+          >
+        }
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Date *</label>
         <input
           type="date"
           name="date"
           value={form.date}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Due Date *</label>
         <input
           type="date"
           name="dueDate"
           value={form.dueDate}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Amount *</label>
         <input
           type="number"
           name="amount"
           value={form.amount}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           min="0"
           step="0.01"
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium mb-1">Status *</label>
         <select
           name="status"
           value={form.status}
-          onChange={handleInputChange}
+          onChange={handleFormChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option>Pending</option>
-          <option>Paid</option>
-          <option>Overdue</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
       </div>
     </div>
   );
 
+  /* ---------- render ---------- */
   return (
     <PageBase1
       title="Invoices"
@@ -440,6 +519,7 @@ export default function Invoices() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+    // DO NOT PASS loading/error — PageBase1 doesn't support them
     />
   );
 }
