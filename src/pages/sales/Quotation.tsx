@@ -1,116 +1,238 @@
-import React, { useState, useMemo, useEffect } from "react";
+/* -------------------------------------------------
+   Quotation – Matches AddSalesModal autocomplete
+   ------------------------------------------------- */
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  ChangeEvent,
+} from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1, Column } from "@/pages/PageBase1";
+import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
 
-const pageSizeOptions = [5, 10, 20];
+type Customer = {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+};
+
+type Product = {
+  id: number;
+  productName: string;
+  sku: string;
+  price: number;
+  unit: string;
+};
+
+type CustomerOption = {
+  id: number;
+  display: string;
+};
+
+type ProductOption = {
+  id: number;
+  display: string;
+  extra: { SKU: string; Price: string };
+};
+
+const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
+const ProductAutoComplete = AutoCompleteTextBox<ProductOption>;
+
+type ProductRow = {
+  id: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  unit: string;
+  total: number;
+};
 
 export default function Quotation() {
-  const [data, setData] = useState<any>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  /* ---------- state ---------- */
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("Quotation");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  const [formMode, setFormMode] = useState<"add" | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Pagination state for customers table
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
-
-  // Form state
   const [quotationNo, setQuotationNo] = useState("QTN-0001");
   const [quotationDate, setQuotationDate] = useState(() => {
     const d = new Date();
-    return d.toISOString().slice(0, 10);
+    return d.toISOString().split("T")[0];
   });
 
-  const [customer, setCustomer] = useState<number | null>(null);
-  const [customerDetails, setCustomerDetails] = useState<any>(null);
-  const [productRows, setProductRows] = useState<
+  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [customerName, setCustomerName] = useState("");
+  const [customerDetails, setCustomerDetails] = useState<Customer | null>(null);
+
+  const [productRows, setProductRows] = useState<ProductRow[]>([
     {
-      id: number;
-      productId: number;
-      code: string;
-      price: number;
-      quantity: number;
-      unit: string;
-      total: number;
-    }[]
-  >([]);
+      id: 1,
+      productId: 0,
+      productName: "",
+      sku: "",
+      price: 0,
+      quantity: 1,
+      unit: "",
+      total: 0,
+    },
+  ]);
 
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0);
 
-  const onCustomerChange = (id: number) => {
-    setCustomer(id);
-    if (data && Array.isArray(data.customers)) {
-      const cust = data.customers.find((c: any) => c.id === id);
-      if (cust) setCustomerDetails(cust);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /* ---------- load initial data ---------- */
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const [custRes, prodRes] = await Promise.all([
+        apiService.get<any>("Quotation"),
+        apiService.get<any>("Products"),
+      ]);
+
+      if (custRes?.status?.code === "S" && Array.isArray(custRes.result)) {
+        setAllCustomers(custRes.result);
+        setFilteredCustomers(custRes.result);
+      }
+
+      if (prodRes?.status?.code === "S" && Array.isArray(prodRes.result)) {
+        setAllProducts(prodRes.result);
+        setFilteredProducts(prodRes.result);
+      }
+
+      setError(null);
+    } catch (err) {
+      setError("Failed to load data.");
+      console.error("Quotation load error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const onProductChange = (rowId: number, productId: number) => {
-    if (!data || !Array.isArray(data.products)) return;
-    const product = data.products.find((p: any) => p.id === productId);
+  /* ---------- form reset ---------- */
+  const resetForm = () => {
+    setQuotationNo(`QTN-${Date.now().toString().slice(-4)}`);
+    setQuotationDate(new Date().toISOString().split("T")[0]);
+    setCustomerId(null);
+    setCustomerName("");
+    setCustomerDetails(null);
+    setProductRows([
+      {
+        id: 1,
+        productId: 0,
+        productName: "",
+        sku: "",
+        price: 0,
+        quantity: 1,
+        unit: "",
+        total: 0,
+      },
+    ]);
+    setDiscount(0);
+    setTax(0);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setFormMode("add");
+  };
+
+  const closeModal = () => {
+    setFormMode(null);
+  };
+
+  /* ---------- Customer Autocomplete (same as AddSalesModal) ---------- */
+  const handleCustomerSearch = (query: string) => {
+    const filtered = allCustomers.filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+    setCustomerName(query);
+  };
+
+  const handleCustomerSelect = (sel: CustomerOption) => {
+    const cust = allCustomers.find((c) => c.id === sel.id);
+    if (cust) {
+      setCustomerId(cust.id);
+      setCustomerName(cust.name);
+      setCustomerDetails(cust);
+      setFilteredCustomers(allCustomers); // reset list
+    }
+  };
+
+  /* ---------- Product Autocomplete (same as AddSalesModal) ---------- */
+  const handleProductSearch = (query: string, rowId: number) => {
+    const filtered = allProducts.filter(
+      (p) =>
+        p.productName.toLowerCase().includes(query.toLowerCase()) ||
+        p.sku.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+
     setProductRows((rows) =>
-      rows.map((row) =>
-        row.id === rowId && product
-          ? {
-              ...row,
-              productId,
-              code: product.code,
-              price: product.price,
-              unit: product.unit,
-              total: product.price * row.quantity,
-            }
-          : row
+      rows.map((r) =>
+        r.id === rowId ? { ...r, productName: query, productId: 0 } : r
       )
     );
   };
 
-  const onQuantityChange = (rowId: number, quantity: number) => {
+  const handleProductSelect = (rowId: number, sel: ProductOption) => {
+    const prod = allProducts.find((p) => p.id === sel.id);
+    if (!prod) return;
+
+    const price = Number(prod.price) || 0;
+    const quantity = productRows.find((r) => r.id === rowId)?.quantity || 1;
+    const total = price * quantity;
+
     setProductRows((rows) =>
-      rows.map((row) =>
-        row.id === rowId
+      rows.map((r) =>
+        r.id === rowId
           ? {
-              ...row,
-              quantity,
-              total: row.price * quantity,
-            }
-          : row
+            ...r,
+            productId: prod.id,
+            productName: prod.productName,
+            sku: prod.sku,
+            price,
+            unit: prod.unit,
+            total,
+          }
+          : r
       )
     );
+
+    setFilteredProducts(allProducts); // reset list
   };
 
+  /* ---------- Product Row Logic ---------- */
   const addProductRow = () => {
-    if (!data || !Array.isArray(data.products) || data.products.length === 0)
-      return;
-    const newId = productRows.length
-      ? Math.max(...productRows.map((r) => r.id)) + 1
-      : 1;
-    const firstProduct = data.products[0];
+    const newId = productRows.length ? Math.max(...productRows.map((r) => r.id)) + 1 : 1;
     setProductRows((rows) => [
       ...rows,
       {
         id: newId,
-        productId: firstProduct.id,
-        code: firstProduct.code,
-        price: firstProduct.price,
+        productId: 0,
+        productName: "",
+        sku: "",
+        price: 0,
         quantity: 1,
-        unit: firstProduct.unit,
-        total: firstProduct.price * 1,
+        unit: "",
+        total: 0,
       },
     ]);
   };
@@ -119,376 +241,279 @@ export default function Quotation() {
     setProductRows((rows) => rows.filter((r) => r.id !== rowId));
   };
 
-  const subTotal = useMemo(() => {
-    return productRows.reduce((acc, row) => acc + row.total, 0);
-  }, [productRows]);
+  const handleQuantityChange = (rowId: number, qty: number) => {
+    setProductRows((rows) =>
+      rows.map((r) =>
+        r.id === rowId
+          ? { ...r, quantity: qty, total: r.price * qty }
+          : r
+      )
+    );
+  };
 
-  const discountAmount = useMemo(() => {
-    return (subTotal * discount) / 100;
-  }, [subTotal, discount]);
+  /* ---------- Calculations ---------- */
+  const subTotal = useMemo(
+    () => productRows.reduce((s, r) => s + r.price * r.quantity, 0),
+    [productRows]
+  );
+  const discountAmount = (subTotal * discount) / 100;
+  const taxAmount = ((subTotal - discountAmount) * tax) / 100;
+  const grandTotal = subTotal - discountAmount + taxAmount;
 
-  const taxAmount = useMemo(() => {
-    return ((subTotal - discountAmount) * tax) / 100;
-  }, [subTotal, discountAmount, tax]);
-
-  const grandTotal = useMemo(() => {
-    return subTotal - discountAmount + taxAmount;
-  }, [subTotal, discountAmount, taxAmount]);
-
-  const paginatedCustomers = useMemo(() => {
-    if (!data || !Array.isArray(data.customers)) return [];
-    const start = (currentPage - 1) * itemsPerPage;
-    return data.customers.slice(start, start + itemsPerPage);
-  }, [currentPage, itemsPerPage, data]);
-
-  const handleClear = () => {
-    setQuotationNo("QTN-0001");
-    setQuotationDate(new Date().toISOString().slice(0, 10));
-    if (data && Array.isArray(data.customers) && data.customers.length > 0) {
-      setCustomer(data.customers[0].id);
-      setCustomerDetails(data.customers[0]);
-    } else {
-      setCustomer(null);
-      setCustomerDetails(null);
+  /* ---------- Save ---------- */
+  const handleSave = () => {
+    if (!customerId) {
+      alert("Please select a customer.");
+      return;
     }
-    if (data && Array.isArray(data.products) && data.products.length > 0) {
-      setProductRows([
-        {
-          id: 1,
-          productId: data.products[0].id,
-          code: data.products[0].code,
-          price: data.products[0].price,
-          quantity: 1,
-          unit: data.products[0].unit,
-          total: data.products[0].price * 1,
-        },
-      ]);
-    } else {
-      setProductRows([]);
+    if (productRows.some((r) => !r.productId)) {
+      alert("Please select a product for all rows.");
+      return;
     }
-    setDiscount(0);
-    setTax(0);
+
+    alert("Quotation saved successfully!");
+    closeModal();
+  };
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
     setCurrentPage(1);
   };
 
-  const onReportClick = () => {
-    alert("Report button clicked - Implement report generation");
-  };
-  const onSaveClick = () => {
-    alert("Save button clicked - Implement save functionality");
+  const handleClear = () => {
+    setSearch("");
+    setCurrentPage(1);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">Quotation</h1>
+  const handleReport = () => {
+    alert("Report coming soon!");
+  };
 
-      <div className="max-w-7xl mx-auto bg-card rounded shadow p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex space-x-3">
-            <button
-              onClick={onReportClick}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Report"
-              type="button"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-            </button>
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-              type="button"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              onClick={onSaveClick}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Save"
-              type="button"
-            >
-              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-            </button>
+  /* ---------- Table Search + Pagination ---------- */
+  const filteredTableCustomers = useMemo(() => {
+    const term = search.toLowerCase();
+    return allCustomers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        c.phone.includes(term) ||
+        c.email.toLowerCase().includes(term) ||
+        c.address.toLowerCase().includes(term)
+    );
+  }, [allCustomers, search]);
+
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredTableCustomers.slice(start, start + itemsPerPage);
+  }, [filteredTableCustomers, currentPage, itemsPerPage]);
+
+  const customerColumns: Column[] = [
+    { key: "name", label: "Name" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+    { key: "address", label: "Address" },
+  ];
+
+  const customFilters = () => (
+    <input
+      type="text"
+      placeholder="Search customers..."
+      value={search}
+      onChange={handleSearchChange}
+      className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+    />
+  );
+
+  /* ---------- Modal Form ---------- */
+  const modalForm = () => (
+    <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+      {/* Header */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Quotation No</label>
+          <input
+            type="text"
+            value={quotationNo}
+            readOnly
+            className="w-full border border-input rounded px-3 py-2 bg-gray-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Date</label>
+          <input
+            type="date"
+            value={quotationDate}
+            onChange={(e) => setQuotationDate(e.target.value)}
+            className="w-full border border-input rounded px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Customer *</label>
+          <CustomerAutoComplete
+            value={customerName}
+            onSearch={handleCustomerSearch}
+            onSelect={handleCustomerSelect}
+            items={filteredCustomers.map((c) => ({
+              id: c.id,
+              display: c.name,
+            }))}
+            placeholder="Search customer..."
+          />
+        </div>
+      </div>
+
+      {customerDetails && (
+        <div className="bg-gray-50 p-4 rounded border text-sm">
+          <h3 className="font-semibold mb-2">Customer Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div><strong>Name:</strong> {customerDetails.name}</div>
+            <div><strong>Phone:</strong> {customerDetails.phone}</div>
+            <div><strong>Email:</strong> {customerDetails.email}</div>
+            <div><strong>Address:</strong> {customerDetails.address}</div>
           </div>
         </div>
+      )}
 
-        {/* Quotation Info Section */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label
-                htmlFor="quotationNo"
-                className="block text-sm font-medium mb-1"
-              >
-                Quotation No
-              </label>
-              <input
-                id="quotationNo"
-                type="text"
-                value={quotationNo}
-                onChange={(e) => setQuotationNo(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+      {/* Products Table */}
+      <div>
+        <h3 className="font-semibold mb-2">Products</h3>
+        <div className="space-y-2">
+          {productRows.map((row) => (
+            <div key={row.id} className="grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-4">
+                <ProductAutoComplete
+                  value={row.productName}
+                  onSearch={(q) => handleProductSearch(q, row.id)}
+                  onSelect={(sel) => {
+                    const prod = allProducts.find((p) => p.id === sel.id);
+                    if (prod) handleProductSelect(row.id, sel);
+                  }}
+                  items={filteredProducts.map((p) => ({
+                    id: p.id,
+                    display: p.productName,
+                    extra: { SKU: p.sku, Price: `$${p.price}` },
+                  }))}
+                  placeholder="Search product..."
+                />
+              </div>
+              <div className="col-span-1 text-center">{row.sku || "-"}</div>
+              <div className="col-span-1 text-right">${row.price.toFixed(2)}</div>
+              <div className="col-span-1">
+                <input
+                  type="number"
+                  min="1"
+                  value={row.quantity}
+                  onChange={(e) => handleQuantityChange(row.id, Number(e.target.value))}
+                  className="w-full border rounded px-2 py-1 text-right"
+                />
+              </div>
+              <div className="col-span-1 text-center">{row.unit}</div>
+              <div className="col-span-2 text-right font-medium">${row.total.toFixed(2)}</div>
+              <div className="col-span-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => removeProductRow(row.id)}
+                  className="text-red-600"
+                >
+                  <i className="fa fa-trash" />
+                </button>
+              </div>
             </div>
-            <div>
-              <label
-                htmlFor="quotationDate"
-                className="block text-sm font-medium mb-1"
-              >
-                Quotation Date
-              </label>
-              <input
-                id="quotationDate"
-                type="date"
-                value={quotationDate}
-                onChange={(e) => setQuotationDate(e.target.value)}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="customerSelect"
-                className="block text-sm font-medium mb-1"
-              >
-                Customer
-              </label>
-              <select
-                id="customerSelect"
-                value={customer ?? ""}
-                onChange={(e) => onCustomerChange(Number(e.target.value))}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {data &&
-                  Array.isArray(data.customers) &&
-                  data.customers.map((cust: any) => (
-                    <option key={cust.id} value={cust.id}>
-                      {cust.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* Customer Details Section */}
-        <section className="mb-8 bg-gray-50 border border-gray-200 rounded p-4">
-          <h2 className="text-lg font-semibold mb-4">Customer Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Name
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={customerDetails?.name ?? ""}
-                className="w-full border border-input rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Phone
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={customerDetails?.phone ?? ""}
-                className="w-full border border-input rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                readOnly
-                value={customerDetails?.email ?? ""}
-                className="w-full border border-input rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Address
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={customerDetails?.address ?? ""}
-                className="w-full border border-input rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Products Table Section */}
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Products</h2>
-          <div className="overflow-x-auto border border-gray-300 rounded">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Product</th>
-                  <th className="px-4 py-2 text-left font-semibold">Code</th>
-                  <th className="px-4 py-2 text-left font-semibold">Price</th>
-                  <th className="px-4 py-2 text-left font-semibold">Quantity</th>
-                  <th className="px-4 py-2 text-left font-semibold">Unit</th>
-                  <th className="px-4 py-2 text-left font-semibold">Total</th>
-                  <th className="px-4 py-2 text-center font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {productRows.map((row) => (
-                  <tr key={row.id}>
-                    <td className="px-4 py-2">
-                      <select
-                        value={row.productId}
-                        onChange={(e) =>
-                          onProductChange(row.id, Number(e.target.value))
-                        }
-                        className="w-full border border-input rounded px-2 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        {data &&
-                          Array.isArray(data.products) &&
-                          data.products.map((prod: any) => (
-                            <option key={prod.id} value={prod.id}>
-                              {prod.name}
-                            </option>
-                          ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-2">{row.code}</td>
-                    <td className="px-4 py-2">${row.price.toFixed(2)}</td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        min={1}
-                        value={row.quantity}
-                        onChange={(e) =>
-                          onQuantityChange(row.id, Number(e.target.value))
-                        }
-                        className="w-20 border border-input rounded px-2 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </td>
-                    <td className="px-4 py-2">{row.unit}</td>
-                    <td className="px-4 py-2">${row.total.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-center">
-                      <button
-                        onClick={() => removeProductRow(row.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Remove product"
-                        type="button"
-                      >
-                        <i className="fas fa-trash-alt"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-3 flex justify-end">
-            <button
-              onClick={addProductRow}
-              type="button"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-plus fa-light" aria-hidden="true"></i> Add
-              Product
-            </button>
-          </div>
-        </section>
-
-        {/* Summary Section */}
-        <section className="mb-8 max-w-md ml-auto bg-gray-50 border border-gray-200 rounded p-4">
-          <div className="grid grid-cols-2 gap-4 mb-3 items-center">
-            <label
-              htmlFor="subtotal"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Sub Total:
-            </label>
-            <div className="text-right text-gray-900 font-semibold">
-              ${subTotal.toFixed(2)}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-3 items-center">
-            <label
-              htmlFor="discount"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Discount (%):
-            </label>
-            <input
-              id="discount"
-              type="number"
-              min={0}
-              max={100}
-              value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-right"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-3 items-center">
-            <label
-              htmlFor="tax"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Tax (%):
-            </label>
-            <input
-              id="tax"
-              type="number"
-              min={0}
-              max={100}
-              value={tax}
-              onChange={(e) => setTax(Number(e.target.value))}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring text-right"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-300 items-center">
-            <span className="text-lg font-semibold">Grand Total:</span>
-            <span className="text-lg font-semibold text-right">
-              ${grandTotal.toFixed(2)}
-            </span>
-          </div>
-        </section>
-
-        {/* Customers Table with Pagination */}
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Customers List</h2>
-          <div className="overflow-x-auto border border-gray-300 rounded">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Name</th>
-                  <th className="px-4 py-2 text-left font-semibold">Phone</th>
-                  <th className="px-4 py-2 text-left font-semibold">Email</th>
-                  <th className="px-4 py-2 text-left font-semibold">Address</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {paginatedCustomers.map((cust: any) => (
-                  <tr key={cust.id}>
-                    <td className="px-4 py-2">{cust.name}</td>
-                    <td className="px-4 py-2">{cust.phone}</td>
-                    <td className="px-4 py-2">{cust.email}</td>
-                    <td className="px-4 py-2">{cust.address}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={data && Array.isArray(data.customers) ? data.customers.length : 0}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
-          />
-        </section>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addProductRow}
+          className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+        >
+          <i className="fa fa-plus-circle" /> Add Product
+        </button>
       </div>
-    </div>
+
+      {/* Totals */}
+      <div className="max-w-md ml-auto space-y-2 text-sm">
+        <div className="flex justify-between"><span>Sub Total:</span> <span>${subTotal.toFixed(2)}</span></div>
+        <div className="flex justify-between items-center">
+          <span>Discount (%):</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={discount}
+            onChange={(e) => setDiscount(Number(e.target.value))}
+            className="w-20 border rounded px-2 py-1 text-right"
+          />
+        </div>
+        <div className="flex justify-between items-center">
+          <span>Tax (%):</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={tax}
+            onChange={(e) => setTax(Number(e.target.value))}
+            className="w-20 border rounded px-2 py-1 text-right"
+          />
+        </div>
+        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+          <span>Grand Total:</span> <span>${grandTotal.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-3 mt-6">
+        <button type="button" onClick={closeModal} className="px-4 py-2 border rounded-lg hover:bg-gray-100">
+          Cancel
+        </button>
+        <button type="button" onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+          Save Quotation
+        </button>
+      </div>
+    </form>
+  );
+
+  /* ---------- Render ---------- */
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <i className="fa fa-spinner fa-spin text-3xl text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-red-600">
+        <p className="text-lg">{error}</p>
+        <button onClick={loadInitialData} className="mt-4 px-4 py-2 bg-primary text-white rounded">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <PageBase1
+      title="Quotation"
+      description="Create and manage quotations"
+      icon="fa-light fa-file-invoice"
+      onAddClick={openAddModal}
+      onRefresh={handleClear}
+      onReport={handleReport}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredTableCustomers.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={customerColumns}
+      tableData={paginatedCustomers}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle="Add Quotation"
+      modalForm={modalForm}
+      onFormSubmit={() => { }} // Disabled
+      customFilters={customFilters}
+    />
   );
 }
