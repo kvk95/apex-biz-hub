@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -12,12 +12,6 @@ interface Warehouse {
   warehouseEmail: string;
   warehouseAddress: string;
   warehouseStatus: (typeof STATUSES)[number];
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
 }
 
 export default function Warehouses() {
@@ -229,11 +223,6 @@ export default function Warehouses() {
 
   const columns: Column[] = [
     {
-      key: "index",
-      label: "#",
-      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
-    },
-    {
       key: "warehouseName",
       label: "Warehouse Name",
       render: (value) => <span className="font-semibold">{value}</span>,
@@ -241,7 +230,7 @@ export default function Warehouses() {
     { key: "warehouseCode", label: "Code" },
     { key: "warehousePhone", label: "Phone" },
     { key: "warehouseEmail", label: "Email" },
-    { key: "warehouseAddress", label: "Address" }, 
+    { key: "warehouseAddress", label: "Address" },
     { key: "warehouseStatus", label: "Status", render: renderStatusBadge },
   ];
 

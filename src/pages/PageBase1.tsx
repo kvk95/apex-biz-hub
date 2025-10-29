@@ -2,7 +2,7 @@ import React from "react";
 import { Pagination } from "@/components/Pagination/Pagination";
 import { useTheme } from "@/components/theme/theme-provider";
 
-interface Column {
+export interface Column {
   key: string;
   label: string;
   render?: (value: any, row: any, idx?: number) => React.ReactNode;

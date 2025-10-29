@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
-import { PageBase1 } from "@/pages/PageBase1";
+import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
@@ -9,14 +8,7 @@ interface LeaveType {
   id: number;
   leaveType: string;
   days: number;
-  status: typeof STATUSES[number];
-}
-
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
+  status: (typeof STATUSES)[number];
 }
 
 export default function LeaveTypes() {
@@ -60,7 +52,10 @@ export default function LeaveTypes() {
       const matchesStatus = !searchStatus || item.status === searchStatus;
       return matchesLeaveType && matchesStatus;
     });
-    console.log("LeaveTypes filteredData:", result, { searchLeaveType, searchStatus });
+    console.log("LeaveTypes filteredData:", result, {
+      searchLeaveType,
+      searchStatus,
+    });
     return result;
   }, [data, searchLeaveType, searchStatus]);
 
@@ -123,7 +118,10 @@ export default function LeaveTypes() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this leave type?")) {
       setData((prev) => prev.filter((lt) => lt.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
       console.log("LeaveTypes handleDelete:", { id });
@@ -145,7 +143,7 @@ export default function LeaveTypes() {
     console.log("LeaveTypes handleReport:", { filteredData });
   };
 
-  const columns: Column[] = [ 
+  const columns: Column[] = [
     {
       key: "leaveType",
       label: "Leave Type",
@@ -153,18 +151,22 @@ export default function LeaveTypes() {
       render: (value) => <span className="font-semibold">{value}</span>,
     },
     { key: "days", label: "Days", align: "right" },
-    { key: "createdDate", label: "Created On", align: "center" ,render: (value) => <span className="font-semibold">dd mmm yyyy</span>,},
+    {
+      key: "createdDate",
+      label: "Created On",
+      align: "center",
+      render: (value) => <span className="font-semibold">dd mmm yyyy</span>,
+    },
     {
       key: "status",
       label: "Status",
       align: "center",
       render: renderStatusBadge,
     },
-
   ];
 
-  const rowActions = (row: LeaveType) => ( 
-        <>
+  const rowActions = (row: LeaveType) => (
+    <>
       <button
         onClick={() => handleEdit(row)}
         aria-label={`Edit  ${row.leaveType}`}
@@ -193,7 +195,9 @@ export default function LeaveTypes() {
         onChange={(e) => {
           setSearchLeaveType(e.target.value);
           setCurrentPage(1);
-          console.log("LeaveTypes handleSearchLeaveTypeChange:", { searchLeaveType: e.target.value });
+          console.log("LeaveTypes handleSearchLeaveTypeChange:", {
+            searchLeaveType: e.target.value,
+          });
         }}
         className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         aria-label="Search by leave type"
@@ -203,14 +207,18 @@ export default function LeaveTypes() {
         onChange={(e) => {
           setSearchStatus(e.target.value);
           setCurrentPage(1);
-          console.log("LeaveTypes handleSearchStatusChange:", { searchStatus: e.target.value });
+          console.log("LeaveTypes handleSearchStatusChange:", {
+            searchStatus: e.target.value,
+          });
         }}
         className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         aria-label="Filter by status"
       >
         <option value="">All Status</option>
         {STATUSES.filter((s) => s === "Active" || s === "Inactive").map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
       </select>
     </div>
@@ -263,9 +271,13 @@ export default function LeaveTypes() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Select status"
         >
-          {STATUSES.filter((s) => s === "Active" || s === "Inactive").map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
+          {STATUSES.filter((s) => s === "Active" || s === "Inactive").map(
+            (s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            )
+          )}
         </select>
       </div>
     </div>
@@ -286,7 +298,9 @@ export default function LeaveTypes() {
       onSearchChange={(e) => {
         setSearchLeaveType(e.target.value);
         setCurrentPage(1);
-        console.log("LeaveTypes handleSearchLeaveTypeChange:", { searchLeaveType: e.target.value });
+        console.log("LeaveTypes handleSearchLeaveTypeChange:", {
+          searchLeaveType: e.target.value,
+        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}

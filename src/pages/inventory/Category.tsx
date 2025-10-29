@@ -12,13 +12,6 @@ interface CategoryRecord {
   status: (typeof EXPIRED_STATUSES)[number];
 }
 
-interface Column {
-  key: string;
-  label: string;
-  render?: (value: any, row: any, idx?: number) => JSX.Element;
-  align?: "left" | "center" | "right";
-}
-
 export default function Category() {
   const { state } = useLocation();
 
