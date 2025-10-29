@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { CATEGORIES, UNITS } from "@/constants/constants";
 
 interface ExpiredProductRecord {
   id: number;
@@ -15,9 +16,13 @@ interface ExpiredProductRecord {
   price: number;
 }
 
-const CATEGORIES = ["Fruits", "Dairy", "Bakery", "Vegetables"];
-const SUPPLIERS = ["Supplier A", "Supplier B", "Supplier C", "Supplier D", "Supplier E"];
-const UNITS = ["kg", "liter", "unit", "pack"];
+const SUPPLIERS = [
+  "Supplier A",
+  "Supplier B",
+  "Supplier C",
+  "Supplier D",
+  "Supplier E",
+];
 
 export default function ExpiredProducts() {
   const [data, setData] = useState<ExpiredProductRecord[]>([]);
@@ -26,7 +31,10 @@ export default function ExpiredProducts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: "",
+    end: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"edit" | null>(null);
@@ -44,27 +52,32 @@ export default function ExpiredProducts() {
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<ExpiredProductRecord[]>("ExpiredProducts");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-    };
     loadData();
   }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<ExpiredProductRecord[]>(
+      "ExpiredProducts"
+    );
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesSearch =
         item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.productCode.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !selectedCategory || item.category === selectedCategory;
-      const matchesSupplier = !selectedSupplier || item.supplier === selectedSupplier;
+      const matchesCategory =
+        !selectedCategory || item.category === selectedCategory;
+      const matchesSupplier =
+        !selectedSupplier || item.supplier === selectedSupplier;
       const matchesDate =
         (!dateRange.start || item.expiredDate >= dateRange.start) &&
         (!dateRange.end || item.expiredDate <= dateRange.end);
@@ -133,7 +146,10 @@ export default function ExpiredProducts() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       setData((prev) => prev.filter((item) => item.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -161,8 +177,18 @@ export default function ExpiredProducts() {
     { key: "expiredDate", label: "Expired Date", align: "left" },
     { key: "quantity", label: "Quantity", align: "right" },
     { key: "unit", label: "Unit", align: "left" },
-    { key: "cost", label: "Cost", align: "right", render: (value) => `$${value.toFixed(2)}` },
-    { key: "price", label: "Price", align: "right", render: (value) => `$${value.toFixed(2)}` },
+    {
+      key: "cost",
+      label: "Cost",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
+    {
+      key: "price",
+      label: "Price",
+      align: "right",
+      render: (value) => `$${value.toFixed(2)}`,
+    },
   ];
 
   const rowActions = (row: ExpiredProductRecord) => (
@@ -210,7 +236,9 @@ export default function ExpiredProducts() {
       >
         <option value="">All Categories</option>
         {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>{cat}</option>
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
         ))}
       </select>
       <select
@@ -224,7 +252,9 @@ export default function ExpiredProducts() {
       >
         <option value="">All Suppliers</option>
         {SUPPLIERS.map((sup) => (
-          <option key={sup} value={sup}>{sup}</option>
+          <option key={sup} value={sup}>
+            {sup}
+          </option>
         ))}
       </select>
       <input
@@ -297,7 +327,9 @@ export default function ExpiredProducts() {
         >
           <option value="">Select Category</option>
           {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
       </div>
@@ -315,7 +347,9 @@ export default function ExpiredProducts() {
         >
           <option value="">Select Supplier</option>
           {SUPPLIERS.map((sup) => (
-            <option key={sup} value={sup}>{sup}</option>
+            <option key={sup} value={sup}>
+              {sup}
+            </option>
           ))}
         </select>
       </div>
@@ -364,7 +398,9 @@ export default function ExpiredProducts() {
         >
           <option value="">Select Unit</option>
           {UNITS.map((unit) => (
-            <option key={unit} value={unit}>{unit}</option>
+            <option key={unit} value={unit}>
+              {unit}
+            </option>
           ))}
         </select>
       </div>

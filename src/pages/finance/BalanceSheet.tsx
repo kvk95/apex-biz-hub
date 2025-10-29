@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-
-// Placeholder constant (to be adjusted based on actual data or requirements)
-export const PAYMENT_METHODS = ["All", "Cash", "Credit Card", "Cheque", "Bank Transfer"] as const;
+import { PAYMENT_TYPES } from "@/constants/constants";
 
 interface BalanceSheetItem {
   id: number;
@@ -104,7 +102,7 @@ const BalanceSheet: React.FC = () => {
         onChange={handleFilterChangePaymentMethod}
         className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {PAYMENT_METHODS.map((method) => (
+        {PAYMENT_TYPES.map((method) => (
           <option key={method} value={method}>
             {method}
           </option>
