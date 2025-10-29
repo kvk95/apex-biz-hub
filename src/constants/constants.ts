@@ -168,12 +168,12 @@ export const MONTHS = [
 
 export const ACCOUNT_TYPES = ["Savings", "Current"] as const;
 
-export const TAX_TYPES = [ "VAT", "GST", "Sales Tax"] as const;
+export const TAX_TYPES = ["VAT", "GST", "Sales Tax"] as const;
 
 export const TAX_OPTIONS = ["Exclusive", "Inclusive"] as const;
-  
+
 //from screen - to be removed later
-export const CATEGORIES = ["Computers","Groceries","Electronics","Apparel","Books","Furniture"] as const;
+export const CATEGORIES = ["Computers", "Groceries", "Electronics", "Apparel", "Books", "Furniture"] as const;
 
 //from screen - to be removed later
 export const UNITS = ["Piece", "Box", "Packet", "Kg"] as const;
@@ -214,11 +214,23 @@ export const EXPENSE_HEADS = [
   "Courier",
 ] as const;
 
-export const INCOME_CATEGORIES = [ "Sales", "Service"] as const;
+export const INCOME_CATEGORIES = ["Sales", "Service"] as const;
 
 export const ACCOUNTS = ["Cash", "Bank"] as const;
 
 export const CURRENCIES = ["USD", "INR", "EUR"] as const;
- 
+
 
 export const COUNTRIES = ["India"] as const;
+
+export const SORT_OPTIONS = [
+  "Last 7 Days",
+  "Recently Added",
+  "This Month",
+  "Last Month",
+  "Ascending",
+  "Descending",
+  "All Time",
+] as const;
+
+export const ORDER_TYPES = ["ONLINE", "POS"] as const;

@@ -1,9 +1,19 @@
+/* -------------------------------------------------
+   OnlineOrders – fully template-compliant, no type errors
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
 import AddSalesModal from "./AddSalesModal";
+import {
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  SORT_OPTIONS,
+  ORDER_TYPES,
+} from "@/constants/constants";
 
-interface OrderItem {
+type OrderItem = {
   productId: number;
   productName: string;
   sku: string;
@@ -12,9 +22,9 @@ interface OrderItem {
   discount: number;
   tax: number;
   total: number;
-}
+};
 
-interface Totals {
+type Totals = {
   subTotal: number;
   tax: number;
   discount: number;
@@ -22,38 +32,39 @@ interface Totals {
   grandTotal: number;
   paid?: number;
   due?: number;
-}
+};
 
-interface Order {
+type Order = {
   id: number;
   orderId: string;
-  orderType: string;
+  orderType: (typeof ORDER_TYPES)[number];
   date: string;
   customerId: number;
   customerName: string;
   supplierId: number;
   supplierName?: string;
   paymentMethod: string;
-  paymentStatus: string;
-  status: string;
+  paymentStatus: (typeof PAYMENT_STATUSES)[number];
+  status: (typeof ORDER_STATUSES)[number];
   items: OrderItem[];
   totals: Totals;
-}
+};
 
-/* -------------------------------------------------
-   OnlineOrders component
-   ------------------------------------------------- */
 export default function OnlineOrders() {
   /* ---------- state ---------- */
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
-  const [selectedSort, setSelectedSort] = useState("All Time");
+  const [selectedStatus, setSelectedStatus] = useState<(typeof ORDER_STATUSES)[number] | "All">("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number] | "All">("All");
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("All Time");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [loading, setLoading] = useState(true); // Kept for future use
+  const [error, setError] = useState<string | null>(null); // Kept for future use
+
+  const currentOrderType = "ONLINE" as const;
 
   /* ---------- load data ---------- */
   useEffect(() => {
@@ -61,15 +72,22 @@ export default function OnlineOrders() {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await apiService.get<any>("OnlineOrders");
+      const response = await apiService.get<Order[]>("OnlineOrders");
       if (response.status.code === "S") {
-        const onlineOrders = response.result;
-        setOrders(onlineOrders);
-        console.log("OnlineOrders loadData:", { data: onlineOrders });
+        setOrders(response.result);
+        setError(null);
+        console.log("OnlineOrders loadData:", { data: response.result });
+      } else {
+        setError(response.status.description);
+        console.error("OnlineOrders loadData error:", response.status);
       }
-    } catch (error) {
-      console.error("Failed to load Online orders:", error);
+    } catch (err) {
+      setError("Failed to load online orders.");
+      console.error("OnlineOrders loadData exception:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,9 +103,12 @@ export default function OnlineOrders() {
       );
     }
 
-    if (selectedCustomer !== "All") result = result.filter((o) => o.customerName === selectedCustomer);
-    if (selectedStatus !== "All") result = result.filter((o) => o.status === selectedStatus);
-    if (selectedPaymentStatus !== "All") result = result.filter((o) => o.paymentStatus === selectedPaymentStatus);
+    if (selectedCustomer !== "All")
+      result = result.filter((o) => o.customerName === selectedCustomer);
+    if (selectedStatus !== "All")
+      result = result.filter((o) => o.status === selectedStatus);
+    if (selectedPaymentStatus !== "All")
+      result = result.filter((o) => o.paymentStatus === selectedPaymentStatus);
 
     if (selectedSort === "Last 7 Days") {
       const last7 = new Date();
@@ -107,7 +128,14 @@ export default function OnlineOrders() {
       selectedSort,
     });
     return result;
-  }, [orders, search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort]);
+  }, [
+    orders,
+    search,
+    selectedCustomer,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedSort,
+  ]);
 
   /* ---------- pagination ---------- */
   const paginatedData = useMemo(() => {
@@ -124,7 +152,11 @@ export default function OnlineOrders() {
     return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(() => ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))], [orders]);
+  /* ---------- derived options ---------- */
+  const customerOptions = useMemo(
+    () => ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))],
+    [orders]
+  );
 
   /* ---------- handlers ---------- */
   const handleAddClick = () => {
@@ -153,28 +185,39 @@ export default function OnlineOrders() {
 
   const handleReport = () => {
     alert("Online Orders Report:\n\n" + JSON.stringify(orders, null, 2));
+    console.log("OnlineOrders handleReport");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("OnlineOrders handleSearchChange:", { search: e.target.value, currentPage: 1 });
+    console.log("OnlineOrders handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
-      console.log("OnlineOrders handlePageChange:", { page, totalPages, currentPage });
+      console.log("OnlineOrders handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
     } else {
-      console.warn("OnlineOrders handlePageChange: Invalid page", { page, totalPages, currentPage });
+      console.warn("OnlineOrders handlePageChange: Invalid page", {
+        page,
+        totalPages,
+        currentPage,
+      });
     }
   };
 
-  /* ---------- row actions (edit / delete) ---------- */
+  /* ---------- row actions ---------- */
   const rowActions = (row: Order) => (
     <>
-      {/* Edit opens the same modal – you can pass the row if you want to pre-fill */}
       <button
         onClick={() => {
           setIsModalOpen(true);
@@ -192,7 +235,16 @@ export default function OnlineOrders() {
         onClick={() => {
           if (window.confirm("Are you sure you want to delete this order?")) {
             setOrders((prev) => prev.filter((o) => o.id !== row.id));
-            console.log("OnlineOrders rowActions: Delete confirmed", { id: row.id });
+            const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+            } else if (totalPages === 0) {
+              setCurrentPage(1);
+            }
+            console.log("OnlineOrders rowActions: Delete confirmed", {
+              id: row.id,
+              totalPages,
+            });
           }
         }}
         aria-label={`Delete order ${row.orderId}`}
@@ -220,21 +272,10 @@ export default function OnlineOrders() {
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Completed"
-            ? "bg-green-100 text-green-700"
-            : value === "Pending"
-              ? "bg-yellow-100 text-yellow-700"
-              : "bg-gray-100 text-gray-600"
-            }`}
-        >
-          {value}
-        </span>
-      ),
+      render: renderStatusBadge,
     },
     {
-      key: "grandTotal", // Simplified key (no dots needed since we access manually)
+      key: "grandTotal",
       label: "Grand Total ($)",
       render: (_, row) => `$${Number(row.totals.grandTotal || 0).toFixed(2)}`,
       align: "right",
@@ -266,7 +307,7 @@ export default function OnlineOrders() {
     },
   ];
 
-  /* ---------- custom filters (search + dropdowns) ---------- */
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
     <>
       <input
@@ -290,32 +331,38 @@ export default function OnlineOrders() {
       </select>
       <select
         value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value)}
+        onChange={(e) => setSelectedStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option>All</option>
-        <option>Pending</option>
-        <option>Completed</option>
-        <option>Cancelled</option>
+        {ORDER_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option>All</option>
-        <option>Paid</option>
-        <option>Partial</option>
-        <option>Unpaid</option>
+        {PAYMENT_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value)}
+        onChange={(e) => setSelectedSort(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option>All Time</option>
-        <option>Last 7 Days</option>
-        <option>This Month</option>
+        {SORT_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
     </>
   );
@@ -341,7 +388,6 @@ export default function OnlineOrders() {
         tableData={paginatedData}
         rowActions={rowActions}
         customFilters={customFilters}
-        /* ---- modal-related props are optional, we just pass undefined ---- */
         formMode={undefined}
         setFormMode={undefined}
         modalTitle={undefined}
@@ -349,7 +395,6 @@ export default function OnlineOrders() {
         onFormSubmit={undefined}
       />
 
-      {/* Your existing, fully-functional modal */}
       <AddSalesModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -357,7 +402,7 @@ export default function OnlineOrders() {
           console.log("OnlineOrders: AddSalesModal closed");
         }}
         onSave={handleAddOrder}
-        orderType="ONLINE"
+        orderType={currentOrderType}
       />
     </>
   );

@@ -1,9 +1,19 @@
+/* -------------------------------------------------
+   PosOrders
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
 import AddSalesModal from "./AddSalesModal";
+import {
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  SORT_OPTIONS,
+  ORDER_TYPES,
+} from "@/constants/constants";
 
-interface OrderItem {
+type OrderItem = {
   productId: number;
   productName: string;
   sku: string;
@@ -12,9 +22,9 @@ interface OrderItem {
   discount: number;
   tax: number;
   total: number;
-}
+};
 
-interface Totals {
+type Totals = {
   subTotal: number;
   tax: number;
   discount: number;
@@ -22,52 +32,66 @@ interface Totals {
   grandTotal: number;
   paid?: number;
   due?: number;
-}
+};
 
-interface Order {
+type Order = {
   id: number;
   orderId: string;
-  orderType: string;
+  orderType: (typeof ORDER_TYPES)[number];
   date: string;
   customerId: number;
   customerName: string;
   supplierId: number;
   supplierName?: string;
   paymentMethod: string;
-  paymentStatus: string;
-  status: string;
+  paymentStatus: (typeof PAYMENT_STATUSES)[number];
+  status: (typeof ORDER_STATUSES)[number];
   items: OrderItem[];
   totals: Totals;
-}
+};
 
 export default function PosOrders() {
+  /* ---------- state ---------- */
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
-  const [selectedSort, setSelectedSort] = useState("All Time");
+  const [selectedStatus, setSelectedStatus] = useState<(typeof ORDER_STATUSES)[number] | "All">("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number] | "All">("All");
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("All Time");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  const currentOrderType = "POS" as const;
+
+  /* ---------- load data ---------- */
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await apiService.get<any>("PosOrders");
+      const response = await apiService.get<Order[]>("PosOrders");
       if (response.status.code === "S") {
-        const posOrders = response.result;
-        setOrders(posOrders);
-        console.log("PosOrders loadData:", { data: posOrders });
+        setOrders(response.result);
+        setError(null);
+        console.log("PosOrders loadData:", { data: response.result });
+      } else {
+        setError(response.status.description);
+        console.error("PosOrders loadData error:", response.status);
       }
-    } catch (error) {
-      console.error("Failed to load POS orders:", error);
+    } catch (err) {
+      setError("Failed to load POS orders.");
+      console.error("PosOrders loadData exception:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ---------- filtering ---------- */
   const filteredData = useMemo(() => {
     let result = [...orders];
 
@@ -79,9 +103,12 @@ export default function PosOrders() {
       );
     }
 
-    if (selectedCustomer !== "All") result = result.filter((o) => o.customerName === selectedCustomer);
-    if (selectedStatus !== "All") result = result.filter((o) => o.status === selectedStatus);
-    if (selectedPaymentStatus !== "All") result = result.filter((o) => o.paymentStatus === selectedPaymentStatus);
+    if (selectedCustomer !== "All")
+      result = result.filter((o) => o.customerName === selectedCustomer);
+    if (selectedStatus !== "All")
+      result = result.filter((o) => o.status === selectedStatus);
+    if (selectedPaymentStatus !== "All")
+      result = result.filter((o) => o.paymentStatus === selectedPaymentStatus);
 
     if (selectedSort === "Last 7 Days") {
       const last7 = new Date();
@@ -101,8 +128,16 @@ export default function PosOrders() {
       selectedSort,
     });
     return result;
-  }, [orders, search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort]);
+  }, [
+    orders,
+    search,
+    selectedCustomer,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedSort,
+  ]);
 
+  /* ---------- pagination ---------- */
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
@@ -117,15 +152,20 @@ export default function PosOrders() {
     return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(() => ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))], [orders]);
+  /* ---------- derived options ---------- */
+  const customerOptions = useMemo(
+    () => ["All", ...Array.from(new Set(orders.map((o) => o.customerName)))],
+    [orders]
+  );
 
+  /* ---------- handlers ---------- */
   const handleAddClick = () => {
     setIsModalOpen(true);
     console.log("PosOrders handleAddClick: Opening AddSalesModal");
   };
 
   const handleAddOrder = (newOrder: Order) => {
-    if (!newOrder || newOrder.orderType !== "POS") return;
+    if (!newOrder || newOrder.orderType !== currentOrderType) return;
     setOrders((prev) => [newOrder, ...prev]);
     setIsModalOpen(false);
     const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
@@ -146,24 +186,37 @@ export default function PosOrders() {
 
   const handleReport = () => {
     alert("POS Orders Report:\n\n" + JSON.stringify(orders, null, 2));
+    console.log("PosOrders handleReport");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
-    console.log("PosOrders handleSearchChange:", { search: e.target.value, currentPage: 1 });
+    console.log("PosOrders handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
-      console.log("PosOrders handlePageChange:", { page, totalPages, currentPage });
+      console.log("PosOrders handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
     } else {
-      console.warn("PosOrders handlePageChange: Invalid page", { page, totalPages, currentPage });
+      console.warn("PosOrders handlePageChange: Invalid page", {
+        page,
+        totalPages,
+        currentPage,
+      });
     }
   };
 
+  /* ---------- row actions ---------- */
   const rowActions = (row: Order) => (
     <>
       <button
@@ -172,8 +225,7 @@ export default function PosOrders() {
           console.log("PosOrders rowActions: Edit clicked", { row });
         }}
         aria-label={`Edit POS order ${row.orderId}`}
-        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
-        title="Edit"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
         <span className="sr-only">Edit order</span>
@@ -183,12 +235,20 @@ export default function PosOrders() {
         onClick={() => {
           if (window.confirm("Are you sure you want to delete this POS order?")) {
             setOrders((prev) => prev.filter((o) => o.id !== row.id));
-            console.log("PosOrders rowActions: Delete confirmed", { id: row.id });
+            const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+            } else if (totalPages === 0) {
+              setCurrentPage(1);
+            }
+            console.log("PosOrders rowActions: Delete confirmed", {
+              id: row.id,
+              totalPages,
+            });
           }
         }}
         aria-label={`Delete POS order ${row.orderId}`}
-        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
-        title="Delete"
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete order</span>
@@ -196,6 +256,7 @@ export default function PosOrders() {
     </>
   );
 
+  /* ---------- table columns ---------- */
   const columns: Column[] = [
     {
       key: "index",
@@ -210,18 +271,7 @@ export default function PosOrders() {
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${value === "Completed"
-            ? "bg-green-100 text-green-700"
-            : value === "Pending"
-              ? "bg-yellow-100 text-yellow-700"
-              : "bg-gray-100 text-gray-600"
-            }`}
-        >
-          {value}
-        </span>
-      ),
+      render: renderStatusBadge,
     },
     {
       key: "grandTotal",
@@ -256,6 +306,7 @@ export default function PosOrders() {
     },
   ];
 
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
     <>
       <input
@@ -279,36 +330,43 @@ export default function PosOrders() {
       </select>
       <select
         value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value)}
+        onChange={(e) => setSelectedStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option>All</option>
-        <option>Pending</option>
-        <option>Completed</option>
-        <option>Cancelled</option>
+        {ORDER_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option>All</option>
-        <option>Paid</option>
-        <option>Partial</option>
-        <option>Unpaid</option>
+        {PAYMENT_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
       <select
         value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value)}
+        onChange={(e) => setSelectedSort(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option>All Time</option>
-        <option>Last 7 Days</option>
-        <option>This Month</option>
+        {SORT_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
     </>
   );
 
+  /* ---------- render ---------- */
   return (
     <>
       <PageBase1
@@ -329,15 +387,14 @@ export default function PosOrders() {
         tableData={paginatedData}
         rowActions={rowActions}
         customFilters={customFilters}
-        // Modal props (not used) — safe to pass undefined
         formMode={undefined}
         setFormMode={undefined}
         modalTitle={undefined}
         modalForm={undefined}
         onFormSubmit={undefined}
+      // DO NOT PASS loading/error — PageBase1 doesn't support them
       />
 
-      {/* Your existing AddSalesModal — fully preserved */}
       <AddSalesModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -345,7 +402,7 @@ export default function PosOrders() {
           console.log("PosOrders: AddSalesModal closed");
         }}
         onSave={handleAddOrder}
-        orderType="POS"
+        orderType={currentOrderType}
       />
     </>
   );
