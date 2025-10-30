@@ -311,4 +311,9 @@ export const CUSTOMERS = [
 
 
 export const INVOICE_STATUSES = ["All", "Paid", "Unpaid", "Partial"] as const;
- 
+
+export const QUOTATION_STATUSES = [
+  "Ordered",
+  "Pending",
+  "Sent"
+] as const;

@@ -6,108 +6,203 @@
   "result": [
     {
       "id": 1,
-      "name": "John Doe",
-      "phone": "123-456-7890",
-      "email": "john@example.com",
-      "address": "123 Main St, Cityville"
+      "productId": "1",
+      "productName": "Apple iPhone 14 Pro Max",
+      "customerName": "John Doe",
+      "customerId": "1",
+      "status": "Sent",
+      "Total": "550",
+      "description": "iPhone delivered to John Doe"
     },
     {
       "id": 2,
-      "name": "Jane Smith",
-      "phone": "987-654-3210",
-      "email": "jane@example.com",
-      "address": "456 Elm St, Townsville"
+      "productId": "3",
+      "productName": "Sony WH-1000XM4 Headphones",
+      "customerName": "Jane Smith",
+      "customerId": "2",
+      "status": "Pending",
+      "Total": "350",
+      "description": "Headphones order pending for Jane Smith"
     },
     {
       "id": 3,
-      "name": "Michael Johnson",
-      "phone": "555-123-4567",
-      "email": "michael@example.com",
-      "address": "789 Oak St, Villagetown"
+      "productId": "6",
+      "productName": "Logitech MX Master 3 Mouse",
+      "customerName": "Carlos Ruiz",
+      "customerId": "3",
+      "status": "Sent",
+      "Total": "100",
+      "description": "Mouse shipped to Carlos Ruiz"
     },
     {
       "id": 4,
-      "name": "Emily Davis",
-      "phone": "444-555-6666",
-      "email": "emily@example.com",
-      "address": "321 Pine St, Hamlet"
+      "productId": "4",
+      "productName": "Apple MacBook Pro 16\"",
+      "customerName": "Anna Müller",
+      "customerId": "4",
+      "status": "Pending",
+      "Total": "2500",
+      "description": "MacBook Pro order pending for Anna Müller"
     },
     {
       "id": 5,
-      "name": "William Brown",
-      "phone": "222-333-4444",
-      "email": "william@example.com",
-      "address": "654 Maple St, Borough"
+      "productId": "7",
+      "productName": "Apple Watch Series 7",
+      "customerName": "Liu Wei",
+      "customerId": "5",
+      "status": "Sent",
+      "Total": "400",
+      "description": "Apple Watch delivered to Liu Wei"
     },
     {
       "id": 6,
-      "name": "Olivia Wilson",
-      "phone": "111-222-3333",
-      "email": "olivia@example.com",
-      "address": "987 Birch St, Metropolis"
+      "productId": "8",
+      "productName": "Google Pixel 7 Pro",
+      "customerName": "Fatima Al Farsi",
+      "customerId": "6",
+      "status": "Pending",
+      "Total": "900",
+      "description": "Pixel 7 Pro order pending for Fatima Al Farsi"
     },
     {
       "id": 7,
-      "name": "James Taylor",
-      "phone": "777-888-9999",
-      "email": "james@example.com",
-      "address": "159 Cedar St, Capital City"
+      "productId": "10",
+      "productName": "Microsoft Surface Laptop 5",
+      "customerName": "Mohamed Salah",
+      "customerId": "7",
+      "status": "Sent",
+      "Total": "1600",
+      "description": "Surface Laptop shipped to Mohamed Salah"
     },
     {
       "id": 8,
-      "name": "Sophia Martinez",
-      "phone": "888-999-0000",
-      "email": "sophia@example.com",
-      "address": "753 Spruce St, Downtown"
+      "productId": "11",
+      "productName": "Samsung Galaxy Watch 5",
+      "customerName": "Sofia Rossi",
+      "customerId": "8",
+      "status": "Pending",
+      "Total": "350",
+      "description": "Galaxy Watch order pending for Sofia Rossi"
     },
     {
       "id": 9,
-      "name": "Benjamin Anderson",
-      "phone": "666-777-8888",
-      "email": "benjamin@example.com",
-      "address": "852 Walnut St, Uptown"
+      "productId": "12",
+      "productName": "Canon EOS R6 Camera",
+      "customerName": "Lucas Martin",
+      "customerId": "9",
+      "status": "Sent",
+      "Total": "2500",
+      "description": "Canon camera delivered to Lucas Martin"
     },
     {
       "id": 10,
-      "name": "Isabella Thomas",
-      "phone": "333-444-5555",
-      "email": "isabella@example.com",
-      "address": "951 Chestnut St, Suburbia"
+      "productId": "14",
+      "productName": "Sony Alpha a7 IV",
+      "customerName": "Emma Johnson",
+      "customerId": "10",
+      "status": "Pending",
+      "Total": "2800",
+      "description": "Sony Alpha order pending for Emma Johnson"
     },
     {
-      "id": 1,
-      "name": "Product A",
-      "code": "PA-001",
-      "price": 25.0,
-      "unit": "pcs"
+      "id": 11,
+      "productId": "15",
+      "productName": "JBL Flip 6 Speaker",
+      "customerName": "Oliver Brown",
+      "customerId": "11",
+      "status": "Sent",
+      "Total": "120",
+      "description": "JBL speaker shipped to Oliver Brown"
     },
     {
-      "id": 2,
-      "name": "Product B",
-      "code": "PB-002",
-      "price": 40.0,
-      "unit": "pcs"
+      "id": 12,
+      "productId": "2",
+      "productName": "Samsung Galaxy S22 Ultra",
+      "customerName": "Isabella Garcia",
+      "customerId": "12",
+      "status": "Pending",
+      "Total": "1100",
+      "description": "Galaxy S22 Ultra order pending for Isabella Garcia"
     },
     {
-      "id": 3,
-      "name": "Product C",
-      "code": "PC-003",
-      "price": 15.5,
-      "unit": "pcs"
+      "id": 13,
+      "productId": "5",
+      "productName": "Dell XPS 13",
+      "customerName": "John Doe",
+      "customerId": "1",
+      "status": "Sent",
+      "Total": "1400",
+      "description": "Dell laptop delivered to John Doe"
     },
     {
-      "id": 4,
-      "name": "Product D",
-      "code": "PD-004",
-      "price": 60.0,
-      "unit": "pcs"
+      "id": 14,
+      "productId": "9",
+      "productName": "Bose QuietComfort Earbuds",
+      "customerName": "Jane Smith",
+      "customerId": "2",
+      "status": "Pending",
+      "Total": "280",
+      "description": "Bose earbuds order pending for Jane Smith"
     },
     {
-      "id": 5,
-      "name": "Product E",
-      "code": "PE-005",
-      "price": 100.0,
-      "unit": "pcs"
+      "id": 15,
+      "productId": "13",
+      "productName": "Nikon Z7 II Camera",
+      "customerName": "Carlos Ruiz",
+      "customerId": "3",
+      "status": "Sent",
+      "Total": "3000",
+      "description": "Nikon camera shipped to Carlos Ruiz"
+    },
+    {
+      "id": 16,
+      "productId": "1",
+      "productName": "Apple iPhone 14 Pro Max",
+      "customerName": "Anna Müller",
+      "customerId": "4",
+      "status": "Pending",
+      "Total": "1200",
+      "description": "iPhone order pending for Anna Müller"
+    },
+    {
+      "id": 17,
+      "productId": "3",
+      "productName": "Sony WH-1000XM4 Headphones",
+      "customerName": "Liu Wei",
+      "customerId": "5",
+      "status": "Sent",
+      "Total": "350",
+      "description": "Headphones delivered to Liu Wei"
+    },
+    {
+      "id": 18,
+      "productId": "6",
+      "productName": "Logitech MX Master 3 Mouse",
+      "customerName": "Fatima Al Farsi",
+      "customerId": "6",
+      "status": "Pending",
+      "Total": "100",
+      "description": "Mouse order pending for Fatima Al Farsi"
+    },
+    {
+      "id": 19,
+      "productId": "4",
+      "productName": "Apple MacBook Pro 16\"",
+      "customerName": "Mohamed Salah",
+      "customerId": "7",
+      "status": "Sent",
+      "Total": "2500",
+      "description": "MacBook Pro delivered to Mohamed Salah"
+    },
+    {
+      "id": 20,
+      "productId": "7",
+      "productName": "Apple Watch Series 7",
+      "customerName": "Sofia Rossi",
+      "customerId": "8",
+      "status": "Pending",
+      "Total": "400",
+      "description": "Apple Watch order pending for Sofia Rossi"
     }
   ]
 }

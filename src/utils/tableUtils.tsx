@@ -80,7 +80,10 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
   Withdrawn: "bg-gray-500 text-white dark:bg-gray-700",
   Deferred: "bg-amber-400 text-black dark:bg-amber-700",
   "Auto Approved": "bg-green-500 text-white dark:bg-green-700",
-  
+
+  //Quotation:
+  Sent: "bg-green-600 text-white dark:bg-green-800",
+
   // Default
   Default: "bg-gray-300 text-gray-900 dark:bg-gray-700 dark:text-gray-200",
 };
@@ -90,8 +93,28 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
  * Accepts any value from STATUSES, ORDER_STATUSES, PAYMENT_STATUSES, etc.
  */
 export const renderStatusBadge = (value: string): JSX.Element => {
+
+  /**
+   * Normalizes a string to have only the first letter capitalized.
+   * Useful for standardizing status labels like "Pending", "Approved", etc.
+   *
+   * Examples:
+   *   "PENDING" → "Pending"
+   *   "peNdiNg" → "Pending"
+   *   "approved" → "Approved"
+   */
+  function normalizeValue(value: string): string {
+    // Convert the entire string to lowercase
+    const lower = value.toLowerCase();
+
+    // Capitalize the first character and append the rest of the string
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+
+  const normalizedValue = normalizeValue(value);
+
   const classString =
-    UNIVERSAL_STATUS_COLORS[value] || UNIVERSAL_STATUS_COLORS.Default;
+    UNIVERSAL_STATUS_COLORS[normalizedValue] || UNIVERSAL_STATUS_COLORS.Default;
 
   return (
     <span
