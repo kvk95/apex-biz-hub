@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, STATUSES } from "@/constants/constants";
+import { CATEGORIES, STATUSES , BRANDS} from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 
 interface ProductRecord {
@@ -15,8 +15,6 @@ interface ProductRecord {
   status: string;
   image: string;
 }
-
-const BRANDS = ["All Brands", "Brand A", "Brand B", "Brand C"];
 
 export default function Products() {
   const [data, setData] = useState<ProductRecord[]>([]);

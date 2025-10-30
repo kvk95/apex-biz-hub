@@ -1,17 +1,3 @@
-export const ROLES = [
-  "Admin",
-  "Manager",
-  "Staff",
-  "User",
-  "Cashier",
-  "Supervisor",
-  "Accountant",
-  "StoreOwner",
-  "HR",
-  "Support",
-  "Guest",
-] as const;
-
 export const STATUSES = [
   "Active",
   "Inactive",
@@ -62,19 +48,6 @@ export const DISCOUNT_TYPES = [
   "Bulk Purchase",
   "Seasonal",
   "Member Exclusive",
-] as const;
-
-export const DEPARTMENTS = [
-  "Sales",
-  "Marketing",
-  "IT",
-  "HR",
-  "Finance",
-  "Customer Support",
-  "Procurement",
-  "Operations",
-  "Logistics",
-  "Maintenance",
 ] as const;
 
 export const PURCHASE_STATUSES = [
@@ -172,34 +145,6 @@ export const TAX_TYPES = ["VAT", "GST", "Sales Tax"] as const;
 
 export const TAX_OPTIONS = ["Exclusive", "Inclusive"] as const;
 
-//from screen - to be removed later
-export const CATEGORIES = [
-  "Computers",
-  "Groceries",
-  "Electronics",
-  "Apparel",
-  "Books",
-  "Furniture",
-] as const;
-
-//from screen - to be removed later
-export const UNITS = ["Piece", "Box", "Packet", "Kg"] as const;
-
-export const SUPPLIERS = [
-  "All Suppliers",
-  "Apple Inc.",
-  "Samsung",
-  "Sony",
-  "Dell",
-  "Logitech",
-  "Canon",
-  "HP",
-  "Bose",
-  "Microsoft",
-  "Google",
-  "JBL",
-] as const;
-
 export const WAREHOUSES = [
   "Main Warehouse",
   "Secondary Warehouse",
@@ -256,4 +201,114 @@ export const SORT_OPTIONS = [
 export const ORDER_TYPES = ["ONLINE", "POS"] as const;
 
 export const RETURN_STATUSES = ["Pending", "Paid"] as const;
-export const PAYMENT_STATUS_OPTIONS = ["All", "Paid", "Partial", "Unpaid"] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const ROLES = [
+  "Admin",
+  "Manager",
+  "Staff",
+  "User",
+  "Cashier",
+  "Supervisor",
+  "Accountant",
+  "StoreOwner",
+  "HR",
+  "Support",
+  "Guest",
+] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const DEPARTMENTS = [
+  "Sales",
+  "Marketing",
+  "IT",
+  "HR",
+  "Finance",
+  "Customer Support",
+  "Procurement",
+  "Operations",
+  "Logistics",
+  "Maintenance",
+] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const CATEGORIES = [
+  "Computers",
+  "Groceries",
+  "Electronics",
+  "Apparel",
+  "Books",
+  "Furniture",
+] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const UNITS = ["Piece", "Box", "Packet", "Kg"] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const SUPPLIERS = [
+  "All Suppliers",
+  "Apple Inc.",
+  "Samsung",
+  "Sony",
+  "Dell",
+  "Logitech",
+  "Canon",
+  "HP",
+  "Bose",
+  "Microsoft",
+  "Google",
+  "JBL",
+] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const BRANDS = [
+  "All Brands",
+  "Apple",
+  "Samsung",
+  "Sony",
+  "Dell",
+  "Logitech",
+  "Canon",
+  "Bose",
+  "Microsoft",
+  "Google",
+  "JBL",
+  "HP",
+  "Fitbit",
+] as const;
+
+/**
+ * @deprecated Use the API call to get data from tables.
+ * This component will be removed in a future release.
+ */
+export const CUSTOMERS = [
+  "All",
+  "John Doe",
+  "Jane Smith",
+  "Acme Corp",
+  "NyaInfo Technologies",
+  "Customer A",
+  "Customer B",
+] as const;
+
+
+export const INVOICE_STATUSES = ["All", "Paid", "Unpaid", "Partial"] as const;
+ 

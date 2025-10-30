@@ -161,7 +161,7 @@ export function AppNavbar({ isPosPage }) {
       >
         {!isPosPage ? (
           <SidebarTrigger
-            className="h-8 w-8 absolute bg-primary text-white hover:bg-primary-dark"
+            className="h-8 w-8 absolute selected_color hover:bg-primary-dark"
             style={{
               left: "-13px",
               width: "25px",

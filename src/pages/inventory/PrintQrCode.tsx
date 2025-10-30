@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { Pagination } from "@/components/Pagination/Pagination";
-
-const categories = ["All", "Category A", "Category B", "Category C"];
+import { CATEGORIES } from "@/constants/constants";
 
 const PrintQrCode: React.FC = () => {
   const [data, setData] = useState([]);
@@ -18,7 +17,7 @@ const PrintQrCode: React.FC = () => {
   const [editForm, setEditForm] = useState({
     productName: "",
     productCode: "",
-    category: categories[1],
+    category: CATEGORIES[1],
     price: "",
     quantity: "",
   });
@@ -173,7 +172,7 @@ const PrintQrCode: React.FC = () => {
               onChange={handleCategoryChange}
               className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {categories.map((cat) => (
+              {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -362,7 +361,7 @@ const PrintQrCode: React.FC = () => {
                   onChange={handleEditInputChange}
                   className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  {categories.slice(1).map((cat) => (
+                  {CATEGORIES.slice(1).map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>

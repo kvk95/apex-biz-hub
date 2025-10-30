@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, UNITS } from "@/constants/constants";
+import { CATEGORIES, UNITS , SUPPLIERS} from "@/constants/constants";
 
 interface ExpiredProductRecord {
   id: number;
@@ -15,14 +15,6 @@ interface ExpiredProductRecord {
   cost: number;
   price: number;
 }
-
-const SUPPLIERS = [
-  "Supplier A",
-  "Supplier B",
-  "Supplier C",
-  "Supplier D",
-  "Supplier E",
-];
 
 export default function ExpiredProducts() {
   const [data, setData] = useState<ExpiredProductRecord[]>([]);

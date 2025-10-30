@@ -8,7 +8,6 @@ import { renderStatusBadge } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
 import {
   RETURN_STATUSES,
-  PAYMENT_STATUS_OPTIONS,
   SORT_OPTIONS,
   ORDER_STATUSES,
   PAYMENT_STATUSES,
@@ -88,7 +87,7 @@ export default function SalesReturn() {
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState<(typeof RETURN_STATUSES)[number] | "All">("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUS_OPTIONS)[number]>("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number]>("All");
   const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Recently Added");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -587,7 +586,7 @@ export default function SalesReturn() {
         onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
         className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {PAYMENT_STATUS_OPTIONS.map((s) => (
+        {PAYMENT_STATUSES.map((s) => (
           <option key={s} value={s}>
             {s}
           </option>

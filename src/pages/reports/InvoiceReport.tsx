@@ -1,25 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import {   PAYMENT_STATUSES, PAYMENT_TYPES } from "@/constants/constants";
+import { PAYMENT_STATUSES, PAYMENT_TYPES, BRANDS, CUSTOMERS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
-
-export const CUSTOMERS = [
-  "All",
-  "John Doe",
-  "Jane Smith",
-  "Acme Corp",
-  "NyaInfo Technologies",
-  "Customer A",
-  "Customer B",
-] as const;
-
-export const INVOICE_STATUSES = [
-  "All",
-  "Paid",
-  "Unpaid",
-  "Partial",
-] as const;
 
 interface InvoiceItem {
   id: number; // Assumed for uniqueness
@@ -33,8 +16,8 @@ interface InvoiceItem {
   total: number;
 }
 
-const InvoiceReport: React.FC = () => { 
-  const [data, setData] = useState<InvoiceItem[]>([]);  
+const InvoiceReport: React.FC = () => {
+  const [data, setData] = useState<InvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,10 +38,10 @@ const InvoiceReport: React.FC = () => {
   }, []);
 
   const loadData = async () => {
-    setLoading(true); 
-    const response = await apiService.get<InvoiceItem[]>("InvoiceReport");    
+    setLoading(true);
+    const response = await apiService.get<InvoiceItem[]>("InvoiceReport");
     if (response.status.code === "S") {
-      setData( response.result ); // Normalize API response
+      setData(response.result); // Normalize API response
       setError(null);
     } else {
       setError(response.status.description);
@@ -66,7 +49,7 @@ const InvoiceReport: React.FC = () => {
     setLoading(false);
   };
 
-  const filteredInvoices = useMemo(() => { 
+  const filteredInvoices = useMemo(() => {
     return data.filter((inv) => {
       const fromDate = filters.fromDate ? new Date(filters.fromDate) : null;
       const toDate = filters.toDate ? new Date(filters.toDate) : null;
@@ -127,25 +110,36 @@ const InvoiceReport: React.FC = () => {
     { key: "invoiceNo", label: "Invoice No", align: "left" },
     { key: "customer", label: "Customer", align: "left" },
     { key: "date", label: "Date", align: "left" },
-    { key: "dueDate", label: "Due Date", align: "left" }, 
-        {
-          key: "status",
-          label: "Invoice Status",
-          align: "center",
-          render: renderStatusBadge,
-        },
+    { key: "dueDate", label: "Due Date", align: "left" },
+    {
+      key: "status",
+      label: "Invoice Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
     {
       key: "paymentStatus",
       label: "Payment Status",
       align: "center",
       render: renderStatusBadge,
-    },         
+    },
     { key: "paymentMethod", label: "Payment Method", align: "left" },
-    { key: "total", label: "Total", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "total",
+      label: "Total",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setCurrentPage(1);
+      }}
+      className="flex flex-wrap gap-2 mb-4 items-center"
+    >
       <input
         type="date"
         name="fromDate"
@@ -178,7 +172,7 @@ const InvoiceReport: React.FC = () => {
         onChange={handleFilterChange}
         className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {INVOICE_STATUSES.map((status) => (
+        {PAYMENT_STATUSES.map((status) => (
           <option key={status} value={status}>
             {status}
           </option>

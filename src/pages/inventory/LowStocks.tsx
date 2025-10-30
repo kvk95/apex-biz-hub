@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { CATEGORIES, STOCK_STATUSES } from "@/constants/constants";
 
 interface LowStockRecord {
   id: number;
@@ -11,20 +12,6 @@ interface LowStockRecord {
   supplier: string;
   qtyAlert: number;
 }
-
-const CATEGORIES = [
-  "All Categories",
-  "Mobile",
-  "Headphones",
-  "Laptop",
-  "Accessories",
-  "Smart Home",
-  "Tablet",
-  "Speaker",
-  "Camera",
-];
-
-const STOCK_STATUSES = ["All", "Low Stock", "Out of Stock"];
 
 export default function LowStocks() {
   const [data, setData] = useState<LowStockRecord[]>([]);
@@ -73,7 +60,9 @@ export default function LowStocks() {
       const matchesStock =
         stockFilter === "All" ||
         (stockFilter === "Out of Stock" && item.quantity === 0) ||
-        (stockFilter === "Low Stock" && item.quantity > 0 && item.quantity <= item.qtyAlert);
+        (stockFilter === "Low Stock" &&
+          item.quantity > 0 &&
+          item.quantity <= item.qtyAlert);
       return matchesCategory && matchesSearch && matchesStock;
     });
   }, [data, searchTerm, selectedCategory, stockFilter]);
@@ -147,7 +136,10 @@ export default function LowStocks() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       setData((prev) => prev.filter((item) => item.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -179,7 +171,12 @@ export default function LowStocks() {
     { key: "product", label: "Product", align: "left" },
     { key: "category", label: "Category", align: "left" },
     { key: "quantity", label: "Quantity", align: "right" },
-    { key: "price", label: "Price ($)", align: "right", render: (value) => value.toFixed(2) },
+    {
+      key: "price",
+      label: "Price ($)",
+      align: "right",
+      render: (value) => value.toFixed(2),
+    },
     { key: "supplier", label: "Supplier", align: "left" },
     { key: "qtyAlert", label: "Qty Alert", align: "right" },
   ];
@@ -225,7 +222,9 @@ export default function LowStocks() {
         aria-label="Filter by category"
       >
         {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>{cat}</option>
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
         ))}
       </select>
       <select
@@ -238,7 +237,9 @@ export default function LowStocks() {
         aria-label="Filter by stock status"
       >
         {STOCK_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
       </select>
     </div>
@@ -277,7 +278,9 @@ export default function LowStocks() {
         >
           <option value="">Select Category</option>
           {CATEGORIES.filter((cat) => cat !== "All Categories").map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
       </div>

@@ -1,25 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { Pagination } from "@/components/Pagination/Pagination";
-
-const suppliers = [
-  "Supplier A",
-  "Supplier B",
-  "Supplier C",
-  "Supplier D",
-  "Supplier E",
-  "Supplier F",
-  "Supplier G",
-  "Supplier H",
-  "Supplier I",
-  "Supplier J",
-  "Supplier K",
-  "Supplier L",
-];
-
-const warehouses = ["Main Warehouse", "Secondary Warehouse"];
-
-const statusOptions = ["Received", "Pending", "Partial"];
+import { SUPPLIERS, PURCHASE_STATUSES , WAREHOUSES} from "@/constants/constants";
 
 const Purchases: React.FC = () => {
   const [data, setData] = useState([]);
@@ -319,7 +301,7 @@ const Purchases: React.FC = () => {
                 className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All Suppliers</option>
-                {suppliers.map((sup) => (
+                {SUPPLIERS.map((sup) => (
                   <option key={sup} value={sup}>
                     {sup}
                   </option>
@@ -343,7 +325,7 @@ const Purchases: React.FC = () => {
                 className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All Warehouses</option>
-                {warehouses.map((wh) => (
+                {WAREHOUSES.map((wh) => (
                   <option key={wh} value={wh}>
                     {wh}
                   </option>
@@ -367,7 +349,7 @@ const Purchases: React.FC = () => {
                 className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All Statuses</option>
-                {statusOptions.map((st) => (
+                {PURCHASE_STATUSES.map((st) => (
                   <option key={st} value={st}>
                     {st}
                   </option>
@@ -604,7 +586,7 @@ const Purchases: React.FC = () => {
                     onChange={handleEditInputChange}
                     className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {suppliers.map((sup) => (
+                    {SUPPLIERS.map((sup) => (
                       <option key={sup} value={sup}>
                         {sup}
                       </option>
@@ -627,7 +609,7 @@ const Purchases: React.FC = () => {
                     onChange={handleEditInputChange}
                     className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {warehouses.map((wh) => (
+                    {WAREHOUSES.map((wh) => (
                       <option key={wh} value={wh}>
                         {wh}
                       </option>
@@ -733,7 +715,7 @@ const Purchases: React.FC = () => {
                     onChange={handleEditInputChange}
                     className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {statusOptions.map((status) => (
+                    {PURCHASE_STATUSES.map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>

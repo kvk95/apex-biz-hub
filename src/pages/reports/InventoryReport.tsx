@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, STATUSES } from "@/constants/constants";
-
-export const BRANDS = ["All Brands", "Apple", "Samsung", "Sony", "Dell", "Logitech", "Canon", "Bose", "Microsoft", "Google", "JBL", "HP", "Fitbit"] as const;
-   
+import {
+  CATEGORIES,
+  STATUSES,
+  PAYMENT_STATUSES,
+  BRANDS,
+} from "@/constants/constants";
 
 interface InventoryItem {
   id: number; // Assumed for uniqueness
@@ -52,7 +54,8 @@ const InventoryReport: React.FC = () => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchCategory =
-        selectedCategory === "All Categories" || item.category === selectedCategory;
+        selectedCategory === "All Categories" ||
+        item.category === selectedCategory;
       const matchBrand =
         selectedBrand === "All Brands" || item.brand === selectedBrand;
       const matchStatus =
@@ -63,9 +66,24 @@ const InventoryReport: React.FC = () => {
         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
       const matchDateFrom = !dateFrom || (item.date && item.date >= dateFrom); // Check if date exists
       const matchDateTo = !dateTo || (item.date && item.date <= dateTo); // Check if date exists
-      return matchCategory && matchBrand && matchStatus && matchSearch && matchDateFrom && matchDateTo;
+      return (
+        matchCategory &&
+        matchBrand &&
+        matchStatus &&
+        matchSearch &&
+        matchDateFrom &&
+        matchDateTo
+      );
     });
-  }, [data, selectedCategory, selectedBrand, selectedStatus, searchTerm, dateFrom, dateTo]);
+  }, [
+    data,
+    selectedCategory,
+    selectedBrand,
+    selectedStatus,
+    searchTerm,
+    dateFrom,
+    dateTo,
+  ]);
 
   const handleResetFilters = () => {
     setSelectedCategory("All Categories");
@@ -86,26 +104,52 @@ const InventoryReport: React.FC = () => {
     { key: "sku", label: "SKU", align: "left" },
     { key: "category", label: "Category", align: "left" },
     { key: "brand", label: "Brand", align: "left" },
-    { key: "quantity", label: "Quantity", align: "right", render: (v) => v.toString() },
-    { key: "price", label: "Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "totalValue", label: "Total Value", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "status", label: "Status", align: "left", render: (v) => (
-      <span
-        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-          v === "In Stock"
-            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-            : v === "Low Stock"
-            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-        }`}
-      >
-        {v}
-      </span>
-    )},
+    {
+      key: "quantity",
+      label: "Quantity",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "price",
+      label: "Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "totalValue",
+      label: "Total Value",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "status",
+      label: "Status",
+      align: "left",
+      render: (v) => (
+        <span
+          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+            v === "In Stock"
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : v === "Low Stock"
+              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+          }`}
+        >
+          {v}
+        </span>
+      ),
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setCurrentPage(1);
+      }}
+      className="flex flex-wrap gap-2 mb-4 items-center"
+    >
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
