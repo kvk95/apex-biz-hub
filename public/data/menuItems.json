@@ -3,8 +3,7 @@
     "title": "Dashboard",
     "icon": "fa fa-tachometer-alt",
     "items": [
-      { "title": "Admin Dashboard", "url": "/dashboard/admin-1", "icon": "fa fa-tachometer-alt" },
-      { "title": "Admin Dashboard 2", "url": "/dashboard/admin-2", "icon": "fa fa-th-large" },
+      { "title": "Admin Dashboard", "url": "/dashboard/admindb", "icon": "fa fa-tachometer-alt" }, 
       { "title": "Sales Dashboard", "url": "/dashboard/sales", "icon": "fa fa-chart-line" }
     ]
   },

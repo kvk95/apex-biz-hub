@@ -221,7 +221,7 @@ export function AppNavbar({ isPosPage }) {
             <>
               <Button
                 variant="ghost"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/dashboard/admindb")}
                 className="bg-gray-500 text-white hover:bg-primary hover:text-primary-foreground p-2"
               >
                 <i className="fa fa-dashboard "></i>

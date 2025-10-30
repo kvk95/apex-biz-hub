@@ -13,7 +13,7 @@ import {
 import { MainLayout } from "./components/layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import Logout from "./pages/auth/Logout";
-import Admin1Dashboard from "./pages/dashboard/Admin1Dashboard";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
 import AccountStatement from "./pages/finance/AccountStatement";
 import BalanceSheet from "./pages/finance/BalanceSheet";
@@ -169,9 +169,8 @@ const App = () => {
             {isLoggedIn ? (
               <Route path="/" element={<MainLayout />}>
                 {/* Dashboard */}
-                <Route index element={<Admin1Dashboard />} />
-                <Route path="dashboard/admin-1" element={<Admin1Dashboard />} />
-                <Route path="dashboard/admin-2" element={<Admin1Dashboard />} />
+                <Route index element={<AdminDashboard />} />
+                <Route path="dashboard/admindb" element={<AdminDashboard />} />
                 <Route path="dashboard/sales" element={<SalesDashboard />} />
 
                 {/* Super Admin */}
