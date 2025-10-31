@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   OnlineOrders – fully template-compliant, no type errors
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
@@ -12,6 +9,7 @@ import {
   SORT_OPTIONS,
   ORDER_TYPES,
 } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 type OrderItem = {
   productId: number;
@@ -55,9 +53,14 @@ export default function OnlineOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState<(typeof ORDER_STATUSES)[number] | "All">("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number] | "All">("All");
-  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("All Time");
+  const [selectedStatus, setSelectedStatus] = useState<
+    (typeof ORDER_STATUSES)[number] | "All"
+  >("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<
+    (typeof PAYMENT_STATUSES)[number] | "All"
+  >("All");
+  const [selectedSort, setSelectedSort] =
+    useState<(typeof SORT_OPTIONS)[number]>("All Time");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -235,7 +238,9 @@ export default function OnlineOrders() {
         onClick={() => {
           if (window.confirm("Are you sure you want to delete this order?")) {
             setOrders((prev) => prev.filter((o) => o.id !== row.id));
-            const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+            const totalPages = Math.ceil(
+              (filteredData.length - 1) / itemsPerPage
+            );
             if (currentPage > totalPages && totalPages > 0) {
               setCurrentPage(totalPages);
             } else if (totalPages === 0) {
@@ -276,30 +281,30 @@ export default function OnlineOrders() {
     },
     {
       key: "grandTotal",
-      label: "Grand Total ($)",
-      render: (_, row) => `$${Number(row.totals.grandTotal || 0).toFixed(2)}`,
+      label: "Grand Total (₹)",
+      render: (_, row) => `₹${Number(row.totals.grandTotal || 0).toFixed(2)}`,
       align: "right",
     },
     {
       key: "paid",
-      label: "Paid ($)",
+      label: "Paid (₹)",
       render: (_, row) => {
         const paid = row.totals.paid ?? row.totals.grandTotal * 0.8;
-        return `$${Number(paid || 0).toFixed(2)}`;
+        return `₹${Number(paid || 0).toFixed(2)}`;
       },
       align: "right",
     },
     {
       key: "due",
-      label: "Due ($)",
+      label: "Due (₹)",
       render: (_, row) => {
         const paid = row.totals.paid ?? row.totals.grandTotal * 0.8;
         const due = row.totals.grandTotal - paid;
-        return `$${Number(due || 0).toFixed(2)}`;
+        return `₹${Number(due || 0).toFixed(2)}`;
       },
       align: "right",
     },
-    { key: "paymentStatus", label: "Payment Status" },
+    { key: "paymentStatus", label: "Payment Status" }, 
     {
       key: "supplierName",
       label: "Biller",
@@ -309,62 +314,67 @@ export default function OnlineOrders() {
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Customer or Order ID..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <select
-        value={selectedCustomer}
-        onChange={(e) => setSelectedCustomer(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {customerOptions.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {ORDER_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start"> 
+        <SearchInput
+          className=""
+          value={search}
+          placeholder="Search by Customer or Order ID..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={selectedCustomer}
+          onChange={(e) => setSelectedCustomer(e.target.value)}
+          className="border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {customerOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value as any)}
+          className="border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option>All</option>
+          {ORDER_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedPaymentStatus}
+          onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
+          className="border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option>All</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value as any)}
+          className="border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- render ---------- */
