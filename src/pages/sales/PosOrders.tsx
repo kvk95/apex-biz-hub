@@ -6,6 +6,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import AddSalesModal from "./AddSalesModal";
+import { SearchInput } from "@/components/Search/SearchInput";
 import {
   ORDER_STATUSES,
   PAYMENT_STATUSES,
@@ -308,62 +309,65 @@ export default function PosOrders() {
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Customer or Order ID..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <select
-        value={selectedCustomer}
-        onChange={(e) => setSelectedCustomer(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {customerOptions.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {ORDER_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </>
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      {/* Left: Search Input */}
+      <div className="w-full md:w-auto md:max-w-md">
+        <SearchInput
+          value={search}
+          placeholder="Search by Customer or Order ID..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+          }}
+          className="w-full"
+        />
+      </div>
+
+      {/* Right: Filter Dropdowns - Right Aligned */}
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+        <select
+          value={selectedCustomer}
+          onChange={(e) => setSelectedCustomer(e.target.value)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px]"
+        >
+          {customerOptions.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {ORDER_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedPaymentStatus}
+          onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- render ---------- */

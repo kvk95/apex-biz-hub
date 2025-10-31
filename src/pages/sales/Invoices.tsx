@@ -6,6 +6,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { SearchInput } from "@/components/Search/SearchInput";
 import {
   PAYMENT_STATUSES,
   SORT_OPTIONS,
@@ -340,7 +341,7 @@ export default function Invoices() {
         className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
         title="Edit"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
+        <i className="fa fa-pen" aria-hidden="true"></i>
         <span className="sr-only">Edit</span>
       </button>
       <button
@@ -349,7 +350,7 @@ export default function Invoices() {
         className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
         title="Delete"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <i className="fa fa-trash" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
       </button>
     </>
@@ -357,50 +358,54 @@ export default function Invoices() {
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Invoice No or Customer..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <select
-        value={selectedCustomer}
-        onChange={(e) => setSelectedCustomer(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {customerOptions.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </>
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      {/* Left: Search Input */}
+      <div className="w-full md:w-auto md:max-w-md">
+        <SearchInput
+          value={search}
+          placeholder="Search by Invoice No or Customer..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+          }}
+          className="w-full"
+        />
+      </div>
+
+      {/* Right: Filter Dropdowns */}
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+        <select
+          value={selectedCustomer}
+          onChange={(e) => setSelectedCustomer(e.target.value)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+        >
+          {customerOptions.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- modal form ---------- */
@@ -420,22 +425,16 @@ export default function Invoices() {
 
       <div>
         <label className="block text-sm font-medium mb-1">Customer *</label>
-        {
-          (
-            <AutoCompleteTextBox
-              value={form.customer}
-              onSearch={handleCustomerSearch}
-              onSelect={handleCustomerSelect}
-              items={filteredCustomers.map((c) => ({
-                id: c.id,
-                display: c.name,
-              }))}
-              placeholder="Search customer..."
-            />
-          ) as React.ReactElement<
-            typeof AutoCompleteTextBox<CustomerOption>
-          >
-        }
+        <AutoCompleteTextBox
+          value={form.customer}
+          onSearch={handleCustomerSearch}
+          onSelect={handleCustomerSelect}
+          items={filteredCustomers.map((c) => ({
+            id: c.id,
+            display: c.name,
+          }))}
+          placeholder="Search customer..."
+        />
       </div>
 
       <div>
@@ -499,7 +498,7 @@ export default function Invoices() {
     <PageBase1
       title="Invoices"
       description="Manage your invoices"
-      icon="fa-light fa-file-invoice-dollar"
+      icon="fa-solid fa-file-invoice-dollar"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}
@@ -519,7 +518,6 @@ export default function Invoices() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
-    // DO NOT PASS loading/error — PageBase1 doesn't support them
     />
   );
 }

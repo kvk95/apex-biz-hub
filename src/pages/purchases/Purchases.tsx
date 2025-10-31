@@ -6,6 +6,8 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { SearchInput } from "@/components/Search/SearchInput";
+
 import {
   PURCHASE_STATUSES,
   PAYMENT_STATUSES,
@@ -330,7 +332,6 @@ export default function Purchases() {
   };
 
   const handleProductSelect = (idx: number, item: AutoCompleteItem) => {
-    // Find product from filtered results OR use temp if already selected
     const prod = filteredProducts.find((p) => p.id === item.id) || tempSelectedProduct;
     if (!prod) return;
 
@@ -357,8 +358,8 @@ export default function Purchases() {
     };
 
     setForm((prev) => ({ ...prev, items }));
-    setFilteredProducts([]); // Clear suggestions
-    setTempSelectedProduct(null); // Reset
+    setFilteredProducts([]);
+    setTempSelectedProduct(null);
   };
 
   const addItem = () => {
@@ -494,66 +495,91 @@ export default function Purchases() {
     },
   ];
 
+  /* ---------- GRID ACTION BUTTONS - EXACT MOCKUP STANDARD ---------- */
   const rowActions = (row: Purchase) => (
     <>
-      <button type="button" onClick={() => handleEdit(row)} title="Edit" className="text-gray-700 hover:text-primary p-1">
+      <button
+        type="button"
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.reference}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
         <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
       </button>
-      <button type="button" onClick={() => handleDelete(row.id)} title="Delete" className="text-red-600 hover:text-red-800 p-1">
+      <button
+        type="button"
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.reference}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
       </button>
     </>
   );
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Reference or Supplier..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <select
-        value={selectedSupplier}
-        onChange={(e) => setSelectedSupplier(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {supplierOptions.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {PURCHASE_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-      <select
-        value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-    </>
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      {/* Left: Search Input */}
+      <div className="w-full md:w-auto md:max-w-md">
+        <SearchInput
+          value={search}
+          placeholder="Search by Reference or Supplier..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+          }}
+          className="w-full"
+        />
+      </div>
+
+      {/* Right: Filter Dropdowns - Right Aligned */}
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+        <select
+          value={selectedSupplier}
+          onChange={(e) => setSelectedSupplier(e.target.value)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          {supplierOptions.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {PURCHASE_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedPaymentStatus}
+          onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- modal form (NO BUTTONS) ---------- */
@@ -621,7 +647,7 @@ export default function Purchases() {
                     onSearch={(q) => handleProductSearch(q, idx)}
                     onSelect={(sel) => {
                       const prod = filteredProducts.find(p => p.id === sel.id);
-                      if (prod) setTempSelectedProduct(prod); // Save before clear
+                      if (prod) setTempSelectedProduct(prod);
                       handleProductSelect(idx, sel);
                     }}
                     items={filteredProducts.map((p) => ({
