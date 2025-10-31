@@ -11,11 +11,13 @@ import {
   Legend,
   ReferenceLine,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import React from "react";
-import { Badge } from "@/components/ui/badge"; // Assuming you have a Badge component for statuses
-
-// Assuming these are Shadcn UI or similar component libraries
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 // Dummy Data for the dashboard
@@ -25,10 +27,10 @@ const dummyData = {
     product: "Apple Iphone 15",
     stock: 5,
   },
-  totalPurchaseDue: "$307144",
-  totalSalesDue: "$4385",
-  totalSaleAmount: "$385656.5",
-  totalExpenseAmount: "$40000",
+  totalPurchaseDue: "307144",
+  totalSalesDue: "4385",
+  totalSaleAmount: "385656.5",
+  totalExpenseAmount: "40000",
   customers: 100,
   suppliers: 110,
   purchaseInvoice: 150,
@@ -45,10 +47,10 @@ const dummyData = {
     { month: "Sep", sales: 400, purchases: -210 },
   ],
   recentlyAddedProducts: [
-    { id: 1, product: "Lenovo 3rd Generation", price: "$12500" },
-    { id: 2, product: "Bold V3.2", price: "$1600" },
-    { id: 3, product: "Nike Jordan", price: "$2000" },
-    { id: 4, product: "Apple Series 5 Watch", price: "$800" },
+    { id: 1, product: "Lenovo 3rd Generation", price: "12500" },
+    { id: 2, product: "Bold V3.2", price: "1600" },
+    { id: 3, product: "Nike Jordan", price: "2000" },
+    { id: 4, product: "Apple Series 5 Watch", price: "800" },
   ],
   expiredProducts: [
     { product: "Red Premium Handy", sku: "PT006", expiredDate: "29 Mar 2023" },
@@ -115,25 +117,15 @@ const dummyData = {
     { name: "Richard Wilson", orders: 14, total: "$5366" },
     { name: "Mary Bronson", orders: 8, total: "$4569" },
   ],
-  topCategories: [
-    { name: "Electronics", sales: 698 },
-    { name: "Sports", sales: 545 },
-    { name: "Lifestyles", sales: 456 },
-  ],
-  orderStatistics: [
-    { hour: "2 AM", orders: 5 },
-    { hour: "4 AM", orders: 3 },
-    { hour: "6 AM", orders: 6 },
-    { hour: "8 AM", orders: 7 },
-    { hour: "10 AM", orders: 9 },
-    { hour: "12 PM", orders: 8 },
-    { hour: "2 PM", orders: 12 },
-    { hour: "4 PM", orders: 10 },
-    { hour: "6 PM", orders: 5 },
-    { hour: "8 PM", orders: 3 },
-    { hour: "10 PM", orders: 4 },
-    { hour: "12 AM", orders: 6 },
-  ],
+  topCategories: {
+    categories: [
+      { name: "Electronics", sales: 698 },
+      { name: "Sports", sales: 545 },
+      { name: "Lifestyles", sales: 456 },
+    ],
+    totalCategories: 698,
+    totalProducts: 7899,
+  },
 };
 
 // Row 1 - White Cards for Total Stats
@@ -179,7 +171,7 @@ const TotalStatsCards = ({ data }) => (
             ></i>
           </div>
           <div className="dash-counts">
-            <h4 className="mb-1 text-2xl font-bold">{item.value}</h4>
+            <h4 className="mb-1 text-2xl font-bold">₹{item.value}</h4>
             <p className="mb-0 text-sm text-gray-600">{item.title}</p>
           </div>
         </CardContent>
@@ -267,8 +259,21 @@ const PurchasesSalesGraphAndRecentProducts = ({ data }) => (
         <Tooltip />
         <Legend />
         <ReferenceLine y={0} stroke="#000" />
-        <Bar dataKey="sales" fill="#00c853" stackId="stack" />
-        <Bar dataKey="purchases" fill="#f44336" stackId="stack" width="4" />
+        <Bar
+          dataKey="sales"
+          fill="#00c853"
+          stackId="stack"
+          barSize={10}
+          radius={20}
+        />
+        <Bar
+          dataKey="purchases"
+          fill="#f44336"
+          stackId="stack"
+          barSize={10}
+          width="4"
+          radius={20}
+        />
       </BarChart>
     </CardContent>
   </Card>
@@ -443,44 +448,140 @@ const TopSellingLowStockRecentSales = ({ data }) => (
 );
 
 // Row 6 - Top Customers, Top Categories, Order Statistics
-const TopCustomersCategoriesOrderStats = ({ data }) => (
-  <div className="grid gap-6 lg:grid-cols-3">
-    {["Top Customers", "Top Categories", "Order Statistics"].map(
-      (title, index) => (
-        <Card key={index}>
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={[
-                { key: "name", label: "Name" },
-                { key: "sales", label: "Sales" },
-              ]}
-              data={data[title.replace(/ /g, "").toLowerCase()] || []}
-              pageSize={5}
-            />
-          </CardContent>
-        </Card>
-      )
-    )}
-  </div>
-);
+const TopCustomersCategoriesOrderStats = ({ data }) => {
+  const navigate = useNavigate();
+
+  // Handle View All button click
+  const handleViewAllClick = () => {
+    navigate("/peoples/customers", {
+      state: { mode: "view" }, // Passing state to the Customers screen
+    });
+  };
+
+  // Pie chart colors for different categories
+  const COLORS = ["#FF8042", "#00C49F", "#0088FE"];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full">
+      {/* Top Customers Card */}
+      <Card className="shadow-sm">
+        <CardHeader className="flex justify-between items-center">
+          <CardTitle className="text-xl font-bold">Top Customers</CardTitle>
+          <button
+            onClick={handleViewAllClick} // Trigger navigate when clicked
+            className="text-sm text-primary hover:underline"
+          >
+            View All
+          </button>
+        </CardHeader>
+        <CardContent>
+          {data.topCustomers.map((customer, index) => (
+            <div
+              key={index}
+              className="flex items-center space-x-4 py-3 border-b border-gray-200 last:border-b-0"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-xs font-medium">
+                    {customer.name[0]}
+                  </span>
+                </div>
+                <div className="ml-4">
+                  <h5 className="text-base font-semibold">{customer.name}</h5>
+                  <p className="text-sm text-gray-600">
+                    {customer.orders} Orders
+                  </p>
+                </div>
+              </div>
+              <div className="ml-auto text-lg font-semibold">
+                {customer.total}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Top Categories Card */}
+      <Card className="shadow-sm">
+        <CardHeader className="flex justify-between items-center">
+          <CardTitle className="text-xl font-bold">Top Categories</CardTitle>
+          <button
+            onClick={handleViewAllClick}
+            className="text-sm text-primary hover:underline"
+          >
+            View All
+          </button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-center">
+            {/* Pie chart */}
+            <div className="flex-shrink-0 w-full sm:w-1/2">
+              <PieChart width={250} height={250}>
+                <Pie
+                  data={data.topCategories.categories}
+                  dataKey="sales"
+                  nameKey="name"
+                  innerRadius="60%"
+                  outerRadius="100%"
+                  cornerRadius="50%"
+                  paddingAngle={5}
+                  fill="#8884d8"
+                  label
+                  isAnimationActive={true}
+                >
+                  {data.topCategories.categories.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </div>
+
+            {/* Category Statistics */}
+            <div className="flex flex-col sm:ml-8 mt-6 sm:mt-0 w-full sm:w-1/2">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">
+                    Total Number Of Categories:
+                  </span>{" "}
+                  {data.topCategories.totalCategories}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2 mt-4">
+                <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">
+                    Total Number Of Products:
+                  </span>{" "}
+                  {data.topCategories.totalProducts}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 // Main Dashboard Container
 export default function AdminDashboard() {
   const [data] = useState(dummyData);
 
   return (
-    <div className="space-y-8 p-4 md:p-6 lg:p-8 animate-fade-in">
+    <div className="space-y-8 p-1 md:p-6 lg:p-8 animate-fade-in">
       {/* Header and Quick Alerts */}
       <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="font-poppins">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-            <i className="fa fa-tachometer-alt text-primary mr-2" />
-            Admin Dashboard
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white"> 
+           Welcome, Admin
           </h1>
-          <p className="text-lg text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Welcome back! Here's a snapshot of your business today.
           </p>
 
@@ -488,7 +589,7 @@ export default function AdminDashboard() {
           <div className="mt-4 flex flex-col sm:flex-row gap-4">
             <div className="p-3 rounded-lg shadow-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
               <p className="font-semibold text-green-700 dark:text-green-300">
-                <i className="fa fa-truck text-lg mr-2" />
+                <i className="fa fa-truck text-sm mr-2" />
                 You have{" "}
                 <span className="text-xl font-bold">
                   {data.ordersToday}+
@@ -497,17 +598,17 @@ export default function AdminDashboard() {
               </p>
             </div>
             <div className="p-3 rounded-lg shadow-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-              <p className="font-semibold text-yellow-700 dark:text-yellow-300">
-                <i className="fa fa-exclamation-circle text-lg mr-2" />
+              <p className="font-semibold text-yellow-700 dark:text-yellow-300 ">
+                <i className="fa fa-exclamation-circle text-sm mr-2" />
                 <span className="font-bold">{data.stockAlert.product}</span> is
                 Low in Stock (&lt; {data.stockAlert.stock} Pcs).
                 <Button
                   variant="link"
                   size="sm"
-                  className="ml-2 p-0 h-auto text-yellow-700 dark:text-yellow-300 hover:text-yellow-800"
+                  className="ml-5 p-0 h-auto text-yellow-700 bg-yellow-200/50 dark:text-yellow-300 hover:text-yellow-800 border p-1"
                   onClick={() => console.log("Add Stock")}
                 >
-                  <i className="fa fa-plus-circle mr-1" /> Add Stock
+                  <i className="fa fa-plus-circle  " /> Add Stock
                 </Button>
               </p>
             </div>
@@ -516,19 +617,9 @@ export default function AdminDashboard() {
 
         {/* Date Filters - More button-like */}
         <div className="flex gap-2 p-1 rounded-lg bg-gray-100 dark:bg-gray-800 shadow-inner">
-          <Button variant="outline" className="text-sm">
-            Today
-          </Button>
-          <Button variant="outline" className="text-sm">
-            This Week
-          </Button>
-          <Button className="bg-primary hover:bg-primary/90 text-white shadow-md text-sm">
-            This Month
-          </Button>
+          ...
         </div>
       </div>
-
-      <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
       {/* Row 1 */}
       <TotalStatsCards data={data} />
