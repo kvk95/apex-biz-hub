@@ -6,12 +6,11 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { SearchInput } from "@/components/Search/SearchInput";
 import {
   RETURN_STATUSES,
   SORT_OPTIONS,
-  ORDER_STATUSES,
   PAYMENT_STATUSES,
-  ORDER_TYPES,
 } from "@/constants/constants";
 
 type Product = {
@@ -50,15 +49,10 @@ type Totals = {
 type Order = {
   id: number;
   orderId: string;
-  orderType: (typeof ORDER_TYPES)[number];
   date: string;
   customerId: number;
   customerName: string;
-  supplierId: number;
-  supplierName?: string;
-  paymentMethod: string;
   paymentStatus: (typeof PAYMENT_STATUSES)[number];
-  status: (typeof ORDER_STATUSES)[number];
   items: OrderItem[];
   totals: Totals;
 };
@@ -87,7 +81,7 @@ export default function SalesReturn() {
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState<(typeof RETURN_STATUSES)[number] | "All">("All");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number]>("All");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<(typeof PAYMENT_STATUSES)[number] | "All">("All");
   const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Recently Added");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -112,10 +106,12 @@ export default function SalesReturn() {
 
   /* ---------- load data ---------- */
   useEffect(() => {
+    console.log("[SalesReturn] Initial loadData triggered");
     loadData();
   }, []);
 
   const loadData = async () => {
+    console.log("[SalesReturn] loadData started");
     setLoading(true);
     try {
       const [returnRes, posRes] = await Promise.all([
@@ -125,14 +121,13 @@ export default function SalesReturn() {
 
       if (returnRes.status.code === "S") {
         setSalesReturns(returnRes.result);
-        console.log("SalesReturn loadData salesReturns:", returnRes.result);
+        console.log("[SalesReturn] Loaded returns:", returnRes.result.length);
       }
 
       if (posRes.status.code === "S") {
         const loadedOrders: Order[] = posRes.result;
         setOrders(loadedOrders);
 
-        // Extract unique products
         const allItems: Product[] = loadedOrders.flatMap((order) =>
           order.items.map((item): Product => ({
             productId: item.productId,
@@ -148,40 +143,35 @@ export default function SalesReturn() {
 
         setProducts(uniqueProducts);
         setFilteredProducts(uniqueProducts);
+        console.log("[SalesReturn] Loaded products:", uniqueProducts.length);
 
-        // Extract all customers (will be filtered later)
         const uniqueCustomers: Customer[] = Array.from(
           new Map(loadedOrders.map((o) => [o.customerId, { id: o.customerId, name: o.customerName }])).values()
         );
-
         setFilteredCustomers(uniqueCustomers);
-        console.log("SalesReturn loadData products:", uniqueProducts);
-        console.log("SalesReturn loadData all customers:", uniqueCustomers);
+        console.log("[SalesReturn] Loaded customers:", uniqueCustomers.length);
       }
 
       setError(null);
+      console.log("[SalesReturn] loadData completed");
     } catch (err) {
       setError("Failed to load data.");
-      console.error("SalesReturn loadData error:", err);
+      console.error("[SalesReturn] loadData error:", err);
     } finally {
       setLoading(false);
+      console.log("[SalesReturn] loadData finished");
     }
   };
 
   /* ---------- customers for selected product ---------- */
   const customersForSelectedProduct = useMemo((): Customer[] => {
     if (!form.productId || orders.length === 0) return [];
-
-    const matchingOrders = orders.filter((order) =>
-      order.items.some((item) => item.productId === form.productId)
-    );
-
-    return Array.from(
-      new Map(matchingOrders.map((o) => [o.customerId, { id: o.customerId, name: o.customerName }])).values()
-    );
+    const matching = orders.filter((o) => o.items.some((i) => i.productId === form.productId));
+    const customers = Array.from(new Map(matching.map((o) => [o.customerId, { id: o.customerId, name: o.customerName }])).values());
+    console.log("[SalesReturn] customersForSelectedProduct:", { productId: form.productId, count: customers.length });
+    return customers;
   }, [form.productId, orders]);
 
-  /* ---------- update filtered customers when product changes ---------- */
   useEffect(() => {
     if (!form.productId) {
       setForm((prev) => ({ ...prev, customer: "" }));
@@ -193,6 +183,8 @@ export default function SalesReturn() {
 
   /* ---------- filtering ---------- */
   const filteredData = useMemo(() => {
+    console.log("[SalesReturn] filteredData recompute", { search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort });
+
     let result = [...salesReturns];
 
     if (search.trim()) {
@@ -203,23 +195,27 @@ export default function SalesReturn() {
           r.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
           r.customer.toLowerCase().includes(search.toLowerCase())
       );
+      console.log("[SalesReturn] After search:", result.length);
     }
 
     if (selectedCustomer !== "All") {
       result = result.filter((r) => r.customer === selectedCustomer);
+      console.log("[SalesReturn] After customer filter:", result.length);
     }
 
     if (selectedStatus !== "All") {
       result = result.filter((r) => r.status === selectedStatus);
+      console.log("[SalesReturn] After status filter:", result.length);
     }
 
     if (selectedPaymentStatus !== "All") {
       result = result.filter((r) => {
         if (selectedPaymentStatus === "Paid") return r.paidAmount === r.totalAmount;
         if (selectedPaymentStatus === "Partial") return r.paidAmount > 0 && r.paidAmount < r.totalAmount;
-        if (selectedPaymentStatus === "Unpaid") return r.paidAmount === 0;
+        if (selectedPaymentStatus === "UnPaid") return r.paidAmount === 0;
         return true;
       });
+      console.log("[SalesReturn] After payment filter:", result.length);
     }
 
     if (selectedSort === "Recently Added") {
@@ -242,45 +238,28 @@ export default function SalesReturn() {
       });
     }
 
-    console.log("SalesReturn filteredData:", result, {
-      search,
-      selectedCustomer,
-      selectedStatus,
-      selectedPaymentStatus,
-      selectedSort,
-    });
+    console.log("[SalesReturn] Final filtered data:", result.length);
     return result;
-  }, [
-    salesReturns,
-    search,
-    selectedCustomer,
-    selectedStatus,
-    selectedPaymentStatus,
-    selectedSort,
-  ]);
+  }, [salesReturns, search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort]);
 
   /* ---------- pagination ---------- */
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const result = filteredData.slice(start, end);
-    console.log("SalesReturn paginatedData:", result, {
-      currentPage,
-      start,
-      end,
-      itemsPerPage,
-      totalItems: filteredData.length,
-    });
+    console.log("[SalesReturn] paginatedData:", { currentPage, start, end, total: filteredData.length, result: result.length });
     return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
-  /* ---------- derived options ---------- */
   const customerOptions = useMemo(() => {
-    return ["All", ...Array.from(new Set(salesReturns.map((r) => r.customer)))];
+    const opts = ["All", ...Array.from(new Set(salesReturns.map((r) => r.customer)))];
+    console.log("[SalesReturn] customerOptions:", opts);
+    return opts;
   }, [salesReturns]);
 
   /* ---------- handlers ---------- */
   const handleAddClick = () => {
+    console.log("[SalesReturn] handleAddClick");
     setFormMode("add");
     setForm({
       id: null,
@@ -296,10 +275,10 @@ export default function SalesReturn() {
       dueAmount: "",
       status: "Pending",
     });
-    console.log("SalesReturn handleAddClick");
   };
 
   const handleEdit = (ret: SalesReturn) => {
+    console.log("[SalesReturn] handleEdit:", ret);
     setFormMode("edit");
     setForm({
       id: ret.id,
@@ -315,7 +294,6 @@ export default function SalesReturn() {
       dueAmount: ret.dueAmount.toString(),
       status: ret.status,
     });
-    console.log("SalesReturn handleEdit:", { ret });
   };
 
   const handleProductSearch = (query: string) => {
@@ -326,7 +304,7 @@ export default function SalesReturn() {
     );
     setFilteredProducts(filtered);
     setForm((prev) => ({ ...prev, productName: query }));
-    console.log("SalesReturn handleProductSearch:", { query, count: filtered.length });
+    console.log("[SalesReturn] Product search:", { query, results: filtered.length });
   };
 
   const handleProductSelect = (item: AutoCompleteItem & { sku: string; price: number }) => {
@@ -343,11 +321,11 @@ export default function SalesReturn() {
         price: product.price,
         totalAmount: total.toFixed(2),
         dueAmount: due >= 0 ? due.toFixed(2) : "0.00",
-        customer: "", // Reset customer
+        customer: "",
       };
     });
     setFilteredProducts(products);
-    console.log("SalesReturn handleProductSelect:", { product });
+    console.log("[SalesReturn] Product selected:", product);
   };
 
   const handleCustomerSearch = (query: string) => {
@@ -356,13 +334,13 @@ export default function SalesReturn() {
     );
     setFilteredCustomers(filtered);
     setForm((prev) => ({ ...prev, customer: query }));
-    console.log("SalesReturn handleCustomerSearch:", { query, count: filtered.length });
+    console.log("[SalesReturn] Customer search:", { query, results: filtered.length });
   };
 
   const handleCustomerSelect = (item: AutoCompleteItem) => {
     setForm((prev) => ({ ...prev, customer: item.display }));
     setFilteredCustomers(customersForSelectedProduct);
-    console.log("SalesReturn handleCustomerSelect:", { item });
+    console.log("[SalesReturn] Customer selected:", item);
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -376,11 +354,12 @@ export default function SalesReturn() {
       }
       return updated;
     });
-    console.log("SalesReturn handleFormChange:", { name, value });
+    console.log("[SalesReturn] Form change:", { name, value });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[SalesReturn] handleFormSubmit", { formMode, form });
 
     if (
       !form.productName ||
@@ -391,6 +370,7 @@ export default function SalesReturn() {
       parseFloat(form.totalAmount) <= 0
     ) {
       alert("Please fill all required fields with valid values.");
+      console.warn("[SalesReturn] Validation failed");
       return;
     }
 
@@ -418,29 +398,27 @@ export default function SalesReturn() {
       setSalesReturns((prev) => [newReturn, ...prev]);
       const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
       setCurrentPage(totalPages);
+      console.log("[SalesReturn] Added return:", newReturn);
     } else if (formMode === "edit") {
       setSalesReturns((prev) => prev.map((r) => (r.id === newReturn.id ? newReturn : r)));
+      console.log("[SalesReturn] Updated return ID:", newReturn.id);
     }
 
     setFormMode(null);
-    console.log("SalesReturn handleFormSubmit:", { newReturn, formMode });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this return?")) {
       setSalesReturns((prev) => prev.filter((r) => r.id !== id));
-      const totalItemsAfterDelete = filteredData.length - 1;
-      const totalPages = Math.ceil(totalItemsAfterDelete / itemsPerPage);
-      if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(totalPages);
-      } else if (totalPages === 0) {
-        setCurrentPage(1);
-      }
-      console.log("SalesReturn handleDelete:", { id, totalPages });
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
+      else if (totalPages === 0) setCurrentPage(1);
+      console.log("[SalesReturn] Deleted return ID:", id);
     }
   };
 
   const handleClear = () => {
+    console.log("[SalesReturn] handleClear - resetting");
     loadData();
     setSearch("");
     setSelectedCustomer("All");
@@ -448,12 +426,11 @@ export default function SalesReturn() {
     setSelectedPaymentStatus("All");
     setSelectedSort("Recently Added");
     setCurrentPage(1);
-    console.log("SalesReturn handleClear");
   };
 
   const handleReport = () => {
+    console.log("[SalesReturn] handleReport");
     alert("Sales Returns Report:\n\n" + JSON.stringify(salesReturns, null, 2));
-    console.log("SalesReturn handleReport");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -466,9 +443,7 @@ export default function SalesReturn() {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
-      console.log("SalesReturn handlePageChange:", { page, totalPages });
-    } else {
-      console.warn("Invalid page", { page, totalPages, currentPage });
+      console.log("[SalesReturn] Page changed:", { from: currentPage, to: page });
     }
   };
 
@@ -532,7 +507,7 @@ export default function SalesReturn() {
         className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
         title="Edit"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
+        <i className="fa fa-pen" aria-hidden="true"></i>
         <span className="sr-only">Edit</span>
       </button>
       <button
@@ -541,7 +516,7 @@ export default function SalesReturn() {
         className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
         title="Delete"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <i className="fa fa-trash" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
       </button>
     </>
@@ -549,67 +524,83 @@ export default function SalesReturn() {
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Product, SKU, Invoice, Customer..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <select
-        value={selectedCustomer}
-        onChange={(e) => setSelectedCustomer(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {customerOptions.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {RETURN_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedPaymentStatus}
-        onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={(e) => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </>
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      {/* Left: Search Input */}
+      <div className="w-full md:w-auto md:max-w-md">
+        <SearchInput
+          value={search}
+          placeholder="Search by Product, SKU, Invoice, Customer..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+            console.log("[SalesReturn] Search updated:", query);
+          }}
+          className="w-full"
+        />
+      </div>
+
+      {/* Right: Filters */}
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+        <select
+          value={selectedCustomer}
+          onChange={(e) => {
+            setSelectedCustomer(e.target.value);
+            console.log("[SalesReturn] Customer filter:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+        >
+          {customerOptions.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => {
+            setSelectedStatus(e.target.value as any);
+            console.log("[SalesReturn] Status filter:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {RETURN_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedPaymentStatus}
+          onChange={(e) => {
+            setSelectedPaymentStatus(e.target.value as any);
+            console.log("[SalesReturn] Payment filter:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedSort}
+          onChange={(e) => {
+            setSelectedSort(e.target.value as any);
+            console.log("[SalesReturn] Sort changed:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- modal form ---------- */
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Product AutoComplete */}
       <div className="md:col-span-3">
         <label className="block text-sm font-medium mb-1">Product *</label>
         <AutoCompleteTextBox
@@ -626,7 +617,6 @@ export default function SalesReturn() {
         />
       </div>
 
-      {/* Customer AutoComplete (filtered by product) */}
       <div>
         <label className="block text-sm font-medium mb-1">Customer *</label>
         <AutoCompleteTextBox
@@ -637,11 +627,7 @@ export default function SalesReturn() {
             id: c.id,
             display: c.name,
           }))}
-          placeholder={
-            form.productId
-              ? "Search customer who bought this product..."
-              : "Select a product first"
-          }
+          placeholder={form.productId ? "Search customer..." : "Select product first"}
           disabled={!form.productId}
         />
       </div>
@@ -653,7 +639,7 @@ export default function SalesReturn() {
           name="invoiceNo"
           value={form.invoiceNo}
           onChange={handleFormChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
@@ -665,7 +651,7 @@ export default function SalesReturn() {
           name="date"
           value={form.date}
           onChange={handleFormChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
@@ -679,7 +665,7 @@ export default function SalesReturn() {
           onChange={handleFormChange}
           min="0"
           step="0.01"
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           required
         />
       </div>
@@ -693,7 +679,7 @@ export default function SalesReturn() {
           onChange={handleFormChange}
           min="0"
           step="0.01"
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -703,7 +689,7 @@ export default function SalesReturn() {
           type="text"
           value={form.dueAmount}
           readOnly
-          className="w-full border border-input rounded px-3 py-2 bg-gray-50 text-gray-600"
+          className="w-full border border-input rounded-md px-3 py-2 bg-gray-50 text-gray-600"
         />
       </div>
 
@@ -713,12 +699,10 @@ export default function SalesReturn() {
           name="status"
           value={form.status}
           onChange={handleFormChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {RETURN_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
       </div>
@@ -726,11 +710,20 @@ export default function SalesReturn() {
   );
 
   /* ---------- render ---------- */
+  if (loading) {
+    console.log("[SalesReturn] Rendering loading");
+    return <div className="flex items-center justify-center min-h-screen"><i className="fa fa-spinner fa-spin text-3xl text-primary" /></div>;
+  }
+  if (error) {
+    console.error("[SalesReturn] Rendering error:", error);
+    return <div className="flex flex-col items-center justify-center min-h-screen text-red-600"><p>{error}</p><button onClick={loadData} className="mt-4 px-4 py-2 bg-primary text-white rounded">Retry</button></div>;
+  }
+
   return (
     <PageBase1
       title="Sales Returns"
       description="Manage sales returns from POS orders"
-      icon="fa-light fa-arrow-rotate-left"
+      icon="fa-solid fa-arrow-rotate-left"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

@@ -60,6 +60,11 @@ export const PURCHASE_STATUSES = [
 ] as const;
 
 export const PAYMENT_STATUSES = [
+  /**
+ * @deprecated For Search Drop down.
+ * Need to inject using API.
+ */
+  "All", // For Search Drop down
   "Paid",
   "UnPaid",
   "Due",

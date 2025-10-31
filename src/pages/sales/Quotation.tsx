@@ -6,6 +6,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { SearchInput } from "@/components/Search/SearchInput";
 import { QUOTATION_STATUSES, SORT_OPTIONS } from "@/constants/constants";
 
 /* ---------- Types ---------- */
@@ -36,7 +37,7 @@ type Quotation = {
   customerId: string;
   status: QuotationStatus;
   Total: string;
-  description?: string;   // Added
+  description?: string;
 };
 
 type CustomerOption = AutoCompleteItem;
@@ -102,9 +103,13 @@ export default function Quotation() {
   });
 
   /* ---------- load data ---------- */
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    console.log("[Quotation] Initial loadData triggered");
+    loadData();
+  }, []);
 
   const loadData = async () => {
+    console.log("[Quotation] loadData started");
     setLoading(true);
     try {
       const [quotRes, custRes, prodRes] = await Promise.all([
@@ -112,59 +117,96 @@ export default function Quotation() {
         apiService.get<Customer[]>("Customers"),
         apiService.get<Product[]>("Products"),
       ]);
-      if (quotRes.status.code === "S") setQuotations(quotRes.result);
+
+      if (quotRes.status.code === "S") {
+        setQuotations(quotRes.result);
+        console.log("[Quotation] Loaded quotations:", quotRes.result.length);
+      } else {
+        console.warn("[Quotation] Failed to load quotations:", quotRes.status);
+      }
+
       if (custRes.status.code === "S") {
         setAllCustomers(custRes.result);
         setFilteredCustomers(custRes.result);
+        console.log("[Quotation] Loaded customers:", custRes.result.length);
       }
+
       if (prodRes.status.code === "S") {
         setAllProducts(prodRes.result);
         setFilteredProducts(prodRes.result);
+        console.log("[Quotation] Loaded products:", prodRes.result.length);
       }
+
       setError(null);
+      console.log("[Quotation] loadData completed successfully");
     } catch (err) {
       setError("Failed to load data.");
-      console.error(err);
+      console.error("[Quotation] loadData error:", err);
     } finally {
       setLoading(false);
+      console.log("[Quotation] loadData finished, loading:", false);
     }
   };
 
   /* ---------- filtering & pagination ---------- */
   const filteredData = useMemo(() => {
+    console.log("[Quotation] filteredData recompute", { search, selectedCustomer, selectedStatus, selectedSort });
+
     let res = [...quotations];
-    if (search.trim())
+    if (search.trim()) {
       res = res.filter(q =>
         q.productName.toLowerCase().includes(search.toLowerCase()) ||
         q.customerName.toLowerCase().includes(search.toLowerCase()) ||
         (q.description?.toLowerCase().includes(search.toLowerCase()) ?? false)
       );
-    if (selectedCustomer !== "All") res = res.filter(q => q.customerName === selectedCustomer);
-    if (selectedStatus !== "All") res = res.filter(q => q.status === selectedStatus);
+      console.log("[Quotation] After search filter:", res.length);
+    }
 
-    if (selectedSort === "Recently Added") res.sort((a, b) => b.id - a.id);
-    else if (selectedSort === "Ascending") res.sort((a, b) => parseFloat(a.Total) - parseFloat(b.Total));
-    else if (selectedSort === "Descending") res.sort((a, b) => parseFloat(b.Total) - parseFloat(a.Total));
+    if (selectedCustomer !== "All") {
+      res = res.filter(q => q.customerName === selectedCustomer);
+      console.log("[Quotation] After customer filter:", res.length);
+    }
 
+    if (selectedStatus !== "All") {
+      res = res.filter(q => q.status === selectedStatus);
+      console.log("[Quotation] After status filter:", res.length);
+    }
+
+    if (selectedSort === "Recently Added") {
+      res.sort((a, b) => b.id - a.id);
+    } else if (selectedSort === "Ascending") {
+      res.sort((a, b) => parseFloat(a.Total) - parseFloat(b.Total));
+    } else if (selectedSort === "Descending") {
+      res.sort((a, b) => parseFloat(b.Total) - parseFloat(a.Total));
+    }
+
+    console.log("[Quotation] Final filtered data:", res.length);
     return res;
   }, [quotations, search, selectedCustomer, selectedStatus, selectedSort]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
+    const end = start + itemsPerPage;
+    const result = filteredData.slice(start, end);
+    console.log("[Quotation] paginatedData:", { currentPage, start, end, total: filteredData.length, result: result.length });
+    return result;
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(
-    () => ["All", ...Array.from(new Set(quotations.map(q => q.customerName)))],
-    [quotations]
-  );
+  const customerOptions = useMemo(() => {
+    const opts = ["All", ...Array.from(new Set(quotations.map(q => q.customerName)))];
+    console.log("[Quotation] customerOptions:", opts);
+    return opts;
+  }, [quotations]);
 
   /* ---------- handlers ---------- */
   const handleAddClick = () => {
     const newId = quotations.length ? Math.max(...quotations.map(q => q.id)) + 1 : 1;
+    const newQuotationNo = `QTN-${String(newId).padStart(4, "0")}`;
+    console.log("[Quotation] handleAddClick - new ID:", newId, "Quotation No:", newQuotationNo);
+
     setForm({
       id: undefined,
-      quotationNo: `QTN-${String(newId).padStart(4, "0")}`,
+      quotationNo: newQuotationNo,
       quotationDate: new Date().toISOString().split("T")[0],
       customerId: "",
       customerName: "",
@@ -179,6 +221,7 @@ export default function Quotation() {
   };
 
   const handleEdit = (row: Quotation) => {
+    console.log("[Quotation] handleEdit - row:", row);
     const prod = allProducts.find(p => p.id.toString() === row.productId);
     const price = prod?.price ?? 0;
     const quantity = price ? Math.round(parseFloat(row.Total) / price) : 1;
@@ -204,7 +247,7 @@ export default function Quotation() {
       orderTax: "0",
       discount: "0",
       shipping: "0",
-      description: row.description ?? "",   // Load description
+      description: row.description ?? "",
       status: row.status,
     });
     setFormMode("edit");
@@ -215,10 +258,13 @@ export default function Quotation() {
     const f = allCustomers.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
     setFilteredCustomers(f);
     setForm(p => ({ ...p, customerName: q, customerId: "" }));
+    console.log("[Quotation] Customer search:", { query: q, results: f.length });
   };
+
   const handleCustomerSelect = (c: CustomerOption) => {
     setForm(p => ({ ...p, customerId: c.id.toString(), customerName: c.display }));
     setFilteredCustomers(allCustomers);
+    console.log("[Quotation] Customer selected:", c);
   };
 
   const handleProductSearch = (q: string, rowId: number) => {
@@ -231,7 +277,9 @@ export default function Quotation() {
       ...p,
       productRows: p.productRows.map(r => (r.id === rowId ? { ...r, productName: q, productId: 0 } : r)),
     }));
+    console.log("[Quotation] Product search (row", rowId, "):", { query: q, results: f.length });
   };
+
   const handleProductSelect = (rowId: number, sel: ProductOption) => {
     const prod = allProducts.find(p => p.id === sel.id);
     if (!prod) return;
@@ -247,6 +295,7 @@ export default function Quotation() {
       ),
     }));
     setFilteredProducts(allProducts);
+    console.log("[Quotation] Product selected (row", rowId, "):", { product: prod.productName, price, qty, total });
   };
 
   const addProductRow = () => {
@@ -255,10 +304,14 @@ export default function Quotation() {
       ...p,
       productRows: [...p.productRows, { id: newId, productId: 0, productName: "", sku: "", price: 0, quantity: 1, unit: "", total: 0 }],
     }));
+    console.log("[Quotation] Added product row:", newId);
   };
+
   const removeProductRow = (rowId: number) => {
     setForm(p => ({ ...p, productRows: p.productRows.filter(r => r.id !== rowId) }));
+    console.log("[Quotation] Removed product row:", rowId);
   };
+
   const handleQuantityChange = (rowId: number, qty: number) => {
     setForm(p => ({
       ...p,
@@ -266,20 +319,40 @@ export default function Quotation() {
         r.id === rowId ? { ...r, quantity: qty < 1 ? 1 : qty, total: r.price * (qty < 1 ? 1 : qty) } : r
       ),
     }));
+    console.log("[Quotation] Quantity changed (row", rowId, "):", qty);
   };
 
   /* ---------- calculations ---------- */
-  const subTotal = useMemo(() => form.productRows.reduce((s, r) => s + r.price * r.quantity, 0), [form.productRows]);
+  const subTotal = useMemo(() => {
+    const total = form.productRows.reduce((s, r) => s + r.price * r.quantity, 0);
+    console.log("[Quotation] subTotal:", total.toFixed(2));
+    return total;
+  }, [form.productRows]);
+
   const discountAmt = (subTotal * parseFloat(form.discount || "0")) / 100;
   const taxable = subTotal - discountAmt;
   const taxAmt = (taxable * parseFloat(form.orderTax || "0")) / 100;
   const grandTotal = taxable + taxAmt + parseFloat(form.shipping || "0");
 
+  useMemo(() => {
+    console.log("[Quotation] Calculations:", { subTotal, discountAmt, taxable, taxAmt, grandTotal });
+  }, [subTotal, form.discount, form.orderTax, form.shipping]);
+
   /* ---------- form submit ---------- */
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.customerId) { alert("Please select a customer."); return; }
-    if (form.productRows.some(r => !r.productId)) { alert("Please select a product for all rows."); return; }
+    console.log("[Quotation] handleFormSubmit", { formMode, form });
+
+    if (!form.customerId) {
+      alert("Please select a customer.");
+      console.warn("[Quotation] Validation failed: customer missing");
+      return;
+    }
+    if (form.productRows.some(r => !r.productId)) {
+      alert("Please select a product for all rows.");
+      console.warn("[Quotation] Validation failed: product missing");
+      return;
+    }
 
     const productName = form.productRows.map(r => r.productName).join(", ");
     const productId = form.productRows[0]?.productId.toString() || "";
@@ -292,13 +365,14 @@ export default function Quotation() {
       customerId: form.customerId,
       status: formMode === "add" ? statusSent : (form.status ?? statusSent),
       Total: grandTotal.toFixed(2),
-      description: form.description,   // Save description
+      description: form.description,
     };
 
     if (formMode === "add") {
       setQuotations(p => [newQuotation, ...p]);
       const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
       setCurrentPage(totalPages);
+      console.log("[Quotation] Added new quotation:", newQuotation);
     } else if (formMode === "edit" && form.id !== undefined) {
       setQuotations(p =>
         p.map(q =>
@@ -307,6 +381,7 @@ export default function Quotation() {
             : q
         )
       );
+      console.log("[Quotation] Updated quotation ID:", form.id);
     }
     setFormMode(null);
   };
@@ -318,9 +393,12 @@ export default function Quotation() {
       const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
       else if (totalPages === 0) setCurrentPage(1);
+      console.log("[Quotation] Deleted quotation ID:", id);
     }
   };
+
   const handleClear = () => {
+    console.log("[Quotation] handleClear - resetting filters");
     loadData();
     setSearch("");
     setSelectedCustomer("All");
@@ -328,14 +406,22 @@ export default function Quotation() {
     setSelectedSort("Recently Added");
     setCurrentPage(1);
   };
-  const handleReport = () => alert("Quotation Report:\n\n" + JSON.stringify(quotations, null, 2));
+
+  const handleReport = () => {
+    console.log("[Quotation] handleReport - generating report");
+    alert("Quotation Report:\n\n" + JSON.stringify(quotations, null, 2));
+  };
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1);
   };
+
   const handlePageChange = (page: number) => {
     const total = Math.ceil(filteredData.length / itemsPerPage);
-    if (page >= 1 && page <= total && page !== currentPage) setCurrentPage(page);
+    if (page >= 1 && page <= total && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("[Quotation] Page changed:", { from: currentPage, to: page, total });
+    }
   };
 
   /* ---------- table columns ---------- */
@@ -348,59 +434,88 @@ export default function Quotation() {
     { key: "description", label: "Description", render: (v: string | undefined) => v || "-", className: "max-w-xs truncate" },
   ];
 
+  /* ---------- row actions ---------- */
   const rowActions = (row: Quotation) => (
     <>
-      <button onClick={() => handleEdit(row)} className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors" title="Edit">
-        <i className="fa fa-edit" aria-hidden="true"></i>
+      <button
+        onClick={() => handleEdit(row)}
+        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
+        title="Edit"
+      >
+        <i className="fa fa-pen" aria-hidden="true"></i>
         <span className="sr-only">Edit</span>
       </button>
-      <button onClick={() => handleDelete(row.id)} className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors" title="Delete">
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+      <button
+        onClick={() => handleDelete(row.id)}
+        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
+        title="Delete"
+      >
+        <i className="fa fa-trash" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
       </button>
     </>
   );
 
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <>
-      <input
-        type="text"
-        placeholder="Search by Product, Customer, or Description..."
-        value={search}
-        onChange={handleSearchChange}
-        className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <select
-        value={selectedCustomer}
-        onChange={e => setSelectedCustomer(e.target.value)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {customerOptions.map(c => <option key={c} value={c}>{c}</option>)}
-      </select>
-      <select
-        value={selectedStatus}
-        onChange={e => setSelectedStatus(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option>All</option>
-        {QUOTATION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
-      <select
-        value={selectedSort}
-        onChange={e => setSelectedSort(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
-    </>
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      {/* Left: Search Input */}
+      <div className="w-full md:w-auto md:max-w-md">
+        <SearchInput
+          value={search}
+          placeholder="Search by Product, Customer, or Description..."
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+            console.log("[Quotation] Search updated:", query);
+          }}
+          className="w-full"
+        />
+      </div>
+
+      {/* Right: Filter Dropdowns */}
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+        <select
+          value={selectedCustomer}
+          onChange={(e) => {
+            setSelectedCustomer(e.target.value);
+            console.log("[Quotation] Customer filter:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+        >
+          {customerOptions.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+
+        <select
+          value={selectedStatus}
+          onChange={(e) => {
+            setSelectedStatus(e.target.value as any);
+            console.log("[Quotation] Status filter:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+        >
+          <option>All</option>
+          {QUOTATION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+
+        <select
+          value={selectedSort}
+          onChange={(e) => {
+            setSelectedSort(e.target.value as any);
+            console.log("[Quotation] Sort changed:", e.target.value);
+          }}
+          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+        >
+          {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+    </div>
   );
 
   /* ---------- MODAL FORM – NO FOOTER BUTTONS ---------- */
   const modalForm = () => (
     <form onSubmit={handleFormSubmit} className="space-y-6">
-
-      {/* ==== Header – Customer / Date / Reference ==== */}
+      {/* Header */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
@@ -443,7 +558,7 @@ export default function Quotation() {
         </div>
       </div>
 
-      {/* ==== Product Autocomplete ==== */}
+      {/* Product Autocomplete */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">
           Product <span className="text-red-600">*</span>
@@ -461,7 +576,7 @@ export default function Quotation() {
         />
       </div>
 
-      {/* ==== Product Table ==== */}
+      {/* Product Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -537,12 +652,10 @@ export default function Quotation() {
         </button>
       </div>
 
-      {/* ==== Bottom Row – Tax / Discount / Shipping / Status ==== */}
+      {/* Bottom Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Order Tax <span className="text-red-600">*</span>
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-1">Order Tax *</label>
           <input
             type="number"
             min="0"
@@ -554,9 +667,7 @@ export default function Quotation() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Discount <span className="text-red-600">*</span>
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-1">Discount *</label>
           <input
             type="number"
             min="0"
@@ -568,9 +679,7 @@ export default function Quotation() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Shipping <span className="text-red-600">*</span>
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-1">Shipping *</label>
           <input
             type="number"
             min="0"
@@ -582,9 +691,7 @@ export default function Quotation() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Status <span className="text-red-600">*</span>
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-1">Status *</label>
           <select
             value={form.status ?? statusSent}
             onChange={e => setForm(p => ({ ...p, status: e.target.value as QuotationStatus }))}
@@ -597,7 +704,7 @@ export default function Quotation() {
         </div>
       </div>
 
-      {/* ==== Description ==== */}
+      {/* Description */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">Description</label>
         <textarea
@@ -608,20 +715,24 @@ export default function Quotation() {
           placeholder="Enter description..."
         />
       </div>
-
-      {/* NO FOOTER BUTTONS – Handled by PageBase1 */}
     </form>
   );
 
   /* ---------- render ---------- */
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><i className="fa fa-spinner fa-spin text-3xl text-primary" /></div>;
-  if (error) return <div className="flex flex-col items-center justify-center min-h-screen text-red-600"><p>{error}</p><button onClick={loadData} className="mt-4 px-4 py-2 bg-primary text-white rounded">Retry</button></div>;
+  if (loading) {
+    console.log("[Quotation] Rendering loading state");
+    return <div className="flex items-center justify-center min-h-screen"><i className="fa fa-spinner fa-spin text-3xl text-primary" /></div>;
+  }
+  if (error) {
+    console.error("[Quotation] Rendering error state:", error);
+    return <div className="flex flex-col items-center justify-center min-h-screen text-red-600"><p>{error}</p><button onClick={loadData} className="mt-4 px-4 py-2 bg-primary text-white rounded">Retry</button></div>;
+  }
 
   return (
     <PageBase1
       title="Quotation"
       description="Create and manage quotations"
-      icon="fa-light fa-file-invoice"
+      icon="fa-solid fa-file-lines"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}
