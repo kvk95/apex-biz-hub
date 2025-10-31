@@ -51,6 +51,7 @@ export function SearchInput({
   return (
     <div className={`relative ${className}`} onMouseDown={stopPropagation}>
       <i className="fa fa-search absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+
       <Input
         ref={inputRef}
         type="text"
@@ -61,7 +62,7 @@ export function SearchInput({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         disabled={disabled}
-        className={`pl-10 ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={`block w-full p-4 ps-10 text-sm ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         autoComplete="off"
         onMouseDown={(e) => {
           e.stopPropagation();
