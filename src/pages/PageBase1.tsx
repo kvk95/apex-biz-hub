@@ -147,7 +147,7 @@ export function PageBase1({
         </div>
       </div>
       {tableColumns && (
-        <section className="bg-card rounded shadow py-6">
+        <section className="bg-card rounded shadow  pt-2 pb-6">
           {customFilters ? (
             <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-2 p-2">
               {customFilters()}

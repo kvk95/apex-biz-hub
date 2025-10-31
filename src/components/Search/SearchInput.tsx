@@ -11,6 +11,10 @@ interface SearchInputProps {
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   disabled?: boolean;
+  style?: React.DetailedHTMLProps<
+    React.StyleHTMLAttributes<HTMLStyleElement>,
+    HTMLStyleElement
+  >;
 }
 
 export function SearchInput({
@@ -23,6 +27,7 @@ export function SearchInput({
   onBlur,
   onKeyDown,
   disabled = false,
+  style
 }: SearchInputProps) {
   const [query, setQuery] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,12 +54,13 @@ export function SearchInput({
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
-    <div className={`relative ${className}`} onMouseDown={stopPropagation}>
-      <i className="fa fa-search absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-
-      <Input
+    <div className={`relative  max-w-md ${className}`} onMouseDown={stopPropagation}>
+      <div className="absolute inset-y-0 start-0 flex items-center ps-2 pointer-events-none">
+        <i className="fa-light fa-magnifying-glass absolute top-4 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground text-xs"></i>
+      </div>
+      <input
+        type="search"
         ref={inputRef}
-        type="text"
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -62,12 +68,15 @@ export function SearchInput({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         disabled={disabled}
-        className={`block w-full p-4 ps-10 text-sm ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={` border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-8 px-2.5 py-1.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 ${
+          disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""
+        }`}
         autoComplete="off"
         onMouseDown={(e) => {
           e.stopPropagation();
           if (!disabled) inputRef.current?.focus();
         }}
+        style={style}
       />
     </div>
   );

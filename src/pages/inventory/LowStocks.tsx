@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES, STOCK_STATUSES } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface LowStockRecord {
   id: number;
@@ -72,10 +73,6 @@ export default function LowStocks() {
     return filteredData.slice(start, start + itemsPerPage);
   }, [currentPage, itemsPerPage, filteredData]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -203,45 +200,50 @@ export default function LowStocks() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Product/Supplier"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product or supplier"
-      />
-      <select
-        value={selectedCategory}
-        onChange={(e) => {
-          setSelectedCategory(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by category"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={stockFilter}
-        onChange={(e) => {
-          setStockFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by stock status"
-      >
-        {STOCK_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product/Supplier"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by category"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={stockFilter}
+          onChange={(e) => {
+            setStockFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by stock status"
+        >
+          {STOCK_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -363,7 +365,10 @@ export default function LowStocks() {
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchTerm}
-      onSearchChange={handleSearchChange}
+      onSearchChange={(e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+      }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}

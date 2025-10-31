@@ -3,13 +3,14 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface UnitRecord {
   id: number;
   unitName: string;
   shortName: string;
   description: string;
-  status: typeof EXPIRED_STATUSES[number];
+  status: (typeof EXPIRED_STATUSES)[number];
 }
 
 export default function Units() {
@@ -34,10 +35,12 @@ export default function Units() {
       setLoading(true);
       const response = await apiService.get<UnitRecord[]>("Units");
       if (response.status.code === "S") {
-        setData(response.result.map((item) => ({
-          ...item,
-          status: item.status || EXPIRED_STATUSES[0],
-        })));
+        setData(
+          response.result.map((item) => ({
+            ...item,
+            status: item.status || EXPIRED_STATUSES[0],
+          }))
+        );
         setError(null);
       } else {
         setError(response.status.description);
@@ -104,7 +107,10 @@ export default function Units() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this unit?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -138,7 +144,12 @@ export default function Units() {
     },
     { key: "shortName", label: "Short Name", align: "left" },
     { key: "description", label: "Description", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: UnitRecord) => (
@@ -163,32 +174,36 @@ export default function Units() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Name/Short Name/Description"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by unit name, short name, or description"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {EXPIRED_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchText}
+          placeholder="Search Name/Short Name/Description"
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {EXPIRED_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -256,7 +271,9 @@ export default function Units() {
         >
           <option value="">Select Status</option>
           {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>

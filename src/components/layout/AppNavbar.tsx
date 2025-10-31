@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 const addnewItems = [
   { name: "Category", icon: "fa-tags", key: "/inventory/categories" },
@@ -59,7 +60,10 @@ export function DropdownTable({ dropdownOpen, setDropdownOpen }) {
             <tr key={row}>
               {/* 3 cols in each row */}
               {addnewItems.slice(row * 3, row * 3 + 3).map((item) => (
-                <td key={item.key} className="p-1 align-top items-center justify-center border last:border-0">
+                <td
+                  key={item.key}
+                  className="p-1 align-top items-center justify-center border last:border-0"
+                >
                   <button
                     className=" items-center justify-center w-full p-3 rounded hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
                     onClick={() => {
@@ -67,13 +71,12 @@ export function DropdownTable({ dropdownOpen, setDropdownOpen }) {
                       navigate(`${item.key}`, {
                         state: { mode: "create" },
                       });
-                    }
-                  }
+                    }}
                   >
                     <i
                       className={`fa ${item.icon} text-xl mr-2 selected_color_text`}
                     />
-                    <br/>
+                    <br />
                     <span className="font-medium">{item.name}</span>
                   </button>
                 </td>
@@ -183,17 +186,11 @@ export function AppNavbar({ isPosPage }) {
         <div className="flex flex-1 items-center gap-4">
           {!isPosPage && (
             <>
-              <div className="relative flex-1 max-w-md">
-                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                  <i className="fa-light fa-magnifying-glass absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
-                </div>
-                <input
-                  type="search"
-                  placeholder="Search products, orders, customers..."
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  style={inputBgStyle}
-                />
-              </div>{" "}
+              <SearchInput
+                className="flex-1"
+                placeholder="Search products, orders, customers..."
+                onSearch={() => alert("search")}
+              ></SearchInput>
             </>
           )}
         </div>

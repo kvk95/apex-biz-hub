@@ -3,12 +3,13 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface VariantRecord {
   id: number;
   variantName: string;
   variantValue: string;
-  status: typeof EXPIRED_STATUSES[number];
+  status: (typeof EXPIRED_STATUSES)[number];
 }
 
 export default function VariantAttributes() {
@@ -30,7 +31,9 @@ export default function VariantAttributes() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const response = await apiService.get<VariantRecord[]>("VariantAttributes");
+      const response = await apiService.get<VariantRecord[]>(
+        "VariantAttributes"
+      );
       if (response.status.code === "S") {
         setData(response.result);
         setError(null);
@@ -97,7 +100,10 @@ export default function VariantAttributes() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this variant?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -118,7 +124,9 @@ export default function VariantAttributes() {
   };
 
   const handleReport = () => {
-    alert("Variant Attributes Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    alert(
+      "Variant Attributes Report:\n\n" + JSON.stringify(filteredData, null, 2)
+    );
   };
 
   const columns: Column[] = [
@@ -129,7 +137,12 @@ export default function VariantAttributes() {
       render: (value) => <span className="font-semibold">{value}</span>,
     },
     { key: "variantValue", label: "Variant Value", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: VariantRecord) => (
@@ -154,32 +167,36 @@ export default function VariantAttributes() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Name/Value"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by variant name or value"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {EXPIRED_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchText}
+          placeholder="Search Name/Value"
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {EXPIRED_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -202,7 +219,10 @@ export default function VariantAttributes() {
         />
       </div>
       <div>
-        <label htmlFor="variantValue" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="variantValue"
+          className="block text-sm font-medium mb-1"
+        >
           Variant Value <span className="text-destructive">*</span>
         </label>
         <input
@@ -232,7 +252,9 @@ export default function VariantAttributes() {
         >
           <option value="">Select Status</option>
           {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>

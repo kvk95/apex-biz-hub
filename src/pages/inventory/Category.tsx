@@ -4,6 +4,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface CategoryRecord {
   id: number;
@@ -179,34 +180,36 @@ export default function Category() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Name/Description"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by category name or description"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {EXPIRED_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchText}
+          placeholder="Search Name/Description"
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {EXPIRED_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

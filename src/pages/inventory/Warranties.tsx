@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { EXPIRED_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface WarrantyRecord {
   id: number;
@@ -11,7 +12,7 @@ interface WarrantyRecord {
   productName: string;
   purchaseDate: string;
   warrantyPeriod: string;
-  status: typeof EXPIRED_STATUSES[number];
+  status: (typeof EXPIRED_STATUSES)[number];
 }
 
 export default function Warranties() {
@@ -116,7 +117,10 @@ export default function Warranties() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this warranty?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
       console.log("Warranties handleDelete:", { id });
@@ -162,7 +166,12 @@ export default function Warranties() {
       render: (value) => new Date(value).toLocaleDateString(),
     },
     { key: "warrantyPeriod", label: "Warranty Period", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: WarrantyRecord) => (
@@ -187,34 +196,39 @@ export default function Warranties() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Warranty No/Customer Name"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-          console.log("Warranties handleSearchChange:", { searchText: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by warranty number or customer name"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("Warranties handleFilterStatusChange:", { filterStatus: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {EXPIRED_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchText}
+          placeholder="Search Warranty No/Customer Name"
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("Warranties handleFilterStatusChange:", {
+              filterStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {EXPIRED_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -237,7 +251,10 @@ export default function Warranties() {
         />
       </div>
       <div>
-        <label htmlFor="customerName" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="customerName"
+          className="block text-sm font-medium mb-1"
+        >
           Customer Name <span className="text-destructive">*</span>
         </label>
         <input
@@ -269,7 +286,10 @@ export default function Warranties() {
         />
       </div>
       <div>
-        <label htmlFor="purchaseDate" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="purchaseDate"
+          className="block text-sm font-medium mb-1"
+        >
           Purchase Date <span className="text-destructive">*</span>
         </label>
         <input
@@ -284,7 +304,10 @@ export default function Warranties() {
         />
       </div>
       <div>
-        <label htmlFor="warrantyPeriod" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="warrantyPeriod"
+          className="block text-sm font-medium mb-1"
+        >
           Warranty Period <span className="text-destructive">*</span>
         </label>
         <input
@@ -314,7 +337,9 @@ export default function Warranties() {
         >
           <option value="">Select Status</option>
           {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -344,7 +369,9 @@ export default function Warranties() {
       onSearchChange={(e) => {
         setSearchText(e.target.value);
         setCurrentPage(1);
-        console.log("Warranties handleSearchChange:", { searchText: e.target.value });
+        console.log("Warranties handleSearchChange:", {
+          searchText: e.target.value,
+        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}

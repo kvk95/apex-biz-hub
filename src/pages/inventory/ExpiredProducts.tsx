@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, UNITS , SUPPLIERS} from "@/constants/constants";
+import { CATEGORIES, UNITS, SUPPLIERS } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface ExpiredProductRecord {
   id: number;
@@ -205,70 +206,72 @@ export default function ExpiredProducts() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Product/Code"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product name or code"
-      />
-      <select
-        value={selectedCategory}
-        onChange={(e) => {
-          setSelectedCategory(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by category"
-      >
-        <option value="">All Categories</option>
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedSupplier}
-        onChange={(e) => {
-          setSelectedSupplier(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by supplier"
-      >
-        <option value="">All Suppliers</option>
-        {SUPPLIERS.map((sup) => (
-          <option key={sup} value={sup}>
-            {sup}
-          </option>
-        ))}
-      </select>
-      <input
-        type="date"
-        value={dateRange.start}
-        onChange={(e) => {
-          setDateRange((prev) => ({ ...prev, start: e.target.value }));
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Start date"
-      />
-      <input
-        type="date"
-        value={dateRange.end}
-        onChange={(e) => {
-          setDateRange((prev) => ({ ...prev, end: e.target.value }));
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="End date"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product/Code"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by category"
+        >
+          <option value="">All Categories</option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedSupplier}
+          onChange={(e) => {
+            setSelectedSupplier(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by supplier"
+        >
+          <option value="">All Suppliers</option>
+          {SUPPLIERS.map((sup) => (
+            <option key={sup} value={sup}>
+              {sup}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={dateRange.start}
+          onChange={(e) => {
+            setDateRange((prev) => ({ ...prev, start: e.target.value }));
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Start date"
+        />
+        <input
+          type="date"
+          value={dateRange.end}
+          onChange={(e) => {
+            setDateRange((prev) => ({ ...prev, end: e.target.value }));
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="End date"
+        />
+      </div>
     </div>
   );
 

@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, STATUSES , BRANDS} from "@/constants/constants";
+import { CATEGORIES, STATUSES, BRANDS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface ProductRecord {
   id: number;
@@ -127,7 +128,7 @@ export default function Products() {
       label: "Status",
       align: "center",
       render: renderStatusBadge,
-    }, 
+    },
   ];
 
   const rowActions = (row: ProductRecord) => (
@@ -160,48 +161,50 @@ export default function Products() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 ">
-      <input
-        type="text"
-        placeholder="Search Product"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product name"
-      />
-      <select
-        value={selectedCategory}
-        onChange={(e) => {
-          setSelectedCategory(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by category"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedBrand}
-        onChange={(e) => {
-          setSelectedBrand(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by brand"
-      >
-        {BRANDS.map((brand) => (
-          <option key={brand} value={brand}>
-            {brand}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by category"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedBrand}
+          onChange={(e) => {
+            setSelectedBrand(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by brand"
+        >
+          {BRANDS.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
