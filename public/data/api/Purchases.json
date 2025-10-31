@@ -5,148 +5,254 @@
   },
   "result": [
     {
-      "id": 1,
-      "date": "2022-04-01",
-      "purchaseNo": "PUR-001",
-      "supplier": "Supplier A",
-      "warehouse": "Main Warehouse",
-      "productQty": 10,
-      "grandTotal": 1500,
-      "paid": 1000,
-      "due": 500,
-      "status": "Received"
+      "supplierName": "Nyainfo Technologies",
+      "supplierId": "1",
+      "date": "2025-10-01",
+      "reference": "INV-20251001",
+      "products": [
+        {
+          "productName": "Apple iPhone 14 Pro Max",
+          "productId": "1",
+          "quantity": 5,
+          "purchasePrice": 120000,
+          "discountAmount": 2000,
+          "taxPercent": 18,
+          "taxAmount": 21600,
+          "unitCost": 118000,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 21600,
+      "discount": 2000,
+      "shipping": 1000,
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "description": "iPhones for executive team."
     },
     {
-      "id": 2,
-      "date": "2022-04-05",
-      "purchaseNo": "PUR-002",
-      "supplier": "Supplier B",
-      "warehouse": "Secondary Warehouse",
-      "productQty": 5,
-      "grandTotal": 750,
-      "paid": 750,
-      "due": 0,
-      "status": "Pending"
+      "supplierName": "Alpha Supplies",
+      "supplierId": "2",
+      "date": "2025-10-02",
+      "reference": "INV-20251002",
+      "products": [
+        {
+          "productName": "Logitech MX Master 3 Mouse",
+          "productId": "6",
+          "quantity": 20,
+          "purchasePrice": 2000,
+          "discountAmount": 200,
+          "taxPercent": 18,
+          "taxAmount": 3600,
+          "unitCost": 1900,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 3600,
+      "discount": 200,
+      "shipping": 500,
+      "status": "Pending",
+      "paymentStatus": "UnPaid",
+      "description": "Mouse stock for retail."
     },
     {
-      "id": 3,
-      "date": "2022-04-10",
-      "purchaseNo": "PUR-003",
-      "supplier": "Supplier C",
-      "warehouse": "Main Warehouse",
-      "productQty": 20,
-      "grandTotal": 3000,
-      "paid": 1500,
-      "due": 1500,
-      "status": "Partial"
+      "supplierName": "Beta Traders",
+      "supplierId": "3",
+      "date": "2025-10-03",
+      "reference": "INV-20251003",
+      "products": [
+        {
+          "productName": "Sony WH-1000XM4 Headphones",
+          "productId": "3",
+          "quantity": 15,
+          "purchasePrice": 3500,
+          "discountAmount": 300,
+          "taxPercent": 18,
+          "taxAmount": 6300,
+          "unitCost": 3400,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 6300,
+      "discount": 300,
+      "shipping": 700,
+      "status": "Ordered",
+      "paymentStatus": "Partial",
+      "description": "Headphones for tech team."
     },
     {
-      "id": 4,
-      "date": "2022-04-15",
-      "purchaseNo": "PUR-004",
-      "supplier": "Supplier D",
-      "warehouse": "Main Warehouse",
-      "productQty": 15,
-      "grandTotal": 2250,
-      "paid": 2250,
-      "due": 0,
-      "status": "Received"
+      "supplierName": "Gamma Corp",
+      "supplierId": "4",
+      "date": "2025-10-04",
+      "reference": "INV-20251004",
+      "products": [
+        {
+          "productName": "Canon EOS R6 Camera",
+          "productId": "12",
+          "quantity": 3,
+          "purchasePrice": 250000,
+          "discountAmount": 5000,
+          "taxPercent": 18,
+          "taxAmount": 45000,
+          "unitCost": 245000,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 45000,
+      "discount": 5000,
+      "shipping": 2000,
+      "status": "Pending",
+      "paymentStatus": "Due",
+      "description": "Cameras for media department."
     },
     {
-      "id": 5,
-      "date": "2022-04-20",
-      "purchaseNo": "PUR-005",
-      "supplier": "Supplier E",
-      "warehouse": "Secondary Warehouse",
-      "productQty": 8,
-      "grandTotal": 1200,
-      "paid": 600,
-      "due": 600,
-      "status": "Pending"
+      "supplierName": "Delta Enterprises",
+      "supplierId": "5",
+      "date": "2025-10-05",
+      "reference": "INV-20251005",
+      "products": [
+        {
+          "productName": "Samsung Galaxy S22 Ultra",
+          "productId": "2",
+          "quantity": 10,
+          "purchasePrice": 110000,
+          "discountAmount": 1000,
+          "taxPercent": 18,
+          "taxAmount": 19800,
+          "unitCost": 109000,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 19800,
+      "discount": 1000,
+      "shipping": 1500,
+      "status": "Received",
+      "paymentStatus": "Refunded",
+      "description": "Phones for sales team."
     },
     {
-      "id": 6,
-      "date": "2022-04-25",
-      "purchaseNo": "PUR-006",
-      "supplier": "Supplier F",
-      "warehouse": "Main Warehouse",
-      "productQty": 12,
-      "grandTotal": 1800,
-      "paid": 1800,
-      "due": 0,
-      "status": "Received"
+      "supplierName": "Epsilon Goods",
+      "supplierId": "6",
+      "date": "2025-10-06",
+      "reference": "INV-20251006",
+      "products": [
+        {
+          "productName": "JBL Flip 6 Speaker",
+          "productId": "15",
+          "quantity": 25,
+          "purchasePrice": 1200,
+          "discountAmount": 300,
+          "taxPercent": 18,
+          "taxAmount": 5400,
+          "unitCost": 1150,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 5400,
+      "discount": 300,
+      "shipping": 600,
+      "status": "Ordered",
+      "paymentStatus": "Overdue",
+      "description": "Speakers for event inventory."
     },
     {
-      "id": 7,
-      "date": "2022-04-28",
-      "purchaseNo": "PUR-007",
-      "supplier": "Supplier G",
-      "warehouse": "Secondary Warehouse",
-      "productQty": 7,
-      "grandTotal": 1050,
-      "paid": 500,
-      "due": 550,
-      "status": "Partial"
+      "supplierName": "Zeta Wholesale",
+      "supplierId": "7",
+      "date": "2025-10-07",
+      "reference": "INV-20251007",
+      "products": [
+        {
+          "productName": "Google Pixel 7 Pro",
+          "productId": "8",
+          "quantity": 8,
+          "purchasePrice": 90000,
+          "discountAmount": 800,
+          "taxPercent": 18,
+          "taxAmount": 16200,
+          "unitCost": 89200,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 16200,
+      "discount": 800,
+      "shipping": 1000,
+      "status": "Pending",
+      "paymentStatus": "In Progress",
+      "description": "Pixel phones for testing."
     },
     {
-      "id": 8,
-      "date": "2022-05-01",
-      "purchaseNo": "PUR-008",
-      "supplier": "Supplier H",
-      "warehouse": "Main Warehouse",
-      "productQty": 25,
-      "grandTotal": 3750,
-      "paid": 3750,
-      "due": 0,
-      "status": "Received"
+      "supplierName": "Eta Distributors",
+      "supplierId": "8",
+      "date": "2025-10-08",
+      "reference": "INV-20251008",
+      "products": [
+        {
+          "productName": "Sony Alpha a7 IV",
+          "productId": "14",
+          "quantity": 2,
+          "purchasePrice": 280000,
+          "discountAmount": 4000,
+          "taxPercent": 18,
+          "taxAmount": 50400,
+          "unitCost": 276000,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 50400,
+      "discount": 4000,
+      "shipping": 2500,
+      "status": "Received",
+      "paymentStatus": "Failed",
+      "description": "High-end cameras for studio."
     },
     {
-      "id": 9,
-      "date": "2022-05-05",
-      "purchaseNo": "PUR-009",
-      "supplier": "Supplier I",
-      "warehouse": "Secondary Warehouse",
-      "productQty": 9,
-      "grandTotal": 1350,
-      "paid": 1350,
-      "due": 0,
-      "status": "Received"
+      "supplierName": "Theta Imports",
+      "supplierId": "9",
+      "date": "2025-10-09",
+      "reference": "INV-20251009",
+      "products": [
+        {
+          "productName": "Dell XPS 13",
+          "productId": "5",
+          "quantity": 6,
+          "purchasePrice": 140000,
+          "discountAmount": 1200,
+          "taxPercent": 18,
+          "taxAmount": 25200,
+          "unitCost": 138800,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 25200,
+      "discount": 1200,
+      "shipping": 1800,
+      "status": "Ordered",
+      "paymentStatus": "Paid",
+      "description": "Laptops for new hires."
     },
     {
-      "id": 10,
-      "date": "2022-05-10",
-      "purchaseNo": "PUR-010",
-      "supplier": "Supplier J",
-      "warehouse": "Main Warehouse",
-      "productQty": 11,
-      "grandTotal": 1650,
-      "paid": 1000,
-      "due": 650,
-      "status": "Pending"
-    },
-    {
-      "id": 11,
-      "date": "2022-05-15",
-      "purchaseNo": "PUR-011",
-      "supplier": "Supplier K",
-      "warehouse": "Main Warehouse",
-      "productQty": 14,
-      "grandTotal": 2100,
-      "paid": 2100,
-      "due": 0,
-      "status": "Received"
-    },
-    {
-      "id": 12,
-      "date": "2022-05-20",
-      "purchaseNo": "PUR-012",
-      "supplier": "Supplier L",
-      "warehouse": "Secondary Warehouse",
-      "productQty": 6,
-      "grandTotal": 900,
-      "paid": 450,
-      "due": 450,
-      "status": "Partial"
+      "supplierName": "Iota Supplies",
+      "supplierId": "10",
+      "date": "2025-10-10",
+      "reference": "INV-20251010",
+      "products": [
+        {
+          "productName": "Samsung Galaxy Watch 5",
+          "productId": "11",
+          "quantity": 12,
+          "purchasePrice": 3500,
+          "discountAmount": 400,
+          "taxPercent": 18,
+          "taxAmount": 7560,
+          "unitCost": 3450,
+          "totalCostPercent": 100
+        }
+      ],
+      "orderTax": 7560,
+      "discount": 400,
+      "shipping": 900,
+      "status": "Pending",
+      "paymentStatus": "Partial",
+      "description": "Wearables for health program."
     }
   ]
 }

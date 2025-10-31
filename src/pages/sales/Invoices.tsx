@@ -1,5 +1,5 @@
 /* -------------------------------------------------
-   Invoices – matches OnlineOrders/PosOrders exactly
+   Invoices
    ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
