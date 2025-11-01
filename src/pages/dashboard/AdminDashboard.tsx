@@ -1,132 +1,24 @@
 import { DataTable } from "@/components/DataTable/DataTable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ReferenceLine,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
-// Dummy Data for the dashboard
-const dummyData = {
-  ordersToday: 200,
-  stockAlert: {
-    product: "Apple Iphone 15",
-    stock: 5,
-  },
-  totalPurchaseDue: "307144",
-  totalSalesDue: "4385",
-  totalSaleAmount: "385656.5",
-  totalExpenseAmount: "40000",
-  customers: 100,
-  suppliers: 110,
-  purchaseInvoice: 150,
-  salesInvoice: 170,
-  purchasesSalesData: [
-    { month: "Jan", sales: 200, purchases: -100 },
-    { month: "Feb", sales: 250, purchases: -130 },
-    { month: "Mar", sales: 300, purchases: 150 },
-    { month: "Apr", sales: 350, purchases: -200 },
-    { month: "May", sales: 180, purchases: -90 },
-    { month: "Jun", sales: 150, purchases: -70 },
-    { month: "Jul", sales: 380, purchases: -250 },
-    { month: "Aug", sales: 320, purchases: -200 },
-    { month: "Sep", sales: 400, purchases: -210 },
-  ],
-  recentlyAddedProducts: [
-    { id: 1, product: "Lenovo 3rd Generation", price: "12500" },
-    { id: 2, product: "Bold V3.2", price: "1600" },
-    { id: 3, product: "Nike Jordan", price: "2000" },
-    { id: 4, product: "Apple Series 5 Watch", price: "800" },
-  ],
-  expiredProducts: [
-    { product: "Red Premium Handy", sku: "PT006", expiredDate: "29 Mar 2023" },
-    { product: "Iphone 14 Pro", sku: "PT007", expiredDate: "04 Apr 2023" },
-    { product: "Black Slim 200", sku: "PT008", expiredDate: "13 May 2023" },
-    { product: "Woodcraft Sandal", sku: "PT009", expiredDate: "27 May 2023" },
-    {
-      product: "Apple Series 5 Watch",
-      sku: "PT010",
-      expiredDate: "26 May 2023",
-    },
-  ],
-  topSellingProducts: [
-    {
-      name: "Charger Cable - Lighting",
-      sales: 247,
-      price: "$187",
-      percentage: "+25%",
-    },
-    {
-      name: "Yves Saint Eau De Parfum",
-      sales: 289,
-      price: "$145",
-      percentage: "+25%",
-    },
-    { name: "Apple Airpods 2", sales: 300, price: "$458", percentage: "+25%" },
-    { name: "Vacuum Cleaner", sales: 225, price: "$139", percentage: "-21%" },
-  ],
-  lowStockProducts: [
-    { name: "Dell XPS 13", sku: "#665814", stock: 8, minStock: 10 },
-    { name: "Vacuum Cleaner Robot", sku: "#940004", stock: 14, minStock: 20 },
-    { name: "KitchenAid Stand Mixer", sku: "#325569", stock: 21, minStock: 15 },
-    { name: "Levi's Trucker Jacket", sku: "#124588", stock: 12, minStock: 10 },
-  ],
-  recentSales: [
-    {
-      product: "Apple Watch Series 9",
-      price: "$640",
-      status: "Processing",
-      date: "Today",
-    },
-    {
-      product: "Gold Bracelet",
-      price: "$126",
-      status: "Cancelled",
-      date: "Today",
-    },
-    {
-      product: "Parachute Down Duvet",
-      price: "$69",
-      status: "On Hold",
-      date: "15 Jan 2025",
-    },
-    {
-      product: "YETI Rambler Tumbler",
-      price: "$65",
-      status: "Processing",
-      date: "12 Jan 2025",
-    },
-  ],
-  topCustomers: [
-    { name: "Carlos Curran", orders: 24, total: "$8964.5" },
-    { name: "Stan Gaunter", orders: 22, total: "$16985" },
-    { name: "Richard Wilson", orders: 14, total: "$5366" },
-    { name: "Mary Bronson", orders: 8, total: "$4569" },
-  ],
-  topCategories: {
-    categories: [
-      { name: "Electronics", sales: 698 },
-      { name: "Sports", sales: 545 },
-      { name: "Lifestyles", sales: 456 },
-    ],
-    totalCategories: 698,
-    totalProducts: 7899,
-  },
-};
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiService } from "@/services/ApiService";
+import { useEffect, useState } from "react";
+import CountUp from "react-countup";
+import { useNavigate } from "react-router-dom";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ReferenceLine,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts";
 
 // Row 1 - White Cards for Total Stats
 const TotalStatsCards = ({ data }) => (
@@ -171,7 +63,9 @@ const TotalStatsCards = ({ data }) => (
             ></i>
           </div>
           <div className="dash-counts">
-            <h4 className="mb-1 text-2xl font-bold">₹{item.value}</h4>
+            <h4 className="mb-1 text-2xl font-bold">
+              ₹<CountUp delay={index} end={item.value} />
+            </h4>
             <p className="mb-0 text-sm text-gray-600">{item.title}</p>
           </div>
         </CardContent>
@@ -215,7 +109,9 @@ const ColorfulStatsCards = ({ data }) => (
       >
         <CardContent className="flex justify-between items-center p-4">
           <div className="dash-counts">
-            <h4 className="mb-1 text-white text-2xl font-bold">{item.value}</h4>
+            <h4 className="mb-1 text-white text-2xl font-bold">
+              <CountUp delay={index * 0.5} end={item.value} />
+            </h4>
             <p className="text-white mb-0">{item.title}</p>
           </div>
           <div className="dash-imgs">
@@ -571,15 +467,61 @@ const TopCustomersCategoriesOrderStats = ({ data }) => {
 
 // Main Dashboard Container
 export default function AdminDashboard() {
-  const [data] = useState(dummyData);
+  const [data, setData] = useState<any>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null); // Clear previous errors
+    try {
+      const response = await apiService.get("AdminDashboard");
+      if (response.status && response.status.code === "S") {
+        setData(response.result);
+      } else {
+        // Handle API success/fail logic based on your apiService structure
+        setError(
+          response.status
+            ? response.status.description
+            : "An unknown error occurred."
+        );
+      }
+    } catch (e) {
+      console.error("API Fetch Error:", e);
+      setError(
+        "Failed to fetch dashboard data. Please check network connection."
+      );
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-1 md:p-6 lg:p-8 animate-fade-in">
       {/* Header and Quick Alerts */}
       <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="font-poppins">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white"> 
-           Welcome, Admin
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            Welcome, Admin
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Welcome back! Here's a snapshot of your business today.
@@ -592,7 +534,7 @@ export default function AdminDashboard() {
                 <i className="fa fa-truck text-sm mr-2" />
                 You have{" "}
                 <span className="text-xl font-bold">
-                  {data.ordersToday}+
+                  <CountUp delay={0} end={data.ordersToday} />+
                 </span>{" "}
                 Orders Today.
               </p>

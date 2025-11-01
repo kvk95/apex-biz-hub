@@ -9,451 +9,227 @@
       "product": "Apple Iphone 15",
       "stock": 5
     },
-    "stats": [
-      {
-        "id": "totalSales",
-        "title": "Total Sales",
-        "value": "₹8,988,078",
-        "change": 22,
-        "icon": "fa fa-dollar-sign",
-        "gradient": "bg-success/10"
-      },
-      {
-        "id": "totalSalesReturn",
-        "title": "Total Sales Return",
-        "value": "₹1,478,145",
-        "change": -22,
-        "icon": "fa fa-undo",
-        "gradient": "bg-warning/10"
-      },
-      {
-        "id": "totalPurchase",
-        "title": "Total Purchase",
-        "value": "₹2,145,789",
-        "change": 22,
-        "icon": "fa fa-shopping-bag",
-        "gradient": "bg-primary/10"
-      },
-      {
-        "id": "totalPurchaseReturn",
-        "title": "Total Purchase Return",
-        "value": "₹1,458,747",
-        "change": 22,
-        "icon": "fa fa-undo",
-        "gradient": "bg-warning/10"
-      },
-      {
-        "id": "profit",
-        "title": "Profit",
-        "value": "₹8,458,798",
-        "change": 35,
-        "icon": "fa fa-trending-up",
-        "gradient": "bg-accent/10"
-      },
-      {
-        "id": "invoiceDue",
-        "title": "Invoice Due",
-        "value": "₹4,898,878",
-        "change": 35,
-        "icon": "fa fa-file-invoice",
-        "gradient": "bg-info/10"
-      },
-      {
-        "id": "totalExpenses",
-        "title": "Total Expenses",
-        "value": "₹8,980,097",
-        "change": 41,
-        "icon": "fa fa-money-bill",
-        "gradient": "bg-danger/10"
-      },
-      {
-        "id": "totalPaymentReturns",
-        "title": "Total Payment Returns",
-        "value": "₹7,458,798",
-        "change": -20,
-        "icon": "fa fa-undo",
-        "gradient": "bg-warning/10"
-      },
-      {
-        "id": "totalPurchaseDue",
-        "title": "Total Purchase Due",
-        "value": "₹3,144.00",
-        "change": 0,
-        "icon": "fa fa-shopping-bag",
-        "gradient": "bg-primary/10"
-      },
-      {
-        "id": "totalSalesDue",
-        "title": "Total Sales Due",
-        "value": "₹4,385.00",
-        "change": 0,
-        "icon": "fa fa-dollar-sign",
-        "gradient": "bg-success/10"
-      },
-      {
-        "id": "totalSaleAmount",
-        "title": "Total Sale Amount",
-        "value": "₹35,656.50",
-        "change": 0,
-        "icon": "fa fa-dollar-sign",
-        "gradient": "bg-success/10"
-      },
-      {
-        "id": "totalExpenseAmount",
-        "title": "Total Expense Amount",
-        "value": "₹400.00",
-        "change": 0,
-        "icon": "fa fa-money-bill",
-        "gradient": "bg-danger/10"
-      }
-    ],
-    "counts": {
-      "totalPurchaseCount": "3K",
-      "totalSalesCount": "1K",
-      "suppliers": 6987,
-      "customers": 4896,
-      "orders": 200,
-      "purchaseInvoice": 150,
-      "salesInvoice": 170
-    },
-    "salesData": [
+    "totalPurchaseDue": "307144",
+    "totalSalesDue": "4385",
+    "totalSaleAmount": "385656.5",
+    "totalExpenseAmount": "40000",
+    "customers": 100,
+    "suppliers": 110,
+    "purchaseInvoice": 150,
+    "salesInvoice": 170,
+    "purchasesSalesData": [
       {
         "month": "Jan",
-        "sales": 1000,
-        "purchases": 800,
-        "profit": 200
+        "sales": 200,
+        "purchases": -100
       },
       {
         "month": "Feb",
-        "sales": 1200,
-        "purchases": 900,
-        "profit": 300
+        "sales": 250,
+        "purchases": -130
       },
       {
         "month": "Mar",
-        "sales": 1500,
-        "purchases": 1100,
-        "profit": 400
-      }
-    ],
-    "categoryData": [
-      {
-        "name": "Electronics",
-        "sales": 698
+        "sales": 300,
+        "purchases": 150
       },
       {
-        "name": "Sports",
-        "sales": 545
+        "month": "Apr",
+        "sales": 350,
+        "purchases": -200
       },
       {
-        "name": "Lifestyles",
-        "sales": 456
-      }
-    ],
-    "recentOrders": [
-      {
-        "id": "1",
-        "customer": "John Doe",
-        "product": "Apple Watch",
-        "amount": "₹640",
-        "status": "Completed",
-        "date": "Today"
+        "month": "May",
+        "sales": 180,
+        "purchases": -90
       },
       {
-        "id": "2",
-        "customer": "Jane Smith",
-        "product": "Gold Bracelet",
-        "amount": "₹126",
-        "status": "Processing",
-        "date": "15 Jan 2025"
-      }
-    ],
-    "lowStockProducts": [
-      {
-        "name": "Dell XPS 13",
-        "sku": "665814",
-        "stock": 8,
-        "minStock": 10
+        "month": "Jun",
+        "sales": 150,
+        "purchases": -70
       },
       {
-        "name": "Lay's Classic",
-        "sku": "365586",
-        "stock": 5,
-        "minStock": 10
-      }
-    ],
-    "topCustomers": [
-      {
-        "name": "Carlos Curran",
-        "email": "carlos@example.com",
-        "orders": 24,
-        "total": "₹8,9645"
+        "month": "Jul",
+        "sales": 380,
+        "purchases": -250
       },
       {
-        "name": "Stan Gaunter",
-        "email": "stan@example.com",
-        "orders": 22,
-        "total": "₹16,985"
-      }
-    ],
-    "topSellingProducts": [
-      {
-        "name": "Charger Cable - Lighting",
-        "price": "₹187",
-        "sales": "247+",
-        "percentage": "25%"
+        "month": "Aug",
+        "sales": 320,
+        "purchases": -200
       },
       {
-        "name": "Yves Saint Eau De Parfum",
-        "price": "₹145",
-        "sales": "289+",
-        "percentage": "25%"
-      },
-      {
-        "name": "Apple Airpods 2",
-        "price": "₹458",
-        "sales": "300+",
-        "percentage": "25%"
-      },
-      {
-        "name": "Vacuum Cleaner",
-        "price": "₹139",
-        "sales": "225+",
-        "percentage": "21%"
-      },
-      {
-        "name": "Samsung Galaxy S21 Fe 5g",
-        "price": "₹898",
-        "sales": "365+",
-        "percentage": "25%"
-      }
-    ],
-    "recentSales": [
-      {
-        "name": "Apple Watch Series 9",
-        "category": "Electronics",
-        "price": "₹640",
-        "date": "Today",
-        "status": "Processing"
-      },
-      {
-        "name": "Gold Bracelet",
-        "category": "Fashion",
-        "price": "₹126",
-        "date": "15 Jan 2025",
-        "status": "Cancelled"
-      },
-      {
-        "name": "Osmo Genius Starter Kit",
-        "category": "Lifestyles",
-        "price": "₹87.56",
-        "date": "11 Jan 2025",
-        "status": "Completed"
-      }
-    ],
-    "revenue": {
-      "value": "₹12,189",
-      "percentage": 25
-    },
-    "expense": {
-      "value": "₹48,988,078",
-      "percentage": 25
-    },
-    "customerTransactions": [
-      {
-        "date": "24 May 2025",
-        "customer": "",
-        "status": "Completed",
-        "total": "₹4,560"
-      },
-      {
-        "date": "23 May 2025",
-        "customer": "",
-        "status": "Completed",
-        "total": "₹3,569"
-      },
-      {
-        "date": "22 May 2025",
-        "customer": "",
-        "status": "Draft",
-        "total": "₹4,560"
-      },
-      {
-        "date": "21 May 2025",
-        "customer": "Randy McCree #114589",
-        "status": "Completed",
-        "total": "₹2,155"
-      },
-      {
-        "date": "21 May 2025",
-        "customer": "",
-        "status": "Completed",
-        "total": "₹5,123"
-      }
-    ],
-    "supplierTransactions": [
-      {
-        "date": "24 May 2025",
-        "supplier": "Electro Mart",
-        "status": "Completed",
-        "total": "₹1000"
-      },
-      {
-        "date": "23 May 2025",
-        "supplier": "Quantum Gadgets",
-        "status": "Completed",
-        "total": "₹1500"
-      },
-      {
-        "date": "22 May 2025",
-        "supplier": "Prime Bazaar",
-        "status": "Pending",
-        "total": "₹2000"
-      },
-      {
-        "date": "21 May 2025",
-        "supplier": "Alpha Mobiles",
-        "status": "Completed",
-        "total": "₹1200"
-      },
-      {
-        "date": "21 May 2025",
-        "supplier": "Aesthetic Bags",
-        "status": "Completed",
-        "total": "₹1300"
-      }
-    ],
-    "expenses": [
-      {
-        "date": "24 May 2025",
-        "expense": "Electricity Payment #EX849",
-        "status": "Approved",
-        "total": "₹200"
-      },
-      {
-        "date": "23 May 2025",
-        "expense": "Electricity Payment #EX849",
-        "status": "Approved",
-        "total": "₹200"
-      },
-      {
-        "date": "22 May 2025",
-        "expense": "Stationery Purchase #EX848",
-        "status": "Approved",
-        "total": "₹50"
-      },
-      {
-        "date": "21 May 2025",
-        "expense": "AC Repair Service #EX847",
-        "status": "Pending",
-        "total": "₹800"
-      },
-      {
-        "date": "21 May 2025",
-        "expense": "Client Meeting #EX846",
-        "status": "Approved",
-        "total": "₹100"
-      }
-    ],
-    "invoices": [
-      {
-        "customer": "",
-        "dueDate": "24 May 2025",
-        "status": "Paid",
-        "amount": "₹1300"
-      },
-      {
-        "customer": "",
-        "dueDate": "23 May 2025",
-        "status": "Overdue",
-        "amount": "₹1250"
-      },
-      {
-        "customer": "",
-        "dueDate": "22 May 2025",
-        "status": "Paid",
-        "amount": "₹1700"
-      },
-      {
-        "customer": "Randy McCree #INV002",
-        "dueDate": "21 May 2025",
-        "status": "Unpaid",
-        "amount": "₹1500"
-      },
-      {
-        "customer": "",
-        "dueDate": "21 May 2025",
-        "status": "Paid",
-        "amount": "₹1000"
-      }
-    ],
-    "topCategories": [
-      {
-        "name": "Electronics",
-        "sales": 698
-      },
-      {
-        "name": "Sports",
-        "sales": 545
-      },
-      {
-        "name": "Lifestyles",
-        "sales": 456
+        "month": "Sep",
+        "sales": 400,
+        "purchases": -210
       }
     ],
     "recentlyAddedProducts": [
       {
         "id": 1,
-        "product": "Product A",
-        "price": "₹12500"
+        "product": "Lenovo 3rd Generation",
+        "price": "12500"
       },
       {
         "id": 2,
-        "product": "Product B",
-        "price": "₹1600"
+        "product": "Bold V3.2",
+        "price": "1600"
       },
       {
         "id": 3,
-        "product": "Product C",
-        "price": "₹2000"
+        "product": "Nike Jordan",
+        "price": "2000"
       },
       {
         "id": 4,
-        "product": "Product D",
-        "price": "₹800"
+        "product": "Apple Series 5 Watch",
+        "price": "800"
       }
     ],
     "expiredProducts": [
       {
-        "product": "Product X",
+        "product": "Red Premium Handy",
         "sku": "PT006",
-        "manufacturedDate": "17 Jan 2023",
         "expiredDate": "29 Mar 2023"
       },
       {
-        "product": "Product Y",
+        "product": "Iphone 14 Pro",
         "sku": "PT007",
-        "manufacturedDate": "22 Feb 2023",
         "expiredDate": "04 Apr 2023"
       },
       {
-        "product": "Product Z",
+        "product": "Black Slim 200",
         "sku": "PT008",
-        "manufacturedDate": "18 Mar 2023",
         "expiredDate": "13 May 2023"
       },
       {
-        "product": "Product W",
+        "product": "Woodcraft Sandal",
         "sku": "PT009",
-        "manufacturedDate": "29 Mar 2023",
         "expiredDate": "27 May 2023"
       },
       {
-        "product": "Product V",
+        "product": "Apple Series 5 Watch",
         "sku": "PT010",
-        "manufacturedDate": "24 Mar 2023",
         "expiredDate": "26 May 2023"
       }
-    ]
+    ],
+    "topSellingProducts": [
+      {
+        "name": "Charger Cable - Lighting",
+        "sales": 247,
+        "price": "$187",
+        "percentage": "+25%"
+      },
+      {
+        "name": "Yves Saint Eau De Parfum",
+        "sales": 289,
+        "price": "$145",
+        "percentage": "+25%"
+      },
+      {
+        "name": "Apple Airpods 2",
+        "sales": 300,
+        "price": "$458",
+        "percentage": "+25%"
+      },
+      {
+        "name": "Vacuum Cleaner",
+        "sales": 225,
+        "price": "$139",
+        "percentage": "-21%"
+      }
+    ],
+    "lowStockProducts": [
+      {
+        "name": "Dell XPS 13",
+        "sku": "#665814",
+        "stock": 8,
+        "minStock": 10
+      },
+      {
+        "name": "Vacuum Cleaner Robot",
+        "sku": "#940004",
+        "stock": 14,
+        "minStock": 20
+      },
+      {
+        "name": "KitchenAid Stand Mixer",
+        "sku": "#325569",
+        "stock": 21,
+        "minStock": 15
+      },
+      {
+        "name": "Levi's Trucker Jacket",
+        "sku": "#124588",
+        "stock": 12,
+        "minStock": 10
+      }
+    ],
+    "recentSales": [
+      {
+        "product": "Apple Watch Series 9",
+        "price": "$640",
+        "status": "Processing",
+        "date": "Today"
+      },
+      {
+        "product": "Gold Bracelet",
+        "price": "$126",
+        "status": "Cancelled",
+        "date": "Today"
+      },
+      {
+        "product": "Parachute Down Duvet",
+        "price": "$69",
+        "status": "On Hold",
+        "date": "15 Jan 2025"
+      },
+      {
+        "product": "YETI Rambler Tumbler",
+        "price": "$65",
+        "status": "Processing",
+        "date": "12 Jan 2025"
+      }
+    ],
+    "topCustomers": [
+      {
+        "name": "Carlos Curran",
+        "orders": 24,
+        "total": "$8964.5"
+      },
+      {
+        "name": "Stan Gaunter",
+        "orders": 22,
+        "total": "$16985"
+      },
+      {
+        "name": "Richard Wilson",
+        "orders": 14,
+        "total": "$5366"
+      },
+      {
+        "name": "Mary Bronson",
+        "orders": 8,
+        "total": "$4569"
+      }
+    ],
+    "topCategories": {
+      "categories": [
+        {
+          "name": "Electronics",
+          "sales": 698
+        },
+        {
+          "name": "Sports",
+          "sales": 545
+        },
+        {
+          "name": "Lifestyles",
+          "sales": 456
+        }
+      ],
+      "totalCategories": 698,
+      "totalProducts": 7899
+    }
   }
 }

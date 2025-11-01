@@ -3,174 +3,128 @@
     "code": "S",
     "description": ""
   },
-  "result": [
-    {
-      "id": 1,
-      "invoice": "INV-001",
-      "customer": "John Doe",
-      "date": "2023-09-01",
-      "total": 150.0,
-      "paid": 150.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 2,
-      "invoice": "INV-002",
-      "customer": "Jane Smith",
-      "date": "2023-09-02",
-      "total": 200.0,
-      "paid": 100.0,
-      "due": 100.0,
-      "status": "Partial"
-    },
-    {
-      "id": 3,
-      "invoice": "INV-003",
-      "customer": "Acme Corp",
-      "date": "2023-09-03",
-      "total": 500.0,
-      "paid": 500.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 4,
-      "invoice": "INV-004",
-      "customer": "Beta LLC",
-      "date": "2023-09-04",
-      "total": 300.0,
-      "paid": 0.0,
-      "due": 300.0,
-      "status": "Due"
-    },
-    {
-      "id": 5,
-      "invoice": "INV-005",
-      "customer": "Gamma Inc",
-      "date": "2023-09-05",
-      "total": 250.0,
-      "paid": 250.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 6,
-      "invoice": "INV-006",
-      "customer": "Delta Co",
-      "date": "2023-09-06",
-      "total": 180.0,
-      "paid": 180.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 7,
-      "invoice": "INV-007",
-      "customer": "Epsilon Ltd",
-      "date": "2023-09-07",
-      "total": 400.0,
-      "paid": 200.0,
-      "due": 200.0,
-      "status": "Partial"
-    },
-    {
-      "id": 8,
-      "invoice": "INV-008",
-      "customer": "Zeta Partners",
-      "date": "2023-09-08",
-      "total": 350.0,
-      "paid": 350.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 9,
-      "invoice": "INV-009",
-      "customer": "Eta Enterprises",
-      "date": "2023-09-09",
-      "total": 275.0,
-      "paid": 275.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 10,
-      "invoice": "INV-010",
-      "customer": "Theta Services",
-      "date": "2023-09-10",
-      "total": 320.0,
-      "paid": 0.0,
-      "due": 320.0,
-      "status": "Due"
-    },
-    {
-      "id": 11,
-      "invoice": "INV-011",
-      "customer": "Iota Solutions",
-      "date": "2023-09-11",
-      "total": 210.0,
-      "paid": 210.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 12,
-      "invoice": "INV-012",
-      "customer": "Kappa Group",
-      "date": "2023-09-12",
-      "total": 190.0,
-      "paid": 190.0,
-      "due": 0.0,
-      "status": "Paid"
-    },
-    {
-      "id": 1,
-      "name": "John Doe"
-    },
-    {
-      "id": 2,
-      "name": "Jane Smith"
-    },
-    {
-      "id": 3,
-      "name": "Acme Corp"
-    },
-    {
-      "id": 4,
-      "name": "Beta LLC"
-    },
-    {
-      "id": 5,
-      "name": "Gamma Inc"
-    },
-    {
-      "id": 6,
-      "name": "Delta Co"
-    },
-    {
-      "id": 7,
-      "name": "Epsilon Ltd"
-    },
-    {
-      "id": 8,
-      "name": "Zeta Partners"
-    },
-    {
-      "id": 9,
-      "name": "Eta Enterprises"
-    },
-    {
-      "id": 10,
-      "name": "Theta Services"
-    },
-    {
-      "id": 11,
-      "name": "Iota Solutions"
-    },
-    {
-      "id": 12,
-      "name": "Kappa Group"
-    }
-  ]
+  "result": {
+    "weeklyEarnings": 95000.45,
+    "totalSales": 10000,
+    "totalAmountSales": 800,
+    "bestSelling": [
+      {
+        "name": "Lenovo 3rd Generation",
+        "price": 4420,
+        "sales": 6547,
+        "icon": "fa-laptop"
+      },
+      {
+        "name": "Bold V3.2",
+        "price": 1474,
+        "sales": 3474,
+        "icon": "fa-shoe-prints"
+      },
+      {
+        "name": "Nike Jordan",
+        "price": 8784,
+        "sales": 1478,
+        "icon": "fa-headphones"
+      },
+      {
+        "name": "Apple Series 5 Watch",
+        "price": 3240,
+        "sales": 987,
+        "icon": "fa-watch"
+      },
+      {
+        "name": "Amazon Echo Dot",
+        "price": 597,
+        "sales": 784,
+        "icon": "fa-volume-up"
+      }
+    ],
+    "recentTransactions": [
+      {
+        "orderId": "INV-001",
+        "product": "Lobar Handy",
+        "paymentMethod": "Paypal",
+        "status": "Success",
+        "amount": 1099.0
+      },
+      {
+        "orderId": "INV-002",
+        "product": "Red Premium Handy",
+        "paymentMethod": "Apple Pay",
+        "status": "Cancelled",
+        "amount": 600.55
+      },
+      {
+        "orderId": "INV-003",
+        "product": "Iphone 14 Pro",
+        "paymentMethod": "Stripe",
+        "status": "Completed",
+        "amount": 1099.0
+      },
+      {
+        "orderId": "INV-004",
+        "product": "Black Slim 200",
+        "paymentMethod": "PayU",
+        "status": "Success",
+        "amount": 1569.0
+      },
+      {
+        "orderId": "INV-005",
+        "product": "Woodcraft Sandal",
+        "paymentMethod": "Paytm",
+        "status": "Success",
+        "amount": 1478.0
+      }
+    ],
+    "salesAnalytics": [
+      {
+        "month": "Jan",
+        "sales": 30000
+      },
+      {
+        "month": "Feb",
+        "sales": 50000
+      },
+      {
+        "month": "Mar",
+        "sales": 35000
+      },
+      {
+        "month": "Apr",
+        "sales": 55000
+      },
+      {
+        "month": "May",
+        "sales": 40000
+      },
+      {
+        "month": "Jun",
+        "sales": 25000
+      },
+      {
+        "month": "Jul",
+        "sales": 45000
+      },
+      {
+        "month": "Aug",
+        "sales": 60000
+      },
+      {
+        "month": "Sep",
+        "sales": 20000
+      },
+      {
+        "month": "Oct",
+        "sales": 30000
+      },
+      {
+        "month": "Nov",
+        "sales": 40000
+      },
+      {
+        "month": "Dec",
+        "sales": 45000
+      }
+    ]
+  }
 }
