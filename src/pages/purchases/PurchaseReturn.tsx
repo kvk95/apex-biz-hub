@@ -174,7 +174,12 @@ export default function PurchaseReturn() {
     } else if (selectedSort === "Last 7 Days") {
       const last7 = new Date();
       last7.setDate(last7.getDate() - 7);
-      result = result.filter((r) => new Date(r.date) >= last7);
+      last7.setHours(0, 0, 0, 0); // Normalize to start of day
+      result = result.filter((r) => {
+        const d = new Date(r.date);
+        d.setHours(0, 0, 0, 0);
+        return d >= last7;
+      });
     } else if (selectedSort === "Last Month") {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
