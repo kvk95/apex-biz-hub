@@ -6,99 +6,203 @@
   "result": [
     {
       "id": 1,
-      "date": "2023-04-01",
-      "expenseHead": "Office Rent",
-      "amount": 2500,
-      "paymentType": "Cash",
-      "note": "Monthly office rent payment"
+      "reference": "EX849",
+      "expenseName": "Electricity Payment",
+      "category": "Utilities",
+      "description": "Electricity Bill",
+      "date": "2024-12-24",
+      "amount": 200,
+      "status": "Approved"
     },
     {
       "id": 2,
-      "date": "2023-04-03",
-      "expenseHead": "Electricity Bill",
-      "amount": 450,
-      "paymentType": "Cheque",
-      "note": "Electricity bill for March"
+      "reference": "EX850",
+      "expenseName": "Internet Subscription",
+      "category": "Utilities",
+      "description": "Monthly broadband bill",
+      "date": "2024-12-25",
+      "amount": 120,
+      "status": "Pending"
     },
     {
       "id": 3,
-      "date": "2023-04-05",
-      "expenseHead": "Internet",
-      "amount": 120,
-      "paymentType": "Cash",
-      "note": "Monthly internet charges"
+      "reference": "EX851",
+      "expenseName": "Office Supplies",
+      "category": "Operations",
+      "description": "Printer ink and paper",
+      "date": "2024-12-26",
+      "amount": 85,
+      "status": "Approved"
     },
     {
       "id": 4,
-      "date": "2023-04-07",
-      "expenseHead": "Stationery",
-      "amount": 75,
-      "paymentType": "Cash",
-      "note": "Office stationery purchase"
+      "reference": "EX852",
+      "expenseName": "Travel Reimbursement",
+      "category": "Travel",
+      "description": "Client visit taxi fare",
+      "date": "2024-12-27",
+      "amount": 300,
+      "status": "Pending"
     },
     {
       "id": 5,
-      "date": "2023-04-10",
-      "expenseHead": "Travel",
-      "amount": 300,
-      "paymentType": "Cheque",
-      "note": "Client meeting travel expenses"
+      "reference": "EX853",
+      "expenseName": "Software License",
+      "category": "IT",
+      "description": "Annual subscription for design tools",
+      "date": "2024-12-28",
+      "amount": 450,
+      "status": "Approved"
     },
     {
       "id": 6,
-      "date": "2023-04-12",
-      "expenseHead": "Maintenance",
-      "amount": 200,
-      "paymentType": "Cash",
-      "note": "Office AC maintenance"
+      "reference": "EX854",
+      "expenseName": "Team Lunch",
+      "category": "Entertainment",
+      "description": "Quarterly team outing",
+      "date": "2024-12-29",
+      "amount": 600,
+      "status": "Pending"
     },
     {
       "id": 7,
-      "date": "2023-04-15",
-      "expenseHead": "Software Subscription",
-      "amount": 99,
-      "paymentType": "Cash",
-      "note": "Monthly software subscription"
+      "reference": "EX855",
+      "expenseName": "Courier Charges",
+      "category": "Logistics",
+      "description": "Document delivery to client",
+      "date": "2024-12-30",
+      "amount": 75,
+      "status": "Approved"
     },
     {
       "id": 8,
-      "date": "2023-04-18",
-      "expenseHead": "Cleaning",
-      "amount": 150,
-      "paymentType": "Cash",
-      "note": "Office cleaning charges"
+      "reference": "EX856",
+      "expenseName": "Stationery Purchase",
+      "category": "Operations",
+      "description": "Pens, notebooks, folders",
+      "date": "2024-12-31",
+      "amount": 95,
+      "status": "Pending"
     },
     {
       "id": 9,
-      "date": "2023-04-20",
-      "expenseHead": "Miscellaneous",
-      "amount": 60,
-      "paymentType": "Cash",
-      "note": "Miscellaneous expenses"
+      "reference": "EX857",
+      "expenseName": "Mobile Recharge",
+      "category": "Utilities",
+      "description": "Business phone top-up",
+      "date": "2025-01-01",
+      "amount": 50,
+      "status": "Approved"
     },
     {
       "id": 10,
-      "date": "2023-04-22",
-      "expenseHead": "Snacks",
+      "reference": "EX858",
+      "expenseName": "Parking Fees",
+      "category": "Travel",
+      "description": "Client site parking",
+      "date": "2025-01-02",
       "amount": 40,
-      "paymentType": "Cash",
-      "note": "Office snacks purchase"
+      "status": "Pending"
     },
     {
       "id": 11,
-      "date": "2023-04-25",
-      "expenseHead": "Printing",
-      "amount": 85,
-      "paymentType": "Cheque",
-      "note": "Printing documents"
+      "reference": "EX859",
+      "expenseName": "Cleaning Services",
+      "category": "Maintenance",
+      "description": "Monthly office cleaning",
+      "date": "2025-01-03",
+      "amount": 250,
+      "status": "Approved"
     },
     {
       "id": 12,
-      "date": "2023-04-27",
-      "expenseHead": "Courier",
-      "amount": 55,
-      "paymentType": "Cash",
-      "note": "Courier charges"
+      "reference": "EX860",
+      "expenseName": "Printer Maintenance",
+      "category": "IT",
+      "description": "Service and repair",
+      "date": "2025-01-04",
+      "amount": 180,
+      "status": "Pending"
+    },
+    {
+      "id": 13,
+      "reference": "EX861",
+      "expenseName": "Client Gifts",
+      "category": "Marketing",
+      "description": "Holiday gift packs",
+      "date": "2025-01-05",
+      "amount": 320,
+      "status": "Approved"
+    },
+    {
+      "id": 14,
+      "reference": "EX862",
+      "expenseName": "Water Delivery",
+      "category": "Utilities",
+      "description": "Monthly drinking water supply",
+      "date": "2025-01-06",
+      "amount": 110,
+      "status": "Pending"
+    },
+    {
+      "id": 15,
+      "reference": "EX863",
+      "expenseName": "Conference Tickets",
+      "category": "Training",
+      "description": "Tech summit registration",
+      "date": "2025-01-07",
+      "amount": 700,
+      "status": "Approved"
+    },
+    {
+      "id": 16,
+      "reference": "EX864",
+      "expenseName": "Laptop Repair",
+      "category": "IT",
+      "description": "Screen replacement",
+      "date": "2025-01-08",
+      "amount": 350,
+      "status": "Pending"
+    },
+    {
+      "id": 17,
+      "reference": "EX865",
+      "expenseName": "Marketing Ads",
+      "category": "Marketing",
+      "description": "Social media campaign",
+      "date": "2025-01-09",
+      "amount": 900,
+      "status": "Approved"
+    },
+    {
+      "id": 18,
+      "reference": "EX866",
+      "expenseName": "Security Services",
+      "category": "Maintenance",
+      "description": "Monthly guard charges",
+      "date": "2025-01-10",
+      "amount": 500,
+      "status": "Pending"
+    },
+    {
+      "id": 19,
+      "reference": "EX867",
+      "expenseName": "Fuel Reimbursement",
+      "category": "Travel",
+      "description": "Local travel fuel",
+      "date": "2025-01-11",
+      "amount": 150,
+      "status": "Approved"
+    },
+    {
+      "id": 20,
+      "reference": "EX868",
+      "expenseName": "Domain Renewal",
+      "category": "IT",
+      "description": "Annual domain fee",
+      "date": "2025-01-12",
+      "amount": 60,
+      "status": "Pending"
     }
   ]
 }

@@ -322,3 +322,8 @@ export const QUOTATION_STATUSES = [
   "Pending",
   "Sent"
 ] as const;
+
+export const EXPENSE_HEADS_STATUSES = [
+  "Pending",
+  "Approved"
+] as const;
