@@ -226,7 +226,8 @@ export default function PosOrders() {
           console.log("PosOrders rowActions: Edit clicked", { row });
         }}
         aria-label={`Edit POS order ${row.orderId}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
+        title="Edit"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
         <span className="sr-only">Edit order</span>
@@ -249,7 +250,8 @@ export default function PosOrders() {
           }
         }}
         aria-label={`Delete POS order ${row.orderId}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
+        title="Delete"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete order</span>

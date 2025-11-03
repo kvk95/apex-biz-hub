@@ -439,19 +439,22 @@ export default function Quotation() {
     <>
       <button
         onClick={() => handleEdit(row)}
+        aria-label={`Edit quotation ${row.quotationNo || row.id}`}
         className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
         title="Edit"
       >
-        <i className="fa fa-pen" aria-hidden="true"></i>
-        <span className="sr-only">Edit</span>
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit quotation</span>
       </button>
+
       <button
         onClick={() => handleDelete(row.id)}
+        aria-label={`Delete quotation ${row.quotationNo || row.id}`}
         className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
         title="Delete"
       >
-        <i className="fa fa-trash" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete quotation</span>
       </button>
     </>
   );
