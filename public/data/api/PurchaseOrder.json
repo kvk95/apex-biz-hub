@@ -5,113 +5,300 @@
   },
   "result": [
     {
-      "id": 1,
-      "poNumber": "PO-1001",
-      "supplier": "Supplier A",
-      "date": "2025-10-01",
-      "status": "Pending",
-      "total": 1500.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 1",
-          "qty": 10,
-          "price": 50.0,
-          "total": 500.0
-        },
-        {
-          "id": 2,
-          "product": "Product 2",
-          "qty": 20,
-          "price": 50.0,
-          "total": 1000.0
-        }
-      ]
+      "productName": "Apple iPhone 14 Pro Max",
+      "productId": "1",
+      "purchasedAmount": 120000,
+      "purchasedquantity": 40,
+      "instockQTY": 30,
+      "purchasedDate": "2025-11-02"
     },
     {
-      "id": 2,
-      "poNumber": "PO-1002",
-      "supplier": "Supplier B",
-      "date": "2025-10-02",
-      "status": "Completed",
-      "total": 800.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 3",
-          "qty": 8,
-          "price": 100.0,
-          "total": 800.0
-        }
-      ]
+      "productName": "Samsung Galaxy S22 Ultra",
+      "productId": "2",
+      "purchasedAmount": 110000,
+      "purchasedquantity": 35,
+      "instockQTY": 20,
+      "purchasedDate": "2025-11-01"
     },
     {
-      "id": 3,
-      "poNumber": "PO-1003",
-      "supplier": "Supplier C",
-      "date": "2025-10-03",
-      "status": "Pending",
-      "total": 1200.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 4",
-          "qty": 12,
-          "price": 100.0,
-          "total": 1200.0
-        }
-      ]
+      "productName": "Sony WH-1000XM4 Headphones",
+      "productId": "3",
+      "purchasedAmount": 35000,
+      "purchasedquantity": 100,
+      "instockQTY": 65,
+      "purchasedDate": "2025-10-31"
     },
     {
-      "id": 4,
-      "poNumber": "PO-1004",
-      "supplier": "Supplier D",
-      "date": "2025-10-04",
-      "status": "Pending",
-      "total": 600.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 5",
-          "qty": 6,
-          "price": 100.0,
-          "total": 600.0
-        }
-      ]
+      "productName": "Apple MacBook Pro 16\"",
+      "productId": "4",
+      "purchasedAmount": 250000,
+      "purchasedquantity": 10,
+      "instockQTY": 4,
+      "purchasedDate": "2025-10-30"
     },
     {
-      "id": 5,
-      "poNumber": "PO-1005",
-      "supplier": "Supplier E",
-      "date": "2025-10-05",
-      "status": "Completed",
-      "total": 2000.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 6",
-          "qty": 20,
-          "price": 100.0,
-          "total": 2000.0
-        }
-      ]
+      "productName": "Dell XPS 13",
+      "productId": "5",
+      "purchasedAmount": 140000,
+      "purchasedquantity": 12,
+      "instockQTY": 6,
+      "purchasedDate": "2025-10-29"
     },
     {
-      "id": 6,
-      "poNumber": "PO-1006",
-      "supplier": "Supplier F",
-      "date": "2025-10-06",
-      "status": "Pending",
-      "total": 1800.0,
-      "items": [
-        {
-          "id": 1,
-          "product": "Product 7",
-          "qty": 18,
-          "price": 100.0,
-          "total": 1800.0
-        }
-      ]
+      "productName": "Logitech MX Master 3 Mouse",
+      "productId": "6",
+      "purchasedAmount": 10000,
+      "purchasedquantity": 100,
+      "instockQTY": 80,
+      "purchasedDate": "2025-10-28"
+    },
+    {
+      "productName": "Apple Watch Series 7",
+      "productId": "7",
+      "purchasedAmount": 40000,
+      "purchasedquantity": 25,
+      "instockQTY": 10,
+      "purchasedDate": "2025-10-27"
+    },
+    {
+      "productName": "Google Pixel 7 Pro",
+      "productId": "8",
+      "purchasedAmount": 90000,
+      "purchasedquantity": 20,
+      "instockQTY": 15,
+      "purchasedDate": "2025-10-25"
+    },
+    {
+      "productName": "Bose QuietComfort Earbuds",
+      "productId": "9",
+      "purchasedAmount": 28000,
+      "purchasedquantity": 50,
+      "instockQTY": 30,
+      "purchasedDate": "2025-10-24"
+    },
+    {
+      "productName": "Microsoft Surface Laptop 5",
+      "productId": "10",
+      "purchasedAmount": 160000,
+      "purchasedquantity": 8,
+      "instockQTY": 3,
+      "purchasedDate": "2025-10-22"
+    },
+    {
+      "productName": "Samsung Galaxy Watch 5",
+      "productId": "11",
+      "purchasedAmount": 35000,
+      "purchasedquantity": 40,
+      "instockQTY": 25,
+      "purchasedDate": "2025-10-20"
+    },
+    {
+      "productName": "Canon EOS R6 Camera",
+      "productId": "12",
+      "purchasedAmount": 250000,
+      "purchasedquantity": 5,
+      "instockQTY": 2,
+      "purchasedDate": "2025-10-18"
+    },
+    {
+      "productName": "Nikon Z7 II Camera",
+      "productId": "13",
+      "purchasedAmount": 300000,
+      "purchasedquantity": 4,
+      "instockQTY": 1,
+      "purchasedDate": "2025-10-15"
+    },
+    {
+      "productName": "Sony Alpha a7 IV",
+      "productId": "14",
+      "purchasedAmount": 280000,
+      "purchasedquantity": 6,
+      "instockQTY": 3,
+      "purchasedDate": "2025-10-12"
+    },
+    {
+      "productName": "JBL Flip 6 Speaker",
+      "productId": "15",
+      "purchasedAmount": 12000,
+      "purchasedquantity": 60,
+      "instockQTY": 45,
+      "purchasedDate": "2025-10-10"
+    },
+    {
+      "productName": "Apple iPhone 14 Pro Max",
+      "productId": "1",
+      "purchasedAmount": 240000,
+      "purchasedquantity": 80,
+      "instockQTY": 50,
+      "purchasedDate": "2025-10-08"
+    },
+    {
+      "productName": "Sony WH-1000XM4 Headphones",
+      "productId": "3",
+      "purchasedAmount": 70000,
+      "purchasedquantity": 200,
+      "instockQTY": 120,
+      "purchasedDate": "2025-10-06"
+    },
+    {
+      "productName": "Logitech MX Master 3 Mouse",
+      "productId": "6",
+      "purchasedAmount": 20000,
+      "purchasedquantity": 200,
+      "instockQTY": 150,
+      "purchasedDate": "2025-10-04"
+    },
+    {
+      "productName": "Google Pixel 7 Pro",
+      "productId": "8",
+      "purchasedAmount": 180000,
+      "purchasedquantity": 40,
+      "instockQTY": 25,
+      "purchasedDate": "2025-10-02"
+    },
+    {
+      "productName": "JBL Flip 6 Speaker",
+      "productId": "15",
+      "purchasedAmount": 24000,
+      "purchasedquantity": 120,
+      "instockQTY": 90,
+      "purchasedDate": "2025-09-30"
+    },
+    {
+      "productName": "Apple MacBook Pro 16\"",
+      "productId": "4",
+      "purchasedAmount": 500000,
+      "purchasedquantity": 20,
+      "instockQTY": 12,
+      "purchasedDate": "2025-09-28"
+    },
+    {
+      "productName": "Dell XPS 13",
+      "productId": "5",
+      "purchasedAmount": 280000,
+      "purchasedquantity": 24,
+      "instockQTY": 14,
+      "purchasedDate": "2025-09-25"
+    },
+    {
+      "productName": "Samsung Galaxy Watch 5",
+      "productId": "11",
+      "purchasedAmount": 70000,
+      "purchasedquantity": 80,
+      "instockQTY": 60,
+      "purchasedDate": "2025-09-22"
+    },
+    {
+      "productName": "Canon EOS R6 Camera",
+      "productId": "12",
+      "purchasedAmount": 500000,
+      "purchasedquantity": 10,
+      "instockQTY": 6,
+      "purchasedDate": "2025-09-20"
+    },
+    {
+      "productName": "Nikon Z7 II Camera",
+      "productId": "13",
+      "purchasedAmount": 600000,
+      "purchasedquantity": 8,
+      "instockQTY": 4,
+      "purchasedDate": "2025-09-18"
+    },
+    {
+      "productName": "Sony Alpha a7 IV",
+      "productId": "14",
+      "purchasedAmount": 560000,
+      "purchasedquantity": 12,
+      "instockQTY": 7,
+      "purchasedDate": "2025-09-15"
+    },
+    {
+      "productName": "Apple Watch Series 7",
+      "productId": "7",
+      "purchasedAmount": 80000,
+      "purchasedquantity": 50,
+      "instockQTY": 35,
+      "purchasedDate": "2025-09-12"
+    },
+    {
+      "productName": "Bose QuietComfort Earbuds",
+      "productId": "9",
+      "purchasedAmount": 56000,
+      "purchasedquantity": 100,
+      "instockQTY": 70,
+      "purchasedDate": "2025-09-10"
+    },
+    {
+      "productName": "Microsoft Surface Laptop 5",
+      "productId": "10",
+      "purchasedAmount": 320000,
+      "purchasedquantity": 16,
+      "instockQTY": 10,
+      "purchasedDate": "2025-09-08"
+    },
+    {
+      "productName": "Apple Watch Series 7",
+      "productId": "7",
+      "purchasedAmount": 160000,
+      "purchasedquantity": 40,
+      "instockQTY": 28,
+      "purchasedDate": "2025-09-05"
+    },
+    {
+      "productName": "Google Pixel 7 Pro",
+      "productId": "8",
+      "purchasedAmount": 360000,
+      "purchasedquantity": 80,
+      "instockQTY": 55,
+      "purchasedDate": "2025-09-03"
+    },
+    {
+      "productName": "Sony WH-1000XM4 Headphones",
+      "productId": "3",
+      "purchasedAmount": 105000,
+      "purchasedquantity": 300,
+      "instockQTY": 180,
+      "purchasedDate": "2025-09-01"
+    },
+    {
+      "productName": "JBL Flip 6 Speaker",
+      "productId": "15",
+      "purchasedAmount": 36000,
+      "purchasedquantity": 180,
+      "instockQTY": 120,
+      "purchasedDate": "2025-08-28"
+    },
+    {
+      "productName": "Apple iPhone 14 Pro Max",
+      "productId": "1",
+      "purchasedAmount": 360000,
+      "purchasedquantity": 120,
+      "instockQTY": 90,
+      "purchasedDate": "2025-08-25"
+    },
+    {
+      "productName": "Dell XPS 13",
+      "productId": "5",
+      "purchasedAmount": 420000,
+      "purchasedquantity": 36,
+      "instockQTY": 24,
+      "purchasedDate": "2025-08-22"
+    },
+    {
+      "productName": "Samsung Galaxy S22 Ultra",
+      "productId": "2",
+      "purchasedAmount": 330000,
+      "purchasedquantity": 105,
+      "instockQTY": 70,
+      "purchasedDate": "2025-08-20"
+    },
+    {
+      "productName": "Logitech MX Master 3 Mouse",
+      "productId": "6",
+      "purchasedAmount": 30000,
+      "purchasedquantity": 300,
+      "instockQTY": 220,
+      "purchasedDate": "2025-08-18"
     }
   ]
 }
