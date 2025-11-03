@@ -439,7 +439,7 @@ export default function Quotation() {
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit quotation ${row.quotationNo || row.id}`}
+        aria-label={`Edit quotation ${row.id || row.id}`}
         className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
         title="Edit"
       >
@@ -449,7 +449,7 @@ export default function Quotation() {
 
       <button
         onClick={() => handleDelete(row.id)}
-        aria-label={`Delete quotation ${row.quotationNo || row.id}`}
+        aria-label={`Delete quotation ${row.id || row.id}`}
         className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
         title="Delete"
       >
