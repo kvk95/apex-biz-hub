@@ -22,6 +22,7 @@ interface AutoCompleteTextBoxProps<T extends AutoCompleteItem> {
     maxVisible?: number;
     renderItem?: (item: T, highlighted: boolean) => React.ReactNode;
     disabled?: boolean;
+    className?: string;
 }
 
 export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
@@ -33,6 +34,7 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
     maxVisible = 8,
     renderItem,
     disabled = false,
+    className = "",
 }: AutoCompleteTextBoxProps<T>) => {
     const [inputValue, setInputValue] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
@@ -144,6 +146,7 @@ export const AutoCompleteTextBox = <T extends AutoCompleteItem>({
                 onKeyDown={handleKeyDown}
                 debounce={300}
                 disabled={disabled}
+                className={className}
             />
 
             {!disabled && isOpen && inputValue && visible.length > 0 && (

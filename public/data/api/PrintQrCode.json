@@ -3,102 +3,27 @@
     "code": "S",
     "description": ""
   },
-  "result": [
-    {
-      "id": 1,
-      "productName": "Product 1",
-      "productCode": "P001",
-      "category": "Category A",
-      "price": 100,
-      "quantity": 10
-    },
-    {
-      "id": 2,
-      "productName": "Product 2",
-      "productCode": "P002",
-      "category": "Category B",
-      "price": 200,
-      "quantity": 15
-    },
-    {
+  "result": {
+    "warehouse": {
       "id": 3,
-      "productName": "Product 3",
-      "productCode": "P003",
-      "category": "Category A",
-      "price": 150,
-      "quantity": 8
+      "name": "East Warehouse"
     },
-    {
-      "id": 4,
-      "productName": "Product 4",
-      "productCode": "P004",
-      "category": "Category C",
-      "price": 250,
-      "quantity": 20
-    },
-    {
-      "id": 5,
-      "productName": "Product 5",
-      "productCode": "P005",
-      "category": "Category B",
-      "price": 300,
-      "quantity": 5
-    },
-    {
+    "store": {
       "id": 6,
-      "productName": "Product 6",
-      "productCode": "P006",
-      "category": "Category A",
-      "price": 120,
-      "quantity": 12
+      "name": "Nyainfo Store 6"
     },
-    {
-      "id": 7,
-      "productName": "Product 7",
-      "productCode": "P007",
-      "category": "Category C",
-      "price": 180,
-      "quantity": 7
-    },
-    {
-      "id": 8,
-      "productName": "Product 8",
-      "productCode": "P008",
-      "category": "Category B",
-      "price": 220,
-      "quantity": 9
-    },
-    {
-      "id": 9,
-      "productName": "Product 9",
-      "productCode": "P009",
-      "category": "Category A",
-      "price": 130,
-      "quantity": 14
-    },
-    {
-      "id": 10,
-      "productName": "Product 10",
-      "productCode": "P010",
-      "category": "Category C",
-      "price": 270,
-      "quantity": 11
-    },
-    {
-      "id": 11,
-      "productName": "Product 11",
-      "productCode": "P011",
-      "category": "Category B",
-      "price": 210,
-      "quantity": 6
-    },
-    {
-      "id": 12,
-      "productName": "Product 12",
-      "productCode": "P012",
-      "category": "Category A",
-      "price": 140,
-      "quantity": 13
-    }
-  ]
+    "products": [
+      {
+        "productId": null,
+        "productName": "Nike Jordan",
+        "productImage": "nike-jordan-image.jpg",
+        "sku": "PT002",
+        "code": "HG3FK",
+        "referenceNumber": "32RRR554",
+        "quantity": 4
+      }
+    ],
+    "paperSize": "A4",
+    "generateReferenceNumber": true
+  }
 }
