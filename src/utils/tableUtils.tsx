@@ -9,10 +9,11 @@ import {
 } from "@/constants/constants";
 
 /**
- * Universal Tailwind color mapping for all known status constants.
- * Includes dark theme variants for brand consistency.
+ * Raw Tailwind color mapping for all known status constants.
+ * Keys may contain inconsistent casing or spacing.
+ * This map is normalized before export to ensure consistent lookup.
  */
-export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
+const RAW_STATUS_COLORS: Record<string, string> = {
   // General Statuses
   Active: "bg-green-600 text-white dark:bg-green-800",
   Inactive: "bg-red-500 text-white dark:bg-red-800",
@@ -21,7 +22,7 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
   Archived: "bg-gray-500 text-white dark:bg-gray-700",
   Deleted: "bg-gray-700 text-white dark:bg-gray-900",
 
-  // Expired
+  // Expiry & Renewal
   Expired: "bg-red-600 text-white dark:bg-red-900",
   Renewed: "bg-green-500 text-white dark:bg-green-700",
   Cancelled: "bg-rose-600 text-white dark:bg-rose-800",
@@ -45,7 +46,7 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
 
   // Payment
   Paid: "bg-green-700 text-white dark:bg-green-900",
-  UnPaid: "bg-red-600 text-white dark:bg-red-800",
+  UnPaid: "bg-red-600 text-white dark:bg-red-800", // Will be normalized to "Unpaid"
   Due: "bg-amber-600 text-white dark:bg-amber-800",
   Refunded: "bg-violet-500 text-white dark:bg-violet-700",
   Overdue: "bg-orange-700 text-white dark:bg-orange-900",
@@ -63,17 +64,14 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
   Completed: "bg-green-600 text-white dark:bg-green-800",
   Processing: "bg-blue-500 text-white dark:bg-blue-800",
   "On Hold": "bg-yellow-600 text-white dark:bg-yellow-800",
-  //Returned: "bg-rose-500 text-white dark:bg-rose-700", // from-above
-  //Refunded: "bg-violet-600 text-white dark:bg-violet-800", // from-above
+  // Returned and Refunded reused from above
   Shipped: "bg-cyan-500 text-white dark:bg-cyan-700",
   Delivered: "bg-green-500 text-white dark:bg-green-700",
   "Partially Fulfilled": "bg-indigo-500 text-white dark:bg-indigo-700",
 
-  // Leave Approval Statuses
-  //Pending: "bg-yellow-500 text-white dark:bg-yellow-700",  // from-above
+  // Leave Approval
   Approved: "bg-green-600 text-white dark:bg-green-800",
   Rejected: "bg-red-500 text-white dark:bg-red-700",
-  //Cancelled: "bg-rose-600 text-white dark:bg-rose-800",  // from-above
   Forwarded: "bg-blue-400 text-white dark:bg-blue-600",
   Reviewed: "bg-indigo-500 text-white dark:bg-indigo-700",
   Escalated: "bg-red-600 text-white dark:bg-red-800",
@@ -81,37 +79,46 @@ export const UNIVERSAL_STATUS_COLORS: Record<string, string> = {
   Deferred: "bg-amber-400 text-black dark:bg-amber-700",
   "Auto Approved": "bg-green-500 text-white dark:bg-green-700",
 
-  //Quotation:
+  // Quotation
   Sent: "bg-green-600 text-white dark:bg-green-800",
 
-  // Default
+  // Fallback
   Default: "bg-gray-300 text-gray-900 dark:bg-gray-700 dark:text-gray-200",
 };
 
 /**
- * Generalized badge renderer for all status groups.
- * Accepts any value from STATUSES, ORDER_STATUSES, PAYMENT_STATUSES, etc.
+ * Capitalizes the first letter of each word in a string.
+ * Ensures consistent formatting for status keys like "in progress" → "In Progress".
+ */
+function normalizeValue(value: string): string {
+  return value
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Normalized export of status colors.
+ * All keys are transformed using normalizeValue to ensure consistent lookup.
+ */
+export const UNIVERSAL_STATUS_COLORS: Record<string, string> = Object.fromEntries(
+  Object.entries(RAW_STATUS_COLORS).map(([key, val]) => [normalizeValue(key), val])
+);
+
+/**
+ * Renders a styled badge for any known status value.
+ * Automatically normalizes input and falls back to Default if no match is found.
+ *
+ * @param value - Raw status string (e.g. "pending", "IN progress", "UnPaid")
+ * @returns JSX badge element with appropriate Tailwind styling
  */
 export const renderStatusBadge = (value: string): JSX.Element => {
-
-  /**
-   * Normalizes a string to have only the first letter capitalized.
-   * Useful for standardizing status labels like "Pending", "Approved", etc.
-   *
-   * Examples:
-   *   "PENDING" → "Pending"
-   *   "peNdiNg" → "Pending"
-   *   "approved" → "Approved"
-   */
-  function normalizeValue(value: string): string {
-    // Convert the entire string to lowercase
-    const lower = value.toLowerCase();
-
-    // Capitalize the first character and append the rest of the string
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
-  }
-
   const normalizedValue = normalizeValue(value);
+
+  if (!UNIVERSAL_STATUS_COLORS[normalizedValue]) {
+    console.log(`Key not found in UNIVERSAL_STATUS_COLORS: @${value}@`);
+  }
 
   const classString =
     UNIVERSAL_STATUS_COLORS[normalizedValue] || UNIVERSAL_STATUS_COLORS.Default;
