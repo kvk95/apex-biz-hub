@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { UNITS,CATEGORIES } from "@/constants/constants";
- 
+import { UNITS, CATEGORIES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
+
 interface ProductData {
   productCode: string;
   productName: string;
@@ -47,15 +49,24 @@ export default function ProductReport() {
   const filteredData = useMemo(() => {
     const result = data.filter((item) => {
       const matchProductCode = productCode.trim()
-        ? item.productCode.toLowerCase().includes(productCode.trim().toLowerCase())
+        ? item.productCode
+            .toLowerCase()
+            .includes(productCode.trim().toLowerCase())
         : true;
       const matchProductName = productName.trim()
-        ? item.productName.toLowerCase().includes(productName.trim().toLowerCase())
+        ? item.productName
+            .toLowerCase()
+            .includes(productName.trim().toLowerCase())
         : true;
-      const matchCategory = category === "All" ? true : item.category === category;
+      const matchCategory =
+        category === "All" ? true : item.category === category;
       const matchUnit = unit ? item.unit === unit : true;
-      const matchMinStock = minStock.trim() ? item.stockQty >= Number(minStock) : true;
-      const matchMaxStock = maxStock.trim() ? item.stockQty <= Number(maxStock) : true;
+      const matchMinStock = minStock.trim()
+        ? item.stockQty >= Number(minStock)
+        : true;
+      const matchMaxStock = maxStock.trim()
+        ? item.stockQty <= Number(maxStock)
+        : true;
       return (
         matchProductCode &&
         matchProductName &&
@@ -133,13 +144,21 @@ export default function ProductReport() {
       key: "purchasePrice",
       label: "Purchase Price",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "salePrice",
       label: "Sale Price",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "stockQty",
@@ -150,7 +169,11 @@ export default function ProductReport() {
       key: "stockValue",
       label: "Stock Value",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
   ];
 
@@ -162,117 +185,114 @@ export default function ProductReport() {
         </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.purchasePrice, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.salePrice, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
-        <td className="px-4 py-3 text-right">{filteredData
-          .reduce((acc, cur) => acc + cur.stockQty, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
+        <td className="px-4 py-3 text-right">
+          {filteredData
+            .reduce((acc, cur) => acc + cur.stockQty, 0)
+            .toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+        </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.stockValue, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Product Code"
-        value={productCode}
-        onChange={(e) => {
-          setProductCode(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleProductCodeChange:", {
-            productCode: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product code"
-      />
-      <input
-        type="text"
-        placeholder="Product Name"
-        value={productName}
-        onChange={(e) => {
-          setProductName(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleProductNameChange:", {
-            productName: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product name"
-      />
-      <select
-        value={category}
-        onChange={(e) => {
-          setCategory(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleCategoryChange:", {
-            category: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by category"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={unit}
-        onChange={(e) => {
-          setUnit(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleUnitChange:", {
-            unit: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by unit"
-      >
-        <option value="">All Units</option>
-        {UNITS.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
-      <input
-        type="number"
-        placeholder="Min Stock Qty"
-        value={minStock}
-        onChange={(e) => {
-          setMinStock(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleMinStockChange:", {
-            minStock: e.target.value,
-          });
-        }}
-        min="0"
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by minimum stock quantity"
-      />
-      <input
-        type="number"
-        placeholder="Max Stock Qty"
-        value={maxStock}
-        onChange={(e) => {
-          setMaxStock(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductReport handleMaxStockChange:", {
-            maxStock: e.target.value,
-          });
-        }}
-        min="0"
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by maximum stock quantity"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={productCode}
+          placeholder="Product Code"
+          onSearch={(query) => {
+            setProductCode(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={productName}
+          placeholder="Product Name"
+          onSearch={(query) => {
+            setProductName(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setCurrentPage(1);
+            console.log("ProductReport handleCategoryChange:", {
+              category: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by category"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={unit}
+          onChange={(e) => {
+            setUnit(e.target.value);
+            setCurrentPage(1);
+            console.log("ProductReport handleUnitChange:", {
+              unit: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by unit"
+        >
+          <option value="">All Units</option>
+          {UNITS.map((u) => (
+            <option key={u} value={u}>
+              {u}
+            </option>
+          ))}
+        </select>
+        <SearchInput
+          className="w-32"
+          type="number"
+          value={minStock}
+          placeholder="Min Stock Qty"
+          onSearch={(query) => {
+            setMinStock(query);
+            setCurrentPage(1);
+          }}
+          min={0}
+        />
+        <SearchInput
+          className="w-32"
+          type="number"
+          value={maxStock}
+          placeholder="Max Stock Qty"
+          onSearch={(query) => {
+            setMaxStock(query);
+            setCurrentPage(1);
+          }}
+          min={0}
+        />
+      </div>
     </div>
   );
 

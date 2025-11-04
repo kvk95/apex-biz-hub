@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 const TAX_RATES = ["All", "5%", "6%", "7%", "8%", "9%", "10%", "11%", "12%"]; // Replace with TAX_RATES from constants.ts if available
 
@@ -47,7 +49,8 @@ export default function TaxReport() {
       const end = endDate ? new Date(endDate) : null;
       const matchStartDate = start ? itemDate >= start : true;
       const matchEndDate = end ? itemDate <= end : true;
-      const matchTaxRate = selectedTaxRate !== "All" ? item.taxRate === selectedTaxRate : true;
+      const matchTaxRate =
+        selectedTaxRate !== "All" ? item.taxRate === selectedTaxRate : true;
       return matchStartDate && matchEndDate && matchTaxRate;
     });
     console.log("TaxReport filteredData:", result, {
@@ -92,7 +95,11 @@ export default function TaxReport() {
       key: "invoiceNo",
       label: "Invoice No",
       align: "left",
-      render: (value) => <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">{value}</span>,
+      render: (value) => (
+        <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">
+          {value}
+        </span>
+      ),
     },
     { key: "customer", label: "Customer", align: "left" },
     { key: "taxRate", label: "Tax Rate", align: "right" },
@@ -100,13 +107,21 @@ export default function TaxReport() {
       key: "taxAmount",
       label: "Tax Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "totalAmount",
       label: "Total Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
   ];
 
@@ -118,56 +133,61 @@ export default function TaxReport() {
         </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((sum, item) => sum + item.taxAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((sum, item) => sum + item.totalAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="date"
-        placeholder="Start Date"
-        value={startDate}
-        onChange={(e) => {
-          setStartDate(e.target.value);
-          setCurrentPage(1);
-          console.log("TaxReport handleStartDateChange:", { startDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by start date"
-      />
-      <input
-        type="date"
-        placeholder="End Date"
-        value={endDate}
-        onChange={(e) => {
-          setEndDate(e.target.value);
-          setCurrentPage(1);
-          console.log("TaxReport handleEndDateChange:", { endDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by end date"
-      />
-      <select
-        value={selectedTaxRate}
-        onChange={(e) => {
-          setSelectedTaxRate(e.target.value);
-          setCurrentPage(1);
-          console.log("TaxReport handleTaxRateChange:", { selectedTaxRate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by tax rate"
-      >
-        {TAX_RATES.map((rate) => (
-          <option key={rate} value={rate}>
-            {rate}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="Start Date"
+          value={startDate}
+          onSearch={(query) => {
+            setStartDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="End Date"
+          value={endDate}
+          onSearch={(query) => {
+            setEndDate(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={selectedTaxRate}
+          onChange={(e) => {
+            setSelectedTaxRate(e.target.value);
+            setCurrentPage(1); 
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by tax rate"
+        >
+          {TAX_RATES.map((rate) => (
+            <option key={rate} value={rate}>
+              {rate}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

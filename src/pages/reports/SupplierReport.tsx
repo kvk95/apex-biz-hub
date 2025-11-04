@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface SupplierData {
   id: number; // Added for unique key in table rendering
@@ -51,9 +53,13 @@ export default function SupplierReport() {
   const filteredData = useMemo(() => {
     const result = data.filter((item) => {
       return (
-        item.supplierName.toLowerCase().includes(searchSupplier.toLowerCase()) &&
+        item.supplierName
+          .toLowerCase()
+          .includes(searchSupplier.toLowerCase()) &&
         item.supplierCode.toLowerCase().includes(searchCode.toLowerCase()) &&
-        item.contactPerson.toLowerCase().includes(searchContact.toLowerCase()) &&
+        item.contactPerson
+          .toLowerCase()
+          .includes(searchContact.toLowerCase()) &&
         item.phone.toLowerCase().includes(searchPhone.toLowerCase()) &&
         item.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
         item.city.toLowerCase().includes(searchCity.toLowerCase()) &&
@@ -148,105 +154,62 @@ export default function SupplierReport() {
   ];
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Supplier Name"
-        value={searchSupplier}
-        onChange={(e) => {
-          setSearchSupplier(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchSupplierChange:", {
-            searchSupplier: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by supplier name"
-      />
-      <input
-        type="text"
-        placeholder="Supplier Code"
-        value={searchCode}
-        onChange={(e) => {
-          setSearchCode(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchCodeChange:", {
-            searchCode: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by supplier code"
-      />
-      <input
-        type="text"
-        placeholder="Contact Person"
-        value={searchContact}
-        onChange={(e) => {
-          setSearchContact(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchContactChange:", {
-            searchContact: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by contact person"
-      />
-      <input
-        type="text"
-        placeholder="Phone"
-        value={searchPhone}
-        onChange={(e) => {
-          setSearchPhone(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchPhoneChange:", {
-            searchPhone: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by phone"
-      />
-      <input
-        type="text"
-        placeholder="Email"
-        value={searchEmail}
-        onChange={(e) => {
-          setSearchEmail(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchEmailChange:", {
-            searchEmail: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by email"
-      />
-      <input
-        type="text"
-        placeholder="City"
-        value={searchCity}
-        onChange={(e) => {
-          setSearchCity(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchCityChange:", {
-            searchCity: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by city"
-      />
-      <input
-        type="text"
-        placeholder="Country"
-        value={searchCountry}
-        onChange={(e) => {
-          setSearchCountry(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierReport handleSearchCountryChange:", {
-            searchCountry: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by country"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchSupplier}
+          placeholder="Supplier Name"
+          onSearch={(query) => {
+            setSearchSupplier(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={searchContact}
+          placeholder="Contact Person"
+          onSearch={(query) => {
+            setSearchContact(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={searchPhone}
+          placeholder="Phone"
+          onSearch={(query) => {
+            setSearchPhone(query);
+            setCurrentPage(1);
+          }}
+        />
+                <SearchInput
+          className=""
+          value={searchEmail}
+          placeholder="Email"
+          onSearch={(query) => {
+            setSearchEmail(query);
+            setCurrentPage(1);
+          }}
+        /> 
+      </div>
+      <div className="flex justify-end gap-2"> 
+
+        <input
+          type="text"
+          placeholder="City"
+          value={searchCity}
+          onChange={(e) => {
+            setSearchCity(e.target.value);
+            setCurrentPage(1);
+            console.log("SupplierReport handleSearchCityChange:", {
+              searchCity: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Search by city"
+        />
+      </div>
     </div>
   );
 

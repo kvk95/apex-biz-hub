@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface SupplierDue {
   id: number; // Added for unique key in table rendering
@@ -21,7 +23,7 @@ export default function SupplierDueReport() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     loadData();
@@ -46,7 +48,9 @@ export default function SupplierDueReport() {
         .toLowerCase()
         .includes(supplierName.toLowerCase());
       const matchesPhone = item.phone.includes(phone);
-      const matchesEmail = item.email.toLowerCase().includes(email.toLowerCase());
+      const matchesEmail = item.email
+        .toLowerCase()
+        .includes(email.toLowerCase());
       return matchesSupplierName && matchesPhone && matchesEmail;
     });
     console.log("SupplierDueReport filteredData:", result, {
@@ -98,19 +102,31 @@ export default function SupplierDueReport() {
       key: "dueAmount",
       label: "Due Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "paidAmount",
       label: "Paid Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "totalAmount",
       label: "Total Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
   ];
 
@@ -122,61 +138,58 @@ export default function SupplierDueReport() {
         </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.dueAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.paidAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.totalAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Supplier Name"
-        value={supplierName}
-        onChange={(e) => {
-          setSupplierName(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierDueReport handleSearchSupplierNameChange:", {
-            supplierName: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by supplier name"
-      />
-      <input
-        type="text"
-        placeholder="Phone"
-        value={phone}
-        onChange={(e) => {
-          setPhone(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierDueReport handleSearchPhoneChange:", {
-            phone: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by phone"
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => {
-          setEmail(e.target.value);
-          setCurrentPage(1);
-          console.log("SupplierDueReport handleSearchEmailChange:", {
-            email: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by email"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={supplierName}
+          placeholder="Supplier Name"
+          onSearch={(query) => {
+            setSupplierName(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={phone}
+          placeholder="Phone"
+          onSearch={(query) => {
+            setPhone(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={email}
+          placeholder="Email"
+          onSearch={(query) => {
+            setEmail(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2"></div>
     </div>
   );
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { PAYMENT_STATUSES , PAYMENT_TYPES} from "@/constants/constants";
+import { PAYMENT_STATUSES, PAYMENT_TYPES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Income {
   date: string;
@@ -46,12 +47,20 @@ const IncomeReport: React.FC = () => {
     const result = data.filter((item) => {
       const matchStartDate = startDate ? item.date >= startDate : true;
       const matchEndDate = endDate ? item.date <= endDate : true;
-      const matchPaymentStatus = paymentStatus !== "All" ? item.paymentStatus === paymentStatus : true;
-      const matchPaymentMethod = paymentMethod !== "All" ? item.paymentMethod === paymentMethod : true;
+      const matchPaymentStatus =
+        paymentStatus !== "All" ? item.paymentStatus === paymentStatus : true;
+      const matchPaymentMethod =
+        paymentMethod !== "All" ? item.paymentMethod === paymentMethod : true;
       const matchInvoice = searchInvoice
         ? item.invoiceNo.toLowerCase().includes(searchInvoice.toLowerCase())
         : true;
-      return matchStartDate && matchEndDate && matchPaymentStatus && matchPaymentMethod && matchInvoice;
+      return (
+        matchStartDate &&
+        matchEndDate &&
+        matchPaymentStatus &&
+        matchPaymentMethod &&
+        matchInvoice
+      );
     });
     console.log("IncomeReport filteredData:", result, {
       startDate,
@@ -99,21 +108,29 @@ const IncomeReport: React.FC = () => {
       key: "invoiceNo",
       label: "Invoice No",
       align: "left",
-      render: (value) => <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">{value}</span>,
+      render: (value) => (
+        <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">
+          {value}
+        </span>
+      ),
     },
-    { key: "customer", label: "Customer", align: "left" }, 
+    { key: "customer", label: "Customer", align: "left" },
     {
       key: "paymentStatus",
       label: "Payment Status",
       align: "center",
       render: renderStatusBadge,
-    },    
+    },
     { key: "paymentMethod", label: "Payment Method", align: "left" },
     {
       key: "totalAmount",
       label: "Total Amount",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
   ];
 
@@ -125,81 +142,85 @@ const IncomeReport: React.FC = () => {
         </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.totalAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="date"
-        placeholder="Date From"
-        value={startDate}
-        onChange={(e) => {
-          setStartDate(e.target.value);
-          setCurrentPage(1);
-          console.log("IncomeReport handleStartDateChange:", { startDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by start date"
-      />
-      <input
-        type="date"
-        placeholder="Date To"
-        value={endDate}
-        onChange={(e) => {
-          setEndDate(e.target.value);
-          setCurrentPage(1);
-          console.log("IncomeReport handleEndDateChange:", { endDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by end date"
-      />
-      <select
-        value={paymentStatus}
-        onChange={(e) => {
-          setPaymentStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("IncomeReport handlePaymentStatusChange:", { paymentStatus: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by payment status"
-      >
-        {PAYMENT_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <select
-        value={paymentMethod}
-        onChange={(e) => {
-          setPaymentMethod(e.target.value);
-          setCurrentPage(1);
-          console.log("IncomeReport handlePaymentMethodChange:", { paymentMethod: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by payment method"
-      >
-        {PAYMENT_TYPES.map((method) => (
-          <option key={method} value={method}>
-            {method}
-          </option>
-        ))}
-      </select>
-      <input
-        type="text"
-        placeholder="Invoice No"
-        value={searchInvoice}
-        onChange={(e) => {
-          setSearchInvoice(e.target.value);
-          setCurrentPage(1);
-          console.log("IncomeReport handleSearchInvoiceChange:", { searchInvoice: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by invoice number"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchInvoice}
+          placeholder="Invoice No"
+          onSearch={(query) => {
+            setSearchInvoice(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="Date From"
+          value={startDate}
+          onSearch={(query) => {
+            setStartDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="Date To"
+          value={endDate}
+          onSearch={(query) => {
+            setEndDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <select
+          value={paymentStatus}
+          onChange={(e) => {
+            setPaymentStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("IncomeReport handlePaymentStatusChange:", {
+              paymentStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by payment status"
+        >
+          {PAYMENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <select
+          value={paymentMethod}
+          onChange={(e) => {
+            setPaymentMethod(e.target.value);
+            setCurrentPage(1);
+            console.log("IncomeReport handlePaymentMethodChange:", {
+              paymentMethod: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by payment method"
+        >
+          {PAYMENT_TYPES.map((method) => (
+            <option key={method} value={method}>
+              {method}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -214,7 +235,9 @@ const IncomeReport: React.FC = () => {
       onSearchChange={(e) => {
         setSearchInvoice(e.target.value);
         setCurrentPage(1);
-        console.log("IncomeReport handleSearchInvoiceChange:", { searchInvoice: e.target.value });
+        console.log("IncomeReport handleSearchInvoiceChange:", {
+          searchInvoice: e.target.value,
+        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}

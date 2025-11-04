@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
-const YEARS = ["2025","2024","2023", "2022", "2021", "2020"]; // Replace with YEARS from constants.ts if available
+const YEARS = ["2025", "2024", "2023", "2022", "2021", "2020"]; // Replace with YEARS from constants.ts if available
 const BRANCHES = [
   { value: "all", label: "All Branches" },
   { value: "ny", label: "New York" },
@@ -33,7 +35,7 @@ export default function AnnualReport() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<AnnualRecord[]>("AnnualReport"); 
+    const response = await apiService.get<AnnualRecord[]>("AnnualReport");
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -94,7 +96,11 @@ export default function AnnualReport() {
       key: "totalSpent",
       label: "Total Spent",
       align: "left",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "lastPurchase",
@@ -124,7 +130,11 @@ export default function AnnualReport() {
           <td className="px-4 py-3 text-left">Totals</td>
           <td className="px-4 py-3 text-left">{totals.orders}</td>
           <td className="px-4 py-3 text-left">
-            ₹{totals.totalSpent.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹
+            {totals.totalSpent.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </td>
           <td className="px-4 py-3 text-left"></td>
         </tr>
@@ -133,39 +143,46 @@ export default function AnnualReport() {
   };
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <select
-        value={year}
-        onChange={(e) => {
-          setYear(e.target.value);
-          setCurrentPage(1);
-          console.log("AnnualReport handleYearChange:", { year: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by year"
-      >
-        {YEARS.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
-      </select>
-      <select
-        value={branch}
-        onChange={(e) => {
-          setBranch(e.target.value);
-          setCurrentPage(1);
-          console.log("AnnualReport handleBranchChange:", { branch: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by branch"
-      >
-        {BRANCHES.map((b) => (
-          <option key={b.value} value={b.value}>
-            {b.label}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2"></div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={year}
+          onChange={(e) => {
+            setYear(e.target.value);
+            setCurrentPage(1);
+            console.log("AnnualReport handleYearChange:", {
+              year: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by year"
+        >
+          {YEARS.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+        <select
+          value={branch}
+          onChange={(e) => {
+            setBranch(e.target.value);
+            setCurrentPage(1);
+            console.log("AnnualReport handleBranchChange:", {
+              branch: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by branch"
+        >
+          {BRANCHES.map((b) => (
+            <option key={b.value} value={b.value}>
+              {b.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

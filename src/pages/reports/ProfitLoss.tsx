@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface ProfitLossRecord {
   id: string;
@@ -88,27 +90,47 @@ export default function ProfitLoss() {
       key: "totalSales",
       label: "Total Sales",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "totalPurchase",
       label: "Total Purchase",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "expense",
       label: "Expense",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     {
       key: "profitLoss",
       label: "Profit / Loss",
       align: "right",
       render: (value) => (
-        <span className={`font-semibold ${value >= 0 ? "text-green-600" : "text-red-600"}`}>
-          ₹{Math.abs(value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <span
+          className={`font-semibold ${
+            value >= 0 ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          ₹
+          {Math.abs(value).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </span>
       ),
     },
@@ -130,16 +152,36 @@ export default function ProfitLoss() {
         <tr>
           <td className="px-4 py-3 text-left">Total</td>
           <td className="px-4 py-3 text-right">
-            ₹{totals.totalSales.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹
+            {totals.totalSales.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </td>
           <td className="px-4 py-3 text-right">
-            ₹{totals.totalPurchase.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹
+            {totals.totalPurchase.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </td>
           <td className="px-4 py-3 text-right">
-            ₹{totals.expense.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹
+            {totals.expense.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </td>
-          <td className={`px-4 py-3 text-right ${totals.profitLoss >= 0 ? "text-green-600" : "text-red-600"}`}>
-            ₹{Math.abs(totals.profitLoss).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <td
+            className={`px-4 py-3 text-right ${
+              totals.profitLoss >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            ₹
+            {Math.abs(totals.profitLoss).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </td>
         </tr>
       </tfoot>
@@ -147,31 +189,30 @@ export default function ProfitLoss() {
   };
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="date"
-        placeholder="From Date"
-        value={fromDate}
-        onChange={(e) => {
-          setFromDate(e.target.value);
-          setCurrentPage(1);
-          console.log("ProfitLoss handleFromDateChange:", { fromDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by from date"
-      />
-      <input
-        type="date"
-        placeholder="To Date"
-        value={toDate}
-        onChange={(e) => {
-          setToDate(e.target.value);
-          setCurrentPage(1);
-          console.log("ProfitLoss handleToDateChange:", { toDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by to date"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2"></div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="From Date"
+          value={fromDate}
+          onSearch={(query) => {
+            setFromDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="To Date"
+          value={toDate}
+          onSearch={(query) => {
+            setToDate(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
     </div>
   );
 

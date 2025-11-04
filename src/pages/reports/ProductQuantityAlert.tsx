@@ -1,24 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-
-import { CATEGORIES } from "@/constants/constants";
- 
-const BRANDS = [
-  "All",
-  "Apple",
-  "Samsung",
-  "Sony",
-  "Dell",
-  "Logitech",
-  "HP",
-  "Canon",
-  "Nike",
-  "Adidas",
-  "KitchenAid",
-  "Bose",
-  "Microsoft",
-]; // Replace with BRANDS from constants.ts if available
+import { CATEGORIES, BRANDS } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Product {
   productCode: string;
@@ -67,10 +52,17 @@ export default function ProductQuantityAlert() {
       const matchProductName = productName
         ? item.productName.toLowerCase().includes(productName.toLowerCase())
         : true;
-      const matchCategory = category !== "All" ? item.category === category : true;
+      const matchCategory =
+        category !== "All" ? item.category === category : true;
       const matchBrand = brand !== "All" ? item.brand === brand : true;
       const matchAlert = item.quantity <= item.alertQuantity;
-      return matchProductCode && matchProductName && matchCategory && matchBrand && matchAlert;
+      return (
+        matchProductCode &&
+        matchProductName &&
+        matchCategory &&
+        matchBrand &&
+        matchAlert
+      );
     });
     console.log("ProductQuantityAlert filteredData:", result, {
       productCode,
@@ -106,7 +98,10 @@ export default function ProductQuantityAlert() {
   };
 
   const handleReport = () => {
-    alert("Product Quantity Alert Report:\n\n" + JSON.stringify(filteredData, null, 2));
+    alert(
+      "Product Quantity Alert Report:\n\n" +
+        JSON.stringify(filteredData, null, 2)
+    );
     console.log("ProductQuantityAlert handleReport:", { filteredData });
   };
 
@@ -132,84 +127,82 @@ export default function ProductQuantityAlert() {
         <td className="px-4 py-3 text-right" colSpan={6}>
           Total
         </td>
-        <td className="px-4 py-3 text-right">{filteredData
-          .reduce((acc, cur) => acc + cur.alertQuantity, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
-        <td className="px-4 py-3 text-right">{filteredData
-          .reduce((acc, cur) => acc + cur.quantity, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 0 })}</td>
+        <td className="px-4 py-3 text-right">
+          {filteredData
+            .reduce((acc, cur) => acc + cur.alertQuantity, 0)
+            .toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+        </td>
+        <td className="px-4 py-3 text-right">
+          {filteredData
+            .reduce((acc, cur) => acc + cur.quantity, 0)
+            .toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+        </td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Product Code"
-        value={productCode}
-        onChange={(e) => {
-          setProductCode(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductQuantityAlert handleProductCodeChange:", {
-            productCode: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product code"
-      />
-      <input
-        type="text"
-        placeholder="Product Name"
-        value={productName}
-        onChange={(e) => {
-          setProductName(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductQuantityAlert handleProductNameChange:", {
-            productName: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by product name"
-      />
-      <select
-        value={category}
-        onChange={(e) => {
-          setCategory(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductQuantityAlert handleCategoryChange:", {
-            category: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by category"
-      >
-        <option value="All">All Categories</option>
-        {CATEGORIES.slice(1).map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={brand}
-        onChange={(e) => {
-          setBrand(e.target.value);
-          setCurrentPage(1);
-          console.log("ProductQuantityAlert handleBrandChange:", {
-            brand: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by brand"
-      >
-        <option value="All">All Brands</option>
-        {BRANDS.slice(1).map((b) => (
-          <option key={b} value={b}>
-            {b}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={productCode}
+          placeholder="Product Code"
+          onSearch={(query) => {
+            setProductCode(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={productName}
+          placeholder="Product Name"
+          onSearch={(query) => {
+            setProductName(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setCurrentPage(1);
+            console.log("ProductQuantityAlert handleCategoryChange:", {
+              category: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by category"
+        >
+          <option value="All">All Categories</option>
+          {CATEGORIES.slice(1).map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={brand}
+          onChange={(e) => {
+            setBrand(e.target.value);
+            setCurrentPage(1);
+            console.log("ProductQuantityAlert handleBrandChange:", {
+              brand: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by brand"
+        >
+          <option value="All">All Brands</option>
+          {BRANDS.slice(1).map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

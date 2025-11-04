@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface CustomerDueData {
   id: number;
@@ -30,7 +32,9 @@ export default function CustomerDueReport() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<CustomerDueData[]>("CustomerDueReport");
+    const response = await apiService.get<CustomerDueData[]>(
+      "CustomerDueReport"
+    );
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -43,15 +47,32 @@ export default function CustomerDueReport() {
 
   const filteredData = useMemo(() => {
     const result = data.filter((item) => {
-      const matchName = item.name.toLowerCase().includes(searchName.toLowerCase());
-      const matchPhone = item.phone.toLowerCase().includes(searchPhone.toLowerCase());
-      const matchEmail = item.email.toLowerCase().includes(searchEmail.toLowerCase());
-      const matchAddress = item.address.toLowerCase().includes(searchAddress.toLowerCase());
+      const matchName = item.name
+        .toLowerCase()
+        .includes(searchName.toLowerCase());
+      const matchPhone = item.phone
+        .toLowerCase()
+        .includes(searchPhone.toLowerCase());
+      const matchEmail = item.email
+        .toLowerCase()
+        .includes(searchEmail.toLowerCase());
+      const matchAddress = item.address
+        .toLowerCase()
+        .includes(searchAddress.toLowerCase());
       const dueFromNum = parseFloat(searchDueFrom);
       const dueToNum = parseFloat(searchDueTo);
-      const matchDueFrom = isNaN(dueFromNum) ? true : item.dueAmount >= dueFromNum;
+      const matchDueFrom = isNaN(dueFromNum)
+        ? true
+        : item.dueAmount >= dueFromNum;
       const matchDueTo = isNaN(dueToNum) ? true : item.dueAmount <= dueToNum;
-      return matchName && matchPhone && matchEmail && matchAddress && matchDueFrom && matchDueTo;
+      return (
+        matchName &&
+        matchPhone &&
+        matchEmail &&
+        matchAddress &&
+        matchDueFrom &&
+        matchDueTo
+      );
     });
     console.log("CustomerDueReport filteredData:", result, {
       searchName,
@@ -62,7 +83,15 @@ export default function CustomerDueReport() {
       searchDueTo,
     });
     return result;
-  }, [data, searchName, searchPhone, searchEmail, searchAddress, searchDueFrom, searchDueTo]);
+  }, [
+    data,
+    searchName,
+    searchPhone,
+    searchEmail,
+    searchAddress,
+    searchDueFrom,
+    searchDueTo,
+  ]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -97,12 +126,6 @@ export default function CustomerDueReport() {
 
   const columns: Column[] = [
     {
-      key: "index",
-      label: "#",
-      align: "left",
-      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
-    },
-    {
       key: "name",
       label: "Customer Name",
       align: "left",
@@ -116,10 +139,13 @@ export default function CustomerDueReport() {
       label: "Due Amount",
       align: "right",
       render: (value) => (
-        <span className="text-red-600 font-semibold">{`₹${value.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`}</span>
+        <span className="text-red-600 font-semibold">{`₹${value.toLocaleString(
+          "en-IN",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }
+        )}`}</span>
       ),
     },
   ];
@@ -132,101 +158,83 @@ export default function CustomerDueReport() {
         </td>
         <td className="px-4 py-3 text-right text-red-600 font-semibold">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.dueAmount, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
       </tr>
     </tfoot>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Customer Name"
-        value={searchName}
-        onChange={(e) => {
-          setSearchName(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchNameChange:", {
-            searchName: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by customer name"
-      />
-      <input
-        type="text"
-        placeholder="Phone"
-        value={searchPhone}
-        onChange={(e) => {
-          setSearchPhone(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchPhoneChange:", {
-            searchPhone: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by phone"
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={searchEmail}
-        onChange={(e) => {
-          setSearchEmail(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchEmailChange:", {
-            searchEmail: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by email"
-      />
-      <input
-        type="text"
-        placeholder="Address"
-        value={searchAddress}
-        onChange={(e) => {
-          setSearchAddress(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchAddressChange:", {
-            searchAddress: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by address"
-      />
-      <input
-        type="number"
-        placeholder="Min Due"
-        value={searchDueFrom}
-        onChange={(e) => {
-          setSearchDueFrom(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchDueFromChange:", {
-            searchDueFrom: e.target.value,
-          });
-        }}
-        min="0"
-        step="0.01"
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by minimum due amount"
-      />
-      <input
-        type="number"
-        placeholder="Max Due"
-        value={searchDueTo}
-        onChange={(e) => {
-          setSearchDueTo(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerDueReport handleSearchDueToChange:", {
-            searchDueTo: e.target.value,
-          });
-        }}
-        min="0"
-        step="0.01"
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by maximum due amount"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchName}
+          placeholder="Customer Name"
+          onSearch={(query) => {
+            setSearchName(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="number"
+          value={searchPhone}
+          placeholder="Phone"
+          onSearch={(query) => {
+            setSearchPhone(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="email"
+          value={searchEmail}
+          placeholder="Email"
+          onSearch={(query) => {
+            setSearchEmail(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="text"
+          value={searchAddress}
+          placeholder="Address"
+          onSearch={(query) => {
+            setSearchAddress(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className="w-32"
+          type="number"
+          value={searchDueFrom}
+          placeholder="Min Due"
+          onSearch={(query) => {
+            setSearchDueFrom(query);
+            setCurrentPage(1);
+          }}
+          min={0}
+          step={0.01}
+        />
+        <SearchInput
+          className="w-32"
+          type="number"
+          value={searchDueTo}
+          placeholder="Max Due"
+          onSearch={(query) => {
+            setSearchDueTo(query);
+            setCurrentPage(1);
+          }}
+          min={0}
+          step={0.01}
+        />
+      </div>
     </div>
   );
 

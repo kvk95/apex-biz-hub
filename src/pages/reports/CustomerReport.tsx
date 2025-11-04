@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { STATUSES } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface CustomerData {
   id: number;
@@ -103,7 +104,11 @@ export default function CustomerReport() {
       key: "totalPurchase",
       label: "Total Purchase",
       align: "right",
-      render: (value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (value) =>
+        `₹${value.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
     { key: "lastPurchaseDate", label: "Last Purchase Date", align: "left" },
     {
@@ -111,72 +116,63 @@ export default function CustomerReport() {
       label: "Status",
       align: "center",
       render: renderStatusBadge,
-    }, 
+    },
   ];
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Name"
-        value={searchName}
-        onChange={(e) => {
-          setSearchName(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerReport handleSearchNameChange:", {
-            searchName: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by name"
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={searchEmail}
-        onChange={(e) => {
-          setSearchEmail(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerReport handleSearchEmailChange:", {
-            searchEmail: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by email"
-      />
-      <input
-        type="text"
-        placeholder="Phone"
-        value={searchPhone}
-        onChange={(e) => {
-          setSearchPhone(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerReport handleSearchPhoneChange:", {
-            searchPhone: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by phone"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("CustomerReport handleFilterStatusChange:", {
-            filterStatus: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Statuses</option>
-        {STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchName}
+          placeholder="Name"
+          onSearch={(query) => {
+            setSearchName(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="email"
+          value={searchEmail}
+          placeholder="Email"
+          onSearch={(query) => {
+            setSearchEmail(query);
+            setCurrentPage(1);
+          }}
+        />
+        <SearchInput
+          className=""
+          type="number"
+          value={searchPhone}
+          placeholder="Phone"
+          onSearch={(query) => {
+            setSearchPhone(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("CustomerReport handleFilterStatusChange:", {
+              filterStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Statuses</option>
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -189,7 +185,10 @@ export default function CustomerReport() {
         </td>
         <td className="px-4 py-3 text-right">{`₹${filteredData
           .reduce((acc, cur) => acc + cur.totalPurchase, 0)
-          .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+          .toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}</td>
         <td className="px-4 py-3" colSpan={2}></td>
       </tr>
     </tfoot>
