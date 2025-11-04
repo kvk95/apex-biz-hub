@@ -1,10 +1,11 @@
-/* -------------------------------------------------
-   Print QR Code - FIXED: Generate Works with productId: null
-   ------------------------------------------------- */
 import React, { useState, useEffect, useRef } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
-import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import {
+  AutoCompleteTextBox,
+  AutoCompleteItem,
+} from "@/components/Search/AutoCompleteTextBox";
+import QRCode from "react-qr-code";
 
 // === Types ===
 type Warehouse = { id: number; warehouseName: string };
@@ -100,8 +101,17 @@ const QrPreviewModal = ({
                       key={i}
                       className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center space-y-2 text-center"
                     >
-                      <div className="bg-gray-200 border-2 border-dashed rounded-xl w-24 h-24 flex items-center justify-center">
-                        <span className="text-4xl">QR</span>
+                      <div className="bg-gray-200   w-24 h-24 flex items-center justify-center">
+                        <QRCode
+                          size={256}
+                          style={{
+                            height: "auto",
+                            maxWidth: "100%",
+                            width: "100%",
+                          }}
+                          value= {item.referenceNumber || "REF-XXXX"}
+                          viewBox={`0 0 256 256`}
+                        />
                       </div>
                       <div className="text-xs font-mono break-all">
                         {item.referenceNumber || "REF-XXXX"}
@@ -184,7 +194,7 @@ export default function PrintQrCode() {
           storeName: data.store.name,
           paperSize: data.paperSize,
           generateReferenceNumber: data.generateReferenceNumber,
-          items: data.products.map(p => ({
+          items: data.products.map((p) => ({
             productId: p.productId ?? null,
             productName: p.productName,
             productImage: p.productImage,
@@ -199,8 +209,8 @@ export default function PrintQrCode() {
 
         // Populate filteredProducts (only if productId exists)
         const productList: Product[] = data.products
-          .filter(p => p.productId !== null)
-          .map(p => ({
+          .filter((p) => p.productId !== null)
+          .map((p) => ({
             id: p.productId!,
             productName: p.productName,
             productImage: p.productImage,
@@ -217,41 +227,59 @@ export default function PrintQrCode() {
   /* ---------- Autocomplete Handlers ---------- */
   const handleWarehouseSearch = async (query: string) => {
     clearTimeout(warehouseTimeout);
-    setForm(p => ({ ...p, warehouseName: query, warehouseId: "" }));
-    if (!query.trim()) { setFilteredWarehouses([]); return; }
+    setForm((p) => ({ ...p, warehouseName: query, warehouseId: "" }));
+    if (!query.trim()) {
+      setFilteredWarehouses([]);
+      return;
+    }
 
     warehouseTimeout = setTimeout(async () => {
       const res = await apiService.get<Warehouse[]>("Warehouses");
       if (res.status.code === "S") {
         setFilteredWarehouses(
-          res.result.filter(w => w.warehouseName.toLowerCase().includes(query.toLowerCase()))
+          res.result.filter((w) =>
+            w.warehouseName.toLowerCase().includes(query.toLowerCase())
+          )
         );
       }
     }, 300);
   };
 
   const handleWarehouseSelect = (item: AutoCompleteItem) => {
-    setForm(p => ({ ...p, warehouseId: item.id.toString(), warehouseName: item.display }));
+    setForm((p) => ({
+      ...p,
+      warehouseId: item.id.toString(),
+      warehouseName: item.display,
+    }));
     setFilteredWarehouses([]);
   };
 
   const handleStoreSearch = async (query: string) => {
     clearTimeout(storeTimeout);
-    setForm(p => ({ ...p, storeName: query, storeId: "" }));
-    if (!query.trim()) { setFilteredStores([]); return; }
+    setForm((p) => ({ ...p, storeName: query, storeId: "" }));
+    if (!query.trim()) {
+      setFilteredStores([]);
+      return;
+    }
 
     storeTimeout = setTimeout(async () => {
       const res = await apiService.get<Store[]>("Stores");
       if (res.status.code === "S") {
         setFilteredStores(
-          res.result.filter(s => s.storeName.toLowerCase().includes(query.toLowerCase()))
+          res.result.filter((s) =>
+            s.storeName.toLowerCase().includes(query.toLowerCase())
+          )
         );
       }
     }, 300);
   };
 
   const handleStoreSelect = (item: AutoCompleteItem) => {
-    setForm(p => ({ ...p, storeId: item.id.toString(), storeName: item.display }));
+    setForm((p) => ({
+      ...p,
+      storeId: item.id.toString(),
+      storeName: item.display,
+    }));
     setFilteredStores([]);
   };
 
@@ -261,7 +289,7 @@ export default function PrintQrCode() {
     items[idx].searchQuery = query;
     items[idx].productId = null;
     items[idx].isValid = false;
-    setForm(p => ({ ...p, items }));
+    setForm((p) => ({ ...p, items }));
 
     if (!query.trim()) {
       setFilteredProducts([]);
@@ -272,10 +300,11 @@ export default function PrintQrCode() {
       const res = await apiService.get<Product[]>("Products");
       if (res.status.code === "S") {
         setFilteredProducts(
-          res.result.filter(p =>
-            p.productName.toLowerCase().includes(query.toLowerCase()) ||
-            p.sku.toLowerCase().includes(query.toLowerCase()) ||
-            p.code.toLowerCase().includes(query.toLowerCase())
+          res.result.filter(
+            (p) =>
+              p.productName.toLowerCase().includes(query.toLowerCase()) ||
+              p.sku.toLowerCase().includes(query.toLowerCase()) ||
+              p.code.toLowerCase().includes(query.toLowerCase())
           )
         );
       }
@@ -283,7 +312,7 @@ export default function PrintQrCode() {
   };
 
   const handleProductSelect = (idx: number, item: AutoCompleteItem) => {
-    const prod = filteredProducts.find(p => p.id === item.id);
+    const prod = filteredProducts.find((p) => p.id === item.id);
     if (!prod) return;
 
     const items = [...form.items];
@@ -295,41 +324,46 @@ export default function PrintQrCode() {
       sku: prod.sku,
       code: prod.code,
       referenceNumber: form.generateReferenceNumber
-        ? `32RRR${Math.floor(Math.random() * 9999).toString().padStart(4, "0")}`
+        ? `32RRR${Math.floor(Math.random() * 9999)
+            .toString()
+            .padStart(4, "0")}`
         : "",
       searchQuery: prod.productName,
       isValid: true,
     };
 
-    setForm(p => ({ ...p, items }));
+    setForm((p) => ({ ...p, items }));
     setFilteredProducts([]);
   };
 
   const addItem = () => {
-    setForm(p => ({
+    setForm((p) => ({
       ...p,
-      items: [...p.items, {
-        productId: null,
-        productName: "",
-        productImage: "",
-        sku: "",
-        code: "",
-        referenceNumber: "",
-        quantity: 1,
-        searchQuery: "",
-        isValid: false,
-      }],
+      items: [
+        ...p.items,
+        {
+          productId: null,
+          productName: "",
+          productImage: "",
+          sku: "",
+          code: "",
+          referenceNumber: "",
+          quantity: 1,
+          searchQuery: "",
+          isValid: false,
+        },
+      ],
     }));
   };
 
   const removeItem = (idx: number) => {
-    setForm(p => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
+    setForm((p) => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
   };
 
   const handleQtyChange = (idx: number, delta: number) => {
     const items = [...form.items];
     items[idx].quantity = Math.max(1, items[idx].quantity + delta);
-    setForm(p => ({ ...p, items }));
+    setForm((p) => ({ ...p, items }));
   };
 
   /* ---------- ACTIONS ---------- */
@@ -340,7 +374,7 @@ export default function PrintQrCode() {
     }
 
     // Use `isValid` instead of `productId`
-    const validItems = form.items.filter(i => i.isValid);
+    const validItems = form.items.filter((i) => i.isValid);
     if (validItems.length === 0) {
       alert("Please add at least one valid product.");
       return;
@@ -410,7 +444,10 @@ export default function PrintQrCode() {
             value={form.warehouseName}
             onSearch={handleWarehouseSearch}
             onSelect={handleWarehouseSelect}
-            items={filteredWarehouses.map(w => ({ id: w.id, display: w.warehouseName }))}
+            items={filteredWarehouses.map((w) => ({
+              id: w.id,
+              display: w.warehouseName,
+            }))}
             placeholder="Select"
             className="w-full"
           />
@@ -423,7 +460,10 @@ export default function PrintQrCode() {
             value={form.storeName}
             onSearch={handleStoreSearch}
             onSelect={handleStoreSelect}
-            items={filteredStores.map(s => ({ id: s.id, display: s.storeName }))}
+            items={filteredStores.map((s) => ({
+              id: s.id,
+              display: s.storeName,
+            }))}
             placeholder="Select"
             className="w-full"
           />
@@ -435,7 +475,9 @@ export default function PrintQrCode() {
         <table className="w-full border text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-3 py-2 text-left">Product <span className="text-red-500">*</span></th>
+              <th className="px-3 py-2 text-left">
+                Product <span className="text-red-500">*</span>
+              </th>
               <th className="px-3 py-2 text-center">SKU</th>
               <th className="px-3 py-2 text-center">Code</th>
               <th className="px-3 py-2 text-center">Reference Number</th>
@@ -446,7 +488,10 @@ export default function PrintQrCode() {
           <tbody>
             {form.items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-4 text-muted-foreground">
+                <td
+                  colSpan={6}
+                  className="text-center py-4 text-muted-foreground"
+                >
                   No products added.
                 </td>
               </tr>
@@ -458,7 +503,7 @@ export default function PrintQrCode() {
                       value={item.searchQuery}
                       onSearch={(q) => handleProductSearch(q, idx)}
                       onSelect={(sel) => handleProductSelect(idx, sel)}
-                      items={filteredProducts.map(p => ({
+                      items={filteredProducts.map((p) => ({
                         id: p.id,
                         display: p.productName,
                         extra: { SKU: p.sku, Code: p.code },
@@ -491,7 +536,9 @@ export default function PrintQrCode() {
                       >
                         -
                       </button>
-                      <span className="mx-2 w-8 text-center">{item.quantity}</span>
+                      <span className="mx-2 w-8 text-center">
+                        {item.quantity}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleQtyChange(idx, 1)}
@@ -532,7 +579,9 @@ export default function PrintQrCode() {
           </label>
           <select
             value={form.paperSize}
-            onChange={(e) => setForm(p => ({ ...p, paperSize: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, paperSize: e.target.value }))
+            }
             className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option>A3</option>
@@ -542,16 +591,25 @@ export default function PrintQrCode() {
           </select>
         </div>
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-foreground">Reference Number</label>
+          <label className="text-sm font-medium text-foreground">
+            Reference Number
+          </label>
           <button
             type="button"
-            onClick={() => setForm(p => ({ ...p, generateReferenceNumber: !p.generateReferenceNumber }))}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.generateReferenceNumber ? "bg-green-500" : "bg-gray-300"
-              }`}
+            onClick={() =>
+              setForm((p) => ({
+                ...p,
+                generateReferenceNumber: !p.generateReferenceNumber,
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              form.generateReferenceNumber ? "bg-green-500" : "bg-gray-300"
+            }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.generateReferenceNumber ? "translate-x-6" : "translate-x-1"
-                }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                form.generateReferenceNumber ? "translate-x-6" : "translate-x-1"
+              }`}
             />
           </button>
         </div>
@@ -600,12 +658,12 @@ export default function PrintQrCode() {
         currentPage={1}
         itemsPerPage={10}
         totalItems={0}
-        onPageChange={() => { }}
-        onPageSizeChange={() => { }}
+        onPageChange={() => {}}
+        onPageSizeChange={() => {}}
         tableColumns={[]}
         tableData={[]}
         formMode={null}
-        setFormMode={() => { }}
+        setFormMode={() => {}}
         modalTitle=""
         modalForm={null}
         onFormSubmit={null}
@@ -616,7 +674,7 @@ export default function PrintQrCode() {
 
       {isPreviewOpen && (
         <QrPreviewModal
-          items={form.items.filter(i => i.isValid)}
+          items={form.items.filter((i) => i.isValid)}
           paperSize={form.paperSize}
           onClose={() => setIsPreviewOpen(false)}
           onPrint={handlePrintQr}
