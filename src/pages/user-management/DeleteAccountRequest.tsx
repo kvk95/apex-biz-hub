@@ -205,38 +205,41 @@ export default function DeleteAccountRequest() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <select
-        value={statusFilter}
-        onChange={(e) => {
-          setStatusFilter(e.target.value);
-          setCurrentPage(1);
-          console.log("DeleteAccountRequest handleStatusFilterChange:", {
-            statusFilter: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        {["All", ...APPROVAL_STATUSES].map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <input
-        type="date"
-        value={requestDate}
-        onChange={(e) => {
-          setRequestDate(e.target.value);
-          setCurrentPage(1);
-          console.log("DeleteAccountRequest handleRequestDateChange:", {
-            requestDate: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by request date"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start"></div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+            console.log("DeleteAccountRequest handleStatusFilterChange:", {
+              statusFilter: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          {["All", ...APPROVAL_STATUSES].map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={requestDate}
+          onChange={(e) => {
+            setRequestDate(e.target.value);
+            setCurrentPage(1);
+            console.log("DeleteAccountRequest handleRequestDateChange:", {
+              requestDate: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by request date"
+        />
+      </div>
     </div>
   );
 

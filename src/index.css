@@ -23,7 +23,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 32.4 99% 63%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 221 83% 93%;
 
@@ -156,12 +156,12 @@ All colors MUST be HSL.
 }
 
 .selected_color {
-    background-color: hsl(var(--primary));
-    color: white;
+  background-color: hsl(var(--primary));
+  color: white;
 }
 
 .selected_color_text {
-    color: hsl(var(--primary)); 
+  color: hsl(var(--primary));
 }
 
 .font-poppins {
@@ -319,8 +319,8 @@ table.min-w-full thead th {
 ::-webkit-scrollbar {
   width: 5px;
   scrollbar-color: #ccc transparent;
-  height:5px;
-  cursor:drag;
+  height: 5px;
+  cursor: drag;
 }
 
 ::-webkit-scrollbar-track {

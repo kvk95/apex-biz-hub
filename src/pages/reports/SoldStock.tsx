@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface SoldStockItem {
   invoiceId: string;
@@ -62,7 +64,9 @@ const SoldStock: React.FC = () => {
         return false;
       if (
         customerNameFilter &&
-        !item.customerName.toLowerCase().includes(customerNameFilter.toLowerCase())
+        !item.customerName
+          .toLowerCase()
+          .includes(customerNameFilter.toLowerCase())
       )
         return false;
       if (dateFromFilter && item.date < dateFromFilter) return false;
@@ -103,60 +107,91 @@ const SoldStock: React.FC = () => {
     { key: "stockId", label: "Stock ID", align: "left" },
     { key: "productName", label: "Product Name", align: "left" },
     { key: "category", label: "Category", align: "left" },
-    { key: "quantity", label: "Quantity", align: "right", render: (v) => v.toString() },
-    { key: "unitPrice", label: "Unit Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "totalPrice", label: "Total Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "quantity",
+      label: "Quantity",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "unitPrice",
+      label: "Unit Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "totalPrice",
+      label: "Total Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
     { key: "customerName", label: "Customer Name", align: "left" },
     { key: "date", label: "Date", align: "left" },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="text"
-        value={invoiceIdFilter}
-        onChange={(e) => setInvoiceIdFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Invoice ID"
-      />
-      <input
-        type="text"
-        value={stockIdFilter}
-        onChange={(e) => setStockIdFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Stock ID"
-      />
-      <select
-        value={categoryFilter}
-        onChange={(e) => setCategoryFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <input
-        type="text"
-        value={customerNameFilter}
-        onChange={(e) => setCustomerNameFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Customer Name"
-      />
-      <input
-        type="date"
-        value={dateFromFilter}
-        onChange={(e) => setDateFromFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        value={dateToFilter}
-        onChange={(e) => setDateToFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={invoiceIdFilter}
+          placeholder="Invoice ID"
+          onSearch={(query) => {
+            setInvoiceIdFilter(query);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={stockIdFilter}
+          placeholder="Stock ID"
+          onSearch={(query) => {
+            setStockIdFilter(query);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={customerNameFilter}
+          placeholder="Customer Name"
+          onSearch={(query) => {
+            setCustomerNameFilter(query);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCurrentPage(1);
+          }}
+          className="flex  gap-2  "
+        >
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            value={dateFromFilter}
+            onChange={(e) => setDateFromFilter(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="date"
+            value={dateToFilter}
+            onChange={(e) => setDateToFilter(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+      </div>
+    </div>
   );
 
   return (

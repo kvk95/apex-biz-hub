@@ -46,9 +46,15 @@ const SalesReport: React.FC = () => {
     return data.filter((record) => {
       if (startDate && record.date < startDate) return false;
       if (endDate && record.date > endDate) return false;
-      if (customer && !record.customer.toLowerCase().includes(customer.toLowerCase()))
+      if (
+        customer &&
+        !record.customer.toLowerCase().includes(customer.toLowerCase())
+      )
         return false;
-      if (product && !record.product.toLowerCase().includes(product.toLowerCase()))
+      if (
+        product &&
+        !record.product.toLowerCase().includes(product.toLowerCase())
+      )
         return false;
       return true;
     });
@@ -86,52 +92,81 @@ const SalesReport: React.FC = () => {
     { key: "customer", label: "Customer", align: "left" },
     { key: "product", label: "Product", align: "left" },
     { key: "qty", label: "Qty", align: "right", render: (v) => v.toString() },
-    { key: "price", label: "Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "discount", label: "Discount", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "tax", label: "Tax", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "total", label: "Total", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "price",
+      label: "Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "discount",
+      label: "Discount",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "tax",
+      label: "Tax",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "total",
+      label: "Total",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => e.preventDefault()} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="text"
-        value={customer}
-        onChange={(e) => setCustomer(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Customer"
-      />
-      <input
-        type="text"
-        value={product}
-        onChange={(e) => setProduct(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Product"
-      />
-      <select
-        value={itemsPerPage}
-        onChange={(e) => setItemsPerPage(Number(e.target.value))}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {[5, 10, 15].map((size) => (
-          <option key={size} value={size}>
-            {size}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start gap-2">
+        <input
+          type="text"
+          value={customer}
+          onChange={(e) => setCustomer(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Customer"
+        />
+        <input
+          type="text"
+          value={product}
+          onChange={(e) => setProduct(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Product"
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="flex flex-wrap gap-2 items-center"
+        >
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {[5, 10, 15].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </form>
+      </div>
+    </div>
   );
 
   return (

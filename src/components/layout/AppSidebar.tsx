@@ -161,14 +161,33 @@ function MenuItemComponent({
 // ------------------------------------------------------------------
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { open, setOpen } = useSidebar();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const { theme } = useTheme();
 
+  // Hover state for temporary expansion when collapsed
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTemporaryExpanded, setIsTemporaryExpanded] = useState(false);
+
   // Get sidebar open/collapsed state
-  const isOpen = state === "expanded";
+  const isOpen = open;
+
+  // Effects for hover-based expansion/collapse
+  useEffect(() => {
+    if (isHovered && !open) {
+      setOpen(true);
+      setIsTemporaryExpanded(true);
+    }
+  }, [isHovered, open, setOpen]);
+
+  useEffect(() => {
+    if (!isHovered && isTemporaryExpanded) {
+      setOpen(false);
+      setIsTemporaryExpanded(false);
+    }
+  }, [isHovered, isTemporaryExpanded, setOpen]);
 
   useEffect(() => {
     fetch("/data/menuItems.json")
@@ -235,12 +254,16 @@ export function AppSidebar() {
       className="border-r border-gray-200"
       // Apply primary sidebar color and border from theme to the main wrapper
       style={sidebarStyle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* 2. Apply theme-based background and remove fixed 'bg-white' from SidebarContent */}
       <SidebarContent className="flex flex-col" style={sidebarStyle}>
         {/* 3. Apply theme-based background and text color to the sticky header */}
         <div
-            className={`h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 ${isOpen ? "px-4" : "pe-1"}`}
+          className={`h-16 flex items-center justify-center sticky top-0 border-b border-gray-200 z-10 ${
+            isOpen ? "px-4" : "pe-1"
+          }`}
           style={{
             backgroundColor: `hsl(${sidebarHsl})`,
             color: contentTextColor,

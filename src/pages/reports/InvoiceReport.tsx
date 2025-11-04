@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { PAYMENT_STATUSES, PAYMENT_TYPES, BRANDS, CUSTOMERS } from "@/constants/constants";
+import {
+  PAYMENT_STATUSES,
+  PAYMENT_TYPES,
+  BRANDS,
+} from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface InvoiceItem {
   id: number; // Assumed for uniqueness
@@ -133,76 +138,80 @@ const InvoiceReport: React.FC = () => {
   ];
 
   const customFilters = () => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setCurrentPage(1);
-      }}
-      className="flex flex-wrap gap-2 mb-4 items-center"
-    >
-      <input
-        type="date"
-        name="fromDate"
-        value={filters.fromDate}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        name="toDate"
-        value={filters.toDate}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <select
-        name="customer"
-        value={filters.customer}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {CUSTOMERS.map((cust) => (
-          <option key={cust} value={cust}>
-            {cust}
-          </option>
-        ))}
-      </select>
-      <select
-        name="invoiceStatus"
-        value={filters.invoiceStatus}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <select
-        name="paymentStatus"
-        value={filters.paymentStatus}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <select
-        name="paymentMethod"
-        value={filters.paymentMethod}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_TYPES.map((method) => (
-          <option key={method} value={method}>
-            {method}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={filters.customer}
+          placeholder="Customer Name"
+          onSearch={(query) => {
+            filters.customer = query;
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCurrentPage(1);
+          }}
+          className="flex gap-2 "
+        >
+          <select
+            name="invoiceStatus"
+            value={filters.invoiceStatus}
+            onChange={handleFilterChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PAYMENT_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <select
+            name="paymentStatus"
+            value={filters.paymentStatus}
+            onChange={handleFilterChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PAYMENT_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <select
+            name="paymentMethod"
+            value={filters.paymentMethod}
+            onChange={handleFilterChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PAYMENT_TYPES.map((method) => (
+              <option key={method} value={method}>
+                {method}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            name="fromDate"
+            value={filters.fromDate}
+            onChange={handleFilterChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="date"
+            name="toDate"
+            value={filters.toDate}
+            onChange={handleFilterChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+      </div>
+    </div>
   );
 
   return (

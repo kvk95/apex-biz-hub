@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface BestSellerItem {
   id: number; // Assumed for uniqueness
@@ -43,7 +44,8 @@ const BestSeller: React.FC = () => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesCategory =
-        selectedCategory === "All Categories" || item.category === selectedCategory;
+        selectedCategory === "All Categories" ||
+        item.category === selectedCategory;
       const matchesSearch =
         item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
@@ -55,11 +57,6 @@ const BestSeller: React.FC = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -80,32 +77,58 @@ const BestSeller: React.FC = () => {
     { key: "productName", label: "Product Name", align: "left" },
     { key: "sku", label: "SKU", align: "left" },
     { key: "category", label: "Category", align: "left" },
-    { key: "quantity", label: "Quantity", align: "right", render: (v) => v.toString() },
-    { key: "price", label: "Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "total", label: "Total", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "quantity",
+      label: "Quantity",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "price",
+      label: "Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "total",
+      label: "Total",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => e.preventDefault()} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Search Product or SKU"
-      />
-      <select
-        value={selectedCategory}
-        onChange={handleCategoryChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product or SKU"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="flex flex-wrap gap-2 items-center"
+        >
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </form>
+      </div>
+    </div>
   );
 
   return (

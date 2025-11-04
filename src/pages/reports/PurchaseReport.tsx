@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { PURCHASE_STATUSES, PAYMENT_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 type PurchaseRecord = {
   purchaseNo: string;
@@ -65,7 +66,15 @@ const PurchaseReport: React.FC = () => {
       if (dateTo && item.purchaseDate > dateTo) return false;
       return true;
     });
-  }, [data, purchaseNo, supplier, purchaseStatus, paymentStatus, dateFrom, dateTo]);
+  }, [
+    data,
+    purchaseNo,
+    supplier,
+    purchaseStatus,
+    paymentStatus,
+    dateFrom,
+    dateTo,
+  ]);
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -94,75 +103,101 @@ const PurchaseReport: React.FC = () => {
   const columns: Column[] = [
     { key: "purchaseNo", label: "Purchase No", align: "left" },
     { key: "supplier", label: "Supplier", align: "left" },
-    { key: "purchaseDate", label: "Purchase Date", align: "left" }, 
-     {
-          key: "purchaseStatus",
-          label: "Purchase Status",
-          align: "center",
-          render: renderStatusBadge,
-        }, 
-    { key: "grandTotal", label: "Grand Total", align: "right", render: (v) => `₹${v}` },
-    { key: "paidAmount", label: "Paid Amount", align: "right", render: (v) => `₹${v}` },
-    { key: "dueAmount", label: "Due Amount", align: "right", render: (v) => `₹${v}` },
+    { key: "purchaseDate", label: "Purchase Date", align: "left" },
     {
-          key: "paymentStatus",
-          label: "Payment Status",
-          align: "center",
-          render: renderStatusBadge,
-        }, 
+      key: "purchaseStatus",
+      label: "Purchase Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
+    {
+      key: "grandTotal",
+      label: "Grand Total",
+      align: "right",
+      render: (v) => `₹${v}`,
+    },
+    {
+      key: "paidAmount",
+      label: "Paid Amount",
+      align: "right",
+      render: (v) => `₹${v}`,
+    },
+    {
+      key: "dueAmount",
+      label: "Due Amount",
+      align: "right",
+      render: (v) => `₹${v}`,
+    },
+    {
+      key: "paymentStatus",
+      label: "Payment Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={handleSearch} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="text"
-        value={purchaseNo}
-        onChange={(e) => setPurchaseNo(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Purchase No"
-      />
-      <input
-        type="text"
-        value={supplier}
-        onChange={(e) => setSupplier(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Supplier"
-      />
-      <select
-        value={purchaseStatus}
-        onChange={(e) => setPurchaseStatus(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PURCHASE_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <select
-        value={paymentStatus}
-        onChange={(e) => setPaymentStatus(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
-      </select>
-      <input
-        type="date"
-        value={dateFrom}
-        onChange={(e) => setDateFrom(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        value={dateTo}
-        onChange={(e) => setDateTo(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={purchaseNo}
+          placeholder="Purchase No"
+          onSearch={(query) => {
+            setPurchaseNo(query);
+          }}
+        />
+        <SearchInput
+          className=""
+          value={supplier}
+          placeholder="Supplier"
+          onSearch={(query) => {
+            setSupplier(query);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={handleSearch}
+          className="flex justify-end  gap-2"
+        >
+          <select
+            value={purchaseStatus}
+            onChange={(e) => setPurchaseStatus(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PURCHASE_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <select
+            value={paymentStatus}
+            onChange={(e) => setPaymentStatus(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PAYMENT_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+      </div>
+    </div>
   );
 
   return (
@@ -171,7 +206,7 @@ const PurchaseReport: React.FC = () => {
       description="View and filter purchase report records."
       icon="fa fa-shopping-basket"
       onRefresh={handleReset}
-      onReport={handleReport}      
+      onReport={handleReport}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}

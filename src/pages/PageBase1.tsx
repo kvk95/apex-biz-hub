@@ -1,6 +1,7 @@
 import React from "react";
 import { Pagination } from "@/components/Pagination/Pagination";
 import { useTheme } from "@/components/theme/theme-provider";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 export interface Column {
   key: string;
@@ -23,7 +24,7 @@ interface PageBase1Props {
   onRefresh: () => void;
   onReport: () => void;
   search: string;
-  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearchChange: (query: string) => void;
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
@@ -153,14 +154,12 @@ export function PageBase1({
               {customFilters()}
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-4">
-              <input
-                type="text"
-                placeholder="Search"
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 px-4">
+              <SearchInput
+                className=""
                 value={search}
-                onChange={onSearchChange}
-                className="border border-input rounded px-3 py-2 w-full md:w-64 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label="Search"
+                placeholder="Search"
+                onSearch={onSearchChange} 
               />
             </div>
           )}

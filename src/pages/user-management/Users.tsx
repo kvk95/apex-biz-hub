@@ -101,11 +101,11 @@ export default function Users() {
     alert("Users Report:\n\n" + JSON.stringify(data, null, 2));
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = (query) => {
+    setSearch(query);
     setCurrentPage(1);
     console.log("Users handleSearchChange:", {
-      search: e.target.value,
+      search: query,
       currentPage: 1,
     });
   };

@@ -24,7 +24,7 @@ type ThemeContextType = {
 const defaultTheme: ThemeConfig = {
   headerColor: "0 0% 100%", // white
   sidebarColor: "0 0% 100%", // white
-  primaryColor: "221.2 83.2% 53.3%", // Blue
+  primaryColor: "32.4 99% 63%", // Orange
   mode: "light",
 };
 

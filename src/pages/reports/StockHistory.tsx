@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface StockHistoryItem {
   date: string;
@@ -15,7 +17,7 @@ interface StockHistoryItem {
   unitPrice: number;
   totalPrice: number;
 }
- 
+
 const SUPPLIERS = [
   { value: "", label: "Select Supplier" },
   { value: "Supplier X", label: "Supplier X" },
@@ -76,7 +78,8 @@ const StockHistory: React.FC = () => {
 
       if (fromDate && itemDate < fromDate) return false;
       if (toDate && itemDate > toDate) return false;
-      if (selectedSupplier && item.supplierName !== selectedSupplier) return false;
+      if (selectedSupplier && item.supplierName !== selectedSupplier)
+        return false;
       if (selectedProduct && item.productName !== selectedProduct) return false;
       return true;
     });
@@ -109,52 +112,98 @@ const StockHistory: React.FC = () => {
     { key: "productName", label: "Product Name", align: "left" },
     { key: "productCode", label: "Product Code", align: "left" },
     { key: "supplierName", label: "Supplier Name", align: "left" },
-    { key: "purchaseQty", label: "Purchase Qty", align: "right", render: (v) => v.toString() },
-    { key: "purchaseReturnQty", label: "Purchase Return Qty", align: "right", render: (v) => v.toString() },
-    { key: "salesQty", label: "Sales Qty", align: "right", render: (v) => v.toString() },
-    { key: "salesReturnQty", label: "Sales Return Qty", align: "right", render: (v) => v.toString() },
-    { key: "stockQty", label: "Stock Qty", align: "right", render: (v) => v.toString() },
-    { key: "unitPrice", label: "Unit Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "totalPrice", label: "Total Price", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "purchaseQty",
+      label: "Purchase Qty",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "purchaseReturnQty",
+      label: "Purchase Return Qty",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "salesQty",
+      label: "Sales Qty",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "salesReturnQty",
+      label: "Sales Return Qty",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "stockQty",
+      label: "Stock Qty",
+      align: "right",
+      render: (v) => v.toString(),
+    },
+    {
+      key: "unitPrice",
+      label: "Unit Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "totalPrice",
+      label: "Total Price",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="date"
-        value={dateFrom}
-        onChange={(e) => setDateFrom(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        value={dateTo}
-        onChange={(e) => setDateTo(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <select
-        value={selectedSupplier}
-        onChange={(e) => setSelectedSupplier(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {SUPPLIERS.map((sup) => (
-          <option key={sup.value} value={sup.value}>
-            {sup.label}
-          </option>
-        ))}
-      </select>
-      <select
-        value={selectedProduct}
-        onChange={(e) => setSelectedProduct(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PRODUCTS.map((prod) => (
-          <option key={prod.value} value={prod.value}>
-            {prod.label}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2"></div>
+      <div className="flex justify-end gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCurrentPage(1);
+          }}
+          className="flex  gap-2  "
+        >
+          <select
+            value={selectedSupplier}
+            onChange={(e) => setSelectedSupplier(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {SUPPLIERS.map((sup) => (
+              <option key={sup.value} value={sup.value}>
+                {sup.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PRODUCTS.map((prod) => (
+              <option key={prod.value} value={prod.value}>
+                {prod.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+      </div>
+    </div>
   );
 
   return (

@@ -77,6 +77,7 @@ export function SearchInput({
           if (!disabled) inputRef.current?.focus();
         }}
         style={style}
+        aria-label="Search"
       />
     </div>
   );
