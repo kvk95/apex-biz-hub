@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface LeaveType {
   id: number;
@@ -187,40 +188,41 @@ export default function LeaveTypes() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 flex-wrap">
-      <input
-        type="text"
-        placeholder="Search Leave Type"
-        value={searchLeaveType}
-        onChange={(e) => {
-          setSearchLeaveType(e.target.value);
-          setCurrentPage(1);
-          console.log("LeaveTypes handleSearchLeaveTypeChange:", {
-            searchLeaveType: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by leave type"
-      />
-      <select
-        value={searchStatus}
-        onChange={(e) => {
-          setSearchStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("LeaveTypes handleSearchStatusChange:", {
-            searchStatus: e.target.value,
-          });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {STATUSES.filter((s) => s === "Active" || s === "Inactive").map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          placeholder="Search Leave Type"
+          value={searchLeaveType}
+          onSearch={(query) => {
+            setSearchLeaveType(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={searchStatus}
+          onChange={(e) => {
+            setSearchStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("LeaveTypes handleSearchStatusChange:", {
+              searchStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {STATUSES.filter((s) => s === "Active" || s === "Inactive").map(
+            (s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            )
+          )}
+        </select>
+      </div>
     </div>
   );
 

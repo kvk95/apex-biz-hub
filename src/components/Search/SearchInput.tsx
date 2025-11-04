@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 
 interface SearchInputProps {
+  id?: string;
   placeholder?: string;
   value?: string;
   type?: string; // Optional type
@@ -21,6 +22,7 @@ interface SearchInputProps {
 }
 
 export function SearchInput({
+  id,
   placeholder = "Search...",
   value = "",
   type = "search", // default to "search" if not specified
@@ -70,6 +72,7 @@ export function SearchInput({
       <input
         type={type} // Use the `type` passed in props, or fallback to "search"
         ref={inputRef}
+        id={id !== undefined ? id : undefined}
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}

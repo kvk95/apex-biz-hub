@@ -3,16 +3,17 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { LEAVE_TYPES, APPROVAL_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface LeaveRecord {
   id: number;
   employeeName: string;
-  leaveType: typeof LEAVE_TYPES[number];
+  leaveType: (typeof LEAVE_TYPES)[number];
   fromDate: string;
   toDate: string;
   noOfDays: number;
   reason: string;
-  status: typeof APPROVAL_STATUSES[number];
+  status: (typeof APPROVAL_STATUSES)[number];
 }
 
 export default function AdminLeaves() {
@@ -62,7 +63,11 @@ export default function AdminLeaves() {
       const statusMatch = !filterStatus || leave.status === filterStatus;
       return nameMatch && dateMatch && statusMatch;
     });
-    console.log("AdminLeaves filteredLeaves:", result, { searchName, filterDate, filterStatus });
+    console.log("AdminLeaves filteredLeaves:", result, {
+      searchName,
+      filterDate,
+      filterStatus,
+    });
     return result;
   }, [data, searchName, filterDate, filterStatus]);
 
@@ -81,7 +86,9 @@ export default function AdminLeaves() {
   }, [filteredLeaves, currentPage, itemsPerPage]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => {
@@ -90,9 +97,11 @@ export default function AdminLeaves() {
         const from = name === "fromDate" ? value : prev.fromDate;
         const to = name === "toDate" ? value : prev.toDate;
         if (from && to && new Date(to) >= new Date(from)) {
-          updatedForm.noOfDays = Math.ceil(
-            (new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24)
-          ) + 1;
+          updatedForm.noOfDays =
+            Math.ceil(
+              (new Date(to).getTime() - new Date(from).getTime()) /
+                (1000 * 60 * 60 * 24)
+            ) + 1;
         } else {
           updatedForm.noOfDays = 0;
         }
@@ -186,12 +195,17 @@ export default function AdminLeaves() {
     { key: "toDate", label: "To Date", align: "left" },
     { key: "noOfDays", label: "No. of Days", align: "center" },
     { key: "reason", label: "Reason", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge }, 
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: LeaveRecord) => (
-    <> 
-       <button
+    <>
+      <button
         onClick={() => handleEdit(row)}
         aria-label={`Edit  ${row.employeeName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
@@ -203,53 +217,59 @@ export default function AdminLeaves() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 mb-4 flex-wrap">
-      <input
-        type="text"
-        placeholder="Search Name"
-        value={searchName}
-        onChange={(e) => {
-          setSearchName(e.target.value);
-          setCurrentPage(1);
-          console.log("AdminLeaves handleSearchNameChange:", { searchName: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by employee name"
-      />
-      <input
-        type="date"
-        placeholder="Select Date"
-        value={filterDate}
-        onChange={(e) => {
-          setFilterDate(e.target.value);
-          setCurrentPage(1);
-          console.log("AdminLeaves handleFilterDateChange:", { filterDate: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by date"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("AdminLeaves handleFilterStatusChange:", { filterStatus: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {APPROVAL_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          placeholder="Search Name"
+          value={searchName}
+          onSearch={(query) => {
+            setSearchName(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          placeholder="Select Date"
+          value={filterDate}
+          onSearch={(query) => {
+            setFilterDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("AdminLeaves handleFilterStatusChange:", {
+              filterStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {APPROVAL_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="employeeName"
+          className="block text-sm font-medium mb-1"
+        >
           Employee Name <span className="text-destructive">*</span>
         </label>
         <input
@@ -279,7 +299,9 @@ export default function AdminLeaves() {
         >
           <option value="">Select leave type</option>
           {LEAVE_TYPES.map((type) => (
-            <option key={type} value={type}>{type}</option>
+            <option key={type} value={type}>
+              {type}
+            </option>
           ))}
         </select>
       </div>
@@ -358,7 +380,9 @@ export default function AdminLeaves() {
           aria-label="Select status"
         >
           {APPROVAL_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -389,7 +413,9 @@ export default function AdminLeaves() {
       onSearchChange={(e) => {
         setSearchName(e.target.value);
         setCurrentPage(1);
-        console.log("AdminLeaves handleSearchNameChange:", { searchName: e.target.value });
+        console.log("AdminLeaves handleSearchNameChange:", {
+          searchName: e.target.value,
+        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}

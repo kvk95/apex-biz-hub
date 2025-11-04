@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { LEAVE_STATUSES, DEPARTMENTS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Attendance {
   id: number;
@@ -90,62 +91,60 @@ export default function EmployeeAttendance() {
 
   const customFilters = () => (
     <>
-      <div className="flex-1">
-        <input
-          type="text"
-          placeholder="Search Name/ID"
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-            handleFilterChange();
-          }}
-          className="px-3 py-1.5 text-sm w-full border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-      <div className="flex-1">
-        <select
-          value={selectedDepartment}
-          onChange={(e) => {
-            setSelectedDepartment(e.target.value);
-            handleFilterChange();
-          }}
-          className="px-3 py-1.5 text-sm w-full border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All Departments</option>
-          {DEPARTMENTS.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex-1">
-        <select
-          value={selectedStatus}
-          onChange={(e) => {
-            setSelectedStatus(e.target.value);
-            handleFilterChange();
-          }}
-          className="px-3 py-1.5 text-sm w-full border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All Status</option>
-          {LEAVE_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex-1">
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => {
-            setDateFilter(e.target.value);
-            handleFilterChange();
-          }}
-          className="px-3 py-1.5 text-sm w-full border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+      <div className="grid grid-cols-2 w-full justify-stretch px-3">
+        <div className="flex justify-start  gap-2">
+          <SearchInput
+            className=""
+            value={searchText}
+            placeholder="Search Name/ID"
+            onSearch={(query) => {
+              setSearchText(query);
+              handleFilterChange();
+            }}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <select
+            value={selectedDepartment}
+            onChange={(e) => {
+              setSelectedDepartment(e.target.value);
+              handleFilterChange();
+            }}
+            className="px-3 py-1.5 text-sm w-full border border-input rounded  focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All Departments</option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedStatus}
+            onChange={(e) => {
+              setSelectedStatus(e.target.value);
+              handleFilterChange();
+            }}
+            className="px-3 py-1.5 text-sm w-full border border-input rounded  focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All Status</option>
+            {LEAVE_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <SearchInput
+            className=""
+            type="date"
+            value={dateFilter}
+            placeholder="Search Name/ID"
+            onSearch={(query) => {
+              setDateFilter(query);
+              handleFilterChange();
+            }}
+          />
+        </div>
       </div>
     </>
   );

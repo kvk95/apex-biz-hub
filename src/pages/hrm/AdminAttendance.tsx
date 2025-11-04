@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { LEAVE_STATUSES, DEPARTMENTS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Attendance {
   id: number;
@@ -16,7 +17,7 @@ interface Attendance {
   status: (typeof LEAVE_STATUSES)[number];
 }
 
-export default function AdminAttendance() {  
+export default function AdminAttendance() {
   const [data, setData] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,14 +91,14 @@ export default function AdminAttendance() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-  }; 
+  };
 
   const handleClear = () => {
     setSelectedDepartment("All Departments");
     setSelectedStatus("All Status");
     setSearchEmployee("");
     setSearchDate("");
-    setCurrentPage(1); 
+    setCurrentPage(1);
     loadData();
     console.log("AdminAttendance handleClear");
   };
@@ -186,63 +187,62 @@ export default function AdminAttendance() {
 
   const customFilters = () => (
     <>
-      <div className="flex-1">
-        <select
-          id="department"
-          name="department"
-          value={selectedDepartment}
-          onChange={handleDepartmentChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select department to filter attendance records"
-        >
-          {["All Departments", ...DEPARTMENTS].map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex-1">
-        <select
-          id="status"
-          name="status"
-          value={selectedStatus}
-          onChange={handleStatusChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select status to filter attendance records"
-        >
-          {["All Status", ...LEAVE_STATUSES].map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex-1">
-        <input
-          type="text"
-          id="employeeSearch"
-          name="employeeSearch"
-          placeholder="Search by name or ID"
-          value={searchEmployee}
-          onChange={handleSearchChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Search by employee name or ID"
-        />
-      </div>
-      <div className="flex-1">
-        <input
-          type="date"
-          id="date"
-          name="date"
-          value={searchDate}
-          onChange={handleDateChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select date to filter attendance records"
-        />
+      <div className="grid grid-cols-2 w-full justify-stretch px-3">
+        <div className="flex justify-start  gap-2">
+          <SearchInput
+            className=""
+            id="employeeSearch"
+            value={searchEmployee}
+            placeholder="Search by name or ID"
+            onSearch={(query) => {
+              setSearchEmployee(query);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <select
+            id="department"
+            name="department"
+            value={selectedDepartment}
+            onChange={handleDepartmentChange}
+            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Select department to filter attendance records"
+          >
+            {["All Departments", ...DEPARTMENTS].map((dept) => (
+              <option key={dept} value={dept}>
+                {dept}
+              </option>
+            ))}
+          </select>
+          <select
+            id="status"
+            name="status"
+            value={selectedStatus}
+            onChange={handleStatusChange}
+            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Select status to filter attendance records"
+          >
+            {["All Status", ...LEAVE_STATUSES].map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <SearchInput
+            className=""
+            type="date"
+            id="date"
+            value={searchDate}
+            onSearch={(query) => {
+              setSearchDate(query);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
       </div>
     </>
-  ); 
+  );
 
   return (
     <PageBase1
@@ -259,7 +259,7 @@ export default function AdminAttendance() {
       onPageChange={handlePageChange}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
-      tableData={paginatedData} 
+      tableData={paginatedData}
       customFilters={customFilters}
     />
   );

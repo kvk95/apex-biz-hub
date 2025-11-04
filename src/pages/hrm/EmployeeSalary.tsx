@@ -4,18 +4,19 @@ import { PageBase1, Column } from "@/pages/PageBase1";
 import { PAYMENT_STATUSES, MONTHS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { useNavigate } from "react-router-dom";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface EmployeeSalaryRecord {
   id: number;
   employeeName: string;
   employeeId: string;
-  month: typeof MONTHS[number];
+  month: (typeof MONTHS)[number];
   year: string;
   salary: number;
   advance: number;
   deduction: number;
   netSalary: number;
-  paymentStatus: typeof PAYMENT_STATUSES[number];
+  paymentStatus: (typeof PAYMENT_STATUSES)[number];
 }
 
 export default function EmployeeSalary() {
@@ -47,7 +48,9 @@ export default function EmployeeSalary() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<EmployeeSalaryRecord[]>("EmployeeSalary");
+    const response = await apiService.get<EmployeeSalaryRecord[]>(
+      "EmployeeSalary"
+    );
     if (response.status.code === "S") {
       setData(response.result);
       setError(null);
@@ -65,10 +68,14 @@ export default function EmployeeSalary() {
       const matchesSearch =
         record.employeeName.toLowerCase().includes(searchText.toLowerCase()) ||
         record.employeeId.toLowerCase().includes(searchText.toLowerCase());
-      const matchesStatus = !filterStatus || record.paymentStatus === filterStatus;
+      const matchesStatus =
+        !filterStatus || record.paymentStatus === filterStatus;
       return matchesSearch && matchesStatus;
     });
-    console.log("EmployeeSalary filteredData:", result, { searchText, filterStatus });
+    console.log("EmployeeSalary filteredData:", result, {
+      searchText,
+      filterStatus,
+    });
     return result;
   }, [data, searchText, filterStatus]);
 
@@ -98,9 +105,12 @@ export default function EmployeeSalary() {
       const updatedForm = { ...prev, [name]: value };
       if (["salary", "advance", "deduction"].includes(name)) {
         const salary = name === "salary" ? parseFloat(value) || 0 : prev.salary;
-        const advance = name === "advance" ? parseFloat(value) || 0 : prev.advance;
-        const deduction = name === "deduction" ? parseFloat(value) || 0 : prev.deduction;
-        updatedForm.netSalary = salary - advance - deduction > 0 ? salary - advance - deduction : 0;
+        const advance =
+          name === "advance" ? parseFloat(value) || 0 : prev.advance;
+        const deduction =
+          name === "deduction" ? parseFloat(value) || 0 : prev.deduction;
+        updatedForm.netSalary =
+          salary - advance - deduction > 0 ? salary - advance - deduction : 0;
       }
       return updatedForm;
     });
@@ -158,7 +168,10 @@ export default function EmployeeSalary() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this salary record?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
       console.log("EmployeeSalary handleDelete:", { id });
@@ -175,7 +188,9 @@ export default function EmployeeSalary() {
   };
 
   const handleDownload = (record: EmployeeSalaryRecord) => {
-    alert(`Downloading salary slip for ${record.employeeName} (${record.month} ${record.year})`);
+    alert(
+      `Downloading salary slip for ${record.employeeName} (${record.month} ${record.year})`
+    );
     console.log("EmployeeSalary handleDownload:", { record });
   };
 
@@ -210,7 +225,9 @@ export default function EmployeeSalary() {
       key: "index",
       label: "#",
       align: "left",
-      render: (_, __, idx) => <span>{(currentPage - 1) * itemsPerPage + (idx ?? 0) + 1}</span>,
+      render: (_, __, idx) => (
+        <span>{(currentPage - 1) * itemsPerPage + (idx ?? 0) + 1}</span>
+      ),
     },
     {
       key: "employeeName",
@@ -225,34 +242,39 @@ export default function EmployeeSalary() {
       key: "salary",
       label: "Salary",
       align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      render: (value) => `₹${value.toFixed(2)}`,
     },
     {
       key: "advance",
       label: "Advance",
       align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      render: (value) => `₹${value.toFixed(2)}`,
     },
     {
       key: "deduction",
       label: "Deduction",
       align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      render: (value) => `₹${value.toFixed(2)}`,
     },
     {
       key: "netSalary",
       label: "Net Salary",
       align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      render: (value) => `₹${value.toFixed(2)}`,
     },
-    { key: "paymentStatus", label: "Payment Status", align: "center", render: renderStatusBadge }, 
+    {
+      key: "paymentStatus",
+      label: "Payment Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: EmployeeSalaryRecord) => (
     <div className="flex justify-center gap-2">
       <button
         onClick={() => handleView(row)}
-className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
         aria-label={`View salary for ${row.employeeName}`}
         type="button"
       >
@@ -265,8 +287,8 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
         type="button"
       >
         <i className="fa fa-download" aria-hidden="true"></i>
-      </button> 
-<button
+      </button>
+      <button
         onClick={() => handleEdit(row)}
         aria-label={`Edit  ${row.employeeName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
@@ -281,46 +303,54 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
-      </button>      
+      </button>
     </div>
   );
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 mb-4 flex-wrap">
-      <input
-        type="text"
-        placeholder="Search Name/ID"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-          console.log("EmployeeSalary handleSearchChange:", { searchText: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search by employee name or ID"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-          console.log("EmployeeSalary handleFilterStatusChange:", { filterStatus: e.target.value });
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Filter by payment status"
-      >
-        <option value="">All Status</option>
-        {PAYMENT_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          placeholder="Search Name/ID"
+          value={searchText}
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        /> 
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+            console.log("EmployeeSalary handleFilterStatusChange:", {
+              filterStatus: e.target.value,
+            });
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Filter by payment status"
+        >
+          <option value="">All Status</option>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="employeeName"
+          className="block text-sm font-medium mb-1"
+        >
           Employee Name <span className="text-destructive">*</span>
         </label>
         <input
@@ -366,7 +396,9 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
         >
           <option value="">Select Month</option>
           {MONTHS.map((m) => (
-            <option key={m} value={m}>{m}</option>
+            <option key={m} value={m}>
+              {m}
+            </option>
           ))}
         </select>
       </div>
@@ -385,7 +417,9 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
         >
           <option value="">Select Year</option>
           {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
+            <option key={y} value={y}>
+              {y}
+            </option>
           ))}
         </select>
       </div>
@@ -456,7 +490,10 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
         />
       </div>
       <div>
-        <label htmlFor="paymentStatus" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="paymentStatus"
+          className="block text-sm font-medium mb-1"
+        >
           Payment Status <span className="text-destructive">*</span>
         </label>
         <select
@@ -470,7 +507,9 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
         >
           <option value="">Select Status</option>
           {PAYMENT_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -503,7 +542,9 @@ className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-whit
       onSearchChange={(e) => {
         setSearchText(e.target.value);
         setCurrentPage(1);
-        console.log("EmployeeSalary handleSearchChange:", { searchText: e.target.value });
+        console.log("EmployeeSalary handleSearchChange:", {
+          searchText: e.target.value,
+        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}

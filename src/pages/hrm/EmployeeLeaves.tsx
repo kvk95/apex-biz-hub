@@ -3,17 +3,18 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { LEAVE_TYPES, APPROVAL_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface LeaveRecord {
   id: number;
   employeeId: string;
   employeeName: string;
-  leaveType: typeof LEAVE_TYPES[number];
+  leaveType: (typeof LEAVE_TYPES)[number];
   fromDate: string;
   toDate: string;
   days: number;
   reason: string;
-  status: typeof APPROVAL_STATUSES[number];
+  status: (typeof APPROVAL_STATUSES)[number];
 }
 
 export default function EmployeeLeaves() {
@@ -90,10 +91,11 @@ export default function EmployeeLeaves() {
       return;
     }
 
-    const days = Math.ceil(
-      (new Date(form.toDate).getTime() - new Date(form.fromDate).getTime()) /
-        (1000 * 60 * 60 * 24)
-    ) + 1;
+    const days =
+      Math.ceil(
+        (new Date(form.toDate).getTime() - new Date(form.fromDate).getTime()) /
+          (1000 * 60 * 60 * 24)
+      ) + 1;
 
     if (formMode === "add") {
       const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
@@ -147,25 +149,34 @@ export default function EmployeeLeaves() {
 
   const columns: Column[] = [
     { key: "employeeId", label: "Employee ID", align: "center" },
-    { key: "employeeName", label: "Name", align: "left", render: (v) => <span className="font-semibold">{v}</span> },
+    {
+      key: "employeeName",
+      label: "Name",
+      align: "left",
+      render: (v) => <span className="font-semibold">{v}</span>,
+    },
     { key: "leaveType", label: "Leave Type", align: "left" },
     { key: "fromDate", label: "From", align: "center" },
     { key: "toDate", label: "To", align: "center" },
     { key: "days", label: "Days", align: "center" },
     { key: "reason", label: "Reason", align: "left" },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: LeaveRecord) => (
     <>
-    
       {row.status === "Pending" && (
         <button
           onClick={() => alert(`Cancel leave for ${row.employeeName}`)}
-           className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+          className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
           aria-label={`Cancel leave for ${row.employeeName}`}
         >
-          <i className="fa fa-times-circle"  aria-hidden="true"></i> 
+          <i className="fa fa-times-circle" aria-hidden="true"></i>
         </button>
       )}
       {row.status === "Rejected" && (
@@ -174,7 +185,7 @@ export default function EmployeeLeaves() {
           className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs py-2 px-2 text-center inline-flex items-center me-1"
           aria-label={`View rejection reason for ${row.employeeName}`}
         >
-          <i className="fa fa-info "  aria-hidden="true"></i> 
+          <i className="fa fa-info " aria-hidden="true"></i>
         </button>
       )}
 
@@ -194,46 +205,49 @@ export default function EmployeeLeaves() {
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
       </button>
-    </> 
+    </>
   );
 
   const customFilters = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <input
-        type="text"
-        placeholder="Search Name/ID"
-        value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
-        aria-label="Search by employee name or ID"
-      />
-      <input
-        type="date"
-        value={filterDate}
-        onChange={(e) => {
-          setFilterDate(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
-        aria-label="Filter by date"
-      />
-      <select
-        value={filterStatus}
-        onChange={(e) => {
-          setFilterStatus(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
-        aria-label="Filter by status"
-      >
-        <option value="">All Status</option>
-        {APPROVAL_STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchText}
+          placeholder="Search Name/ID"
+          onSearch={(query) => {
+            setSearchText(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          value={filterDate}
+          onSearch={(query) => {
+            setFilterDate(query);
+            setCurrentPage(1);
+          }}
+        />
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:ring-2 focus:ring-ring"
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          {APPROVAL_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -278,7 +292,9 @@ export default function EmployeeLeaves() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
         >
           {LEAVE_TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
+            <option key={t} value={t}>
+              {t}
+            </option>
           ))}
         </select>
       </div>
