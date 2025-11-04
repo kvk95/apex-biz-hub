@@ -1,17 +1,17 @@
-/* -------------------------------------------------
-   Expenses - 100% standardized with PageBase1 + Eye Icon in rowActions (1st)
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
-import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import {
+  AutoCompleteTextBox,
+  AutoCompleteItem,
+} from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { EXPENSE_HEADS, EXPENSE_HEADS_STATUSES } from "@/constants/constants";
 
 // === Types ===
-type ExpenseHead = typeof EXPENSE_HEADS[number];
-type ExpenseStatus = typeof EXPENSE_HEADS_STATUSES[number];
+type ExpenseHead = (typeof EXPENSE_HEADS)[number];
+type ExpenseStatus = (typeof EXPENSE_HEADS_STATUSES)[number];
 
 type Expense = {
   id: number;
@@ -75,14 +75,23 @@ const DescriptionModal: React.FC<{
 export default function Expenses() {
   /* ---------- state ---------- */
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredCategories, setFilteredCategories] = useState<ExpenseHead[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<ExpenseHead[]>(
+    []
+  );
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<ExpenseHead | "All">("All");
-  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus | "All">("All");
+  const [selectedCategory, setSelectedCategory] = useState<ExpenseHead | "All">(
+    "All"
+  );
+  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus | "All">(
+    "All"
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [descriptionModal, setDescriptionModal] = useState<{ open: boolean; desc: string }>({
+  const [descriptionModal, setDescriptionModal] = useState<{
+    open: boolean;
+    desc: string;
+  }>({
     open: false,
     desc: "",
   });
@@ -136,7 +145,9 @@ export default function Expenses() {
       result = result.filter((e) => e.status === selectedStatus);
     }
 
-    result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    result.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
     return result;
   }, [expenses, search, selectedCategory, selectedStatus]);
 
@@ -206,7 +217,8 @@ export default function Expenses() {
 
   /* ---------- async autocomplete: CATEGORY ---------- */
   const handleCategorySearch = (query: string) => {
-    if (categorySearchTimeout.current) clearTimeout(categorySearchTimeout.current);
+    if (categorySearchTimeout.current)
+      clearTimeout(categorySearchTimeout.current);
 
     setForm((prev) => ({ ...prev, category: query as ExpenseHead }));
 
@@ -220,7 +232,10 @@ export default function Expenses() {
         c.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredCategories(filtered);
-      console.log("Expenses: Category search", { query, results: filtered.length });
+      console.log("Expenses: Category search", {
+        query,
+        results: filtered.length,
+      });
     }, 200);
   };
 
@@ -248,7 +263,13 @@ export default function Expenses() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.expenseName.trim() || !form.category || !form.date || !form.amount || Number(form.amount) <= 0) {
+    if (
+      !form.expenseName.trim() ||
+      !form.category ||
+      !form.date ||
+      !form.amount ||
+      Number(form.amount) <= 0
+    ) {
       alert("Please fill all required fields with valid values.");
       return;
     }
@@ -275,7 +296,9 @@ export default function Expenses() {
     if (formMode === "add") {
       setExpenses((prev) => [newExpense, ...prev]);
     } else {
-      setExpenses((prev) => prev.map((e) => (e.id === newExpense.id ? newExpense : e)));
+      setExpenses((prev) =>
+        prev.map((e) => (e.id === newExpense.id ? newExpense : e))
+      );
     }
 
     setFormMode(null);
@@ -342,24 +365,23 @@ export default function Expenses() {
 
   /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
-      <div className="w-full md:w-auto md:max-w-md">
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
         <SearchInput
+          className=""
           value={search}
           placeholder="Search by Reference, Name or Description..."
           onSearch={(query) => {
             setSearch(query);
             setCurrentPage(1);
           }}
-          className="w-full"
         />
       </div>
-
-      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
+      <div className="flex justify-end gap-2">
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px]"
           aria-label="Filter by Category"
         >
           {categoryOptions.map((c) => (
@@ -372,7 +394,7 @@ export default function Expenses() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px]"
           aria-label="Filter by Status"
         >
           <option value="All">Status</option>
@@ -396,7 +418,9 @@ export default function Expenses() {
         <input
           type="text"
           value={form.expenseName}
-          onChange={(e) => setForm((p) => ({ ...p, expenseName: e.target.value }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, expenseName: e.target.value }))
+          }
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Electricity Payment"
           required
@@ -408,7 +432,9 @@ export default function Expenses() {
         <label className="block text-sm font-medium mb-1">Description</label>
         <textarea
           value={form.description}
-          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, description: e.target.value }))
+          }
           rows={3}
           maxLength={360}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
@@ -460,7 +486,9 @@ export default function Expenses() {
             <input
               type="number"
               value={form.amount}
-              onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, amount: e.target.value }))
+              }
               step="0.01"
               min="0"
               className="w-full pl-8 border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
@@ -476,7 +504,12 @@ export default function Expenses() {
           </label>
           <select
             value={form.status}
-            onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as ExpenseStatus }))}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                status: e.target.value as ExpenseStatus,
+              }))
+            }
             className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {EXPENSE_HEADS_STATUSES.map((s) => (

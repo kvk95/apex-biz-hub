@@ -1,16 +1,16 @@
-// src\pages\reports\BalanceSheet.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { PAYMENT_TYPES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface BalanceSheetItem {
   id: number;
   accountName: string;
   debit: number;
   credit: number;
-  paymentMethod:string;
+  paymentMethod: string;
 }
 
 const BalanceSheet: React.FC = () => {
@@ -29,16 +29,15 @@ const BalanceSheet: React.FC = () => {
   }, []);
 
   const loadData = async () => {
-        setLoading(true);
-        const response = await apiService.get<BalanceSheetItem[]>("BalanceSheet");
-        if (response.status.code === "S") {
-          setData(response.result);
-          setError(null);
-        } else {
-          setError(response.status.description);
-        }
-        setLoading(false);
-
+    setLoading(true);
+    const response = await apiService.get<BalanceSheetItem[]>("BalanceSheet");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
   };
 
   const filteredData = useMemo(() => {
@@ -46,9 +45,10 @@ const BalanceSheet: React.FC = () => {
       const matchesSearch = search
         ? item.accountName.toLowerCase().includes(search.toLowerCase())
         : true;
-      const matchesPaymentMethod = paymentMethod !== "All" && item.paymentMethod // Assuming paymentMethod exists; adjust if not
-        ? item.paymentMethod === paymentMethod
-        : true;
+      const matchesPaymentMethod =
+        paymentMethod !== "All" && item.paymentMethod // Assuming paymentMethod exists; adjust if not
+          ? item.paymentMethod === paymentMethod
+          : true;
       return matchesSearch && matchesPaymentMethod;
     });
   }, [data, search, paymentMethod]);
@@ -61,12 +61,9 @@ const BalanceSheet: React.FC = () => {
     return data.reduce((sum, item) => sum + (item.credit || 0), 0);
   }, [data]);
 
-  const handleFilterChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setCurrentPage(1); // Reset to first page on filter change
-  };
-
-  const handleFilterChangePaymentMethod = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFilterChangePaymentMethod = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setPaymentMethod(e.target.value);
     setCurrentPage(1); // Reset to first page on filter change
   };
@@ -84,31 +81,47 @@ const BalanceSheet: React.FC = () => {
 
   const columns: Column[] = [
     { key: "accountName", label: "Account Name", align: "left" },
-    { key: "debit", label: "Debit", align: "right", render: (v) => (v > 0 ? `₹${v.toLocaleString()}` : "-") },
-    { key: "credit", label: "Credit", align: "right", render: (v) => (v > 0 ? `₹${v.toLocaleString()}` : "-") },
+    {
+      key: "debit",
+      label: "Debit",
+      align: "right",
+      render: (v) => (v > 0 ? `₹${v.toLocaleString()}` : "-"),
+    },
+    {
+      key: "credit",
+      label: "Credit",
+      align: "right",
+      render: (v) => (v > 0 ? `₹${v.toLocaleString()}` : "-"),
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="text"
-        value={search}
-        onChange={handleFilterChangeSearch}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Search account"
-      />
-      <select
-        value={paymentMethod}
-        onChange={handleFilterChangePaymentMethod}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        {PAYMENT_TYPES.map((method) => (
-          <option key={method} value={method}>
-            {method}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={search}
+          placeholder="Search account"
+          onSearch={(query) => {
+            setSearch(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={paymentMethod}
+          onChange={handleFilterChangePaymentMethod}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {PAYMENT_TYPES.map((method) => (
+            <option key={method} value={method}>
+              {method}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (

@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 type ExpenseCategory = {
   id: number;
@@ -16,7 +17,7 @@ export default function ExpenseCategory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterCategory, setFilterCategory] = useState("");
@@ -130,10 +131,15 @@ export default function ExpenseCategory() {
     alert("Report Data:\n" + JSON.stringify(filteredData, null, 2));
   };
 
-  const columns: Column[] = [ 
+  const columns: Column[] = [
     { key: "name", label: "Expense Category Name", align: "left" },
     { key: "description", label: "Description", align: "left" },
-        { key: "status", label: "Status", align: "center", render: renderStatusBadge }, 
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: ExpenseCategory) => (
@@ -141,7 +147,7 @@ export default function ExpenseCategory() {
       <button
         onClick={() => handleEdit(row.id)}
         aria-label={`Edit category ${row.name}`}
-       className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
         <span className="sr-only">Edit</span>
@@ -149,7 +155,7 @@ export default function ExpenseCategory() {
       <button
         onClick={() => handleDelete(row.id)}
         aria-label={`Delete category ${row.name}`}
-       className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
         <span className="sr-only">Delete</span>
@@ -158,26 +164,26 @@ export default function ExpenseCategory() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row justify-between mb-4 items-center">
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search"
-      />
-      <div className="flex gap-2">
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
         <select
           value={filterStatus}
           onChange={(e) => {
             setFilterStatus(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Status"
         >
           <option value="">All Status</option>
@@ -195,7 +201,7 @@ export default function ExpenseCategory() {
             setFilterCategory(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Category"
         >
           <option value="">Category</option>

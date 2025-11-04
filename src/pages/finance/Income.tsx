@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { INCOME_CATEGORIES, ACCOUNTS, PAYMENT_TYPES } from "@/constants/constants";
+import {
+  INCOME_CATEGORIES,
+  ACCOUNTS,
+  PAYMENT_TYPES,
+} from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface IncomeItem {
   id: number;
@@ -60,13 +66,34 @@ export default function Income() {
     return data.filter((item) => {
       const dateFromMatch = !filterDateFrom || item.date >= filterDateFrom;
       const dateToMatch = !filterDateTo || item.date <= filterDateTo;
-      const categoryMatch = filterCategory === "All" || item.category === filterCategory;
-      const accountMatch = filterAccount === "All" || item.account === filterAccount;
-      const paymentMethodMatch = filterPaymentMethod === "All" || item.paymentMethod === filterPaymentMethod;
-      const invoiceMatch = !searchInvoice.trim() || item.invoiceId.toLowerCase().includes(searchInvoice.toLowerCase());
-      return dateFromMatch && dateToMatch && categoryMatch && accountMatch && paymentMethodMatch && invoiceMatch;
+      const categoryMatch =
+        filterCategory === "All" || item.category === filterCategory;
+      const accountMatch =
+        filterAccount === "All" || item.account === filterAccount;
+      const paymentMethodMatch =
+        filterPaymentMethod === "All" ||
+        item.paymentMethod === filterPaymentMethod;
+      const invoiceMatch =
+        !searchInvoice.trim() ||
+        item.invoiceId.toLowerCase().includes(searchInvoice.toLowerCase());
+      return (
+        dateFromMatch &&
+        dateToMatch &&
+        categoryMatch &&
+        accountMatch &&
+        paymentMethodMatch &&
+        invoiceMatch
+      );
     });
-  }, [data, filterDateFrom, filterDateTo, filterCategory, filterAccount, filterPaymentMethod, searchInvoice]);
+  }, [
+    data,
+    filterDateFrom,
+    filterDateTo,
+    filterCategory,
+    filterAccount,
+    filterPaymentMethod,
+    searchInvoice,
+  ]);
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -85,7 +112,12 @@ export default function Income() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.date || !form.invoiceId.trim() || !form.amount || form.amount <= 0) {
+    if (
+      !form.date ||
+      !form.invoiceId.trim() ||
+      !form.amount ||
+      form.amount <= 0
+    ) {
       alert("Please fill all required fields with a positive amount.");
       return;
     }
@@ -122,7 +154,10 @@ export default function Income() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this income record?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -140,7 +175,11 @@ export default function Income() {
 
   const handleReport = () => {
     const total = filteredData.reduce((acc, cur) => acc + cur.amount, 0);
-    alert(`Report:\nTotal Income Records: ${filteredData.length}\nTotal Amount: ₹${total.toFixed(2)}`);
+    alert(
+      `Report:\nTotal Income Records: ${
+        filteredData.length
+      }\nTotal Amount: ₹${total.toFixed(2)}`
+    );
   };
 
   const columns: Column[] = [
@@ -149,9 +188,14 @@ export default function Income() {
     { key: "customer", label: "Customer", align: "left" },
     { key: "category", label: "Category", align: "left" },
     { key: "account", label: "Account", align: "left" },
-    { key: "amount", label: "Amount", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "amount",
+      label: "Amount",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
     { key: "paymentMethod", label: "Payment Method", align: "left" },
-    { key: "description", label: "Description", align: "left" }, 
+    { key: "description", label: "Description", align: "left" },
   ];
 
   const rowActions = (row: IncomeItem) => (
@@ -176,26 +220,26 @@ export default function Income() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row justify-between mb-4 items-center">
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchInvoice}
-        onChange={(e) => {
-          setSearchInvoice(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search Invoice"
-      />
-      <div className="flex gap-2">
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchInvoice}
+          placeholder="Search"
+          onSearch={(query) => {
+            setSearchInvoice(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
         <select
           value={filterCategory}
           onChange={(e) => {
             setFilterCategory(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded  focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Category"
         >
           {INCOME_CATEGORIES.map((cat) => (
@@ -210,7 +254,7 @@ export default function Income() {
             setFilterPaymentMethod(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded  focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Status"
         >
           {PAYMENT_TYPES.map((pm) => (
@@ -266,7 +310,9 @@ export default function Income() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
         >
           {INCOME_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
       </div>
@@ -279,7 +325,9 @@ export default function Income() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
         >
           {ACCOUNTS.map((acc) => (
-            <option key={acc} value={acc}>{acc}</option>
+            <option key={acc} value={acc}>
+              {acc}
+            </option>
           ))}
         </select>
       </div>
@@ -304,7 +352,9 @@ export default function Income() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
         >
           {PAYMENT_TYPES.map((pm) => (
-            <option key={pm} value={pm}>{pm}</option>
+            <option key={pm} value={pm}>
+              {pm}
+            </option>
           ))}
         </select>
       </div>
@@ -353,7 +403,9 @@ export default function Income() {
       rowActions={(row) => rowActions(row as IncomeItem)}
       formMode={formMode}
       setFormMode={setFormMode}
-      modalTitle={formMode === "add" ? "Add Income Record" : "Edit Income Record"}
+      modalTitle={
+        formMode === "add" ? "Add Income Record" : "Edit Income Record"
+      }
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}

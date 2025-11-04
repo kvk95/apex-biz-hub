@@ -1,8 +1,8 @@
-// src\pages\reports\TrialBalance.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 // Use the provided constant
 const accountsOptions = [
@@ -54,13 +54,16 @@ const TrialBalance: React.FC = () => {
     } else {
       setError(response.status.description);
     }
-    setLoading(false);    
+    setLoading(false);
   };
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchesAccount = accountFilter === "" || item.accountName === accountFilter;
-      const matchesSearch = searchTerm === "" || item.accountName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesAccount =
+        accountFilter === "" || item.accountName === accountFilter;
+      const matchesSearch =
+        searchTerm === "" ||
+        item.accountName.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesAccount && matchesSearch;
     });
   }, [accountFilter, searchTerm, data]);
@@ -73,12 +76,9 @@ const TrialBalance: React.FC = () => {
     return filteredData.reduce((acc, cur) => acc + (cur.credit || 0), 0);
   }, [filteredData]);
 
-  const handleFilterChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on filter change
-  };
-
-  const handleFilterChangeAccount = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFilterChangeAccount = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setAccountFilter(e.target.value);
     setCurrentPage(1); // Reset to first page on filter change
   };
@@ -96,32 +96,60 @@ const TrialBalance: React.FC = () => {
 
   const columns: Column[] = [
     { key: "accountName", label: "Account Name", align: "left" },
-    { key: "debit", label: "Debit", align: "right", render: (v) => (v > 0 ? `₹${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "-") },
-    { key: "credit", label: "Credit", align: "right", render: (v) => (v > 0 ? `₹${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "-") },
+    {
+      key: "debit",
+      label: "Debit",
+      align: "right",
+      render: (v) =>
+        v > 0
+          ? `₹${v.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
+          : "-",
+    },
+    {
+      key: "credit",
+      label: "Credit",
+      align: "right",
+      render: (v) =>
+        v > 0
+          ? `₹${v.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
+          : "-",
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={handleFilterChangeSearch}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Search account"
-      />
-      <select
-        value={accountFilter}
-        onChange={handleFilterChangeAccount}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option value="">All Accounts</option>
-        {accountsOptions.map((acc) => (
-          <option key={acc} value={acc}>
-            {acc}
-          </option>
-        ))}
-      </select>
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search account"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={accountFilter}
+          onChange={handleFilterChangeAccount}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">All Accounts</option>
+          {accountsOptions.map((acc) => (
+            <option key={acc} value={acc}>
+              {acc}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (
@@ -142,8 +170,14 @@ const TrialBalance: React.FC = () => {
         <tfoot className="bg-muted font-semibold text-foreground">
           <tr>
             <td className="px-4 py-3 text-right">Total</td>
-            <td className="px-4 py-3 text-right">{`₹${totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
-            <td className="px-4 py-3 text-right">{`₹${totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+            <td className="px-4 py-3 text-right">{`₹${totalDebit.toLocaleString(
+              undefined,
+              { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            )}`}</td>
+            <td className="px-4 py-3 text-right">{`₹${totalCredit.toLocaleString(
+              undefined,
+              { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            )}`}</td>
           </tr>
         </tfoot>
       )}

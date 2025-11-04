@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { ACCOUNT_TYPES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface BankAccount {
   id: number;
@@ -235,26 +236,26 @@ export default function BankAccounts() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row justify-between mb-4 items-center">
-      <input
-        type="text"
-        placeholder="Search"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search Accounts"
-      />
-      <div className="flex gap-2">
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          placeholder="Search"
+          value={searchTerm}
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
         <select
           value={filterStatus}
           onChange={(e) => {
             setFilterStatus(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Status"
         >
           <option value="All">Status</option>
@@ -270,7 +271,7 @@ export default function BankAccounts() {
             setFilterAccountType(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Category"
         >
           <option value="All">Account Type</option>

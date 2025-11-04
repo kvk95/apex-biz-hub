@@ -1,8 +1,8 @@
-// src\pages\reports\AccountStatement.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface AccountStatementItem {
   id: number; // Assumed for uniqueness
@@ -36,7 +36,10 @@ const AccountStatement: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<{ status: { code: string; description: string }; result: AccountStatementItem[] }>("AccountStatement");
+    const response = await apiService.get<{
+      status: { code: string; description: string };
+      result: AccountStatementItem[];
+    }>("AccountStatement");
     if (response.status.code === "S") {
       setData(response.result || []);
       setError(null);
@@ -63,10 +66,17 @@ const AccountStatement: React.FC = () => {
     return filteredTransactions.slice(start, start + itemsPerPage);
   }, [filteredTransactions, currentPage, itemsPerPage]);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1); // Reset to first page on filter change
+  const handleFilterChange = (
+    param: React.ChangeEvent<HTMLInputElement> | string
+  ) => {
+    if (typeof param === "string") {
+      setFilters((prev) => ({ ...prev, query: param }));
+      setCurrentPage(1); // Reset to first page on query change
+    } else {
+      const { name, value } = param.target;
+      setFilters((prev) => ({ ...prev, [name]: value }));
+      setCurrentPage(1); // Reset to first page on filter change
+    }
   };
 
   const handleRefresh = () => {
@@ -88,36 +98,54 @@ const AccountStatement: React.FC = () => {
     { key: "invoiceNo", label: "Invoice No", align: "left" },
     { key: "description", label: "Description", align: "left" },
     { key: "paymentType", label: "Payment Type", align: "left" },
-    { key: "debit", label: "Debit", align: "right", render: (v) => (v > 0 ? `₹${v.toFixed(2)}` : "-") },
-    { key: "credit", label: "Credit", align: "right", render: (v) => (v > 0 ? `₹${v.toFixed(2)}` : "-") },
-    { key: "balance", label: "Balance", align: "right", render: (v) => `₹${v.toFixed(2)}` },
+    {
+      key: "debit",
+      label: "Debit",
+      align: "right",
+      render: (v) => (v > 0 ? `₹${v.toFixed(2)}` : "-"),
+    },
+    {
+      key: "credit",
+      label: "Credit",
+      align: "right",
+      render: (v) => (v > 0 ? `₹${v.toFixed(2)}` : "-"),
+    },
+    {
+      key: "balance",
+      label: "Balance",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const customFilters = () => (
-    <form onSubmit={(e) => { e.preventDefault(); setCurrentPage(1); }} className="flex flex-wrap gap-2 mb-4 items-center">
-      <input
-        type="date"
-        name="fromDate"
-        value={filters.fromDate}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="date"
-        name="toDate"
-        value={filters.toDate}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <input
-        type="text"
-        name="customer"
-        value={filters.customer}
-        onChange={handleFilterChange}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="Customer"
-      />
-    </form>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={filters.customer}
+          placeholder="Customer"
+          onSearch={handleFilterChange}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
+          type="date"
+          id="fromDate"
+          value={filters.fromDate}
+          placeholder="Customer"
+          onSearch={handleFilterChange}
+        />
+        <SearchInput
+          className=""
+          type="date"
+          id="toDate"
+          value={filters.toDate}
+          onSearch={handleFilterChange}
+        />
+      </div>
+    </div>
   );
 
   return (

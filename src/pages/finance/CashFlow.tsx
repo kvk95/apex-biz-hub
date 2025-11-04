@@ -1,8 +1,8 @@
-// src\pages\reports\CashFlow.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface CashFlowItem {
   id: number;
@@ -51,18 +51,6 @@ const CashFlow: React.FC = () => {
       return matchesDate && matchesDesc;
     });
   }, [data, searchDate, searchDescription]);
-
-  const handleFilterChangeDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchDate(e.target.value);
-    setCurrentPage(1); // Reset to first page on filter change
-  };
-
-  const handleFilterChangeDescription = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSearchDescription(e.target.value);
-    setCurrentPage(1); // Reset to first page on filter change
-  };
 
   const handleRefresh = () => {
     setSearchDate("");
@@ -117,31 +105,30 @@ const CashFlow: React.FC = () => {
   ];
 
   const customFilters = () => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setCurrentPage(1);
-      }}
-      className="flex gap-2 items-center w-full"
-    >
-      <div className="flex-1">
-        <input
-          type="text"
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
           value={searchDescription}
-          onChange={handleFilterChangeDescription}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Search description"
+          onSearch={(query) => {
+            setSearchDescription(query);
+            setCurrentPage(1);
+          }}
         />
       </div>
-      <div className="flex-none">
-        <input
+      <div className="flex justify-end gap-2">
+        <SearchInput
+          className=""
           type="date"
           value={searchDate}
-          onChange={handleFilterChangeDate}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          onSearch={(query) => {
+            setSearchDate(query);
+            setCurrentPage(1);
+          }}
         />
       </div>
-    </form>
+    </div>
   );
 
   return (

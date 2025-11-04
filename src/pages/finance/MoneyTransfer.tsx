@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { CURRENCIES, STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface Customer {
   id: number;
@@ -230,29 +232,26 @@ export default function MoneyTransfer() {
   );
 
   const customFilters = () => (
-    <div className="flex  justify-between items-center w-full">
-      <div className="flex-1">
-        <input
-          type="text"
-          placeholder="Search"
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
+          placeholder="Search"
+          onSearch={(query) => {
+            setSearchTerm(query);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Search Customers"
         />
       </div>
-
-      <div className="flex-none gap-2 flex">
+      <div className="flex justify-end gap-2">
         <select
           value={filterStatus}
           onChange={(e) => {
             setFilterStatus(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input roundedfocus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Status"
         >
           <option value="All">Status</option>
@@ -268,7 +267,7 @@ export default function MoneyTransfer() {
             setFilterAccountNo(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Category"
         >
           <option value="">Category</option>
