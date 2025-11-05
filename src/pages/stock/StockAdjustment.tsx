@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { WAREHOUSES } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface StockAdjustmentItem {
   id: number;
@@ -42,10 +43,16 @@ const StockAdjustment: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<StockAdjustmentItem[]>("StockAdjustment");
+    const response = await apiService.get<StockAdjustmentItem[]>(
+      "StockAdjustment"
+    );
     if (response.status.code === "S") {
-      setData(response.result.map((item) => ({ ...item, notes: item.notes || "" })));
-      setRows(response.result.map((item) => ({ ...item, notes: item.notes || "" })));
+      setData(
+        response.result.map((item) => ({ ...item, notes: item.notes || "" }))
+      );
+      setRows(
+        response.result.map((item) => ({ ...item, notes: item.notes || "" }))
+      );
       setError(null);
     } else {
       setError(response.status.description);
@@ -54,9 +61,10 @@ const StockAdjustment: React.FC = () => {
   };
 
   const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
-      row.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    return rows.filter(
+      (row) =>
+        row.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.sku.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [rows, searchTerm]);
 
@@ -72,15 +80,22 @@ const StockAdjustment: React.FC = () => {
     setForm((prev) => {
       const newForm = {
         ...prev,
-        [name]: ["stockAdjusted", "unitCost", "totalCost", "stockInHand"].includes(name)
+        [name]: [
+          "stockAdjusted",
+          "unitCost",
+          "totalCost",
+          "stockInHand",
+        ].includes(name)
           ? parseFloat(value) || 0
           : value,
       };
       if (name === "stockAdjusted") {
-        newForm.stockAfterAdjustment = prev.stockInHand + (parseFloat(value) || 0);
+        newForm.stockAfterAdjustment =
+          prev.stockInHand + (parseFloat(value) || 0);
         newForm.totalCost = newForm.stockAfterAdjustment * prev.unitCost;
       } else if (name === "unitCost") {
-        newForm.totalCost = prev.stockAfterAdjustment * (parseFloat(value) || 0);
+        newForm.totalCost =
+          prev.stockAfterAdjustment * (parseFloat(value) || 0);
       }
       return newForm;
     });
@@ -129,7 +144,10 @@ const StockAdjustment: React.FC = () => {
     if (window.confirm("Are you sure you want to delete this adjustment?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
       setRows((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredRows.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredRows.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -153,7 +171,9 @@ const StockAdjustment: React.FC = () => {
   };
 
   const handleReport = () => {
-    alert("Stock Adjustment Report:\n\n" + JSON.stringify(filteredRows, null, 2));
+    alert(
+      "Stock Adjustment Report:\n\n" + JSON.stringify(filteredRows, null, 2)
+    );
   };
 
   const showNote = (row: StockAdjustmentItem) => {
@@ -164,25 +184,43 @@ const StockAdjustment: React.FC = () => {
     { key: "productName", label: "Product Name", align: "left" },
     { key: "sku", label: "SKU", align: "left" },
     { key: "stockInHand", label: "Stock In Hand", align: "right" },
-    { key: "stockAdjusted", label: "Stock Adjusted", align: "right", render: (v, row) => (
-      <input
-        type="number"
-        value={v}
-        onChange={(e) => handleStockAdjustedChange(row.id, e.target.value)}
-        className="w-20 border border-input rounded px-2 py-1 text-right bg-background focus:ring-2 focus:ring-ring"
-        min={-row.stockInHand}
-        title="Enter stock adjustment (negative or positive)"
-      />
-    )},
-    { key: "stockAfterAdjustment", label: "Stock After Adjustment", align: "right" },
-    { key: "unitCost", label: "Unit Cost", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-    { key: "totalCost", label: "Total Cost", align: "right", render: (v) => `₹${v.toFixed(2)}` },
-
+    {
+      key: "stockAdjusted",
+      label: "Stock Adjusted",
+      align: "right",
+      render: (v, row) => (
+        <input
+          type="number"
+          value={v}
+          onChange={(e) => handleStockAdjustedChange(row.id, e.target.value)}
+          className="w-20 border border-input rounded px-2 py-1 text-right bg-background focus:ring-2 focus:ring-ring"
+          min={-row.stockInHand}
+          title="Enter stock adjustment (negative or positive)"
+        />
+      ),
+    },
+    {
+      key: "stockAfterAdjustment",
+      label: "Stock After Adjustment",
+      align: "right",
+    },
+    {
+      key: "unitCost",
+      label: "Unit Cost",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
+    {
+      key: "totalCost",
+      label: "Total Cost",
+      align: "right",
+      render: (v) => `₹${v.toFixed(2)}`,
+    },
   ];
 
   const rowActions = (row: StockAdjustmentItem) => (
     <>
-    <button
+      <button
         onClick={() => showNote(row)}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center"
       >
@@ -225,25 +263,28 @@ const StockAdjustment: React.FC = () => {
   };
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 flex-wrap items-center">
-      <input
-        type="text"
-        placeholder="Search Product Name or SKU"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search Product Name or SKU"
-      />
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product Name or SKU"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2"></div>
     </div>
   );
 
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium mb-1">Product Name <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Product Name <span className="text-destructive">*</span>
+        </label>
         <input
           type="text"
           name="productName"
@@ -255,7 +296,9 @@ const StockAdjustment: React.FC = () => {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">SKU <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          SKU <span className="text-destructive">*</span>
+        </label>
         <input
           type="text"
           name="sku"
@@ -341,7 +384,9 @@ const StockAdjustment: React.FC = () => {
       rowActions={rowActions}
       formMode={formMode}
       setFormMode={setFormMode}
-      modalTitle={formMode === "add" ? "Add Stock Adjustment" : "Edit Stock Adjustment"}
+      modalTitle={
+        formMode === "add" ? "Add Stock Adjustment" : "Edit Stock Adjustment"
+      }
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
@@ -350,38 +395,47 @@ const StockAdjustment: React.FC = () => {
           <input
             type="date"
             value={new Date().toISOString().slice(0, 10)} // Current date: 2025-10-25
-            onChange={(e) => {/* Handle date change if needed */}}
+            onChange={(e) => {
+              /* Handle date change if needed */
+            }}
             className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
             aria-label="Adjustment Date"
           />
           <input
             type="text"
             value="REF-123456"
-            onChange={(e) => {/* Handle reference change if needed */}}
+            onChange={(e) => {
+              /* Handle reference change if needed */
+            }}
             className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
             aria-label="Reference No"
           />
           <select
             value="Main Warehouse"
-            onChange={(e) => {/* Handle warehouse change if needed */}}
+            onChange={(e) => {
+              /* Handle warehouse change if needed */
+            }}
             className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
             aria-label="Warehouse"
           >
             {WAREHOUSES.map((w) => (
-              <option key={w} value={w}>{w}</option>
+              <option key={w} value={w}>
+                {w}
+              </option>
             ))}
           </select>
           <input
             type="text"
             value=""
-            onChange={(e) => {/* Handle note change if needed */}}
+            onChange={(e) => {
+              /* Handle note change if needed */
+            }}
             className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:ring-2 focus:ring-ring"
             aria-label="Note"
             placeholder="Note"
           />
         </div>
       }
-       
     />
   );
 };

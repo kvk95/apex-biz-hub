@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { CATEGORIES, SUPPLIERS, UNITS } from "@/constants/constants";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface StockItem {
   id: number;
@@ -229,64 +230,66 @@ export default function ManageStock() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 flex-wrap items-center">
-      <input
-        type="text"
-        placeholder="Search Product Name or Code"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Search Product Name or Code"
-      />
-      <select
-        value={categoryFilter}
-        onChange={(e) => {
-          setCategoryFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Category"
-      >
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
-      <select
-        value={supplierFilter}
-        onChange={(e) => {
-          setSupplierFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Supplier"
-      >
-        {SUPPLIERS.map((sup) => (
-          <option key={sup} value={sup}>
-            {sup}
-          </option>
-        ))}
-      </select>
-      <select
-        value={unitFilter}
-        onChange={(e) => {
-          setUnitFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="Unit"
-      >
-        <option value="">All Units</option>
-        {UNITS.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2">
+        <SearchInput
+          className=""
+          value={searchTerm}
+          placeholder="Search Product Name or Code"
+          onSearch={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={categoryFilter}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Category"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={supplierFilter}
+          onChange={(e) => {
+            setSupplierFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Supplier"
+        >
+          {SUPPLIERS.map((sup) => (
+            <option key={sup} value={sup}>
+              {sup}
+            </option>
+          ))}
+        </select>
+        <select
+          value={unitFilter}
+          onChange={(e) => {
+            setUnitFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Unit"
+        >
+          <option value="">All Units</option>
+          {UNITS.map((u) => (
+            <option key={u} value={u}>
+              {u}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { STORES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 interface StockTransferItem {
   id: number;
@@ -53,9 +54,11 @@ export default function StockTransfer() {
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchFromStore = !filterFromStore || item.fromStore === filterFromStore;
+      const matchFromStore =
+        !filterFromStore || item.fromStore === filterFromStore;
       const matchToStore = !filterToStore || item.toStore === filterToStore;
-      const matchStatus = item.status === "Pending" || item.status === "Completed"; // Default filter behavior
+      const matchStatus =
+        item.status === "Pending" || item.status === "Completed"; // Default filter behavior
       return matchFromStore && matchToStore && matchStatus;
     });
   }, [data, filterFromStore, filterToStore]);
@@ -85,7 +88,9 @@ export default function StockTransfer() {
       !form.product.trim() ||
       form.quantity <= 0
     ) {
-      alert("Please fill all fields with valid data (quantity must be positive).");
+      alert(
+        "Please fill all fields with valid data (quantity must be positive)."
+      );
       return;
     }
     if (form.fromStore === form.toStore) {
@@ -125,7 +130,10 @@ export default function StockTransfer() {
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this transfer?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredData.length - 1 && currentPage > 1) {
+      if (
+        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
+        currentPage > 1
+      ) {
         setCurrentPage(currentPage - 1);
       }
     }
@@ -147,9 +155,18 @@ export default function StockTransfer() {
     { key: "fromStore", label: "From Store", align: "left" },
     { key: "toStore", label: "To Store", align: "left" },
     { key: "product", label: "Product", align: "left" },
-    { key: "quantity", label: "Quantity", align: "right", render: (v) => `${v}` },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
-     
+    {
+      key: "quantity",
+      label: "Quantity",
+      align: "right",
+      render: (v) => `${v}`,
+    },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: StockTransferItem) => (
@@ -174,46 +191,51 @@ export default function StockTransfer() {
   );
 
   const customFilters = () => (
-    <div className="flex flex-row gap-2 mb-4 flex-wrap items-center">
-      <select
-        value={filterFromStore}
-        onChange={(e) => {
-          setFilterFromStore(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="From Store"
-      >
-        <option value="">From Store</option>
-        {STORES.map((store) => (
-          <option key={store} value={store}>
-            {store}
-          </option>
-        ))}
-      </select>
-      <select
-        value={filterToStore}
-        onChange={(e) => {
-          setFilterToStore(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="px-3 py-1.5 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label="To Store"
-      >
-        <option value="">To Store</option>
-        {STORES.map((store) => (
-          <option key={store} value={store}>
-            {store}
-          </option>
-        ))}
-      </select>
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start  gap-2"></div>
+      <div className="flex justify-end gap-2">
+        <select
+          value={filterFromStore}
+          onChange={(e) => {
+            setFilterFromStore(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="From Store"
+        >
+          <option value="">From Store</option>
+          {STORES.map((store) => (
+            <option key={store} value={store}>
+              {store}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filterToStore}
+          onChange={(e) => {
+            setFilterToStore(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="To Store"
+        >
+          <option value="">To Store</option>
+          {STORES.map((store) => (
+            <option key={store} value={store}>
+              {store}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
   const modalForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium mb-1">Date <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Date <span className="text-destructive">*</span>
+        </label>
         <input
           type="date"
           name="date"
@@ -224,7 +246,9 @@ export default function StockTransfer() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Reference No <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Reference No <span className="text-destructive">*</span>
+        </label>
         <input
           type="text"
           name="referenceNo"
@@ -236,7 +260,9 @@ export default function StockTransfer() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">From Store <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          From Store <span className="text-destructive">*</span>
+        </label>
         <select
           name="fromStore"
           value={form.fromStore}
@@ -244,14 +270,20 @@ export default function StockTransfer() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
           required
         >
-          <option value="" disabled>Select store</option>
+          <option value="" disabled>
+            Select store
+          </option>
           {STORES.map((store) => (
-            <option key={store} value={store}>{store}</option>
+            <option key={store} value={store}>
+              {store}
+            </option>
           ))}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">To Store <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          To Store <span className="text-destructive">*</span>
+        </label>
         <select
           name="toStore"
           value={form.toStore}
@@ -259,14 +291,20 @@ export default function StockTransfer() {
           className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
           required
         >
-          <option value="" disabled>Select store</option>
+          <option value="" disabled>
+            Select store
+          </option>
           {STORES.map((store) => (
-            <option key={store} value={store}>{store}</option>
+            <option key={store} value={store}>
+              {store}
+            </option>
           ))}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Product <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Product <span className="text-destructive">*</span>
+        </label>
         <input
           type="text"
           name="product"
@@ -278,7 +316,9 @@ export default function StockTransfer() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Quantity <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Quantity <span className="text-destructive">*</span>
+        </label>
         <input
           type="number"
           name="quantity"
@@ -291,7 +331,9 @@ export default function StockTransfer() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Status <span className="text-destructive">*</span></label>
+        <label className="block text-sm font-medium mb-1">
+          Status <span className="text-destructive">*</span>
+        </label>
         <select
           name="status"
           value={form.status}
@@ -300,7 +342,9 @@ export default function StockTransfer() {
           required
         >
           {STATUSES.filter((s) => s !== "All").map((status) => (
-            <option key={status} value={status}>{status}</option>
+            <option key={status} value={status}>
+              {status}
+            </option>
           ))}
         </select>
       </div>
@@ -337,10 +381,12 @@ export default function StockTransfer() {
       rowActions={rowActions}
       formMode={formMode}
       setFormMode={setFormMode}
-      modalTitle={formMode === "add" ? "Add Stock Transfer" : "Edit Stock Transfer"}
+      modalTitle={
+        formMode === "add" ? "Add Stock Transfer" : "Edit Stock Transfer"
+      }
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters} 
+      customFilters={customFilters}
     />
   );
 }
