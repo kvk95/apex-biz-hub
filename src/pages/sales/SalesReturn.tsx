@@ -548,7 +548,7 @@ export default function SalesReturn() {
             setSelectedCustomer(e.target.value);
             console.log("[SalesReturn] Customer filter:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
         >
           {customerOptions.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -561,7 +561,7 @@ export default function SalesReturn() {
             setSelectedStatus(e.target.value as any);
             console.log("[SalesReturn] Status filter:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {RETURN_STATUSES.map((s) => (
@@ -575,7 +575,7 @@ export default function SalesReturn() {
             setSelectedPaymentStatus(e.target.value as any);
             console.log("[SalesReturn] Payment filter:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {PAYMENT_STATUSES.map((s) => (
@@ -589,7 +589,7 @@ export default function SalesReturn() {
             setSelectedSort(e.target.value as any);
             console.log("[SalesReturn] Sort changed:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           {SORT_OPTIONS.map((s) => (
             <option key={s} value={s}>{s}</option>

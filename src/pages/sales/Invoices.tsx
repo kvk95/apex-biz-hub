@@ -378,7 +378,7 @@ export default function Invoices() {
         <select
           value={selectedCustomer}
           onChange={(e) => setSelectedCustomer(e.target.value)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+          className="border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
         >
           {customerOptions.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -388,7 +388,7 @@ export default function Invoices() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {PAYMENT_STATUSES.map((s) => (
@@ -399,7 +399,7 @@ export default function Invoices() {
         <select
           value={selectedSort}
           onChange={(e) => setSelectedSort(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           {SORT_OPTIONS.map((s) => (
             <option key={s} value={s}>{s}</option>

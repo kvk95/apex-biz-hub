@@ -540,7 +540,7 @@ export default function Purchases() {
         <select
           value={selectedSupplier}
           onChange={(e) => setSelectedSupplier(e.target.value)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           {supplierOptions.map((s) => (
             <option key={s} value={s}>{s}</option>
@@ -550,7 +550,7 @@ export default function Purchases() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {PURCHASE_STATUSES.map((s) => (
@@ -561,7 +561,7 @@ export default function Purchases() {
         <select
           value={selectedPaymentStatus}
           onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {PAYMENT_STATUSES.map((s) => (
@@ -572,7 +572,7 @@ export default function Purchases() {
         <select
           value={selectedSort}
           onChange={(e) => setSelectedSort(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           {SORT_OPTIONS.map((s) => (
             <option key={s} value={s}>{s}</option>

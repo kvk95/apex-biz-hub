@@ -586,7 +586,7 @@ export default function PurchaseReturn() {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           <option value="All">All Status</option>
           {PURCHASE_STATUSES.map((s) => (
@@ -598,7 +598,7 @@ export default function PurchaseReturn() {
         <select
           value={selectedSort}
           onChange={(e) => setSelectedSort(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[160px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[160px]"
         >
           {SORT_OPTIONS.map((s) => (
             <option key={s} value={s}>{s}</option>

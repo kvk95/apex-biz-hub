@@ -484,7 +484,7 @@ export default function Quotation() {
             setSelectedCustomer(e.target.value);
             console.log("[Quotation] Customer filter:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
         >
           {customerOptions.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -495,7 +495,7 @@ export default function Quotation() {
             setSelectedStatus(e.target.value as any);
             console.log("[Quotation] Status filter:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
         >
           <option>All</option>
           {QUOTATION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -507,7 +507,7 @@ export default function Quotation() {
             setSelectedSort(e.target.value as any);
             console.log("[Quotation] Sort changed:", e.target.value);
           }}
-          className="border border-input rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
