@@ -15,6 +15,7 @@ import { useState, useRef, useEffect } from "react";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { Calculator } from "./Calculator";
 
 const addnewItems = [
   { name: "Category", icon: "fa-tags", key: "/inventory/categories" },
@@ -95,6 +96,7 @@ export function AppNavbar({ isPosPage }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -223,6 +225,15 @@ export function AppNavbar({ isPosPage }) {
               >
                 <i className="fa fa-dashboard "></i>
                 Dashboard
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="pt-2 hover:bg-primary hover:text-primary-foreground"
+                onClick={() => setShowCalculator(true)}
+              >
+                <i className="fa fa-calculator fa-light h-5 w-5"></i>
               </Button>
             </>
           )}
@@ -382,6 +393,9 @@ export function AppNavbar({ isPosPage }) {
           </DropdownMenu>
         </div>
       </header>
+      {showCalculator && (
+        <Calculator onClose={() => setShowCalculator(false)} />
+      )}
     </>
   );
 }
