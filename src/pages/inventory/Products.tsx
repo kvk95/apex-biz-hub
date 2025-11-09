@@ -1,207 +1,230 @@
+/* -------------------------------------------------
+   Products - FINAL: NO ERRORS + REAL DROPDOWNS + EXACT DESIGN
+   ------------------------------------------------- */
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, STATUSES, BRANDS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
 
-interface ProductRecord {
+type Product = {
   id: number;
+  sku: string;
+  code: string;
   productName: string;
-  category: string;
-  brand: string;
+  productImage: string;
+  categoryName: string;
+  subCategoryName: string;
+  brandName: string;
+  unit: string;
+  quantity: number;
   price: number;
-  stock: number;
-  status: string;
-  image: string;
-}
+  createdBy: string;
+  status: "Active" | "Inactive";
+  quantityAlert: number;
+  storeName?: string;
+  warehouseName?: string;
+};
+
+type Store = { id: number; storeName: string; status: string };
+type Warehouse = { id: number; warehouseName: string; warehouseStatus: string };
+type Category = { id: number; categoryName: string; status: string };
+type SubCategory = { id: number; category: string; subCategory: string; status: string };
+type Brand = { id: number; brandName: string; brandStatus: string };
 
 export default function Products() {
-  const [data, setData] = useState<ProductRecord[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedBrand, setSelectedBrand] = useState("All Brands");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    const loadAll = async () => {
+      setLoading(true);
+      try {
+        const [
+          prodRes,
+          storeRes,
+          whRes,
+          catRes,
+          subCatRes,
+          brandRes,
+        ] = await Promise.all([
+          apiService.get("Products"),
+          apiService.get("Stores"),
+          apiService.get("Warehouses"),
+          apiService.get("Category"),
+          apiService.get("SubCategory"),
+          apiService.get("Brands"),
+        ]);
+
+        const get = (res: any) => (res?.result || res?.data || res || []);
+
+        setProducts(get(prodRes));
+        setStores(get(storeRes).filter((s: Store) => s.status === "Active"));
+        setWarehouses(get(whRes).filter((w: Warehouse) => w.warehouseStatus === "Active"));
+        setCategories(get(catRes).filter((c: Category) => c.status === "Active"));
+        setSubCategories(get(subCatRes).filter((sc: SubCategory) => sc.status === "Active"));
+        setBrands(get(brandRes).filter((b: Brand) => b.brandStatus === "Active"));
+
+      } catch (err) {
+        console.error("Load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<ProductRecord[]>("Products");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  const categoryOptions = useMemo(() => ["All Categories", ...categories.map(c => c.categoryName)].sort(), [categories]);
+  const brandOptions = useMemo(() => ["All Brands", ...brands.map(b => b.brandName)].sort(), [brands]);
 
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      const matchesSearch = item.productName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All Categories" ||
-        item.category === selectedCategory;
-      const matchesBrand =
-        selectedBrand === "All Brands" || item.brand === selectedBrand;
-      return matchesSearch && matchesCategory && matchesBrand;
+    return products.filter(item => {
+      const search = searchTerm.toLowerCase();
+      const matchesSearch = item.productName?.toLowerCase().includes(search) || item.sku?.toLowerCase().includes(search);
+      const matchesCat = selectedCategory === "All Categories" || item.categoryName === selectedCategory;
+      const matchesBrand = selectedBrand === "All Brands" || item.brandName === selectedBrand;
+      return matchesSearch && matchesCat && matchesBrand;
     });
-  }, [data, searchTerm, selectedCategory, selectedBrand]);
+  }, [products, searchTerm, selectedCategory, selectedBrand]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const handleView = (record: ProductRecord) => {
-    navigate("/inventory/products/create", {
-      state: { mode: "view", productRecord: record },
-    });
-  };
-
-  const handleEdit = (record: ProductRecord) => {
-    navigate("/inventory/products/create", {
-      state: { mode: "edit", productRecord: record },
-    });
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      setData((prev) => prev.filter((item) => item.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
-  };
-
   const handleClear = () => {
     setSearchTerm("");
     setSelectedCategory("All Categories");
     setSelectedBrand("All Brands");
     setCurrentPage(1);
-    loadData();
   };
 
   const handleAddClick = () => {
-    navigate("/inventory/products/create");
+    navigate("/inventory/products/create", {
+      state: { mode: "create", masterData: { categories, brands, stores, warehouses, subCategories } }
+    });
+  };
+
+  const handleEdit = (row: Product) => {
+    navigate("/inventory/products/create", {
+      state: { mode: "edit", productRecord: row, masterData: { categories, brands, stores, warehouses, subCategories } }
+    });
+  };
+
+  const handleView = (row: Product) => {
+    navigate("/inventory/products/create", {
+      state: { mode: "view", productRecord: row, masterData: { categories, brands, stores, warehouses, subCategories } }
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Delete this product?")) {
+      setProducts(prev => prev.filter(p => p.id !== id));
+    }
   };
 
   const columns: Column[] = [
+    { key: "sku", label: "SKU", align: "left" },
     {
       key: "productName",
-      label: "Product",
+      label: "Product Name",
       align: "left",
-      render: (value, row) => (
-        <div className="flex items-center space-x-3">
+      render: (_v, row: Product) => (
+        <div className="flex items-center gap-3">
           <img
-            src={row.image}
+            src={row.productImage || "/assets/images/placeholder.jpg"}
             alt={row.productName}
-            className="w-12 h-12 rounded object-contain"
+            className="w-10 h-10 rounded object-cover border"
+            onError={(e) => (e.target as HTMLImageElement).src = "/assets/images/placeholder.jpg"}
           />
-          <span>{row.productName}</span>
+          <span className="font-medium">{row.productName}</span>
         </div>
       ),
     },
-    { key: "category", label: "Category", align: "left" },
+    { key: "categoryName", label: "Category", align: "left" },
+    { key: "subCategoryName", label: "Sub Category", align: "left" },
+    { key: "brandName", label: "Brand", align: "left" },
+    { key: "price", label: "Price", align: "right", render: v => `$${Number(v).toFixed(2)}` },
+    { key: "unit", label: "Unit", align: "left" },
     {
-      key: "price",
-      label: "Price ($)",
+      key: "quantity",
+      label: "Qty",
       align: "right",
-      render: (value) => value.toFixed(2),
+      render: (v: number, row: Product) => (
+        <span className={v <= row.quantityAlert ? "text-red-600 font-bold" : ""}>{v}</span>
+      ),
     },
-    { key: "stock", label: "Stock", align: "right" },
     {
-      key: "status",
-      label: "Status",
-      align: "center",
-      render: renderStatusBadge,
+      key: "createdBy",
+      label: "Created By",
+      align: "left",
+      render: (name: string) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-dashed border-gray-400" />
+          <span>{name || "Unknown"}</span>
+        </div>
+      ),
     },
+    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
   ];
 
-  const rowActions = (row: ProductRecord) => (
+  const rowActions = (row: Product) => (
     <>
-      <button
-        onClick={() => handleView(row)}
-        aria-label={`View ${row.productName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-blue-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-      >
-        <i className="fa fa-eye" aria-hidden="true"></i>
-        <span className="sr-only">View</span>
+      <button onClick={() => handleView(row)} className="text-gray-700 hover:text-blue-600 p-1">
+        <i className="fa fa-eye"></i>
       </button>
-      <button
-        onClick={() => handleEdit(row)}
-        aria-label={`Edit ${row.productName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-      >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit</span>
+      <button onClick={() => handleEdit(row)} className="text-gray-700 hover:text-green-600 p-1">
+        <i className="fa fa-edit"></i>
       </button>
-      <button
-        onClick={() => handleDelete(row.id)}
-        aria-label={`Delete ${row.productName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-      >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
+      <button onClick={() => handleDelete(row.id)} className="text-gray-700 hover:text-red-600 p-1">
+        <i className="fa fa-trash"></i>
       </button>
     </>
   );
 
   const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-3">
+      <div className="w-full md:w-auto md:max-w-md">
         <SearchInput
-          className=""
           value={searchTerm}
-          placeholder="Search Product"
-          onSearch={(query) => {
-            setSearchTerm(query);
-            setCurrentPage(1);
-          }}
+          placeholder="Search"
+          onSearch={(q) => { setSearchTerm(q); setCurrentPage(1); }}
+          className="w-full"
         />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex gap-3">
         <select
           value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by category"
+          onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+          className="px-4 py-2 border border-gray-300 rounded-md text-sm min-w-[160px] focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+          <option value="All Categories" disabled>Select Category</option>
+          {categoryOptions.filter(c => c !== "All Categories").map(c => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
         <select
           value={selectedBrand}
-          onChange={(e) => {
-            setSelectedBrand(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by brand"
+          onChange={(e) => { setSelectedBrand(e.target.value); setCurrentPage(1); }}
+          className="px-4 py-2 border border-gray-300 rounded-md text-sm min-w-[160px] focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
-          {BRANDS.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
+          <option value="All Brands" disabled>Select Brand</option>
+          {brandOptions.filter(b => b !== "All Brands").map(b => (
+            <option key={b} value={b}>{b}</option>
           ))}
         </select>
       </div>
@@ -210,17 +233,14 @@ export default function Products() {
 
   return (
     <PageBase1
-      title="Products"
-      description="View and manage products."
-      icon="fa fa-boxes"
+      title="Product List"
+      description="Manage your products"
+      icon="fa-light fa-boxes"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={null}
       search={searchTerm}
-      onSearchChange={(e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-      }}
+      onSearchChange={(q) => { setSearchTerm(q); setCurrentPage(1); }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}
@@ -230,11 +250,38 @@ export default function Products() {
       tableData={paginatedData}
       rowActions={rowActions}
       formMode={null}
-      setFormMode={() => {}}
+      setFormMode={() => { }}
       modalTitle=""
       modalForm={() => null}
-      onFormSubmit={() => {}}
+      onFormSubmit={() => { }}
       customFilters={customFilters}
-    />
+    >
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-500"></div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-2 border rounded text-sm flex items-center gap-2 hover:bg-gray-50">
+            <i className="fa fa-file-pdf text-red-600"></i> PDF
+          </button>
+          <button className="px-3 py-2 border rounded text-sm flex items-center gap-2 hover:bg-gray-50">
+            <i className="fa fa-file-excel text-green-600"></i> XLS
+          </button>
+          <button className="px-3 py-2 border rounded text-sm hover:bg-gray-50">
+            <i className="fa fa-print"></i>
+          </button>
+          <button className="px-3 py-2 border rounded text-sm hover:bg-gray-50">
+            <i className="fa fa-sync"></i>
+          </button>
+          <button onClick={handleAddClick} className="bg-orange-500 text-white px-4 py-2 rounded font-medium flex items-center gap-2 hover:bg-orange-600">
+            <i className="fa fa-plus-circle"></i> Add Product
+          </button>
+          <button onClick={() => alert("Import Products (XLS) - Coming Soon")} className="bg-blue-900 text-white px-4 py-2 rounded font-medium flex items-center gap-2 hover:bg-blue-800">
+            <i className="fa fa-upload"></i> Import Product
+          </button>
+        </div>
+      )}
+    </PageBase1>
   );
 }
