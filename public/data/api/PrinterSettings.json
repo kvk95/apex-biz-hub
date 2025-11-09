@@ -6,86 +6,34 @@
   "result": [
     {
       "id": 1,
-      "printerName": "Printer 1",
-      "printerType": "Thermal",
-      "printerPath": "USB001",
+      "printerName": "Epson L3150",
+      "connectionType": "Network",
+      "ipAddress": "192.168.1.100",
+      "port": "9100",
       "status": "Active"
     },
     {
       "id": 2,
-      "printerName": "Printer 2",
-      "printerType": "Inkjet",
-      "printerPath": "COM3",
-      "status": "Inactive"
+      "printerName": "HP LaserJet P2035",
+      "connectionType": "USB",
+      "ipAddress": "",
+      "port": "USB",
+      "status": "Active"
     },
     {
       "id": 3,
-      "printerName": "Printer 3",
-      "printerType": "Laser",
-      "printerPath": "LPT1",
-      "status": "Active"
+      "printerName": "Brother HL-L2350DW",
+      "connectionType": "WiFi",
+      "ipAddress": "192.168.1.101",
+      "port": "631",
+      "status": "Inactive"
     },
     {
       "id": 4,
-      "printerName": "Printer 4",
-      "printerType": "Thermal",
-      "printerPath": "USB002",
-      "status": "Active"
-    },
-    {
-      "id": 5,
-      "printerName": "Printer 5",
-      "printerType": "Inkjet",
-      "printerPath": "COM4",
-      "status": "Inactive"
-    },
-    {
-      "id": 6,
-      "printerName": "Printer 6",
-      "printerType": "Laser",
-      "printerPath": "LPT2",
-      "status": "Active"
-    },
-    {
-      "id": 7,
-      "printerName": "Printer 7",
-      "printerType": "Thermal",
-      "printerPath": "USB003",
-      "status": "Active"
-    },
-    {
-      "id": 8,
-      "printerName": "Printer 8",
-      "printerType": "Inkjet",
-      "printerPath": "COM5",
-      "status": "Inactive"
-    },
-    {
-      "id": 9,
-      "printerName": "Printer 9",
-      "printerType": "Laser",
-      "printerPath": "LPT3",
-      "status": "Active"
-    },
-    {
-      "id": 10,
-      "printerName": "Printer 10",
-      "printerType": "Thermal",
-      "printerPath": "USB004",
-      "status": "Active"
-    },
-    {
-      "id": 11,
-      "printerName": "Printer 11",
-      "printerType": "Inkjet",
-      "printerPath": "COM6",
-      "status": "Inactive"
-    },
-    {
-      "id": 12,
-      "printerName": "Printer 12",
-      "printerType": "Laser",
-      "printerPath": "LPT4",
+      "printerName": "Canon PIXMA TS3520",
+      "connectionType": "Bluetooth",
+      "ipAddress": "",
+      "port": "BT",
       "status": "Active"
     }
   ]

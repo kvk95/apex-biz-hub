@@ -130,9 +130,15 @@ export default function SupplierReport() {
     { key: "contactPerson", label: "Contact Person", align: "left" },
     { key: "phone", label: "Phone", align: "left" },
     { key: "email", label: "Email", align: "left" },
-    { key: "address", label: "Address", align: "left" },
-    { key: "city", label: "City", align: "left" },
-    { key: "country", label: "Country", align: "left" },
+    {
+      key: "address",
+      label: "Address",
+      render: (value, row) => (
+        <span>
+          {row.address},<br /> {row.city}, {row.country}
+        </span>
+      ),
+    },
     {
       key: "totalPurchase",
       label: "Total Purchase",
@@ -183,7 +189,7 @@ export default function SupplierReport() {
             setCurrentPage(1);
           }}
         />
-                <SearchInput
+        <SearchInput
           className=""
           value={searchEmail}
           placeholder="Email"
@@ -191,10 +197,9 @@ export default function SupplierReport() {
             setSearchEmail(query);
             setCurrentPage(1);
           }}
-        /> 
+        />
       </div>
-      <div className="flex justify-end gap-2"> 
-
+      <div className="flex justify-end gap-2">
         <input
           type="text"
           placeholder="City"

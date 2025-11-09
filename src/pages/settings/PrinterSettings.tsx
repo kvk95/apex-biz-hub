@@ -1,41 +1,70 @@
 import { apiService } from "@/services/ApiService";
-import React, { useEffect, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
+import { STATUSES } from "@/constants/constants";
+import { renderStatusBadge } from "@/utils/tableUtils";
 
-const printerTypes = ["Thermal", "Inkjet", "Laser"];
-const printerStatuses = ["Active", "Inactive"];
+const CONNECTION_TYPES = ["USB", "Network", "Bluetooth", "WiFi"] as const;
+type ConnectionType = typeof CONNECTION_TYPES[number];
+
+interface Printer {
+  id: number;
+  printerName: string;
+  connectionType: ConnectionType;
+  ipAddress: string;
+  port: string;
+  status: (typeof STATUSES)[number];
+}
 
 export default function PrinterSettings() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    printerName: "",
+    connectionType: CONNECTION_TYPES[0],
+    ipAddress: "",
+    port: "",
+    status: STATUSES[0],
+  });
 
-  // Form state
-  const [printerName, setPrinterName] = useState("");
-  const [printerType, setPrinterType] = useState(printerTypes[0]);
-  const [printerPath, setPrinterPath] = useState("");
-  const [status, setStatus] = useState(printerStatuses[0]);
-
-  // Data state
-  const [printers, setPrinters] = useState([]);
-
-  // Loading and error states for API
+  const [printers, setPrinters] = useState<Printer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    printerName: "",
-    printerType: printerTypes[0],
-    printerPath: "",
-    status: printerStatuses[0],
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const filteredPrinters = useMemo(() => {
+    const result = !search.trim()
+      ? printers
+      : printers.filter((p) =>
+          p.printerName.toLowerCase().includes(search.toLowerCase())
+        );
+    console.log("Printers filteredPrinters:", result, { search });
+    return result;
+  }, [search, printers]);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const result = filteredPrinters.slice(start, end);
+    console.log("Printers paginatedData:", result, {
+      currentPage,
+      start,
+      end,
+      itemsPerPage,
+      totalItems: filteredPrinters.length,
+    });
+    return result;
+  }, [currentPage, itemsPerPage, filteredPrinters]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("PrinterSettings");
+    const response = await apiService.get<Printer[]>("PrinterSettings");
     if (response.status.code === "S") {
       setPrinters(response.result);
       setError(null);
@@ -43,460 +72,287 @@ export default function PrinterSettings() {
       setError(response.status.description);
     }
     setLoading(false);
+    console.log("Printers loadData:", { data: response.result });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Handlers
-  const resetForm = () => {
-    setPrinterName("");
-    setPrinterType(printerTypes[0]);
-    setPrinterPath("");
-    setStatus(printerStatuses[0]);
-    setEditId(null);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleSave = () => {
-    if (!printerName.trim() || !printerPath.trim()) return;
-
-    if (editId !== null) {
-      // Edit existing
-      setPrinters((prev) =>
-        prev.map((p) =>
-          p.id === editId
-            ? { ...p, printerName, printerType, printerPath, status }
-            : p
-        )
-      );
-    } else {
-      // Add new
-      const newId =
-        printers.length > 0 ? Math.max(...printers.map((p) => p.id)) + 1 : 1;
-      setPrinters((prev) => [
-        ...prev,
-        { id: newId, printerName, printerType, printerPath, status },
-      ]);
-    }
-    resetForm();
-  };
-
-  const handleEdit = (id: number) => {
-    const p = printers.find((p) => p.id === id);
-    if (!p) return;
-    setEditForm({
-      printerName: p.printerName,
-      printerType: p.printerType,
-      printerPath: p.printerPath,
-      status: p.status,
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      printerName: "",
+      connectionType: CONNECTION_TYPES[0],
+      ipAddress: "",
+      port: "",
+      status: STATUSES[0],
     });
-    setEditId(id);
-    setIsEditModalOpen(true);
+    console.log("Printers handleAddClick: Modal opened for add");
+  };
+
+  const handleEdit = (printer: Printer) => {
+    setFormMode("edit");
+    setForm({ ...printer });
+    console.log("Printers handleEdit: Modal opened for edit", { printer });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !form.printerName.trim() ||
+      !form.connectionType.trim() ||
+      !form.ipAddress.trim() ||
+      !form.port.trim()
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    const portNum = Number(form.port);
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+      alert("Port must be a valid number between 1 and 65535.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = printers.length
+        ? Math.max(...printers.map((p) => p.id)) + 1
+        : 1;
+      setPrinters((prev) => [...prev, { ...form, id: newId }]);
+      const totalPages = Math.ceil((filteredPrinters.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setPrinters((prev) =>
+        prev.map((p) => (p.id === form.id ? { ...form, id: form.id } : p))
+      );
+    }
+    setFormMode(null);
+    console.log("Printers handleFormSubmit:", { form, formMode });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this printer?")) {
       setPrinters((prev) => prev.filter((p) => p.id !== id));
-      if (currentPage > 1 && printers.length <= currentPage * itemsPerPage) {
-        setCurrentPage(currentPage - 1);
+      const totalPages = Math.ceil((filteredPrinters.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+        console.log("Printers handleDelete: Adjusted to last page", {
+          id,
+          currentPage,
+          totalPages,
+        });
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+        console.log("Printers handleDelete: Reset to page 1 (no data)", {
+          id,
+          currentPage,
+          totalPages,
+        });
       }
-      if (editId === id) resetForm();
+      console.log("Printers handleDelete:", { id, totalPages });
     }
   };
 
   const handleClear = () => {
-    resetForm();
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
+    console.log("Printers handleClear");
   };
 
   const handleReport = () => {
-    // For demonstration, just alert JSON data
-    alert(
-      "Printer Settings Report:\n\n" +
-        JSON.stringify(printers, null, 2)
-    );
+    alert("Printer Report:\n\n" + JSON.stringify(printers, null, 2));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+    console.log("Printers handleSearchChange:", {
+      search: e.target.value,
+      currentPage: 1,
+    });
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (!editForm.printerName.trim() || !editForm.printerPath.trim()) return;
-
-    if (editId !== null) {
-      // Update existing
-      setPrinters((prev) =>
-        prev.map((p) =>
-          p.id === editId
-            ? { ...p, ...editForm }
-            : p
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredPrinters.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      console.log("Printers handlePageChange:", {
+        page,
+        totalPages,
+        currentPage,
+      });
+    } else {
+      console.warn("Printers handlePageChange: Invalid page or same page", {
+        page,
+        totalPages,
+        currentPage,
+      });
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, row, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    {
+      key: "printerName",
+      label: "Printer Name",
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    {
+      key: "connectionType",
+      label: "Connection Type",
+    },
+    {
+      key: "ipAddress",
+      label: "IP Address",
+    },
+    {
+      key: "port",
+      label: "Port",
+    },
+    { key: "status", label: "Status", render: renderStatusBadge },
+  ];
 
-  // Calculate paginated data using Pagination component props
-  const paginatedPrinters = printers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const rowActions = (row: Printer) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit printer ${row.printerName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit printer</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete printer ${row.printerName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete printer</span>
+      </button>
+    </>
+  );
+
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label htmlFor="printerName" className="block text-sm font-medium mb-1">
+          Printer Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="printerName"
+          name="printerName"
+          type="text"
+          value={form.printerName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter printer name"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="connectionType" className="block text-sm font-medium mb-1">
+          Connection Type <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="connectionType"
+          name="connectionType"
+          value={form.connectionType}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        >
+          {CONNECTION_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="ipAddress" className="block text-sm font-medium mb-1">
+          IP Address <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="ipAddress"
+          name="ipAddress"
+          type="text"
+          value={form.ipAddress}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter IP address (e.g., 192.168.1.100)"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="port" className="block text-sm font-medium mb-1">
+          Port <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="port"
+          name="port"
+          type="number"
+          min={1}
+          max={65535}
+          value={form.port}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter port (e.g., 9100)"
+          required
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Printer Settings</h1>
-
-      {/* Form Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Printer Name */}
-          <div>
-            <label
-              htmlFor="printerName"
-              className="block text-sm font-medium mb-1"
-            >
-              Printer Name
-            </label>
-            <input
-              type="text"
-              id="printerName"
-              name="printerName"
-              value={printerName}
-              onChange={(e) => setPrinterName(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter printer name"
-            />
-          </div>
-
-          {/* Printer Type */}
-          <div>
-            <label
-              htmlFor="printerType"
-              className="block text-sm font-medium mb-1"
-            >
-              Printer Type
-            </label>
-            <select
-              id="printerType"
-              name="printerType"
-              value={printerType}
-              onChange={(e) => setPrinterType(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {printerTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Printer Path */}
-          <div>
-            <label
-              htmlFor="printerPath"
-              className="block text-sm font-medium mb-1"
-            >
-              Printer Path
-            </label>
-            <input
-              type="text"
-              id="printerPath"
-              name="printerPath"
-              value={printerPath}
-              onChange={(e) => setPrinterPath(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter printer path"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {printerStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Printer Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Printer Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Printer Path
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPrinters.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No printers found.
-                  </td>
-                </tr>
-              )}
-              {paginatedPrinters.map((printer, idx) => (
-                <tr
-                  key={printer.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {printer.printerName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {printer.printerType}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {printer.printerPath}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        printer.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {printer.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(printer.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit printer ${printer.printerName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(printer.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete printer ${printer.printerName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={printers.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Printer
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Printer Name */}
-              <div>
-                <label
-                  htmlFor="editPrinterName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Printer Name
-                </label>
-                <input
-                  type="text"
-                  id="editPrinterName"
-                  name="printerName"
-                  value={editForm.printerName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter printer name"
-                />
-              </div>
-
-              {/* Printer Type */}
-              <div>
-                <label
-                  htmlFor="editPrinterType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Printer Type
-                </label>
-                <select
-                  id="editPrinterType"
-                  name="printerType"
-                  value={editForm.printerType}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {printerTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Printer Path */}
-              <div>
-                <label
-                  htmlFor="editPrinterPath"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Printer Path
-                </label>
-                <input
-                  type="text"
-                  id="editPrinterPath"
-                  name="printerPath"
-                  value={editForm.printerPath}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter printer path"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {printerStatuses.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Printer Settings"
+      description="Manage printer settings for your application."
+      icon="fa fa-print"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear} 
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredPrinters.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Printer" : "Edit Printer"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
   );
 }

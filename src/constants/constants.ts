@@ -165,10 +165,12 @@ export const STORES = [
 
 export const PAYMENT_TYPES = [
   "Cash",
+  "Card",
   "Cheque",
-  "Cheque",
-  "Bank Transfer",
+  "Bank Transfer", 
+  "UPI", 
 ] as const;
+
 
 export const EXPENSE_HEADS = [
   "Office Rent",

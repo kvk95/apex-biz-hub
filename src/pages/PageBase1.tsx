@@ -22,7 +22,7 @@ interface PageBase1Props {
   icon: string;
   onAddClick?: () => void; // Made optional
   onRefresh: () => void;
-  onReport: () => void;
+  onReport?: () => void;
   search: string;
   onSearchChange: (query: string) => void;
   currentPage: number;
@@ -94,6 +94,47 @@ export function PageBase1({
   const selectionBg = `hsl(${primaryColor})`;
   const themeStyles: ThemeStyles = { selectionBg, hoverColor };
 
+  const pluralToSingular = (word: string): string => {
+    // Handle words ending with 'ies' (e.g., categories → category)
+    if (word.endsWith("ies")) {
+      return word.slice(0, -3) + "y";
+    }
+
+    // Handle words ending with 'es'
+    if (word.endsWith("es")) {
+      // Special cases for words like "boxes", "classes", etc.
+      if (
+        word.endsWith("sses") || // classes → class
+        word.endsWith("shes") || // dishes → dish
+        word.endsWith("ches") || // watches → watch
+        word.endsWith("xes") || // boxes → box
+        word.endsWith("zes") || // quizzes → quiz
+        word.toLowerCase() === "expenses" // Special case for "Expenses" → "Expense"
+      ) {
+        return word.slice(0, -2); // Remove the 'es'
+      }
+      return word.slice(0, -2); // General case: just remove 'es'
+    }
+
+    // Handle words ending with 's' (simple plural)
+    if (word.endsWith("s")) {
+      return word.slice(0, -1); // Remove the 's'
+    }
+
+    // Handle words ending with 'ves' (e.g., wolves → wolf, knives → knife)
+    if (word.endsWith("ves")) {
+      return word.slice(0, -3) + "f"; // Replace 'ves' with 'f'
+    }
+
+    // Handle specific words ending with 'f' or 'fe'
+    if (word.endsWith("f") || word.endsWith("fe")) {
+      return word.slice(0, -1); // Handle words like 'leaf' → 'leaf'
+    }
+
+    // Return the word as is if no plural form detected
+    return word;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -109,14 +150,16 @@ export function PageBase1({
           </div>
         </div>
         <div className="flex-none ml-auto flex gap-2">
-          <button
-            onClick={onReport}
-            className="bg-white hover:bg-gray-300 text-danger py-1 px-3 rounded border transition-colors text-lg"
-            type="button"
-            aria-label="Generate Report"
-          >
-            <i className="fa fa-file-pdf" aria-hidden="true"></i>
-          </button>
+          {onReport && (
+            <button
+              onClick={onReport}
+              className="bg-white hover:bg-gray-300 text-danger py-1 px-3 rounded border transition-colors text-lg"
+              type="button"
+              aria-label="Generate Report"
+            >
+              <i className="fa fa-file-pdf" aria-hidden="true"></i>
+            </button>
+          )}
           <button
             onClick={onRefresh}
             className="bg-white hover:bg-gray-300 text-gray-500 py-2 px-3 rounded border transition-colors"
@@ -142,7 +185,7 @@ export function PageBase1({
                 className="fa fa-plus-circle me-2 text-xs"
                 aria-hidden="true"
               ></i>
-              Add
+              Add {pluralToSingular(title)}
             </button>
           )}
         </div>
@@ -159,11 +202,11 @@ export function PageBase1({
                 className=""
                 value={search}
                 placeholder="Search"
-                onSearch={onSearchChange} 
+                onSearch={onSearchChange}
               />
             </div>
           )}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-w-full">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-100">
                 <tr className="border-b border-border">

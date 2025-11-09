@@ -251,20 +251,21 @@ export default function Billers() {
 
   const columns: Column[] = [
     {
-      key: "index",
-      label: "#",
-      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
-    },
-    {
       key: "name",
       label: "Name",
       render: (value) => <span className="font-semibold">{value}</span>,
     },
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
-    { key: "address", label: "Address" },
-    { key: "city", label: "City" },
-    { key: "country", label: "Country" },
+    {
+      key: "address",
+      label: "Address",
+      render: (value, row) => (
+        <span>
+          {row.address},<br /> {row.city}, {row.country}
+        </span>
+      ),
+    },
     { key: "postalCode", label: "Postal Code" },
     { key: "gstNo", label: "GST No" },
     { key: "createdAt", label: "Created At" },
