@@ -9,7 +9,7 @@
       "sku": "PT001",
       "code": "PT001",
       "productName": "Coca Cola 330ml Can",
-      "productImage": "/assets/images/products/cocacola.jpg",
+      "productImage": "/assets/images/products/cocacola.png",
       "categoryId": "1",
       "categoryName": "Beverages",
       "subCategoryId": "1",
@@ -37,8 +37,8 @@
       "discountType": "Percentage",
       "discountValue": 8,
       "images": [
-        "/assets/images/products/cocacola-1.jpg",
-        "/assets/images/products/cocacola-2.jpg"
+        "/assets/images/products/cocacola.png",
+        "/assets/images/products/cocacola.png"
       ],
       "customFields": {
         "warranty": "",
@@ -53,7 +53,7 @@
       "sku": "PT002",
       "code": "PT002",
       "productName": "Tropicana Orange Juice 1L",
-      "productImage": "/assets/images/products/tropicana.jpg",
+      "productImage": "/assets/images/products/tropicana.png",
       "categoryId": "1",
       "categoryName": "Beverages",
       "subCategoryId": "2",
@@ -81,7 +81,7 @@
       "discountType": "Fixed",
       "discountValue": 0.5,
       "images": [
-        "/assets/images/products/tropicana-1.jpg"
+        "/assets/images/products/tropicana.png"
       ],
       "customFields": {
         "warranty": "",
@@ -96,7 +96,7 @@
       "sku": "PT003",
       "code": "PT003",
       "productName": "Lay's Classic Potato Chips 150g",
-      "productImage": "/assets/images/products/lays.jpg",
+      "productImage": "/assets/images/products/lays.png",
       "categoryId": "9",
       "categoryName": "Snacks",
       "subCategoryId": "3",
@@ -124,8 +124,8 @@
       "discountType": "Percentage",
       "discountValue": 15,
       "images": [
-        "/assets/images/products/lays-1.jpg",
-        "/assets/images/products/lays-2.jpg"
+        "/assets/images/products/lays.png",
+        "/assets/images/products/lays.png"
       ],
       "customFields": {
         "warranty": "",
@@ -140,7 +140,7 @@
       "sku": "PT004",
       "code": "PT004",
       "productName": "Amul Full Cream Milk 1L",
-      "productImage": "/assets/images/products/amul-milk.jpg",
+      "productImage": "/assets/images/products/amul-milk.png",
       "categoryId": "4",
       "categoryName": "Dairy Products",
       "subCategoryId": "5",
@@ -168,7 +168,7 @@
       "discountType": "None",
       "discountValue": 0,
       "images": [
-        "/assets/images/products/amul-milk-1.jpg"
+        "/assets/images/products/amul-milk.png"
       ],
       "customFields": {
         "warranty": "",
@@ -183,7 +183,7 @@
       "sku": "PT005",
       "code": "PT005",
       "productName": "Britannia Cheese Cubes 200g",
-      "productImage": "/assets/images/products/britannia-cheese.jpg",
+      "productImage": "/assets/images/products/britannia-cheese.png",
       "categoryId": "4",
       "categoryName": "Dairy Products",
       "subCategoryId": "6",
@@ -211,7 +211,7 @@
       "discountType": "Percentage",
       "discountValue": 10,
       "images": [
-        "/assets/images/products/cheese-1.jpg"
+        "/assets/images/products/britannia-cheese.png"
       ],
       "customFields": {
         "warranty": "",
@@ -226,7 +226,7 @@
       "sku": "PT006",
       "code": "PT006",
       "productName": "Fresh White Bread 400g",
-      "productImage": "/assets/images/products/bread.jpg",
+      "productImage": "/assets/images/products/bread.png",
       "categoryId": "11",
       "categoryName": "Bakery",
       "subCategoryId": "7",
@@ -254,7 +254,7 @@
       "discountType": "None",
       "discountValue": 0,
       "images": [
-        "/assets/images/products/bread-1.jpg"
+        "/assets/images/products/bread.png"
       ],
       "customFields": {
         "warranty": "",
@@ -269,7 +269,7 @@
       "sku": "PT007",
       "code": "PT007",
       "productName": "Chocolate Cake 500g",
-      "productImage": "/assets/images/products/chocolate-cake.jpg",
+      "productImage": "/assets/images/products/chocolate-cake.png",
       "categoryId": "11",
       "categoryName": "Bakery",
       "subCategoryId": "8",
@@ -297,8 +297,8 @@
       "discountType": "Percentage",
       "discountValue": 5,
       "images": [
-        "/assets/images/products/cake-1.jpg",
-        "/assets/images/products/cake-2.jpg"
+        "/assets/images/products/chocolate-cake.png",
+        "/assets/images/products/chocolate-cake.png"
       ],
       "customFields": {
         "warranty": "",
@@ -313,7 +313,7 @@
       "sku": "PT008",
       "code": "PT008",
       "productName": "Kwality Walls Vanilla Ice Cream 1L",
-      "productImage": "/assets/images/products/kwality-icecream.jpg",
+      "productImage": "/assets/images/products/icecream.png",
       "categoryId": "10",
       "categoryName": "Frozen Foods",
       "subCategoryId": "9",
@@ -341,7 +341,7 @@
       "discountType": "Fixed",
       "discountValue": 1,
       "images": [
-        "/assets/images/products/icecream-1.jpg"
+        "/assets/images/products/icecream.png"
       ],
       "customFields": {
         "warranty": "",
@@ -356,7 +356,7 @@
       "sku": "PT009",
       "code": "PT009",
       "productName": "McCain Frozen French Fries 1kg",
-      "productImage": "/assets/images/products/mccain-fries.jpg",
+      "productImage": "/assets/images/products/mccain-fries.png",
       "categoryId": "10",
       "categoryName": "Frozen Foods",
       "subCategoryId": "10",
@@ -384,7 +384,7 @@
       "discountType": "Percentage",
       "discountValue": 12,
       "images": [
-        "/assets/images/products/fries-1.jpg"
+        "/assets/images/products/mccain-fries.png"
       ],
       "customFields": {
         "warranty": "",
@@ -399,7 +399,7 @@
       "sku": "PT010",
       "code": "PT010",
       "productName": "Fresh Red Apples (1kg)",
-      "productImage": "/assets/images/products/apples.jpg",
+      "productImage": "/assets/images/products/apples.png",
       "categoryId": "7",
       "categoryName": "Produce",
       "subCategoryId": "11",
@@ -427,7 +427,7 @@
       "discountType": "None",
       "discountValue": 0,
       "images": [
-        "/assets/images/products/apples-1.jpg"
+        "/assets/images/products/apples.png"
       ],
       "customFields": {
         "warranty": "",
@@ -442,7 +442,7 @@
       "sku": "PT011",
       "code": "PT011",
       "productName": "Dove Beauty Cream Bar 100g",
-      "productImage": "/assets/images/products/dove-soap.jpg",
+      "productImage": "/assets/images/products/dove-soap.png",
       "categoryId": "12",
       "categoryName": "Health & Beauty",
       "subCategoryId": "13",
@@ -470,7 +470,7 @@
       "discountType": "Percentage",
       "discountValue": 20,
       "images": [
-        "/assets/images/products/dove-1.jpg"
+        "/assets/images/products/dove-soap.png"
       ],
       "customFields": {
         "warranty": "N/A",
@@ -485,7 +485,7 @@
       "sku": "PT012",
       "code": "PT012",
       "productName": "Dettol Antiseptic Liquid 500ml",
-      "productImage": "/assets/images/products/dettol.jpg",
+      "productImage": "/assets/images/products/dettol.png",
       "categoryId": "17",
       "categoryName": "Cleaning Supplies",
       "subCategoryId": "14",
@@ -513,7 +513,7 @@
       "discountType": "Fixed",
       "discountValue": 1,
       "images": [
-        "/assets/images/products/dettol-1.jpg"
+        "/assets/images/products/dettol.png"
       ],
       "customFields": {
         "warranty": "",
@@ -528,7 +528,7 @@
       "sku": "PT013",
       "code": "PT013",
       "productName": "A4 Printer Paper 500 Sheets",
-      "productImage": "/assets/images/products/a4-paper.jpg",
+      "productImage": "/assets/images/products/paper.png",
       "categoryId": "18",
       "categoryName": "Office Supplies",
       "subCategoryId": "15",
@@ -556,7 +556,7 @@
       "discountType": "Percentage",
       "discountValue": 15,
       "images": [
-        "/assets/images/products/paper-1.jpg"
+        "/assets/images/products/paper.png"
       ],
       "customFields": {
         "warranty": "N/A",
@@ -571,7 +571,7 @@
       "sku": "PT014",
       "code": "PT014",
       "productName": "Pedigree Adult Dog Food 3kg",
-      "productImage": "/assets/images/products/pedigree.jpg",
+      "productImage": "/assets/images/products/pedigree.png",
       "categoryId": "15",
       "categoryName": "Pet Supplies",
       "subCategoryId": "16",
@@ -599,7 +599,7 @@
       "discountType": "Percentage",
       "discountValue": 10,
       "images": [
-        "/assets/images/products/pedigree-1.jpg"
+        "/assets/images/products/pedigree.png"
       ],
       "customFields": {
         "warranty": "",
@@ -614,7 +614,7 @@
       "sku": "PT015",
       "code": "PT015",
       "productName": "Red Bull Energy Drink 250ml",
-      "productImage": "/assets/images/products/redbull.jpg",
+      "productImage": "/assets/images/products/redbull.png",
       "categoryId": "1",
       "categoryName": "Beverages",
       "subCategoryId": "1",
@@ -642,8 +642,8 @@
       "discountType": "Buy 2 Get 1 Free",
       "discountValue": 33,
       "images": [
-        "/assets/images/products/redbull-1.jpg",
-        "/assets/images/products/redbull-2.jpg"
+        "/assets/images/products/redbull.png",
+        "/assets/images/products/redbull.png"
       ],
       "customFields": {
         "warranty": "",
