@@ -20,6 +20,18 @@ export function MainLayout() {
             <main className={`flex-1 bg-muted/30 ${isPosPage ? "p-1" : "p-4"}`}>
               <Outlet />
             </main>
+            {!isPosPage && (
+              <div className="w-full bg-white py-3 px-4 mt-3">
+                <div className="flex flex-row justify-between items-center">
+                  <span className="text-gray-600 text-sm">
+                    2014 - 2025 © NyaBuy POS. All Rights Reserved.
+                  </span>
+                  <span className="text-gray-800 font-semibold text-sm">
+                    NyaBuy Technologies Pvt. Ltd.
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </SidebarProvider>
