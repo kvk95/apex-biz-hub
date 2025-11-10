@@ -1,192 +1,281 @@
-import React, { useState, useMemo, useEffect } from "react";
+/* -------------------------------------------------
+   Expired Products - 100% standardized with PageBase1 + async autocomplete
+   ------------------------------------------------- */
+import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, UNITS, SUPPLIERS } from "@/constants/constants";
+import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { SORT_OPTIONS } from "@/constants/constants";
 
-interface ExpiredProductRecord {
+type Product = {
   id: number;
+  sku: string;
   productName: string;
-  productCode: string;
-  category: string;
-  supplier: string;
-  expiredDate: string;
-  quantity: number;
-  unit: string;
-  cost: number;
-  price: number;
-}
+  productImage?: string;
+};
+
+type ExpiredProduct = {
+  id: number;
+  productId: number;
+  sku: string;
+  productName: string;
+  productImage?: string;
+  manufacturedDate: string;
+  expiryDate: string;
+  status: "Expired";
+};
 
 export default function ExpiredProducts() {
-  const [data, setData] = useState<ExpiredProductRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState("");
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: "",
-    end: "",
-  });
+  /* ---------- state ---------- */
+  const [expiredProducts, setExpiredProducts] = useState<ExpiredProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedProductFilter, setSelectedProductFilter] = useState("All");
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Last 7 Days");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"edit" | null>(null);
-  const [form, setForm] = useState<ExpiredProductRecord>({
+  const [loading, setLoading] = useState(true);
+
+  // Autocomplete
+  const [productSearchLoading, setProductSearchLoading] = useState(false);
+  let productSearchTimeout: NodeJS.Timeout;
+
+  // Form state
+  const [form, setForm] = useState({
     id: 0,
+    productId: 0,
+    sku: "",
     productName: "",
-    productCode: "",
-    category: "",
-    supplier: "",
-    expiredDate: "",
-    quantity: 0,
-    unit: "",
-    cost: 0,
-    price: 0,
+    manufacturedDate: "",
+    expiryDate: "",
   });
 
+  /* ---------- load data ---------- */
   useEffect(() => {
-    loadData();
+    loadExpiredProducts();
+    loadAllProducts();
   }, []);
 
-  const loadData = async () => {
+  const loadExpiredProducts = async () => {
     setLoading(true);
-    const response = await apiService.get<ExpiredProductRecord[]>(
-      "ExpiredProducts"
-    );
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
+    try {
+      const res = await apiService.get<ExpiredProduct[]>("ExpiredProducts");
+      if (res.status.code === "S") {
+        setExpiredProducts(res.result);
+        console.log("ExpiredProducts: Loaded", res.result.length, "records");
+      }
+    } catch (err) {
+      console.error("ExpiredProducts load error:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  const loadAllProducts = async () => {
+    try {
+      const res = await apiService.get<Product[]>("Products");
+      if (res.status.code === "S") {
+        setAllProducts(res.result);
+        console.log("ExpiredProducts: All Products loaded", res.result.length);
+      }
+    } catch (err) {
+      console.error("Products load error:", err);
+    }
+  };
+
+  /* ---------- filtering & sorting ---------- */
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      const matchesSearch =
-        item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.productCode.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        !selectedCategory || item.category === selectedCategory;
-      const matchesSupplier =
-        !selectedSupplier || item.supplier === selectedSupplier;
-      const matchesDate =
-        (!dateRange.start || item.expiredDate >= dateRange.start) &&
-        (!dateRange.end || item.expiredDate <= dateRange.end);
-      return matchesSearch && matchesCategory && matchesSupplier && matchesDate;
-    });
-  }, [data, searchTerm, selectedCategory, selectedSupplier, dateRange]);
+    let result = [...expiredProducts];
+
+    if (search.trim()) {
+      result = result.filter(
+        (p) =>
+          p.sku.toLowerCase().includes(search.toLowerCase()) ||
+          p.productName.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (selectedProductFilter !== "All") {
+      result = result.filter((p) => p.productName === selectedProductFilter);
+    }
+
+    if (selectedSort === "Last 7 Days") {
+      const last7 = new Date();
+      last7.setDate(last7.getDate() - 7);
+      result = result.filter((p) => new Date(p.expiryDate) >= last7);
+    } else if (selectedSort === "Last Month") {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      result = result.filter((p) => new Date(p.expiryDate) >= start);
+    } else if (selectedSort === "Recently Added") {
+      result.sort((a, b) => b.id - a.id);
+    }
+
+    return result;
+  }, [expiredProducts, search, selectedProductFilter, selectedSort]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const productOptions = useMemo(() => {
+    return ["All", ...Array.from(new Set(expiredProducts.map((p) => p.productName)))];
+  }, [expiredProducts]);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.productName.trim() || !form.expiredDate) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (formMode === "edit" && form.id !== 0) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === form.id
-            ? {
-                ...item,
-                productName: form.productName,
-                productCode: form.productCode,
-                category: form.category,
-                supplier: form.supplier,
-                expiredDate: form.expiredDate,
-                quantity: Number(form.quantity),
-                unit: form.unit,
-                cost: Number(form.cost),
-                price: Number(form.price),
-              }
-            : item
-        )
-      );
-    }
-    setFormMode(null);
+  /* ---------- handlers ---------- */
+  const handleEdit = (record: ExpiredProduct) => {
     setForm({
-      id: 0,
-      productName: "",
-      productCode: "",
-      category: "",
-      supplier: "",
-      expiredDate: "",
-      quantity: 0,
-      unit: "",
-      cost: 0,
-      price: 0,
+      id: record.id,
+      productId: record.productId,
+      sku: record.sku,
+      productName: record.productName,
+      manufacturedDate: record.manufacturedDate,
+      expiryDate: record.expiryDate,
     });
-  };
-
-  const handleEdit = (record: ExpiredProductRecord) => {
-    setForm(record);
     setFormMode("edit");
+    console.log("ExpiredProducts: Edit opened", record);
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      setData((prev) => prev.filter((item) => item.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
+    if (window.confirm("Delete this expired product?")) {
+      setExpiredProducts((prev) => prev.filter((p) => p.id !== id));
+      console.log("ExpiredProducts: Deleted ID", id);
     }
   };
 
   const handleClear = () => {
-    setSearchTerm("");
-    setSelectedCategory("");
-    setSelectedSupplier("");
-    setDateRange({ start: "", end: "" });
+    setSearch("");
+    setSelectedProductFilter("All");
+    setSelectedSort("Last 7 Days");
     setCurrentPage(1);
-    setFormMode(null);
-    loadData();
+    console.log("ExpiredProducts: Filters cleared");
   };
 
   const handleReport = () => {
-    alert("Report generated for expired products.");
+    alert("PDF Report Generated!");
+    console.log("ExpiredProducts: PDF Report");
   };
 
+  const handleExcelReport = () => {
+    alert("Excel Report Exported!");
+    console.log("ExpiredProducts: Excel Report");
+  };
+
+  /* ---------- async autocomplete: Product ---------- */
+  const handleProductSearch = (query: string) => {
+    if (productSearchTimeout) clearTimeout(productSearchTimeout);
+    setForm((prev) => ({ ...prev, productName: query, productId: 0 }));
+
+    if (!query.trim()) {
+      setFilteredProducts([]);
+      return;
+    }
+
+    productSearchTimeout = setTimeout(() => {
+      setProductSearchLoading(true);
+      const filtered = allProducts.filter(
+        (p) =>
+          p.productName.toLowerCase().includes(query.toLowerCase()) ||
+          p.sku.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+      setProductSearchLoading(false);
+      console.log("ExpiredProducts: Search", query, filtered.length, "results");
+    }, 300);
+  };
+
+  const handleProductSelect = (item: AutoCompleteItem) => {
+    const prod = allProducts.find((p) => p.id === item.id);
+    if (!prod) return;
+
+    setForm((prev) => ({
+      ...prev,
+      productId: prod.id,
+      productName: prod.productName,
+      sku: prod.sku,
+    }));
+    setFilteredProducts([]);
+    console.log("ExpiredProducts: Product selected", prod);
+  };
+
+  /* ---------- form submit ---------- */
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.productId || !form.manufacturedDate || !form.expiryDate) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    const updated: ExpiredProduct = {
+      id: form.id,
+      productId: form.productId,
+      sku: form.sku,
+      productName: form.productName,
+      manufacturedDate: form.manufacturedDate,
+      expiryDate: form.expiryDate,
+      status: "Expired",
+      productImage: expiredProducts.find(p => p.id === form.id)?.productImage,
+    };
+
+    setExpiredProducts((prev) =>
+      prev.map((p) => (p.id === form.id ? updated : p))
+    );
+    setFormMode(null);
+    console.log("ExpiredProducts: Updated", updated);
+  };
+
+  /* ---------- table columns ---------- */
   const columns: Column[] = [
-    { key: "productName", label: "Product", align: "left" },
-    { key: "productCode", label: "Product Code", align: "left" },
-    { key: "category", label: "Category", align: "left" },
-    { key: "supplier", label: "Supplier", align: "left" },
-    { key: "expiredDate", label: "Expired Date", align: "left" },
-    { key: "quantity", label: "Quantity", align: "right" },
-    { key: "unit", label: "Unit", align: "left" },
     {
-      key: "cost",
-      label: "Cost",
-      align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      key: "sku",
+      label: "SKU",
+      align: "left",
     },
     {
-      key: "price",
-      label: "Price",
-      align: "right",
-      render: (value) => `$${value.toFixed(2)}`,
+      key: "productName",
+      label: "Product",
+      render: (value, row) => (
+        <div className="flex items-center gap-3">
+          {row.productImage ? (
+            <img
+              src={row.productImage}
+              alt={value}
+              className="w-10 h-10 object-cover rounded"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-gray-200 border-2 border-dashed rounded"></div>
+          )}
+          <span>{value}</span>
+        </div>
+      ),
+    },
+    {
+      key: "manufacturedDate",
+      label: "Manufactured Date",
+      render: (value) => new Date(value).toLocaleDateString("en-GB"),
+      align: "center",
+    },
+    {
+      key: "expiryDate",
+      label: "Expired Date",
+      render: (value) => (
+        <span className="text-red-600 font-medium">
+          {new Date(value).toLocaleDateString("en-GB")}
+        </span>
+      ),
+      align: "center",
     },
   ];
 
-  const rowActions = (row: ExpiredProductRecord) => (
+  const rowActions = (row: ExpiredProduct) => (
     <>
       <button
+        type="button"
         onClick={() => handleEdit(row)}
         aria-label={`Edit ${row.productName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
@@ -195,6 +284,7 @@ export default function ExpiredProducts() {
         <span className="sr-only">Edit</span>
       </button>
       <button
+        type="button"
         onClick={() => handleDelete(row.id)}
         aria-label={`Delete ${row.productName}`}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
@@ -205,247 +295,132 @@ export default function ExpiredProducts() {
     </>
   );
 
+  /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      <div className="w-full md:w-auto md:max-w-md">
         <SearchInput
-          className=""
-          value={searchTerm}
-          placeholder="Search Product/Code"
+          value={search}
+          placeholder="Search"
           onSearch={(query) => {
-            setSearchTerm(query);
+            setSearch(query);
             setCurrentPage(1);
           }}
+          className="w-full"
         />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
         <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by category"
+          value={selectedProductFilter}
+          onChange={(e) => setSelectedProductFilter(e.target.value)}
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
+          aria-label="Filter by product"
         >
-          <option value="">All Categories</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+          {productOptions.map((p) => (
+            <option key={p} value={p}>{p}</option>
           ))}
         </select>
         <select
-          value={selectedSupplier}
-          onChange={(e) => {
-            setSelectedSupplier(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by supplier"
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[160px]"
+          aria-label="Sort by"
         >
-          <option value="">All Suppliers</option>
-          {SUPPLIERS.map((sup) => (
-            <option key={sup} value={sup}>
-              {sup}
-            </option>
+          {SORT_OPTIONS.map((s) => (
+            <option key={s} value={s}>Sort By: {s}</option>
           ))}
         </select>
-        <input
-          type="date"
-          value={dateRange.start}
-          onChange={(e) => {
-            setDateRange((prev) => ({ ...prev, start: e.target.value }));
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Start date"
-        />
-        <input
-          type="date"
-          value={dateRange.end}
-          onChange={(e) => {
-            setDateRange((prev) => ({ ...prev, end: e.target.value }));
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="End date"
-        />
       </div>
     </div>
   );
 
-  const modalForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label htmlFor="productName" className="block text-sm font-medium mb-1">
-          Product Name <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          id="productName"
-          name="productName"
-          value={form.productName}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter product name"
-          required
-          aria-label="Enter product name"
-        />
-      </div>
-      <div>
-        <label htmlFor="productCode" className="block text-sm font-medium mb-1">
-          Product Code
-        </label>
-        <input
-          type="text"
-          id="productCode"
-          name="productCode"
-          value={form.productCode}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter product code"
-          aria-label="Enter product code"
-        />
-      </div>
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium mb-1">
-          Category
-        </label>
-        <select
-          id="category"
-          name="category"
-          value={form.category}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select category"
-        >
-          <option value="">Select Category</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="supplier" className="block text-sm font-medium mb-1">
-          Supplier
-        </label>
-        <select
-          id="supplier"
-          name="supplier"
-          value={form.supplier}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select supplier"
-        >
-          <option value="">Select Supplier</option>
-          {SUPPLIERS.map((sup) => (
-            <option key={sup} value={sup}>
-              {sup}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="expiredDate" className="block text-sm font-medium mb-1">
-          Expired Date <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="date"
-          id="expiredDate"
-          name="expiredDate"
-          value={form.expiredDate}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-          aria-label="Enter expired date"
-        />
-      </div>
-      <div>
-        <label htmlFor="quantity" className="block text-sm font-medium mb-1">
-          Quantity
-        </label>
-        <input
-          type="number"
-          id="quantity"
-          name="quantity"
-          value={form.quantity}
-          onChange={handleInputChange}
-          min={0}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter quantity"
-          aria-label="Enter quantity"
-        />
-      </div>
-      <div>
-        <label htmlFor="unit" className="block text-sm font-medium mb-1">
-          Unit
-        </label>
-        <select
-          id="unit"
-          name="unit"
-          value={form.unit}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Select unit"
-        >
-          <option value="">Select Unit</option>
-          {UNITS.map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="cost" className="block text-sm font-medium mb-1">
-          Cost
-        </label>
-        <input
-          type="number"
-          id="cost"
-          name="cost"
-          value={form.cost}
-          onChange={handleInputChange}
-          min={0}
-          step="0.01"
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter cost"
-          aria-label="Enter cost"
-        />
-      </div>
-      <div>
-        <label htmlFor="price" className="block text-sm font-medium mb-1">
-          Price
-        </label>
-        <input
-          type="number"
-          id="price"
-          name="price"
-          value={form.price}
-          onChange={handleInputChange}
-          min={0}
-          step="0.01"
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter price"
-          aria-label="Enter price"
-        />
-      </div>
-    </div>
-  );
+  /* ---------- modal form with loading/no results ---------- */
+  const modalForm = () => {
+    const displayItems = productSearchLoading
+      ? [{ id: -1, display: "Searching...", extra: { SKU: "" } }]
+      : filteredProducts.length === 0 && form.productName.trim()
+        ? [{ id: -1, display: "No products found", extra: { SKU: "" } }]
+        : filteredProducts.map((p) => ({
+          id: p.id,
+          display: p.productName,
+          extra: { SKU: p.sku },
+        }));
 
+    return (
+      <form onSubmit={handleFormSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            SKU <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.sku}
+            readOnly
+            className="w-full border border-input rounded px-3 py-2"
+            aria-readonly="true"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Product Name <span className="text-red-500">*</span>
+          </label>
+          <AutoCompleteTextBox
+            value={form.productName}
+            onSearch={handleProductSearch}
+            onSelect={handleProductSelect}
+            items={displayItems}
+            placeholder="Search product..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Manufacturer Date <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="date"
+              value={form.manufacturedDate}
+              onChange={(e) => setForm((p) => ({ ...p, manufacturedDate: e.target.value }))}
+              className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+              aria-label="Manufacturer Date"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Expiry Date <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="date"
+              value={form.expiryDate}
+              onChange={(e) => setForm((p) => ({ ...p, expiryDate: e.target.value }))}
+              className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+              aria-label="Expiry Date"
+            />
+          </div>
+        </div>
+      </form>
+    );
+  };
+
+  /* ---------- render ---------- */
   return (
     <PageBase1
       title="Expired Products"
-      description="View and manage expired products."
-      icon="fa fa-calendar-times"
+      description="Manage your expired products"
+      icon="fa-light fa-calendar-xmark"
       onRefresh={handleClear}
       onReport={handleReport}
-      search={searchTerm}
-      onSearchChange={(e) => {
-        setSearchTerm(e.target.value);
+      onExcelReport={handleExcelReport}
+      search={search}
+      onSearchChange={(val) => {
+        setSearch(val);
         setCurrentPage(1);
       }}
       currentPage={currentPage}
