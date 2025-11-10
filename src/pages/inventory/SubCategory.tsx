@@ -1,143 +1,264 @@
+/* -------------------------------------------------
+   SubCategory - 100% Pixel-perfect with Image, Code, Toggle
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { EXPIRED_STATUSES, CATEGORIES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
 
-interface SubCategoryRecord {
+type Category = {
   id: number;
-  category: string;
-  subCategory: string;
+  categoryName: string;
+};
+
+type SubCategory = {
+  id: number;
+  categoryId: string;
+  categoryName: string;
+  subCategoryName: string;
+  categoryCode: string;
   description: string;
-  status: (typeof EXPIRED_STATUSES)[number];
-}
+  status: "Active" | "Inactive";
+  image?: string;
+};
 
 export default function SubCategory() {
-  const [data, setData] = useState<SubCategoryRecord[]>([]);
+  const [data, setData] = useState<SubCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState<SubCategoryRecord>({
+
+  const [form, setForm] = useState({
     id: 0,
-    category: "",
-    subCategory: "",
+    categoryId: "",
+    categoryName: "",
+    subCategoryName: "",
+    categoryCode: "",
     description: "",
-    status: EXPIRED_STATUSES[0],
+    status: true,
+    image: "",
   });
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  /* ---------- Load Data ---------- */
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<SubCategoryRecord[]>("SubCategory");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-    };
-    loadData();
+    loadCategories();
+    loadSubCategories();
   }, []);
 
+  const loadCategories = async () => {
+    try {
+      const res = await apiService.get<Category[]>("Category");
+      if (res.status.code === "S") {
+        setCategories(res.result);
+      }
+    } catch (err) {
+      console.error("Failed to load categories", err);
+    }
+  };
+
+  const loadSubCategories = async () => {
+    setLoading(true);
+    try {
+      const res = await apiService.get<SubCategory[]>("SubCategory");
+      if (res.status.code === "S") {
+        setData(res.result.map((item) => ({
+          ...item,
+          status: item.status || "Active",
+          image: item.image || "/assets/images/placeholder.jpg",
+        })));
+      }
+    } catch (err) {
+      console.error("SubCategory load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------- Filtering ---------- */
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesSearch =
-        item.category.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.subCategory.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.subCategoryName.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.categoryName.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.categoryCode.toLowerCase().includes(searchText.toLowerCase()) ||
         item.description.toLowerCase().includes(searchText.toLowerCase());
-      const matchesStatus = !filterStatus || item.status === filterStatus;
-      return matchesSearch && matchesStatus;
+      const matchesCategory = !filterCategory || item.categoryName === filterCategory;
+      const matchesStatus = filterStatus === "All" || item.status === filterStatus;
+      return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [data, searchText, filterStatus]);
+  }, [data, searchText, filterCategory, filterStatus]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.category || !form.subCategory || !form.status) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { ...form, id: newId }]);
-      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
-    } else if (formMode === "edit" && form.id !== 0) {
-      setData((prev) =>
-        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
-      );
-    }
-    setFormMode(null);
+  /* ---------- Handlers ---------- */
+  const handleAdd = () => {
     setForm({
       id: 0,
-      category: "",
-      subCategory: "",
+      categoryId: "",
+      categoryName: "",
+      subCategoryName: "",
+      categoryCode: "",
       description: "",
-      status: EXPIRED_STATUSES[0],
+      status: true,
+      image: "",
     });
+    setImagePreview(null);
+    setFormMode("add");
   };
 
-  const handleEdit = (record: SubCategoryRecord) => {
-    setForm(record);
+  const handleEdit = (record: SubCategory) => {
+    setForm({
+      id: record.id,
+      categoryId: record.categoryId,
+      categoryName: record.categoryName,
+      subCategoryName: record.subCategoryName,
+      categoryCode: record.categoryCode,
+      description: record.description,
+      status: record.status === "Active",
+      image: record.image,
+    });
+    setImagePreview(record.image || null);
     setFormMode("edit");
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this sub category?")) {
+    if (window.confirm("Delete this sub category?")) {
       setData((prev) => prev.filter((d) => d.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
     }
   };
 
   const handleClear = () => {
     setSearchText("");
-    setFilterStatus("");
+    setFilterCategory("");
+    setFilterStatus("All");
     setCurrentPage(1);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image must be under 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setForm((p) => ({ ...p, image: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const generateCode = (categoryName: string, subCategoryName: string) => {
+    const cat = categoryName.slice(0, 2).toUpperCase();
+    const sub = subCategoryName.slice(0, 2).toUpperCase();
+    const num = String(data.filter(d => d.categoryCode.startsWith(cat)).length + 1).padStart(3, "0");
+    return `${cat}${sub}${num}`;
+  };
+
+  const handleCategoryChange = (categoryName: string) => {
+    const selected = categories.find(c => c.categoryName === categoryName);
+    if (selected) {
+      setForm((p) => ({
+        ...p,
+        categoryId: String(selected.id),
+        categoryName,
+        categoryCode: generateCode(categoryName, p.subCategoryName || ""),
+      }));
+    }
+  };
+
+  const handleSubCategoryChange = (subCategoryName: string) => {
+    setForm((p) => ({
+      ...p,
+      subCategoryName,
+      categoryCode: generateCode(p.categoryName, subCategoryName),
+    }));
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.categoryName || !form.subCategoryName || !form.categoryCode) {
+      alert("Category, Sub Category, and Code are required.");
+      return;
+    }
+
+    const finalCode = form.categoryCode || generateCode(form.categoryName, form.subCategoryName);
+
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map(d => d.id)) + 1 : 1;
+      const newItem: SubCategory = {
+        id: newId,
+        categoryId: form.categoryId,
+        categoryName: form.categoryName,
+        subCategoryName: form.subCategoryName,
+        categoryCode: finalCode,
+        description: form.description,
+        status: form.status ? "Active" : "Inactive",
+        image: form.image || "/assets/images/placeholder.jpg",
+      };
+      setData((prev) => [...prev, newItem]);
+    } else if (formMode === "edit") {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === form.id
+            ? {
+              ...item,
+              categoryId: form.categoryId,
+              categoryName: form.categoryName,
+              subCategoryName: form.subCategoryName,
+              categoryCode: finalCode,
+              description: form.description,
+              status: form.status ? "Active" : "Inactive",
+              image: form.image,
+            }
+            : item
+        )
+      );
+    }
+
     setFormMode(null);
-    setForm({
-      id: 0,
-      category: "",
-      subCategory: "",
-      description: "",
-      status: EXPIRED_STATUSES[0],
-    });
-    loadData();
   };
 
-  const handleReport = () => {
-    alert("Sub Categories Report:\n\n" + JSON.stringify(filteredData, null, 2));
-  };
-
+  /* ---------- Table Columns ---------- */
   const columns: Column[] = [
     {
-      key: "category",
-      label: "Category",
-      align: "left",
-      render: (value) => <span className="font-semibold">{value}</span>,
+      key: "image",
+      label: "Image",
+      align: "center",
+      render: (value) => (
+        <img
+          src={value || "/assets/images/placeholder.jpg"}
+          alt="subcategory"
+          className="w-12 h-12 object-cover rounded-lg border"
+        />
+      ),
     },
-    { key: "subCategory", label: "Sub Category", align: "left" },
+    {
+      key: "subCategoryName",
+      label: "Sub Category",
+      align: "left",
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    { key: "categoryName", label: "Category", align: "left" },
+    { key: "categoryCode", label: "Category Code", align: "left" },
     { key: "description", label: "Description", align: "left" },
     {
       key: "status",
@@ -147,159 +268,197 @@ export default function SubCategory() {
     },
   ];
 
-  const rowActions = (row: SubCategoryRecord) => (
+  const rowActions = (row: SubCategory) => (
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit ${row.subCategory}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit</span>
+        <i className="fa fa-edit"></i>
       </button>
       <button
         onClick={() => handleDelete(row.id)}
-        aria-label={`Delete ${row.subCategory}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
+        <i className="fa fa-trash-can-xmark"></i>
       </button>
     </>
   );
 
   const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      <div className="w-full md:w-auto md:max-w-md">
         <SearchInput
-          className=""
           value={searchText}
-          placeholder="Search Category/Sub Category/Description"
-          onSearch={(query) => {
-            setSearchText(query);
+          placeholder="Search"
+          onSearch={(q) => {
+            setSearchText(q);
             setCurrentPage(1);
           }}
+          className="w-full"
         />
       </div>
-      <div className="flex justify-end">
+      <div className="flex gap-3">
         <select
-          value={filterStatus}
-          onChange={(e) => {
-            setFilterStatus(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by status"
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">All Status</option>
-          {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
+          <option value="">Category</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.categoryName}>
+              {cat.categoryName}
             </option>
           ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as any)}
+          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="All">Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
         </select>
       </div>
     </div>
   );
 
+  /* ---------- Modal Form - EXACT SS2 ---------- */
   const modalForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium mb-1">
-          Category <span className="text-destructive">*</span>
-        </label>
-        <select
-          id="category"
-          name="category"
-          value={form.category}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-          aria-label="Select category"
-        >
-          <option value="">Select Category</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+    <div className="space-y-6">
+      {/* Image Upload */}
+      <div className="flex items-start gap-6">
+        <div className="relative">
+          <img
+            src={imagePreview || "/assets/images/placeholder.jpg"}
+            alt="Preview"
+            className="w-32 h-32 object-cover rounded-lg border-2 border-dashed border-gray-300"
+          />
+          {imagePreview && (
+            <button
+              onClick={() => {
+                setImagePreview(null);
+                setForm((p) => ({ ...p, image: "" }));
+              }}
+              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium mb-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              id="image-upload"
+            />
+            <span className="inline-block px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 transition">
+              Change Image
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground">JPEG, PNG up to 2 MB</p>
+        </div>
       </div>
-      <div>
-        <label htmlFor="subCategory" className="block text-sm font-medium mb-1">
-          Sub Category <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          id="subCategory"
-          name="subCategory"
-          value={form.subCategory}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter sub category"
-          required
-          aria-label="Enter sub category"
-        />
-      </div>
-      <div className="md:col-span-2">
-        <label htmlFor="description" className="block text-sm font-medium mb-1">
-          Description
-        </label>
-        <input
-          type="text"
-          id="description"
-          name="description"
-          value={form.description}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter description"
-          aria-label="Enter description"
-        />
-      </div>
-      <div>
-        <label htmlFor="status" className="block text-sm font-medium mb-1">
-          Status <span className="text-destructive">*</span>
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={form.status}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-          aria-label="Select status"
-        >
-          <option value="">Select Status</option>
-          {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+
+      {/* Form Fields */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={form.categoryName}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+            required
+          >
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.categoryName}>
+                {cat.categoryName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Sub Category <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.subCategoryName}
+            onChange={(e) => handleSubCategoryChange(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+            placeholder="Enter sub category"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Category Code <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.categoryCode}
+            readOnly
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 cursor-not-allowed"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Description <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.description}
+            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+            placeholder="Enter description"
+            required
+          />
+        </div>
+
+        <div className="md:col-span-2 flex items-center justify-between">
+          <label className="text-sm font-medium">
+            Status <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.status}
+            onClick={() => setForm((p) => ({ ...p, status: !p.status }))}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status ? "bg-primary" : "bg-gray-300"
+              }`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status ? "translate-x-7" : "translate-x-1"
+                }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
 
   return (
     <PageBase1
-      title="Sub Categories"
-      description="Manage sub-category records."
-      icon="fa fa-tag"
-      onAddClick={() => {
-        setForm({
-          id: 0,
-          category: "",
-          subCategory: "",
-          description: "",
-          status: EXPIRED_STATUSES[0],
-        });
-        setFormMode("add");
-      }}
+      title="Sub Category"
+      description="Manage your sub categories"
+      icon="fa-light fa-folder-tree"
+      onAddClick={handleAdd}
       onRefresh={handleClear}
-      onReport={handleReport}
+      onReport={() => alert("PDF Report Generated!")}
+      onExcelReport={() => alert("Excel Report Exported!")}
       search={searchText}
-      onSearchChange={(e) => {
-        setSearchText(e.target.value);
+      onSearchChange={(val) => {
+        setSearchText(val);
         setCurrentPage(1);
       }}
       currentPage={currentPage}

@@ -18,7 +18,7 @@
       "categorySlug": "condiments",
       "description": "Sweet and savory sauces, relishes, spreads, and seasonings",
       "status": "Active",
-      "image": "/assets/images/categories/condiments.jpg"
+      "image": "/assets/images/categories/kitchen.jpg"
     },
     {
       "id": 3,
@@ -26,7 +26,7 @@
       "categorySlug": "confections",
       "description": "Desserts, candies, and sweet breads",
       "status": "Active",
-      "image": "/assets/images/categories/category.jpg"
+      "image": "/assets/images/categories/snacks.jpg"
     },
     {
       "id": 4,
@@ -34,7 +34,7 @@
       "categorySlug": "dairy-products",
       "description": "Cheeses",
       "status": "Active",
-      "image": "/assets/images/categories/category.jpg"
+      "image": "/assets/images/categories/bakery.jpg"
     },
     {
       "id": 5,
@@ -58,7 +58,7 @@
       "categorySlug": "produce",
       "description": "Dried fruit and bean curd",
       "status": "Inactive",
-      "image": "/assets/images/categories/gourmet.jpg"
+      "image": "/assets/images/categories/fruits.jpg"
     },
     {
       "id": 8,
@@ -82,7 +82,7 @@
       "categorySlug": "frozen-foods",
       "description": "Frozen vegetables, ready meals, and desserts",
       "status": "Active",
-      "image": "/assets/images/categories/category.png"
+      "image": "/assets/images/categories/vegetables.jpg"
     },
     {
       "id": 11,
@@ -114,7 +114,7 @@
       "categorySlug": "tobacco",
       "description": "Cigarettes, cigars, and other tobacco products",
       "status": "Inactive",
-      "image": "/assets/images/categories/category.png"
+      "image": "/assets/images/categories/accessories.png"
     },
     {
       "id": 15,
@@ -130,7 +130,7 @@
       "categorySlug": "electronics",
       "description": "Small electronics, gadgets, and accessories",
       "status": "Inactive",
-      "image": "/assets/images/categories/category.png"
+      "image": "/assets/images/categories/mobile.png"
     },
     {
       "id": 17,
@@ -146,7 +146,7 @@
       "categorySlug": "office-supplies",
       "description": "Stationery, paper, pens, and other office essentials",
       "status": "Active",
-      "image": "/assets/images/categories/category.png"
+      "image": "/assets/images/categories/paper.png"
     }
   ]
 }

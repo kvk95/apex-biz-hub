@@ -6,87 +6,135 @@
   "result": [
     {
       "id": 1,
-      "category": "Beverages",
-      "subCategory": "Soft Drinks",
+      "categoryId": "1",
+      "categoryName": "Beverages",
+      "categoryCode": "CT001",
+      "subCategoryId": "1",
+      "subCategoryName": "Soft Drinks",
       "description": "Carbonated soft drinks",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/beverages.jpg"
     },
     {
       "id": 2,
-      "category": "Beverages",
-      "subCategory": "Juices",
+      "categoryId": "1",
+      "categoryName": "Beverages",
+      "categoryCode": "CT001",
+      "subCategoryId": "2",
+      "subCategoryName": "Juices",
       "description": "Fresh fruit juices",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/fruits.jpg"
     },
     {
       "id": 3,
-      "category": "Snacks",
-      "subCategory": "Chips",
+      "categoryId": "9",
+      "categoryName": "Snacks",
+      "categoryCode": "CT009",
+      "subCategoryId": "3",
+      "subCategoryName": "Chips",
       "description": "Potato chips and snacks",
-      "status": "Inactive"
+      "status": "Inactive",
+      "image": "/assets/images/categories/snacks.jpg"
     },
     {
       "id": 4,
-      "category": "Snacks",
-      "subCategory": "Nuts",
+      "categoryId": "9",
+      "categoryName": "Snacks",
+      "categoryCode": "CT009",
+      "subCategoryId": "4",
+      "subCategoryName": "Nuts",
       "description": "Roasted nuts",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/snacks.jpg"
     },
     {
       "id": 5,
-      "category": "Dairy",
-      "subCategory": "Milk",
+      "categoryId": "4",
+      "categoryName": "Dairy Products",
+      "categoryCode": "CT004",
+      "subCategoryId": "5",
+      "subCategoryName": "Milk",
       "description": "Fresh milk products",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/bakery.jpg"
     },
     {
       "id": 6,
-      "category": "Dairy",
-      "subCategory": "Cheese",
+      "categoryId": "4",
+      "categoryName": "Dairy Products",
+      "categoryCode": "CT004",
+      "subCategoryId": "6",
+      "subCategoryName": "Cheese",
       "description": "Various cheese types",
-      "status": "Inactive"
+      "status": "Inactive",
+      "image": "/assets/images/categories/bakery.jpg"
     },
     {
       "id": 7,
-      "category": "Bakery",
-      "subCategory": "Bread",
+      "categoryId": "11",
+      "categoryName": "Bakery",
+      "categoryCode": "CT011",
+      "subCategoryId": "7",
+      "subCategoryName": "Bread",
       "description": "Fresh baked bread",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/bakery.jpg"
     },
     {
       "id": 8,
-      "category": "Bakery",
-      "subCategory": "Cakes",
+      "categoryId": "11",
+      "categoryName": "Bakery",
+      "categoryCode": "CT011",
+      "subCategoryId": "8",
+      "subCategoryName": "Cakes",
       "description": "Assorted cakes",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/bakery.jpg"
     },
     {
       "id": 9,
-      "category": "Frozen",
-      "subCategory": "Ice Cream",
+      "categoryId": "10",
+      "categoryName": "Frozen Foods",
+      "categoryCode": "CT010",
+      "subCategoryId": "9",
+      "subCategoryName": "Ice Cream",
       "description": "Frozen desserts",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/icecream.png"
     },
     {
       "id": 10,
-      "category": "Frozen",
-      "subCategory": "Frozen Meals",
+      "categoryId": "10",
+      "categoryName": "Frozen Foods",
+      "categoryCode": "CT010",
+      "subCategoryId": "10",
+      "subCategoryName": "Frozen Meals",
       "description": "Ready to eat frozen meals",
-      "status": "Inactive"
+      "status": "Inactive",
+      "image": "/assets/images/categories/vegetables.jpg"
     },
     {
       "id": 11,
-      "category": "Produce",
-      "subCategory": "Fruits",
+      "categoryId": "7",
+      "categoryName": "Produce",
+      "categoryCode": "CT007",
+      "subCategoryId": "11",
+      "subCategoryName": "Fruits",
       "description": "Fresh fruits",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/categories/fruits.jpg"
     },
     {
       "id": 12,
-      "category": "Produce",
-      "subCategory": "Vegetables",
+      "categoryId": "7",
+      "categoryName": "Produce",
+      "categoryCode": "CT007",
+      "subCategoryId": "12",
+      "subCategoryName": "Vegetables",
       "description": "Fresh vegetables",
-      "status": "Active"
-    } 
+      "status": "Active",
+      "image": "/assets/images/categories/vegetables.jpg"
+    }
   ]
 }
