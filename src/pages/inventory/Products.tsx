@@ -30,7 +30,12 @@ type Product = {
 type Store = { id: number; storeName: string; status: string };
 type Warehouse = { id: number; warehouseName: string; warehouseStatus: string };
 type Category = { id: number; categoryName: string; status: string };
-type SubCategory = { id: number; category: string; subCategory: string; status: string };
+type SubCategory = {
+  id: number;
+  category: string;
+  subCategory: string;
+  status: string;
+};
 type Brand = { id: number; brandName: string; brandStatus: string };
 
 export default function Products() {
@@ -54,31 +59,32 @@ export default function Products() {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const [
-          prodRes,
-          storeRes,
-          whRes,
-          catRes,
-          subCatRes,
-          brandRes,
-        ] = await Promise.all([
-          apiService.get("Products"),
-          apiService.get("Stores"),
-          apiService.get("Warehouses"),
-          apiService.get("Category"),
-          apiService.get("SubCategory"),
-          apiService.get("Brands"),
-        ]);
+        const [prodRes, storeRes, whRes, catRes, subCatRes, brandRes] =
+          await Promise.all([
+            apiService.get("Products"),
+            apiService.get("Stores"),
+            apiService.get("Warehouses"),
+            apiService.get("Category"),
+            apiService.get("SubCategory"),
+            apiService.get("Brands"),
+          ]);
 
-        const get = (res: any) => (res?.result || res?.data || res || []);
+        const get = (res: any) => res?.result || res?.data || res || [];
 
         setProducts(get(prodRes));
         setStores(get(storeRes).filter((s: Store) => s.status === "Active"));
-        setWarehouses(get(whRes).filter((w: Warehouse) => w.warehouseStatus === "Active"));
-        setCategories(get(catRes).filter((c: Category) => c.status === "Active"));
-        setSubCategories(get(subCatRes).filter((sc: SubCategory) => sc.status === "Active"));
-        setBrands(get(brandRes).filter((b: Brand) => b.brandStatus === "Active"));
-
+        setWarehouses(
+          get(whRes).filter((w: Warehouse) => w.warehouseStatus === "Active")
+        );
+        setCategories(
+          get(catRes).filter((c: Category) => c.status === "Active")
+        );
+        setSubCategories(
+          get(subCatRes).filter((sc: SubCategory) => sc.status === "Active")
+        );
+        setBrands(
+          get(brandRes).filter((b: Brand) => b.brandStatus === "Active")
+        );
       } catch (err) {
         console.error("Load error:", err);
       } finally {
@@ -88,15 +94,26 @@ export default function Products() {
     loadAll();
   }, []);
 
-  const categoryOptions = useMemo(() => ["All Categories", ...categories.map(c => c.categoryName)].sort(), [categories]);
-  const brandOptions = useMemo(() => ["All Brands", ...brands.map(b => b.brandName)].sort(), [brands]);
+  const categoryOptions = useMemo(
+    () => ["All Categories", ...categories.map((c) => c.categoryName)].sort(),
+    [categories]
+  );
+  const brandOptions = useMemo(
+    () => ["All Brands", ...brands.map((b) => b.brandName)].sort(),
+    [brands]
+  );
 
   const filteredData = useMemo(() => {
-    return products.filter(item => {
+    return products.filter((item) => {
       const search = searchTerm.toLowerCase();
-      const matchesSearch = item.productName?.toLowerCase().includes(search) || item.sku?.toLowerCase().includes(search);
-      const matchesCat = selectedCategory === "All Categories" || item.categoryName === selectedCategory;
-      const matchesBrand = selectedBrand === "All Brands" || item.brandName === selectedBrand;
+      const matchesSearch =
+        item.productName?.toLowerCase().includes(search) ||
+        item.sku?.toLowerCase().includes(search);
+      const matchesCat =
+        selectedCategory === "All Categories" ||
+        item.categoryName === selectedCategory;
+      const matchesBrand =
+        selectedBrand === "All Brands" || item.brandName === selectedBrand;
       return matchesSearch && matchesCat && matchesBrand;
     });
   }, [products, searchTerm, selectedCategory, selectedBrand]);
@@ -115,26 +132,41 @@ export default function Products() {
 
   const handleAddClick = () => {
     navigate("/inventory/products/create", {
-      state: { mode: "create", masterData: { categories, brands, stores, warehouses, subCategories } }
+      state: {
+        mode: "create",
+        masterData: { categories, brands, stores, warehouses, subCategories },
+      },
     });
   };
 
   const handleEdit = (row: Product) => {
     navigate("/inventory/products/create", {
-      state: { mode: "edit", productRecord: row, masterData: { categories, brands, stores, warehouses, subCategories } }
+      state: {
+        mode: "edit",
+        productRecord: row,
+        masterData: { categories, brands, stores, warehouses, subCategories },
+      },
     });
   };
 
   const handleView = (row: Product) => {
     navigate("/inventory/products/create", {
-      state: { mode: "view", productRecord: row, masterData: { categories, brands, stores, warehouses, subCategories } }
+      state: {
+        mode: "view",
+        productRecord: row,
+        masterData: { categories, brands, stores, warehouses, subCategories },
+      },
     });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Delete this product?")) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
     }
+  };
+
+  const handleReport = () => {
+    alert("Report:\n\n" + JSON.stringify(filteredData, null, 2));
   };
 
   const columns: Column[] = [
@@ -144,12 +176,15 @@ export default function Products() {
       label: "Product Name",
       align: "left",
       render: (_v, row: Product) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           <img
-            src={row.productImage || "/assets/images/placeholder.jpg"}
+            src={row.productImage || "/assets/images/placeholders/24.png"}
             alt={row.productName}
-            className="w-10 h-10 rounded object-cover border"
-            onError={(e) => (e.target as HTMLImageElement).src = "/assets/images/placeholder.jpg"}
+            className="w-8 h-8 rounded object-cover border"
+            onError={(e) =>
+              ((e.target as HTMLImageElement).src =
+                "/assets/images/placeholders/24.png")
+            }
           />
           <span className="font-medium">{row.productName}</span>
         </div>
@@ -158,42 +193,89 @@ export default function Products() {
     { key: "categoryName", label: "Category", align: "left" },
     { key: "subCategoryName", label: "Sub Category", align: "left" },
     { key: "brandName", label: "Brand", align: "left" },
-    { key: "price", label: "Price", align: "right", render: v => `$${Number(v).toFixed(2)}` },
+    {
+      key: "price",
+      label: "Price",
+      align: "right",
+      render: (v) => `₹${Number(v).toFixed(2)}`,
+    },
     { key: "unit", label: "Unit", align: "left" },
     {
       key: "quantity",
       label: "Qty",
       align: "right",
       render: (v: number, row: Product) => (
-        <span className={v <= row.quantityAlert ? "text-red-600 font-bold" : ""}>{v}</span>
+        <span
+          className={v <= row.quantityAlert ? "text-red-600 font-bold" : ""}
+        >
+          {v}
+        </span>
       ),
     },
     {
       key: "createdBy",
       label: "Created By",
       align: "left",
-      render: (name: string) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-dashed border-gray-400" />
-          <span>{name || "Unknown"}</span>
+      render: (_v, row: Product) => (
+        <div className="flex items-center gap-1">
+          <img
+            src={row.productImage || "/assets/images/placeholders/24.png"}
+            alt={row.productName}
+            className="w-6 h-6 rounded object-cover border"
+            onError={(e) =>
+              ((e.target as HTMLImageElement).src =
+                "/assets/images/placeholders/24.png")
+            }
+          />
+          <span className="font-medium">{row.createdBy || "Unknown"}</span>
         </div>
       ),
     },
-    { key: "status", label: "Status", align: "center", render: renderStatusBadge },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
-  const rowActions = (row: Product) => (
+  const rowActions = (row: ProductRecord) => (
     <>
-      <button onClick={() => handleView(row)} className="text-gray-700 hover:text-blue-600 p-1">
-        <i className="fa fa-eye"></i>
+      <button
+        onClick={() => handleView(row)}
+        aria-label={`View ${row.productName}`}
+        className="text-gray-700 border border-gray-600 hover:bg-blue-500 hover:text-white focus:ring-4 rounded-sm text-xs p-2 text-center inline-flex items-center"
+      >
+        <i className="fa fa-eye" aria-hidden="true"></i>
+        <span className="sr-only">View</span>
       </button>
-      <button onClick={() => handleEdit(row)} className="text-gray-700 hover:text-green-600 p-1">
-        <i className="fa fa-edit"></i>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.productName}`}
+        className="text-gray-700 border border-gray-600 hover:bg-primary hover:text-white focus:ring-4 rounded-sm text-xs p-2 text-center inline-flex items-center"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
       </button>
-      <button onClick={() => handleDelete(row.id)} className="text-gray-700 hover:text-red-600 p-1">
-        <i className="fa fa-trash"></i>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.productName}`}
+        className="text-gray-700 border border-gray-600 hover:bg-red-500 hover:text-white focus:ring-4 rounded-sm text-xs p-2 text-center inline-flex items-center"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
       </button>
     </>
+  );
+  const customHeaderFields = () => (
+    <div className="">
+      <button
+        onClick={() => alert("Import Products (XLS) - Coming Soon")}
+        className="bg-blue-950 text-white px-4 py-2 rounded font-medium flex items-center gap-2 hover:bg-blue-800"
+      >
+        <i className="fa fa-download"></i> Import Product
+      </button>
+    </div>
   );
 
   const customFilters = () => (
@@ -202,30 +284,51 @@ export default function Products() {
         <SearchInput
           value={searchTerm}
           placeholder="Search"
-          onSearch={(q) => { setSearchTerm(q); setCurrentPage(1); }}
+          onSearch={(q) => {
+            setSearchTerm(q);
+            setCurrentPage(1);
+          }}
           className="w-full"
         />
       </div>
       <div className="flex gap-3">
         <select
           value={selectedCategory}
-          onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-md text-sm min-w-[160px] focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
-          <option value="All Categories" disabled>Select Category</option>
-          {categoryOptions.filter(c => c !== "All Categories").map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+          <option value="All Categories" disabled>
+            Select Category
+          </option>
+          {categoryOptions
+            .filter((c) => c !== "All Categories")
+            .map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
         </select>
         <select
           value={selectedBrand}
-          onChange={(e) => { setSelectedBrand(e.target.value); setCurrentPage(1); }}
+          onChange={(e) => {
+            setSelectedBrand(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-md text-sm min-w-[160px] focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
-          <option value="All Brands" disabled>Select Brand</option>
-          {brandOptions.filter(b => b !== "All Brands").map(b => (
-            <option key={b} value={b}>{b}</option>
-          ))}
+          <option value="All Brands" disabled>
+            Select Brand
+          </option>
+          {brandOptions
+            .filter((b) => b !== "All Brands")
+            .map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
         </select>
       </div>
     </div>
@@ -235,12 +338,16 @@ export default function Products() {
     <PageBase1
       title="Product List"
       description="Manage your products"
-      icon="fa-light fa-boxes"
+      icon="fa fa-boxes"
       onAddClick={handleAddClick}
       onRefresh={handleClear}
-      onReport={null}
+      onReport={handleReport}
+      onExcelReport={handleReport}
       search={searchTerm}
-      onSearchChange={(q) => { setSearchTerm(q); setCurrentPage(1); }}
+      onSearchChange={(q) => {
+        setSearchTerm(q);
+        setCurrentPage(1);
+      }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}
@@ -250,36 +357,16 @@ export default function Products() {
       tableData={paginatedData}
       rowActions={rowActions}
       formMode={null}
-      setFormMode={() => { }}
+      setFormMode={() => {}}
       modalTitle=""
       modalForm={() => null}
-      onFormSubmit={() => { }}
+      onFormSubmit={() => {}}
       customFilters={customFilters}
+      customHeaderFields={customHeaderFields}
     >
-      {loading ? (
+      {loading && (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-500"></div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-2 border rounded text-sm flex items-center gap-2 hover:bg-gray-50">
-            <i className="fa fa-file-pdf text-red-600"></i> PDF
-          </button>
-          <button className="px-3 py-2 border rounded text-sm flex items-center gap-2 hover:bg-gray-50">
-            <i className="fa fa-file-excel text-green-600"></i> XLS
-          </button>
-          <button className="px-3 py-2 border rounded text-sm hover:bg-gray-50">
-            <i className="fa fa-print"></i>
-          </button>
-          <button className="px-3 py-2 border rounded text-sm hover:bg-gray-50">
-            <i className="fa fa-sync"></i>
-          </button>
-          <button onClick={handleAddClick} className="bg-orange-500 text-white px-4 py-2 rounded font-medium flex items-center gap-2 hover:bg-orange-600">
-            <i className="fa fa-plus-circle"></i> Add Product
-          </button>
-          <button onClick={() => alert("Import Products (XLS) - Coming Soon")} className="bg-blue-900 text-white px-4 py-2 rounded font-medium flex items-center gap-2 hover:bg-blue-800">
-            <i className="fa fa-upload"></i> Import Product
-          </button>
         </div>
       )}
     </PageBase1>

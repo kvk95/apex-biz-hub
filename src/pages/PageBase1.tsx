@@ -20,9 +20,10 @@ interface PageBase1Props {
   title: string;
   description: string;
   icon: string;
-  onAddClick?: () => void; // Made optional
+  onAddClick?: () => void;
   onRefresh: () => void;
   onReport?: () => void;
+  onExcelReport?: () => void;
   search: string;
   onSearchChange: (query: string) => void;
   currentPage: number;
@@ -33,13 +34,14 @@ interface PageBase1Props {
   tableColumns: Column[];
   tableData: any[];
   tableFooter?: () => JSX.Element;
-  rowActions?: (row: any) => JSX.Element; // Made optional
+  rowActions?: (row: any) => JSX.Element;
   formMode: "add" | "edit" | null;
   setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | null>>;
   modalTitle: string;
   modalForm: () => JSX.Element;
   onFormSubmit: (e: React.FormEvent) => void;
   customFilters?: () => JSX.Element;
+  customHeaderFields?: () => JSX.Element;
   children?: React.ReactNode;
 }
 
@@ -62,6 +64,100 @@ function adjustColor(hex: string, percent: number): string {
   }
 }
 
+function hexToHsl(hex: string): string {
+  try {
+    const cleanHex = hex.replace("#", "");
+    const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+    const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+    const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h,
+      s,
+      l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0);
+          break;
+        case g:
+          h = (b - r) / d + 2;
+          break;
+        case b:
+          h = (r - g) / d + 4;
+          break;
+      }
+      h /= 6;
+    }
+
+    return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(
+      l * 100
+    )}%)`;
+  } catch (e) {
+    console.error("Invalid hex color for HSL conversion:", hex, e);
+    return hex; // Fallback to hex
+  }
+}
+
+const pluralToSingular = (word: string): string => {
+  const lowerWord = word.toLowerCase();
+
+  // Handle irregular/common cases first
+  const irregulars: { [key: string]: string } = {
+    children: "child",
+    expenses: "expense",
+    categories: "category",
+    classes: "class",
+    boxes: "box",
+    knives: "knife",
+    wolves: "wolf",
+    // Add more as needed
+  };
+  if (irregulars[lowerWord]) {
+    return irregulars[lowerWord];
+  }
+
+  // Handle words ending with 'ies' (e.g., categories → category)
+  if (lowerWord.endsWith("ies")) {
+    return lowerWord.slice(0, -3) + "y";
+  }
+
+  // Handle words ending with 'es'
+  if (lowerWord.endsWith("es")) {
+    // Special cases
+    if (lowerWord.endsWith("sses")) return lowerWord.slice(0, -2); // classes → class (now handled in irregulars)
+    if (lowerWord.endsWith("shes")) return lowerWord.slice(0, -2); // dishes → dish
+    if (lowerWord.endsWith("ches")) return lowerWord.slice(0, -2); // watches → watch
+    if (lowerWord.endsWith("xes")) return lowerWord.slice(0, -2); // boxes → box (irregular)
+    if (lowerWord.endsWith("zes")) return lowerWord.slice(0, -2); // quizzes → quiz
+    return lowerWord.slice(0, -2); // General: tomatoes → tomato
+  }
+
+  // Handle words ending with 's' (simple plural)
+  if (lowerWord.endsWith("s")) {
+    return lowerWord.slice(0, -1);
+  }
+
+  // Handle words ending with 'ves' (e.g., wolves → wolf)
+  if (lowerWord.endsWith("ves")) {
+    return lowerWord.slice(0, -3) + "f";
+  }
+
+  // Handle words ending with 'f' or 'fe' (e.g., leaf → leaf, but typically unchanged or to 'ves' reverse)
+  if (lowerWord.endsWith("f") || lowerWord.endsWith("fe")) {
+    // Often unchanged or special; fallback to slice for 'fe' → 'f' but keep simple
+    return lowerWord.endsWith("fe") ? lowerWord.slice(0, -2) + "f" : lowerWord;
+  }
+
+  return word; // No change
+};
+
 export function PageBase1({
   title,
   description,
@@ -69,6 +165,7 @@ export function PageBase1({
   onAddClick,
   onRefresh,
   onReport,
+  onExcelReport,
   search,
   onSearchChange,
   currentPage,
@@ -86,6 +183,7 @@ export function PageBase1({
   modalForm,
   onFormSubmit,
   customFilters,
+  customHeaderFields,
   children,
 }: PageBase1Props) {
   const { theme } = useTheme();
@@ -93,47 +191,6 @@ export function PageBase1({
   const hoverColor = adjustColor(primaryColor, -20);
   const selectionBg = `hsl(${primaryColor})`;
   const themeStyles: ThemeStyles = { selectionBg, hoverColor };
-
-  const pluralToSingular = (word: string): string => {
-    // Handle words ending with 'ies' (e.g., categories → category)
-    if (word.endsWith("ies")) {
-      return word.slice(0, -3) + "y";
-    }
-
-    // Handle words ending with 'es'
-    if (word.endsWith("es")) {
-      // Special cases for words like "boxes", "classes", etc.
-      if (
-        word.endsWith("sses") || // classes → class
-        word.endsWith("shes") || // dishes → dish
-        word.endsWith("ches") || // watches → watch
-        word.endsWith("xes") || // boxes → box
-        word.endsWith("zes") || // quizzes → quiz
-        word.toLowerCase() === "expenses" // Special case for "Expenses" → "Expense"
-      ) {
-        return word.slice(0, -2); // Remove the 'es'
-      }
-      return word.slice(0, -2); // General case: just remove 'es'
-    }
-
-    // Handle words ending with 's' (simple plural)
-    if (word.endsWith("s")) {
-      return word.slice(0, -1); // Remove the 's'
-    }
-
-    // Handle words ending with 'ves' (e.g., wolves → wolf, knives → knife)
-    if (word.endsWith("ves")) {
-      return word.slice(0, -3) + "f"; // Replace 'ves' with 'f'
-    }
-
-    // Handle specific words ending with 'f' or 'fe'
-    if (word.endsWith("f") || word.endsWith("fe")) {
-      return word.slice(0, -1); // Handle words like 'leaf' → 'leaf'
-    }
-
-    // Return the word as is if no plural form detected
-    return word;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,29 +206,47 @@ export function PageBase1({
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
+        {customHeaderFields ? (
+          <div className="flex-none ml-auto flex gap-2">
+            {customHeaderFields()}
+          </div>
+        ) : null}
         <div className="flex-none ml-auto flex gap-2">
           {onReport && (
             <button
               onClick={onReport}
-              className="bg-white hover:bg-gray-300 text-danger py-1 px-3 rounded border transition-colors text-lg"
+              className="bg-white hover:bg-gray-300 text-danger py-1 px-3 rounded border transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               type="button"
               aria-label="Generate Report"
+              role="button"
             >
               <i className="fa fa-file-pdf" aria-hidden="true"></i>
             </button>
           )}
+          {onExcelReport && (
+            <button
+              onClick={onExcelReport}
+              className="bg-white hover:bg-gray-300 text-green-700 py-1 px-3 rounded border transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              type="button"
+              aria-label="Export as Excel"
+              role="button"
+            >
+              <i className="fa fa-file-excel" aria-hidden="true"></i>
+            </button>
+          )}
           <button
             onClick={onRefresh}
-            className="bg-white hover:bg-gray-300 text-gray-500 py-2 px-3 rounded border transition-colors"
+            className="bg-white hover:bg-gray-300 text-gray-500 py-2 px-3 rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
             type="button"
             aria-label="Refresh"
+            role="button"
           >
             <i className="fa fa-refresh text-muted" aria-hidden="true"></i>
           </button>
           {onAddClick && (
             <button
               onClick={onAddClick}
-              className="text-white font-semibold py-2 px-3 rounded shadow transition-colors"
+              className="text-white font-semibold py-2 px-3 rounded shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={
                 {
                   backgroundColor: selectionBg,
@@ -191,7 +266,7 @@ export function PageBase1({
         </div>
       </div>
       {tableColumns && (
-        <section className="bg-card rounded shadow  pt-2 pb-6">
+        <section className="bg-card rounded shadow pt-2 pb-6">
           {customFilters ? (
             <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-2 p-2">
               {customFilters()}
@@ -221,8 +296,8 @@ export function PageBase1({
                     </th>
                   ))}
                   {rowActions && (
-                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      {/*Actions */}
+                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground gap-1">
+                      {/* Actions  */}
                     </th>
                   )}
                 </tr>
@@ -240,7 +315,7 @@ export function PageBase1({
                 ) : (
                   tableData.map((row, idx) => (
                     <tr
-                      key={row.id}
+                      key={row.id || idx} // Fallback to index if no id
                       className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
                     >
                       {tableColumns.map((col) => (
@@ -249,6 +324,7 @@ export function PageBase1({
                           className={`px-4 py-2 text-sm ${
                             col.align ? `text-${col.align}` : "text-left"
                           } ${col.className || ""}`}
+                          style={{ fontSize: "14px" }}
                         >
                           {col.render
                             ? col.render(row[col.key], row, idx)
@@ -264,7 +340,7 @@ export function PageBase1({
                   ))
                 )}
               </tbody>
-              {tableFooter ? tableFooter() : <></>}
+              {tableFooter?.()}
             </table>
           </div>
           <Pagination
@@ -276,7 +352,7 @@ export function PageBase1({
           />
         </section>
       )}
-      {children ? children : <></>}
+      {children}
 
       {formMode && (
         <div
@@ -309,12 +385,10 @@ export function PageBase1({
                 {modalTitle}
               </h2>
               <button
-                onClick={() => {
-                  setFormMode(null);
-                  console.log("PageBase1: Modal closed via close button");
-                }}
-                className="text-red-500 hover:text-red-800 focus:ring-2 focus:ring-red-500 rounded-full text-xl"
+                onClick={() => setFormMode(null)}
+                className="text-red-500 hover:text-red-800 focus:ring-2 focus:ring-red-500 rounded-full text-xl focus:outline-none"
                 aria-label="Close modal"
+                type="button"
               >
                 <i className="fa fa-window-close" aria-hidden="true"></i>
               </button>
@@ -324,17 +398,14 @@ export function PageBase1({
             </form>
             <div className="border-t border-border px-4 pt-2 pb-3 flex justify-end gap-4">
               <button
-                onClick={() => {
-                  setFormMode(null);
-                  console.log("PageBase1: Modal closed via cancel button");
-                }}
+                onClick={() => setFormMode(null)}
                 className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-white font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 type="button"
               >
                 <i className="fa fa-times me-2"></i> Cancel
               </button>
               <button
-                onClick={onFormSubmit}
+                type="submit" // Changed to submit; removes onClick
                 className="inline-flex items-center gap-2 text-white font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
                 style={
                   {
@@ -342,7 +413,6 @@ export function PageBase1({
                     "--hover-bg": themeStyles.hoverColor,
                   } as React.CSSProperties
                 }
-                type="button"
               >
                 <i className="fa fa-save me-2"></i>{" "}
                 {formMode === "add" ? "Save" : "Update"}
