@@ -7,6 +7,7 @@
     {
       "id": 1,
       "categoryName": "Beverages",
+      "categorySlug": "beverages",
       "description": "Soft drinks, coffees, teas, beers, and ales",
       "status": "Active",
       "image": "/assets/images/categories/beverages.jpg"
@@ -14,6 +15,7 @@
     {
       "id": 2,
       "categoryName": "Condiments",
+      "categorySlug": "condiments",
       "description": "Sweet and savory sauces, relishes, spreads, and seasonings",
       "status": "Active",
       "image": "/assets/images/categories/condiments.jpg"
@@ -21,6 +23,7 @@
     {
       "id": 3,
       "categoryName": "Confections",
+      "categorySlug": "confections",
       "description": "Desserts, candies, and sweet breads",
       "status": "Active",
       "image": "/assets/images/categories/category.jpg"
@@ -28,6 +31,7 @@
     {
       "id": 4,
       "categoryName": "Dairy Products",
+      "categorySlug": "dairy-products",
       "description": "Cheeses",
       "status": "Active",
       "image": "/assets/images/categories/category.jpg"
@@ -35,6 +39,7 @@
     {
       "id": 5,
       "categoryName": "Grains/Cereals",
+      "categorySlug": "grains-cereals",
       "description": "Breads, crackers, pasta, and cereal",
       "status": "Active",
       "image": "/assets/images/categories/foodgrains.jpg"
@@ -42,6 +47,7 @@
     {
       "id": 6,
       "categoryName": "Meat/Poultry",
+      "categorySlug": "meat-poultry",
       "description": "Prepared meats",
       "status": "Active",
       "image": "/assets/images/categories/meat.jpg"
@@ -49,6 +55,7 @@
     {
       "id": 7,
       "categoryName": "Produce",
+      "categorySlug": "produce",
       "description": "Dried fruit and bean curd",
       "status": "Inactive",
       "image": "/assets/images/categories/gourmet.jpg"
@@ -56,6 +63,7 @@
     {
       "id": 8,
       "categoryName": "Seafood",
+      "categorySlug": "seafood",
       "description": "Seaweed and fish",
       "status": "Active",
       "image": "/assets/images/categories/meat.jpg"
@@ -63,6 +71,7 @@
     {
       "id": 9,
       "categoryName": "Snacks",
+      "categorySlug": "snacks",
       "description": "Chips, nuts, popcorn, and other snack foods",
       "status": "Active",
       "image": "/assets/images/categories/snacks.jpg"
@@ -70,6 +79,7 @@
     {
       "id": 10,
       "categoryName": "Frozen Foods",
+      "categorySlug": "frozen-foods",
       "description": "Frozen vegetables, ready meals, and desserts",
       "status": "Active",
       "image": "/assets/images/categories/category.png"
@@ -77,6 +87,7 @@
     {
       "id": 11,
       "categoryName": "Bakery",
+      "categorySlug": "bakery",
       "description": "Cakes, pastries, and bread",
       "status": "Active",
       "image": "/assets/images/categories/bakery.jpg"
@@ -84,6 +95,7 @@
     {
       "id": 12,
       "categoryName": "Health & Beauty",
+      "categorySlug": "health-beauty",
       "description": "Cosmetics, skincare, and personal care products",
       "status": "Active",
       "image": "/assets/images/categories/beauty.jpg"
@@ -91,6 +103,7 @@
     {
       "id": 13,
       "categoryName": "Household",
+      "categorySlug": "household",
       "description": "Cleaning supplies, paper goods, and home essentials",
       "status": "Active",
       "image": "/assets/images/categories/cleaning.jpg"
@@ -98,6 +111,7 @@
     {
       "id": 14,
       "categoryName": "Tobacco",
+      "categorySlug": "tobacco",
       "description": "Cigarettes, cigars, and other tobacco products",
       "status": "Inactive",
       "image": "/assets/images/categories/category.png"
@@ -105,6 +119,7 @@
     {
       "id": 15,
       "categoryName": "Pet Supplies",
+      "categorySlug": "pet-supplies",
       "description": "Pet food, toys, and accessories",
       "status": "Active",
       "image": "/assets/images/categories/pets.jpg"
@@ -112,6 +127,7 @@
     {
       "id": 16,
       "categoryName": "Electronics",
+      "categorySlug": "electronics",
       "description": "Small electronics, gadgets, and accessories",
       "status": "Inactive",
       "image": "/assets/images/categories/category.png"
@@ -119,6 +135,7 @@
     {
       "id": 17,
       "categoryName": "Cleaning Supplies",
+      "categorySlug": "cleaning-supplies",
       "description": "Detergents, sanitizers, and cleaning tools",
       "status": "Active",
       "image": "/assets/images/categories/cleaning.jpg"
@@ -126,6 +143,7 @@
     {
       "id": 18,
       "categoryName": "Office Supplies",
+      "categorySlug": "office-supplies",
       "description": "Stationery, paper, pens, and other office essentials",
       "status": "Active",
       "image": "/assets/images/categories/category.png"
