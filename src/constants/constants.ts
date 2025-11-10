@@ -1,3 +1,6 @@
+
+export const PATH_HOMESCREEN ="/dashboard/admindb" as const;
+
 export const STATUSES = [
   "Active",
   "Inactive",

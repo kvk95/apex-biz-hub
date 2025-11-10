@@ -113,7 +113,7 @@ export default function Notification() {
       description="Manage your notification preferences"
       icon="fa fa-bell"
     >
-      <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
+      <div className="p-6 bg-card rounded shadow">
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-lg">
             {error}

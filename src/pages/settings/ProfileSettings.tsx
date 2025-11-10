@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { apiService } from "@/services/ApiService";
 import { PageBase1 } from "@/pages/PageBase1";
+import { PATH_HOMESCREEN } from "@/constants/constants";
 
 interface ProfileSettingsForm {
   firstName: string;
@@ -43,23 +44,22 @@ export default function ProfileSettings() {
       setLoading(true);
       try {
         const response = await apiService.get<any>("ProfileSettings");
-        if (response.status.code === "S" && response.result.length > 0) {
-          const data = response.result[0].companyInfo;
-          const nameParts = data.companyName.split(" ");
+        if (response.status.code === "S" && response.result) {
+          const data = response.result;
           setForm({
-            firstName: nameParts[0] || "",
-            lastName: nameParts.slice(1).join(" ") || "",
-            userName: "",
-            phoneNumber: data.companyPhone || "",
-            email: data.companyEmail || "",
-            address: data.companyAddress || "",
-            country: "",
-            state: "",
-            city: "",
-            postalCode: "",
-            image: null,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            userName: data.userName,
+            phoneNumber: data.phoneNumber,
+            email: data.email,
+            address: data.address || "",
+            country: data.country,
+            state: data.state,
+            city: data.city,
+            postalCode: data.postalCode,
+            image: data.image,
           });
-          if (data.companyLogoUrl) setImagePreview(data.companyLogoUrl);
+          if (data.image) setImagePreview(data.image);
         }
       } catch (err) {
         setError("Failed to load profile.");
@@ -123,7 +123,7 @@ export default function ProfileSettings() {
       };
       await apiService.put("GeneralSettings", payload);
       alert("Profile saved!");
-      navigate("/dashboard");
+      navigate(PATH_HOMESCREEN);
     } catch (err) {
       setError("Failed to save. Try again.");
     } finally {
@@ -131,7 +131,7 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleCancel = () => navigate("/dashboard");
+  const handleCancel = () => navigate(PATH_HOMESCREEN);
 
   const isDisabled = mode === "view";
 
@@ -141,7 +141,7 @@ export default function ProfileSettings() {
       description="Manage your profile information"
       icon="fa fa-user-circle"
     >
-      <div className="w-full  mt-8 p-6 bg-white rounded-lg shadow-lg">
+      <div className="p-6 bg-card rounded shadow">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error}
