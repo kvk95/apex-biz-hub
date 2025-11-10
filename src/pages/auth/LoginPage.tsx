@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // Icons replaced with Font Awesome
 import { useState ,useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
 
 // Dummy login function for demonstration; replace with your auth logic
 async function fakeLogin({ email, password }) {

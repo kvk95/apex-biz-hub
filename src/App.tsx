@@ -96,12 +96,12 @@ import CustomFields from "./pages/settings/CustomFields";
 import EmailSettings from "./pages/settings/EmailSettings";
 import EmailTemplates from "./pages/settings/EmailTemplates";
 import GdprSettings from "./pages/settings/GdprSettings";
-import GeneralSettings from "./pages/settings/GeneralSettings";
+import ProfileSettings from "./pages/settings/ProfileSettings";
 import InvoiceSettings from "./pages/settings/InvoiceSettings";
 import InvoiceTemplates from "./pages/settings/InvoiceTemplates";
 import LanguageSettings from "./pages/settings/LanguageSettings";
 import LocalizationSettings from "./pages/settings/LocalizationSettings";
-import Notification from "./pages/settings/Notification";
+import NotificationSettings from "./pages/settings/NotificationSettings";
 import OtpSettings from "./pages/settings/OtpSettings";
 import PaymentGatewaySettings from "./pages/settings/PaymentGatewaySettings";
 import PosSettings from "./pages/settings/PosSettings";
@@ -371,7 +371,7 @@ const App = () => {
                 {/* Settings */}
                 <Route
                   path="settings/general/profile"
-                  element={<GeneralSettings />}
+                  element={<ProfileSettings />}
                 />
                 <Route
                   path="settings/general/security"
@@ -379,7 +379,7 @@ const App = () => {
                 />
                 <Route
                   path="settings/general/notifications"
-                  element={<Notification />}
+                  element={<NotificationSettings />}
                 />
                 <Route
                   path="settings/general/connected-apps"

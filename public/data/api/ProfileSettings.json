@@ -1,0 +1,19 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": {
+    "firstName": "Amit",
+    "lastName": "Sharma",
+    "userName": "amitsharma87",
+    "phoneNumber": "+91 98765 43210",
+    "email": "amit.sharma@example.com",
+    "address": "Flat 302, Green View Apartments, Sector 12",
+    "country": "IN",
+    "state": "MH",
+    "city": "Mumbai",
+    "postalCode": "400064",
+    "image": null
+  }
+}

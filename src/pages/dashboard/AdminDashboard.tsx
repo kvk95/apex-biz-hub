@@ -64,7 +64,7 @@ const TotalStatsCards = ({ data }) => (
           </div>
           <div className="dash-counts">
             <h4 className="mb-1 text-2xl font-bold">
-              ₹<CountUp delay={index} end={item.value} />
+              ₹<CountUp delay={index*0.5} end={item.value} duration={2} />
             </h4>
             <p className="mb-0 text-sm text-gray-600">{item.title}</p>
           </div>

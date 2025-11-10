@@ -1,0 +1,52 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": {
+    "mobilePushNotifications": {
+      "enabled": true
+    },
+    "desktopNotifications": {
+      "enabled": true
+    },
+    "emailNotifications": {
+      "enabled": true
+    },
+    "msmsNotifications": {
+      "enabled": true
+    },
+    "generalNotifications": {
+      "payment": {
+        "push": true,
+        "sms": true,
+        "email": true
+      },
+      "transaction": {
+        "push": true,
+        "sms": false,
+        "email": true
+      },
+      "emailVerification": {
+        "push": false,
+        "sms": true,
+        "email": true
+      },
+      "otp": {
+        "push": true,
+        "sms": true,
+        "email": false
+      },
+      "activity": {
+        "push": true,
+        "sms": true,
+        "email": true
+      },
+      "account": {
+        "push": true,
+        "sms": false,
+        "email": true
+      }
+    }
+  }
+}
