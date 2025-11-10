@@ -1,34 +1,60 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
+import { STATUSES } from "@/constants/constants"; // Assuming STATUSES includes 'Active', 'Inactive'
+import { renderStatusBadge } from "@/utils/tableUtils"; // Assuming this exists or adapt
 
-const statusOptions = ["Active", "Inactive"];
-const typeOptions = ["Text", "Dropdown", "Textarea", "Date"];
+const MODULES = ["Product", "Customer", "Supplier", "Biller"] as const;
+const INPUT_TYPES = ["Number", "Select", "Text", "Date", "Email"] as const; // Extended based on common types
+
+type ModuleType = (typeof MODULES)[number];
+type InputType = (typeof INPUT_TYPES)[number];
+type RequirementType = "Required" | "Disabled";
+
+interface CustomField {
+  id: number;
+  module: ModuleType;
+  label: string;
+  type: InputType;
+  defaultValue: string;
+  required: RequirementType;
+  active: boolean;
+}
 
 export default function CustomFields() {
-  const [data, setData] = useState([]);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    module: MODULES[0],
+    label: "",
+    type: INPUT_TYPES[0],
+    defaultValue: "",
+    required: "Required" as RequirementType,
+    active: true,
+  });
+  const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [fields, setFields] = useState([]);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state for Add Section (preserved exactly)
-  const [form, setForm] = useState({
-    name: "",
-    type: "Text",
-    status: "Active",
-  });
+  const filteredFields = useMemo(() => {
+    const result = !search.trim()
+      ? fields
+      : fields.filter(
+          (f) =>
+            f.label.toLowerCase().includes(search.toLowerCase()) ||
+            f.module.toLowerCase().includes(search.toLowerCase())
+        );
+    return result;
+  }, [search, fields]);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    type: "Text",
-    status: "Active",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredFields.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredFields]);
 
   useEffect(() => {
     loadData();
@@ -36,409 +62,273 @@ export default function CustomFields() {
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("CustomFields");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setFields(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
-
-  // Handlers for Add Section form inputs
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Save handler for Add Section (Add new custom field)
-  const handleSave = () => {
-    if (!form.name.trim()) {
-      alert("Please fill all required fields.");
-      return;
-    }
-
-    const newId = fields.length ? Math.max(...fields.map((f) => f.id)) + 1 : 1;
-    const newField = {
-      id: newId,
-      name: form.name.trim(),
-      type: form.type,
-      status: form.status,
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    setFields((prev) => [newField, ...prev]);
-    setForm({ name: "", type: "Text", status: "Active" });
-    setCurrentPage(1);
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const field = fields.find((f) => f.id === id);
-    if (field) {
-      setEditForm({
-        name: field.name,
-        type: field.type,
-        status: field.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (!editForm.name.trim()) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (editId !== null) {
-      setFields((prev) =>
-        prev.map((f) =>
-          f.id === editId
-            ? {
-                ...f,
-                name: editForm.name.trim(),
-                type: editForm.type,
-                status: editForm.status,
-              }
-            : f
-        )
+    try {
+      const response = await apiService.get<{ result: CustomField[] }>(
+        "CustomFields"
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
+      if (response.status.code === "S") {
+        setFields(response.result || []);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch (err) {
+      setError("Failed to load custom fields.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleRadioChange = (value: RequirementType) => {
+    setForm((f) => ({ ...f, required: value }));
+  };
+
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      module: MODULES[0],
+      label: "",
+      type: INPUT_TYPES[0],
+      defaultValue: "",
+      required: "Required",
+      active: true,
+    });
+  };
+
+  const handleEdit = (field: CustomField) => {
+    setFormMode("edit");
+    setForm({ ...field });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.label.trim() || !form.defaultValue.trim()) {
+      alert("Please fill all required fields.");
+      return;
+    }
+    if (formMode === "add") {
+      const newId = fields.length
+        ? Math.max(...fields.map((f) => f.id)) + 1
+        : 1;
+      setFields((prev) => [...prev, { ...form, id: newId }]);
+    } else if (formMode === "edit" && form.id !== null) {
+      setFields((prev) =>
+        prev.map((f) => (f.id === form.id ? { ...form } : f))
+      );
+    }
+    setFormMode(null);
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this custom field?")) {
       setFields((prev) => prev.filter((f) => f.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= fields.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
     }
   };
 
-  // Clear button handler (replaces Refresh)
   const handleClear = () => {
-    setFields(data);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
-    setForm({ name: "", type: "Text", status: "Active" });
-    setEditId(null);
   };
 
-  const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(fields, null, 2));
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedFields = fields.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const columns: Column[] = [
+    { key: "module", label: "Module" },
+    { key: "label", label: "Label" },
+    { key: "type", label: "Type" },
+    {
+      key: "defaultValue",
+      label: "Default Value",
+      render: (value) => value || "-",
+    },
+    {
+      key: "required",
+      label: "Required/Disable",
+      render: (value) => <span className="capitalize">{value}</span>,
+    },
+    {
+      key: "active",
+      label: "Status",
+      render: (value) =>
+        renderStatusBadge(value ? "Active" : "Inactive") ||
+        (value ? "Active" : "Inactive"),
+    },
+  ];
+
+  const rowActions = (row: CustomField) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit coupon ${row.label}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit coupon</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete coupon ${row.label}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete coupon</span>
+      </button>
+    </>
+  );
+
+  const modalForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="module" className="block text-sm font-medium mb-1">
+          Custom Fields For <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="module"
+          name="module"
+          value={form.module}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        >
+          {MODULES.map((mod) => (
+            <option key={mod} value={mod}>
+              {mod}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="label" className="block text-sm font-medium mb-1">
+          Label <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="label"
+          name="label"
+          type="text"
+          value={form.label}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter label"
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="defaultValue"
+          className="block text-sm font-medium mb-1"
+        >
+          Default Value <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="defaultValue"
+          name="defaultValue"
+          type="text"
+          value={form.defaultValue}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Enter default value"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="type" className="block text-sm font-medium mb-1">
+          Input Type <span className="text-destructive">*</span>
+        </label>
+        <select
+          id="type"
+          name="type"
+          value={form.type}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          required
+        >
+          {INPUT_TYPES.map((typ) => (
+            <option key={typ} value={typ}>
+              {typ}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex space-x-4 items-center">
+        <label className="text-sm font-medium">Required/Disable</label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            name="required"
+            value="Required"
+            checked={form.required === "Required"}
+            onChange={() => handleRadioChange("Required")}
+            className="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span>Required</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            name="required"
+            value="Disabled"
+            checked={form.required === "Disabled"}
+            onChange={() => handleRadioChange("Disabled")}
+            className="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span>Disable</span>
+        </label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <label htmlFor="active" className="text-sm font-medium">
+          Status
+        </label>
+        <input
+          id="active"
+          name="active"
+          type="checkbox"
+          checked={form.active}
+          onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+          className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
+        />
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6">Custom Fields</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
-              Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={form.name}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter field name"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium mb-1">
-              Type
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={form.type}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {typeOptions.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Created At
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedFields.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No custom fields found.
-                  </td>
-                </tr>
-              )}
-              {paginatedFields.map((field, idx) => (
-                <tr
-                  key={field.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">{field.name}</td>
-                  <td className="px-4 py-3 text-sm text-foreground">{field.type}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        field.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {field.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">{field.createdAt}</td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(field.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit custom field ${field.name}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(field.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete custom field ${field.name}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={fields.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Custom Field
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label
-                  htmlFor="editName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editName"
-                  name="name"
-                  value={editForm.name}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter field name"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="editType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Type
-                </label>
-                <select
-                  id="editType"
-                  name="type"
-                  value={editForm.type}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {typeOptions.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Custom Fields"
+      description="Manage custom fields for your modules."
+      icon="fa fa-columns"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredFields.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Custom Field" : "Edit Custom Field"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+    />
   );
 }

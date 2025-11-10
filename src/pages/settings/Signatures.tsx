@@ -217,7 +217,7 @@ export default function Signatures() {
         <img
           src={value}
           alt="Signature"
-          className="w-12 h-12 rounded object-cover"
+          className="w-24 h-8 rounded object-cover"
         />
       ),
       align: "center",

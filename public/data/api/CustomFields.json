@@ -1,92 +1,43 @@
 {
   "status": {
-    "code": "S",
-    "description": ""
+    "code": "S"
   },
   "result": [
     {
       "id": 1,
-      "name": "Color",
-      "type": "Dropdown",
-      "status": "Active",
-      "createdAt": "2023-05-01"
+      "module": "Product",
+      "label": "Weight",
+      "type": "Number",
+      "defaultValue": "0",
+      "required": "Required",
+      "active": true
     },
     {
       "id": 2,
-      "name": "Size",
-      "type": "Text",
-      "status": "Active",
-      "createdAt": "2023-05-02"
+      "module": "Customer",
+      "label": "Type",
+      "type": "Select",
+      "defaultValue": "Regular",
+      "required": "Required",
+      "active": true
     },
     {
       "id": 3,
-      "name": "Material",
-      "type": "Textarea",
-      "status": "Inactive",
-      "createdAt": "2023-05-03"
+      "module": "Supplier",
+      "label": "Type",
+      "type": "Select",
+      "defaultValue": "",
+      "required": "Required",
+      "active": true
     },
     {
       "id": 4,
-      "name": "Brand",
-      "type": "Dropdown",
-      "status": "Active",
-      "createdAt": "2023-05-04"
-    },
-    {
-      "id": 5,
-      "name": "Weight",
-      "type": "Text",
-      "status": "Active",
-      "createdAt": "2023-05-05"
-    },
-    {
-      "id": 6,
-      "name": "Warranty",
-      "type": "Dropdown",
-      "status": "Inactive",
-      "createdAt": "2023-05-06"
-    },
-    {
-      "id": 7,
-      "name": "Model Number",
-      "type": "Text",
-      "status": "Active",
-      "createdAt": "2023-05-07"
-    },
-    {
-      "id": 8,
-      "name": "Manufacturer",
-      "type": "Textarea",
-      "status": "Active",
-      "createdAt": "2023-05-08"
-    },
-    {
-      "id": 9,
-      "name": "Expiration Date",
-      "type": "Date",
-      "status": "Inactive",
-      "createdAt": "2023-05-09"
-    },
-    {
-      "id": 10,
-      "name": "Country of Origin",
-      "type": "Dropdown",
-      "status": "Active",
-      "createdAt": "2023-05-10"
-    },
-    {
-      "id": 11,
-      "name": "Custom Field 1",
-      "type": "Text",
-      "status": "Active",
-      "createdAt": "2023-05-11"
-    },
-    {
-      "id": 12,
-      "name": "Custom Field 2",
-      "type": "Textarea",
-      "status": "Inactive",
-      "createdAt": "2023-05-12"
+      "module": "Biller",
+      "label": "Type",
+      "type": "Select",
+      "defaultValue": "Utility",
+      "required": "Required",
+      "active": true
     }
   ]
 }

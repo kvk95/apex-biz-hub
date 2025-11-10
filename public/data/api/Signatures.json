@@ -10,7 +10,8 @@
       "customerId": "CUST001",
       "signatureDate": "2025-10-01",
       "signatureStatus": "Active",
-      "remarks": "Verified signature"
+      "remarks": "Verified signature",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 2,
@@ -18,7 +19,8 @@
       "customerId": "CUST002",
       "signatureDate": "2025-10-05",
       "signatureStatus": "Active",
-      "remarks": "Signature approved"
+      "remarks": "Signature approved",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 3,
@@ -26,7 +28,8 @@
       "customerId": "CUST003",
       "signatureDate": "2025-10-10",
       "signatureStatus": "Inactive",
-      "remarks": "Signature expired"
+      "remarks": "Signature expired",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 4,
@@ -34,7 +37,8 @@
       "customerId": "CUST004",
       "signatureDate": "2025-10-15",
       "signatureStatus": "Active",
-      "remarks": "Digital verification complete"
+      "remarks": "Digital verification complete",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 5,
@@ -42,7 +46,8 @@
       "customerId": "CUST005",
       "signatureDate": "2025-10-20",
       "signatureStatus": "Pending",
-      "remarks": "Awaiting approval"
+      "remarks": "Awaiting approval",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 6,
@@ -50,7 +55,8 @@
       "customerId": "CUST006",
       "signatureDate": "2025-10-25",
       "signatureStatus": "Active",
-      "remarks": "Signature confirmed"
+      "remarks": "Signature confirmed",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 7,
@@ -58,7 +64,8 @@
       "customerId": "CUST007",
       "signatureDate": "2025-11-01",
       "signatureStatus": "Active",
-      "remarks": "Verified and active"
+      "remarks": "Verified and active",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 8,
@@ -66,7 +73,8 @@
       "customerId": "CUST008",
       "signatureDate": "2025-11-03",
       "signatureStatus": "Inactive",
-      "remarks": "Signature revoked"
+      "remarks": "Signature revoked",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 9,
@@ -74,7 +82,8 @@
       "customerId": "CUST009",
       "signatureDate": "2025-11-05",
       "signatureStatus": "Active",
-      "remarks": "Successfully verified"
+      "remarks": "Successfully verified",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 10,
@@ -82,7 +91,8 @@
       "customerId": "CUST010",
       "signatureDate": "2025-11-07",
       "signatureStatus": "Pending",
-      "remarks": "Under review"
+      "remarks": "Under review",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 11,
@@ -90,7 +100,8 @@
       "customerId": "CUST011",
       "signatureDate": "2025-11-08",
       "signatureStatus": "Active",
-      "remarks": "Signature validated"
+      "remarks": "Signature validated",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     },
     {
       "id": 12,
@@ -98,7 +109,8 @@
       "customerId": "CUST012",
       "signatureDate": "2025-11-09",
       "signatureStatus": "Active",
-      "remarks": "New signature added"
+      "remarks": "New signature added",
+      "signatureImage": "/assets/images/sign/sign_dummy.png"
     }
   ]
 }

@@ -5,64 +5,81 @@
   },
   "result": [
     {
-      "id": 1,
-      "invoiceTemplateName": "Invoice Template 1",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice1.png",
-      "description": "Clean and professional invoice template with blue accents."
+      "id": "inv-1",
+      "name": "General Invoice 1",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "invoice",
+      "isDefault": true
     },
     {
-      "id": 2,
-      "invoiceTemplateName": "Invoice Template 2",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice2.png",
-      "description": "Modern invoice template with green highlights and detailed layout."
+      "id": "inv-2",
+      "name": "General Invoice 2",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "invoice",
+      "isDefault": false
     },
     {
-      "id": 3,
-      "invoiceTemplateName": "Invoice Template 3",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice3.png",
-      "description": "Classic invoice template with red headers and simple design."
+      "id": "inv-3",
+      "name": "General Invoice 3",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "invoice",
+      "isDefault": false
     },
     {
-      "id": 4,
-      "invoiceTemplateName": "Invoice Template 4",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice4.png",
-      "description": "Minimalist invoice template with black and white theme."
+      "id": "inv-4",
+      "name": "General Invoice 4",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "invoice",
+      "isDefault": false
     },
     {
-      "id": 5,
-      "invoiceTemplateName": "Invoice Template 5",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice5.png",
-      "description": "Elegant invoice template with purple accents and clean sections."
+      "id": "inv-5",
+      "name": "General Invoice 5",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "invoice",
+      "isDefault": false
     },
     {
-      "id": 6,
-      "invoiceTemplateName": "Invoice Template 6",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice6.png",
-      "description": "Bold invoice template with orange highlights and structured layout."
+      "id": "pur-1",
+      "name": "Purchase Order 1",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "purchase",
+      "isDefault": true
     },
     {
-      "id": 7,
-      "invoiceTemplateName": "Invoice Template 7",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice7.png",
-      "description": "Creative invoice template with teal colors and modern typography."
+      "id": "pur-2",
+      "name": "Purchase Order 2",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "purchase",
+      "isDefault": false
     },
     {
-      "id": 8,
-      "invoiceTemplateName": "Invoice Template 8",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice8.png",
-      "description": "Simple invoice template with gray tones and classic structure."
+      "id": "pur-3",
+      "name": "Simple Purchase 1",
+      "imageUrl": "/assets/images/invoice/invoice-01.svg",
+      "type": "purchase",
+      "isDefault": false
     },
     {
-      "id": 9,
-      "invoiceTemplateName": "Invoice Template 9",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice9.png",
-      "description": "Professional invoice template with navy blue and clean lines."
+      "id": "rec-1",
+      "name": "Receipt Template 1",
+      "imageUrl": "/assets/images/invoice/invoice-02.svg",
+      "type": "receipt",
+      "isDefault": true
     },
     {
-      "id": 10,
-      "invoiceTemplateName": "Invoice Template 10",
-      "invoiceTemplateImage": "https://dreamspos.dreamstechnologies.com/html/template/assets/images/invoice/invoice10.png",
-      "description": "Stylish invoice template with gold accents and modern feel."
+      "id": "rec-2",
+      "name": "Receipt Template 2",
+      "imageUrl": "/assets/images/invoice/invoice-02.svg",
+      "type": "receipt",
+      "isDefault": false
+    },
+    {
+      "id": "rec-3",
+      "name": "Cash Receipt 1",
+      "imageUrl": "/assets/images/invoice/invoice-02.svg", 
+      "type": "receipt",
+      "isDefault": false
     }
   ]
 }
