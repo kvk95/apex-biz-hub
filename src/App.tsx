@@ -85,8 +85,7 @@ import OnlineOrders from "./pages/sales/OnlineOrders";
 import Pos from "./pages/sales/Pos";
 import PosOrders from "./pages/sales/PosOrders";
 import Quotation from "./pages/sales/Quotation";
-import SalesReturn from "./pages/sales/SalesReturn";
-import Appearance from "./pages/settings/Appearance";
+import SalesReturn from "./pages/sales/SalesReturn"; 
 import BanIpAddress from "./pages/settings/BanIpAddress";
 import BankSettingsGrid from "./pages/settings/BankSettingsGrid";
 import CompanySettings from "./pages/settings/CompanySettings";
@@ -106,7 +105,7 @@ import OtpSettings from "./pages/settings/OtpSettings";
 import PaymentGatewaySettings from "./pages/settings/PaymentGatewaySettings";
 import PosSettings from "./pages/settings/PosSettings";
 import Preference from "./pages/settings/Preference";
-import Prefixes from "./pages/settings/Prefixes";
+import PrefixesSettings from "./pages/settings/PrefixesSettings";
 import PrinterSettings from "./pages/settings/PrinterSettings";
 import SecuritySettings from "./pages/settings/SecuritySettings";
 import Signatures from "./pages/settings/Signatures";
@@ -399,16 +398,12 @@ const App = () => {
                 />
                 <Route
                   path="settings/website/prefixes"
-                  element={<Prefixes />}
+                  element={<PrefixesSettings />}
                 />
                 <Route
                   path="settings/website/preference"
                   element={<Preference />}
-                />
-                <Route
-                  path="settings/website/appearance"
-                  element={<Appearance />}
-                />
+                /> 
                 <Route
                   path="settings/website/social-auth"
                   element={<SocialAuthentication />}

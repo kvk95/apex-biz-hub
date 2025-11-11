@@ -252,8 +252,7 @@
           { "title": "Company Settings", "url": "/settings/website/company", "icon": "fa fa-building" },
           { "title": "Localization", "url": "/settings/website/localization", "icon": "fa fa-globe" },
           { "title": "Prefixes", "url": "/settings/website/prefixes", "icon": "fa fa-hashtag" },
-          { "title": "Preference", "url": "/settings/website/preference", "icon": "fa fa-sliders-h" },
-          { "title": "Appearance", "url": "/settings/website/appearance", "icon": "fa fa-paint-brush" },
+          { "title": "Preference", "url": "/settings/website/preference", "icon": "fa fa-sliders-h" }, 
           { "title": "Social Authentication", "url": "/settings/website/social-auth", "icon": "fa fa-sign-in-alt" },
           { "title": "Language", "url": "/settings/website/language", "icon": "fa fa-language" }
         ]

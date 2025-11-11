@@ -1,612 +1,630 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+
+interface LocalizationSettingsForm {
+  // Existing
+  language: string;
+  showLanguageSwitcher: boolean;
+  timezone: string;
+  dateFormat: string;
+  timeFormat: string;
+  financialYear: string;
+  startingMonth: string;
+  currency: string;
+
+  // New from screenshot
+  currencySymbol: string;
+  currencyPosition: string;
+  decimalSeparator: string;
+  thousandSeparator: string;
+  countryRestriction: string;
+  allowedFileTypes: string[];
+  maxFileSize: number;
+}
+
+const timezones = [
+  "UTC-12:00",
+  "UTC-11:00",
+  "UTC-10:00",
+  "UTC-09:00",
+  "UTC-08:00",
+  "UTC-07:00",
+  "UTC-06:00",
+  "UTC-05:30",
+  "UTC-05:00",
+  "UTC-04:00",
+  "UTC-03:00",
+  "UTC-02:00",
+  "UTC-01:00",
+  "UTC+00:00",
+  "UTC+01:00",
+  "UTC+02:00",
+  "UTC+03:00",
+  "UTC+03:30",
+  "UTC+04:00",
+  "UTC+04:30",
+  "UTC+05:00",
+  "UTC+05:30",
+  "UTC+05:45",
+  "UTC+06:00",
+  "UTC+06:30",
+  "UTC+07:00",
+  "UTC+08:00",
+  "UTC+09:00",
+  "UTC+09:30",
+  "UTC+10:00",
+  "UTC+11:00",
+  "UTC+12:00",
+];
+
+const dateFormats = [
+  "01 Jan 2025",
+  "Jan 01, 2025",
+  "2025-01-01",
+  "01/01/2025",
+  "01-01-2025",
+];
+
+const timeFormats = ["12 Hours", "24 Hours"];
+const years = ["2024", "2025", "2026", "2027", "2028"];
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const currencies = ["USA", "India", "Euro", "UK", "Japan", "Australia"];
+const currencySymbols = ["$", "₹", "€", "£", "¥", "A$"];
+const currencyPositions = ["$100", "100$"];
+const separators = [".", ",", " ", "·"];
+const countryRestrictions = ["Allow All Countries", "Restrict to Selected"];
 
 export default function LocalizationSettings() {
-  const [languageForm, setLanguageForm] = useState({
-    language: "",
-    code: "",
-    currency: "",
-    timezone: "",
-    dateFormat: "",
-    timeFormat: "",
+  const [form, setForm] = useState<LocalizationSettingsForm>({
+    language: "English",
+    showLanguageSwitcher: true,
+    timezone: "UTC+05:30",
+    dateFormat: "01 Jan 2025",
+    timeFormat: "12 Hours",
+    financialYear: "2025",
+    startingMonth: "January",
+    currency: "USA",
+    currencySymbol: "$",
+    currencyPosition: "$100",
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    countryRestriction: "Allow All Countries",
+    allowedFileTypes: ["JPG", "GIF", "PNG"],
+    maxFileSize: 5000,
   });
-
-  const [languages, setLanguages] = useState([]);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const [data, setData] = useState<any>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    language: "",
-    code: "",
-    currency: "",
-    timezone: "",
-    dateFormat: "",
-    timeFormat: "",
-  });
-
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<any>("LocalizationSettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setLanguages(response.result.languages || []);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const response = await apiService.get<{
+          result: LocalizationSettingsForm;
+        }>("LocalizationSettings");
+        if (response.status.code === "S") {
+          setForm(response.result);
+        }
+      } catch (err) {
+        setError("Failed to load settings.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadData();
   }, []);
 
-  // Filtered languages
-  const filteredLanguages = useMemo(() => {
-    if (!searchTerm.trim()) return languages;
-    return languages.filter((l) =>
-      l.language.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.currency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.timezone.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [languages, searchTerm]);
-
-  // Paginated languages
-  const paginatedLanguages = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredLanguages.slice(start, start + itemsPerPage);
-  }, [filteredLanguages, currentPage, itemsPerPage]);
-
-  // Handlers for Add Section form inputs
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
-    setLanguageForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const lang = languages.find((l) => l.id === id);
-    if (lang) {
-      setEditForm({
-        language: lang.language,
-        code: lang.code,
-        currency: lang.currency,
-        timezone: lang.timezone,
-        dateFormat: lang.dateFormat,
-        timeFormat: lang.timeFormat,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Add Section (Add new language)
-  const handleSave = () => {
-    const { language, code, currency, timezone, dateFormat, timeFormat } = languageForm;
-    if (!language || !code || !currency || !timezone || !dateFormat || !timeFormat) {
-      alert("Please fill all fields.");
-      return;
-    }
-    if (editId !== null) {
-      // Update
-      setLanguages((prev) =>
-        prev.map((l) =>
-          l.id === editId
-            ? { ...l, language, code, currency, timezone, dateFormat, timeFormat }
-            : l
-        )
-      );
-      setEditId(null);
+    if (name === "maxFileSize") {
+      setForm((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else {
-      // Add new
-      const newId = languages.length ? Math.max(...languages.map((l) => l.id)) + 1 : 1;
-      setLanguages((prev) => [
-        ...prev,
-        { id: newId, language, code, currency, timezone, dateFormat, timeFormat },
-      ]);
-    }
-    setLanguageForm({
-      language: "",
-      code: "",
-      currency: "",
-      timezone: "",
-      dateFormat: "",
-      timeFormat: "",
-    });
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    const { language, code, currency, timezone, dateFormat, timeFormat } = editForm;
-    if (!language || !code || !currency || !timezone || !dateFormat || !timeFormat) {
-      alert("Please fill all fields.");
-      return;
-    }
-    if (editId !== null) {
-      setLanguages((prev) =>
-        prev.map((l) =>
-          l.id === editId
-            ? { ...l, language, code, currency, timezone, dateFormat, timeFormat }
-            : l
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+  const handleToggle = () => {
+    setForm((prev) => ({
+      ...prev,
+      showLanguageSwitcher: !prev.showLanguageSwitcher,
+    }));
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this language?")) {
-      setLanguages((prev) => prev.filter((l) => l.id !== id));
-      if (editId === id) {
-        setEditId(null);
-        setLanguageForm({
-          language: "",
-          code: "",
-          currency: "",
-          timezone: "",
-          dateFormat: "",
-          timeFormat: "",
-        });
-      }
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= languages.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
+  const handleFileTypeRemove = (type: string) => {
+    setForm((prev) => ({
+      ...prev,
+      allowedFileTypes: prev.allowedFileTypes.filter((t) => t !== type),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await apiService.post("LocalizationSettings", form);
+      alert("Localization settings saved successfully!");
+    } catch (err) {
+      setError("Failed to save settings.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  // Clear button handler (replaces Refresh)
-  const handleClear = () => {
-    setLanguageForm({
-      language: "",
-      code: "",
-      currency: "",
-      timezone: "",
-      dateFormat: "",
-      timeFormat: "",
-    });
-    setEditId(null);
-    setCurrentPage(1);
-  };
-
-  const handleReport = () => {
-    // For demonstration, just alert JSON data
-    alert(JSON.stringify(languages, null, 2));
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">Localization Settings</h1>
+    <PageBase1
+      title="Localization Settings"
+      description="Configure language, timezone, currency, and file settings"
+      icon="fa fa-globe"
+    >
+      <div className="w-full mx-auto mt-2">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Language</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label htmlFor="language" className="block text-sm font-medium mb-1">
-              Language
-            </label>
-            <input
-              type="text"
-              id="language"
-              name="language"
-              value={languageForm.language}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="e.g. English"
-            />
-          </div>
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium mb-1">
-              Language Code
-            </label>
-            <input
-              type="text"
-              id="code"
-              name="code"
-              value={languageForm.code}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="e.g. en"
-            />
-          </div>
-          <div>
-            <label htmlFor="currency" className="block text-sm font-medium mb-1">
-              Currency
-            </label>
-            <select
-              id="currency"
-              name="currency"
-              value={languageForm.currency}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Select currency</option>
-              {(data.currencies || []).map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name} ({c.code})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="timezone" className="block text-sm font-medium mb-1">
-              Timezone
-            </label>
-            <select
-              id="timezone"
-              name="timezone"
-              value={languageForm.timezone}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Select timezone</option>
-              {(data.timezones || []).map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="dateFormat" className="block text-sm font-medium mb-1">
-              Date Format
-            </label>
-            <select
-              id="dateFormat"
-              name="dateFormat"
-              value={languageForm.dateFormat}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Select date format</option>
-              {(data.dateFormats || []).map((df) => (
-                <option key={df} value={df}>
-                  {df}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="timeFormat" className="block text-sm font-medium mb-1">
-              Time Format
-            </label>
-            <select
-              id="timeFormat"
-              name="timeFormat"
-              value={languageForm.timeFormat}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Select time format</option>
-              {(data.timeFormats || []).map((tf) => (
-                <option key={tf} value={tf}>
-                  {tf === "12-hour" ? "12-hour (AM/PM)" : "24-hour"}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Basic Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="flex items-center text-lg font-semibold text-gray-800 mb-6">
+              <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs mr-2">
+                i
+              </span>
+              Basic Information
+            </h3>
 
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="mb-4 flex justify-between items-center px-6">
-          <input
-            type="text"
-            placeholder="Search languages..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="border border-input rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Language
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Currency
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Timezone
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Date Format
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Time Format
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedLanguages.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
+            <div className="space-y-6">
+              {/* Language */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Language
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select Language of the Website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="language"
+                    value={form.language}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    No languages found.
-                  </td>
-                </tr>
-              )}
-              {paginatedLanguages.map((lang, idx) => (
-                <tr
-                  key={lang.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.language}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.code}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.currency}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.timezone}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.dateFormat}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {lang.timeFormat}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(lang.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit ${lang.language}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(lang.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete ${lang.language}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <option>English</option>
+                    <option>Hindi</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                  </select>
+                </div>
+              </div>
 
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredLanguages.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
+              {/* Language Switcher */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Language Switcher
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    To display in all the pages
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.showLanguageSwitcher}
+                      onChange={handleToggle}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                </div>
+              </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Language
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label
-                  htmlFor="editLanguage"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Language
-                </label>
-                <input
-                  type="text"
-                  id="editLanguage"
-                  name="language"
-                  value={editForm.language}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="e.g. English"
-                />
+              {/* Timezone */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Timezone
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select Time zone in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="timezone"
+                    value={form.timezone}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {timezones.map((tz) => (
+                      <option key={tz} value={tz}>
+                        {tz}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label
-                  htmlFor="editCode"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Language Code
-                </label>
-                <input
-                  type="text"
-                  id="editCode"
-                  name="code"
-                  value={editForm.code}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="e.g. en"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editCurrency"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Currency
-                </label>
-                <select
-                  id="editCurrency"
-                  name="currency"
-                  value={editForm.currency}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Select currency</option>
-                  {(data.currencies || []).map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name} ({c.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="editTimezone"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Timezone
-                </label>
-                <select
-                  id="editTimezone"
-                  name="timezone"
-                  value={editForm.timezone}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Select timezone</option>
-                  {(data.timezones || []).map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="editDateFormat"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Date Format
-                </label>
-                <select
-                  id="editDateFormat"
-                  name="dateFormat"
-                  value={editForm.dateFormat}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Select date format</option>
-                  {(data.dateFormats || []).map((df) => (
-                    <option key={df} value={df}>
-                      {df}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="editTimeFormat"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Time Format
-                </label>
-                <select
-                  id="editTimeFormat"
-                  name="timeFormat"
-                  value={editForm.timeFormat}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Select time format</option>
-                  {(data.timeFormats || []).map((tf) => (
-                    <option key={tf} value={tf}>
-                      {tf === "12-hour" ? "12-hour (AM/PM)" : "24-hour"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
+              {/* Date Format */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date format
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select date format to display in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="dateFormat"
+                    value={form.dateFormat}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {dateFormats.map((fmt) => (
+                      <option key={fmt} value={fmt}>
+                        {fmt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Time Format */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Time Format
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select time format to display in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="timeFormat"
+                    value={form.timeFormat}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {timeFormats.map((fmt) => (
+                      <option key={fmt} value={fmt}>
+                        {fmt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Financial Year */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Financial Year
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select year for finance
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="financialYear"
+                    value={form.financialYear}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Starting Month */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Starting Month
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select starting month to display
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="startingMonth"
+                    value={form.startingMonth}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {months.map((month) => (
+                      <option key={month} value={month}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+
+          {/* Currency Settings */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="flex items-center text-lg font-semibold text-gray-800 mb-6">
+              <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs mr-2">
+                i
+              </span>
+              Currency Settings
+            </h3>
+
+            <div className="space-y-6">
+              {/* Currency */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Currency
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select Time zone in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="currency"
+                    value={form.currency}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {currencies.map((curr) => (
+                      <option key={curr} value={curr}>
+                        {curr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Currency Symbol */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Currency Symbol
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select date format to display in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="currencySymbol"
+                    value={form.currencySymbol}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {currencySymbols.map((sym) => (
+                      <option key={sym} value={sym}>
+                        {sym}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Currency Position */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Currency Position
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select time format to display in website
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="currencyPosition"
+                    value={form.currencyPosition}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {currencyPositions.map((pos) => (
+                      <option key={pos} value={pos}>
+                        {pos}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Decimal Separator */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Decimal Separator
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select year for finance
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="decimalSeparator"
+                    value={form.decimalSeparator}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {separators.map((sep) => (
+                      <option key={sep} value={sep}>
+                        {sep}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Thousand Separator */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Thousand Separator
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    Select starting month to display
+                  </p>
+                </div>
+                <div>
+                  <select
+                    name="thousandSeparator"
+                    value={form.thousandSeparator}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {separators.map((sep) => (
+                      <option key={sep} value={sep}>
+                        {sep}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Country Settings */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="flex items-center text-lg font-semibold text-gray-800 mb-6">
+              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">
+                i
+              </span>
+              Country Settings
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Countries Restriction
+                </label>
+                <p className="text-xs text-gray-500">
+                  Select countries restriction
+                </p>
+              </div>
+              <div>
+                <select
+                  name="countryRestriction"
+                  value={form.countryRestriction}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {countryRestrictions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* File Settings */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="flex items-center text-lg font-semibold text-gray-800 mb-6">
+              <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs mr-2">
+                i
+              </span>
+              File Settings
+            </h3>
+
+            <div className="space-y-6">
+              {/* Allowed Files */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Allowed Files
+                  </label>
+                  <p className="text-xs text-gray-500">Select files</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {form.allowedFileTypes.map((type) => (
+                    <span
+                      key={type}
+                      className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+                    >
+                      {type}
+                      <button
+                        type="button"
+                        onClick={() => handleFileTypeRemove(type)}
+                        className="ml-2 text-gray-500 hover:text-red-600"
+                      >
+                        <i className="fas fa-times text-xs"></i>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Max File Size */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max File Size
+                  </label>
+                  <p className="text-xs text-gray-500">File size</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    name="maxFileSize"
+                    value={form.maxFileSize}
+                    onChange={handleChange}
+                    className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    min="1"
+                  />
+                  <span className="text-sm text-gray-600">MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </PageBase1>
   );
 }

@@ -1,0 +1,23 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  },
+  "result": {
+    "productSKU": "SKU-",
+    "supplier": "SUP-",
+    "purchase": "PU-",
+    "purchaseReturn": "PR-",
+    "sales": "SA-",
+    "salesReturn": "SR-",
+    "customer": "CT-",
+    "expense": "EX-",
+    "stockTransfer": "ST-",
+    "stockAdjustment": "SA-",
+    "salesOrder": "SO-",
+    "posInvoice": "PINV-",
+    "estimation": "EST-",
+    "transaction": "TRN-",
+    "employee": "EMP-"
+  }
+}
