@@ -9,6 +9,7 @@
       "brandName": "Apple",
       "brandCode": "APL",
       "brandDescription": "Leading tech company",
+      "createdDate": "2025-11-10T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -16,6 +17,7 @@
       "brandName": "Samsung",
       "brandCode": "SMS",
       "brandDescription": "Global electronics giant",
+      "createdDate": "2025-11-08T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -23,6 +25,7 @@
       "brandName": "Sony",
       "brandCode": "SNY",
       "brandDescription": "Entertainment and electronics",
+      "createdDate": "2025-11-01T09:00:00Z",
       "brandStatus": "Inactive"
     },
     {
@@ -30,6 +33,7 @@
       "brandName": "LG",
       "brandCode": "LG",
       "brandDescription": "Home appliances and electronics",
+      "createdDate": "2025-11-03T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -37,6 +41,7 @@
       "brandName": "Microsoft",
       "brandCode": "MSF",
       "brandDescription": "Software and hardware",
+      "createdDate": "2025-10-15T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -44,6 +49,7 @@
       "brandName": "Dell",
       "brandCode": "DLL",
       "brandDescription": "Computers and accessories",
+      "createdDate": "2025-10-01T09:00:00Z",
       "brandStatus": "Inactive"
     },
     {
@@ -51,6 +57,7 @@
       "brandName": "HP",
       "brandCode": "HP",
       "brandDescription": "Computers and printers",
+      "createdDate": "2025-01-10T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -58,6 +65,7 @@
       "brandName": "Lenovo",
       "brandCode": "LNV",
       "brandDescription": "PC and mobile devices",
+      "createdDate": "2025-02-15T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -65,6 +73,7 @@
       "brandName": "Asus",
       "brandCode": "ASU",
       "brandDescription": "Computer hardware and electronics",
+      "createdDate": "2025-03-01T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -72,6 +81,7 @@
       "brandName": "Acer",
       "brandCode": "ACR",
       "brandDescription": "Computers and displays",
+      "createdDate": "2025-04-01T09:00:00Z",
       "brandStatus": "Inactive"
     },
     {
@@ -79,6 +89,7 @@
       "brandName": "Canon",
       "brandCode": "CNN",
       "brandDescription": "Imaging and optical products",
+      "createdDate": "2024-12-01T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -86,6 +97,7 @@
       "brandName": "Nikon",
       "brandCode": "NKN",
       "brandDescription": "Cameras and imaging products",
+      "createdDate": "2024-11-01T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -93,6 +105,7 @@
       "brandName": "Panasonic",
       "brandCode": "PNC",
       "brandDescription": "Electronics and appliances",
+      "createdDate": "2024-10-01T09:00:00Z",
       "brandStatus": "Inactive"
     },
     {
@@ -100,6 +113,7 @@
       "brandName": "Philips",
       "brandCode": "PLP",
       "brandDescription": "Health and consumer lifestyle",
+      "createdDate": "2024-09-01T09:00:00Z",
       "brandStatus": "Active"
     },
     {
@@ -107,6 +121,7 @@
       "brandName": "Bose",
       "brandCode": "BSE",
       "brandDescription": "Audio equipment",
+      "createdDate": "2024-08-01T09:00:00Z",
       "brandStatus": "Active"
     }
   ]

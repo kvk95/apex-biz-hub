@@ -1,5 +1,5 @@
 
-export const PATH_HOMESCREEN ="/dashboard/admindb" as const;
+export const PATH_HOMESCREEN = "/dashboard/admindb" as const;
 
 export const STATUSES = [
   "Active",
@@ -16,6 +16,11 @@ export const EXPIRED_STATUSES = [
   "Renewed",
   "Cancelled",
   "Grace Period",
+] as const;
+
+export const BRAND_STATUSES = [
+  "Active",
+  "Inactive"
 ] as const;
 
 export const STORE_TYPES = [
@@ -170,8 +175,8 @@ export const PAYMENT_TYPES = [
   "Cash",
   "Card",
   "Cheque",
-  "Bank Transfer", 
-  "UPI", 
+  "Bank Transfer",
+  "UPI",
 ] as const;
 
 
@@ -206,6 +211,12 @@ export const SORT_OPTIONS = [
   "Ascending",
   "Descending",
   "All Time",
+] as const;
+
+export const SORT_LAT_ASC_DSC = [
+  "Latest",
+  "Ascending",
+  "Descending",
 ] as const;
 
 export const ORDER_TYPES = ["ONLINE", "POS"] as const;
