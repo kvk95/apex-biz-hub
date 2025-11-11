@@ -42,6 +42,7 @@ interface PageBase1Props {
   onFormSubmit: (e: React.FormEvent) => void;
   customFilters?: () => JSX.Element;
   customHeaderFields?: () => JSX.Element;
+  customHeaderRow?: () => JSX.Element;
   children?: React.ReactNode;
 }
 
@@ -184,6 +185,7 @@ export function PageBase1({
   onFormSubmit,
   customFilters,
   customHeaderFields,
+  customHeaderRow,
   children,
 }: PageBase1Props) {
   const { theme } = useTheme();
@@ -264,6 +266,9 @@ export function PageBase1({
             <div className="flex-none flex gap-2">{customHeaderFields()}</div>
           ) : null}
         </div>
+        {customHeaderRow ? (
+          <div className="w-full">{customHeaderRow()}</div>
+        ) : null}
         {tableColumns && (
           <section className="bg-card rounded shadow pt-2 pb-6">
             {customFilters ? (
@@ -423,7 +428,7 @@ export function PageBase1({
             </div>
           </div>
         )}
-      </div> 
+      </div>
     </>
   );
 }

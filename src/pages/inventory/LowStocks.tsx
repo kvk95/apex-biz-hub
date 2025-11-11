@@ -22,7 +22,7 @@ export default function LowStocks() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [stockFilter, setStockFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"edit" | null>(null);
   const [form, setForm] = useState<LowStockRecord>({
     id: 0,
@@ -39,6 +39,7 @@ export default function LowStocks() {
     { id: "out", label: "Out of Stock" },
   ];
   const [tabSelected, setTabSelected] = useState(tabItems[0].id);
+  const [notified, setNotified] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -161,8 +162,8 @@ export default function LowStocks() {
     alert("Report generated for low stock items.");
   };
 
-  const handleNotify = () => {
-    alert("Notification sent");
+  const handleNotifyToggle = () => {
+    setNotified((prev) => !prev);
   };
 
   const handleSendEmail = () => {
@@ -204,9 +205,20 @@ export default function LowStocks() {
     </>
   );
 
-  const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start gap-2">
+  const customHeaderFields = () => (
+    <div className="">
+      <button
+        onClick={handleSendEmail}
+        className="bg-blue-950 text-white text-sm px-2 py-2 rounded font-medium flex items-center gap-2 hover:bg-blue-800"
+      >
+        <i className="fa fa-envelope"></i> Send Email
+      </button>
+    </div>
+  );
+
+  const customHeaderRow = () => (
+    <div className="grid grid-cols-2 w-full justify-stretch px-3 mb-2">
+      <div className="flex justify-start  gap-2">
         <ul className="flex w-64 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-gray-700 dark:border-gray-600 dark:text-white">
           {tabItems.map((item, idx) => (
             <li
@@ -220,7 +232,7 @@ export default function LowStocks() {
             >
               <label
                 htmlFor={`tab-radio-${item.id}`}
-                className={`flex items-center justify-center py-1.5 cursor-pointer
+                className={`flex items-center justify-center py-2 cursor-pointer
                transition-colors
                ${
                  tabSelected === item.id
@@ -242,6 +254,27 @@ export default function LowStocks() {
             </li>
           ))}
         </ul>
+      </div>
+      <div className="flex justify-end gap-2">
+        <label className="inline-flex items-center  cursor-pointer">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            checked={notified}
+            onChange={() => setNotified((prev) => !prev)}
+          />
+          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600 dark:peer-checked:bg-green-600"></div>
+          <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+            Notify
+          </span>
+        </label>
+      </div>
+    </div>
+  );
+
+  const customFilters = () => (
+    <div className="grid grid-cols-2 w-full justify-stretch px-3">
+      <div className="flex justify-start gap-2">
         <SearchInput
           className=""
           value={searchTerm}
@@ -405,8 +438,8 @@ export default function LowStocks() {
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchTerm}
-      onSearchChange={(e) => {
-        setSearchTerm(e.target.value);
+      onSearchChange={(text) => {
+        setSearchTerm(text);
         setCurrentPage(1);
       }}
       currentPage={currentPage}
@@ -423,23 +456,14 @@ export default function LowStocks() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      customHeaderFields={customHeaderFields}
+      customHeaderRow={customHeaderRow}
     >
-      <div className="flex justify-end mb-4 gap-2">
-        <button
-          onClick={handleNotify}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-          type="button"
-        >
-          Notify
-        </button>
-        <button
-          onClick={handleSendEmail}
-          className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-          type="button"
-        >
-          Send Email
-        </button>
-      </div>
+      {loading && (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-500"></div>
+        </div>
+      )}
     </PageBase1>
   );
 }
