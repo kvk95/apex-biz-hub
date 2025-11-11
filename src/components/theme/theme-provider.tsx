@@ -14,6 +14,7 @@ type ThemeConfig = {
   sidebarColor: string;
   primaryColor: string;
   mode: string;
+  fontFamily: string;
 };
 
 type ThemeContextType = {
@@ -26,6 +27,7 @@ const defaultTheme: ThemeConfig = {
   sidebarColor: "0 0% 100%", // white
   primaryColor: "32.4 99% 63%", // Orange
   mode: "light",
+  fontFamily: "Nunito",
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -41,6 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--sidebar-background", theme.sidebarColor);
     root.style.setProperty("--primary", theme.primaryColor);
     root.style.setProperty("--ring", theme.primaryColor);
+    root.style.setProperty("--font-family", theme.fontFamily);
 
     // Auto-adjust foregrounds for contrast
     const getLuminance = (hsl: string) => parseFloat(hsl.split(" ")[2]);

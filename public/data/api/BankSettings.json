@@ -1,0 +1,30 @@
+{
+  "status": {
+    "code": "S",
+    "description": "Data extracted successfully."
+  },
+  "result": [
+    {
+      "id": 1,
+      "bankName": "HDFC",
+      "accountNumber": "1234567891832",
+      "accountName": "Mathew",
+      "branch": "Bringham",
+      "ifsc": "HDFC0001245",
+      "status": true,
+      "isDefault": true,
+      "createdOn": "2025-11-11"
+    },
+    {
+      "id": 2,
+      "bankName": "SBI",
+      "accountNumber": "9876543210987",
+      "accountName": "John Doe",
+      "branch": "MG Road",
+      "ifsc": "SBIN0001234",
+      "status": true,
+      "isDefault": false,
+      "createdOn": "2025-10-15"
+    }
+  ]
+}

@@ -44,6 +44,13 @@ const colors = {
   ],
 };
 
+const fontOptions = [
+  { name: "Nunito", value: "Nunito, sans-serif" },
+  { name: "Oswald", value: "Oswald, sans-serif" },
+  { name: "Poppins", value: "Poppins, sans-serif" },
+  { name: "Ubuntu", value: "Ubuntu, sans-serif" },
+];
+
 // Function to darken a given HSL color by reducing its lightness
 const darkenHSL = (hsl: string, amount: number) => {
   const [h, s, l] = hsl.split(" ").map((value) => parseFloat(value));
@@ -174,6 +181,28 @@ export function ThemeCustomizer() {
                 />
               ))}
             </div>
+          </div>
+
+          {/* Font Family Dropdown */}
+          <div className="space-y-3 border border-muted rounded-md p-2">
+            <Label>Font</Label>
+            <select
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              value={theme.fontFamily || fontOptions[0].value}
+              onChange={(e) =>
+                setTheme({ ...theme, fontFamily: e.target.value })
+              }
+            >
+              {fontOptions.map((f) => (
+                <option
+                  key={f.name}
+                  value={f.value}
+                  style={{ fontFamily: f.value }}
+                >
+                  {f.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </SheetContent>

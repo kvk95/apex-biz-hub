@@ -2,6 +2,7 @@
 /****** Utils ******/
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
 
@@ -85,6 +86,7 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1);
 
+    --font-family: "Nunito, sans-serif";
   }
 
   .dark {
@@ -149,6 +151,7 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-family: "Nunito", sans-serif;
+    font-family: var(--font-family);
     font-size: 14px !important;
     color: #646B72;
     line-height: 1.5;
@@ -164,6 +167,14 @@ All colors MUST be HSL.
 
 .selected_color_text {
   color: hsl(var(--primary));
+}
+
+.font-oswald {
+  font-family: "Oswald", sans-serif;
+} 
+
+.font-ubuntu {
+  font-family: "Ubuntu", sans-serif;
 }
 
 .font-poppins {
@@ -202,9 +213,8 @@ All colors MUST be HSL.
   background-color: #ffffff;
 }
 
-
 ::selection {
-  background: #FE9F43;
+  background: hsl(var(--primary));
   color: #ffffff;
   text-shadow: none;
 }
@@ -279,7 +289,7 @@ ul {
 }
 
 .glass-holder {
-  background: url('/assets/images/login2.jpg') center/cover no-repeat;
+  background: url('/assets/images/login/bg1.jpg') center/cover no-repeat;
   height: 100vh;
   justify-content: center;
   align-items: center;
@@ -315,14 +325,11 @@ ul {
   color: #646B72;
 }
 
-
 table.min-w-full thead th {
   background-color: #F9FAFB;
   color: #1B2850;
   text-align: center;
 }
-
-
 
 ::-webkit-scrollbar {
   width: 5px;

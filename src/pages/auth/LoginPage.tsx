@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // Icons replaced with Font Awesome
-import { useState ,useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Dummy login function for demonstration; replace with your auth logic
 async function fakeLogin({ email, password }) {
@@ -18,28 +18,31 @@ async function fakeLogin({ email, password }) {
   });
 }
 
-
 // Array of login images
 const loginImages = ["ph1.png"];
-const loginImageUrl1 = `/assets/images/${loginImages[Math.floor(Math.random() * loginImages.length)]}`;
-
+const loginImageUrl1 = `/assets/images/login/${
+  loginImages[Math.floor(Math.random() * loginImages.length)]
+}`;
 
 function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate();
 
-  // Public folder image path 
+  // Public folder image path
   const loginImageAlt = "Login Illustration";
-  const [backgroundImage, setBackgroundImage] = useState('');
-
+  const [backgroundImage, setBackgroundImage] = useState("");
 
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("password");
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-   useEffect(() => {
+  useEffect(() => {
     // Dynamically change the background image on page load
-    const images = ['/assets/images/loginbg1.jpg', '/assets/images/loginbg2.jpg', '/assets/images/loginbg3.jpg'];
+    const images = [
+      "/assets/images/login/bg1.jpg",
+      "/assets/images/login/bg2.jpg",
+      "/assets/images/login/bg3.jpg",
+    ];
     const randomImage = images[Math.floor(Math.random() * images.length)];
     setBackgroundImage(randomImage);
   }, []);
@@ -61,26 +64,33 @@ function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-3 glass-holder"  style={{
+    <div
+      className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 glass-holder font-ubuntu "
+      style={{
         background: `url(${backgroundImage}) center/cover no-repeat`,
-      }}>
-      <div className="hidden bg-muted lg:block relative"> 
-      </div>
-      <div className="flex items-center justify-center py-12 " style={{paddingTop:"3px"}}>
+      }}
+    >
+      <div className="hidden bg-muted lg:block relative"></div> 
+      <div
+        className="flex items-center justify-center py-12 "
+        style={{ paddingTop: "3px" }}
+      >
         <div className="mx-auto grid w-[350px] gap-6 glass-card">
           <div className="grid gap-2 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               {/* Replace Icons.logo with your own logo or text here if needed */}
               <h1 className="text-3xl font-bold font-headline">NyaBuy</h1>
             </div>
-            <p className="text-balance ">
+            <p className="text-balance text-gray-500">
               Enter your email below to login to your account
             </p>
           </div>
           {/* Pass down onLoginSuccess prop to LoginForm */}
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-500 ">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -93,8 +103,13 @@ function LoginPage({ onLoginSuccess }) {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <a href="/auth/forgot-password" className="ml-auto inline-block text-sm underline">
+                <Label htmlFor="password" className="text-gray-500 ">
+                  Password
+                </Label>
+                <a
+                  href="/auth/forgot-password"
+                  className="ml-auto inline-block text-sm underline"
+                >
                   Forgot your password?
                 </a>
               </div>
@@ -109,7 +124,12 @@ function LoginPage({ onLoginSuccess }) {
               />
             </div>
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending && <i className="fa fa-spinner fa-spin mr-2 h-4 w-4" aria-hidden="true" />}
+              {pending && (
+                <i
+                  className="fa fa-spinner fa-spin mr-2 h-4 w-4"
+                  aria-hidden="true"
+                />
+              )}
               Sign In
             </Button>
             {errorMessage && (
@@ -123,8 +143,6 @@ function LoginPage({ onLoginSuccess }) {
             )}
           </form>
         </div>
-      </div>
-      <div className="hidden bg-muted lg:block relative"> 
       </div>
     </div>
   );

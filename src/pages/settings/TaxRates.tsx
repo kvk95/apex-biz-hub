@@ -1,458 +1,292 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
-const TAX_TYPES = ["Percentage", "Fixed"];
+interface TaxRate {
+  id: number;
+  taxName: string;
+  taxRate: number; // stored as number (e.g., 10 for 10%)
+  createdOn: string; // YYYY-MM-DD
+}
 
 export default function TaxRates() {
-  // Pagination state
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    taxName: "",
+    taxRate: "",
+  });
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Form state
-  const [form, setForm] = useState({
-    taxName: "",
-    taxRate: "",
-    taxType: "Percentage",
-    taxDescription: "",
-  });
+  // Filter & Pagination
+  const filteredTaxRates = useMemo(() => {
+    return !search.trim()
+      ? taxRates
+      : taxRates.filter((t) =>
+          t.taxName.toLowerCase().includes(search.toLowerCase())
+        );
+  }, [search, taxRates]);
 
-  // Data state
-  const [taxRates, setTaxRates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredTaxRates.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredTaxRates]);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    taxName: "",
-    taxRate: "",
-    taxType: "Percentage",
-    taxDescription: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("TaxRates");
-    if (response.status.code === "S") {
-      setTaxRates(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
+    try {
+      const response = await apiService.get<TaxRate[]>("TaxRates");
+      if (response.status.code === "S") {
+        setTaxRates(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch (err) {
+      setError("Failed to load tax rates.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Handlers for Add Section form inputs
-  function handleInputChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
+  // Input Change
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
-  }
+  };
 
-  // Handlers for Edit Modal form inputs
-  function handleEditInputChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target;
-    setEditForm((f) => ({ ...f, [name]: value }));
-  }
-
-  // Open edit modal and populate edit form
-  function handleEdit(id: number) {
-    const tax = taxRates.find((t) => t.id === id);
-    if (!tax) return;
-    setEditForm({
-      taxName: tax.taxName,
-      taxRate: tax.taxRate.replace("%", ""),
-      taxType: tax.taxType,
-      taxDescription: tax.taxDescription,
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      taxName: "",
+      taxRate: "",
     });
-    setEditId(id);
-    setIsEditModalOpen(true);
-  }
+  };
 
-  // Save handler for Add Section (Add new tax rate)
-  function handleSave() {
+  // Edit
+  const handleEdit = (tax: TaxRate) => {
+    setFormMode("edit");
+    setForm({
+      id: tax.id,
+      taxName: tax.taxName,
+      taxRate: tax.taxRate.toString(),
+    });
+  };
+
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!form.taxName.trim()) {
-      alert("Tax Name is required");
+      alert("Tax Name is required.");
       return;
     }
-    if (!form.taxRate.trim() || isNaN(Number(form.taxRate))) {
-      alert("Tax Rate must be a valid number");
+
+    const rate = parseFloat(form.taxRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      alert("Tax Rate must be a number between 0 and 100.");
       return;
     }
-    if (!TAX_TYPES.includes(form.taxType)) {
-      alert("Tax Type is invalid");
-      return;
-    }
-    if (editId !== null) {
-      // Update existing
-      setTaxRates((prev) =>
-        prev.map((t) =>
-          t.id === editId
-            ? {
-                ...t,
-                taxName: form.taxName.trim(),
-                taxRate: form.taxRate.trim() + (form.taxType === "Percentage" ? "%" : ""),
-                taxType: form.taxType,
-                taxDescription: form.taxDescription.trim(),
-              }
-            : t
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
-    } else {
-      // Add new
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (formMode === "add") {
       const newId = taxRates.length ? Math.max(...taxRates.map((t) => t.id)) + 1 : 1;
       setTaxRates((prev) => [
         ...prev,
         {
           id: newId,
           taxName: form.taxName.trim(),
-          taxRate: form.taxRate.trim() + (form.taxType === "Percentage" ? "%" : ""),
-          taxType: form.taxType,
-          taxDescription: form.taxDescription.trim(),
+          taxRate: rate,
+          createdOn: today,
         },
       ]);
-      // If new item added to last page, move to last page
-      const totalItems = taxRates.length + 1;
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      if (totalItems > itemsPerPage * (totalPages - 1)) {
+      const totalPages = Math.ceil((filteredTaxRates.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setTaxRates((prev) =>
+        prev.map((t) =>
+          t.id === form.id
+            ? {
+                ...t,
+                taxName: form.taxName.trim(),
+                taxRate: rate,
+              }
+            : t
+        )
+      );
+    }
+
+    setFormMode(null);
+  };
+
+  // Delete
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this tax rate?")) {
+      setTaxRates((prev) => prev.filter((t) => t.id !== id));
+      const totalPages = Math.ceil((filteredTaxRates.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
     }
-    setForm({
-      taxName: "",
-      taxRate: "",
-      taxType: "Percentage",
-      taxDescription: "",
-    });
-  }
+  };
 
-  // Cancel editing modal
-  function handleEditCancel() {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  }
-
-  function handleDelete(id: number) {
-    if (!window.confirm("Are you sure you want to delete this tax rate?")) return;
-    setTaxRates((prev) => prev.filter((t) => t.id !== id));
-    // Adjust page if needed
-    if ((taxRates.length - 1) % itemsPerPage === 0 && currentPage > 1) {
-      setCurrentPage((p) => p - 1);
-    }
-  }
-
-  // Clear button handler (replaces Refresh)
-  function handleClear() {
-    setForm({
-      taxName: "",
-      taxRate: "",
-      taxType: "Percentage",
-      taxDescription: "",
-    });
-    setEditId(null);
+  // Clear / Refresh
+  const handleClear = () => {
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
-  }
+  };
 
-  function handleReport() {
-    // For demo, just alert JSON data
-    alert(JSON.stringify(taxRates, null, 2));
-  }
+  // Search
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = taxRates.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  // Pagination
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredTaxRates.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Table Columns
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    {
+      key: "taxName",
+      label: "Tax Name",
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: "taxRate",
+      label: "Tax Rates",
+      render: (value) => `${value}%`,
+    },
+    {
+      key: "createdOn",
+      label: "Created On",
+      render: (value) => {
+        const date = new Date(value);
+        const options: Intl.DateTimeFormatOptions = {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        };
+        return date.toLocaleDateString("en-GB", options); // e.g., 12 Jan 2025
+      },
+    },
+  ];
+
+  // Row Actions
+  const rowActions = (row: TaxRate) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.taxName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.taxName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
+
+  // Modal Form
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label htmlFor="taxName" className="block text-sm font-medium mb-1">
+          Tax Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="taxName"
+          name="taxName"
+          type="text"
+          value={form.taxName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., VAT"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="taxRate" className="block text-sm font-medium mb-1">
+          Tax Rate (%) <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="taxRate"
+          name="taxRate"
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value={form.taxRate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., 10"
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">Enter rate as percentage (0–100)</p>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">Tax Rates</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-          <label htmlFor="taxName" className="block text-sm font-medium mb-1">
-            Tax Name <span className="text-destructive">*</span>
-          </label>
-          <input
-            id="taxName"
-            name="taxName"
-            type="text"
-            value={form.taxName}
-            onChange={handleInputChange}
-            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter tax name"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
-          <label htmlFor="taxRate" className="block text-sm font-medium mb-1">
-            Tax Rate <span className="text-destructive">*</span>
-          </label>
-          <input
-            id="taxRate"
-            name="taxRate"
-            type="number"
-            min="0"
-            step="any"
-            value={form.taxRate}
-            onChange={handleInputChange}
-            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter tax rate"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
-          <label htmlFor="taxType" className="block text-sm font-medium mb-1">
-            Tax Type <span className="text-destructive">*</span>
-          </label>
-          <select
-            id="taxType"
-            name="taxType"
-            value={form.taxType}
-            onChange={handleInputChange}
-            className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            required
-          >
-            {TAX_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mt-4">
-          <label htmlFor="taxDescription" className="block text-sm font-medium mb-1 pt-2">
-            Tax Description
-          </label>
-          <textarea
-            id="taxDescription"
-            name="taxDescription"
-            value={form.taxDescription}
-            onChange={handleInputChange}
-            rows={3}
-            className="col-span-3 w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter tax description"
-          />
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Tax Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Tax Rate
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Tax Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Tax Description
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center px-4 py-6 text-muted-foreground italic">
-                    No tax rates found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map(({ id, taxName, taxRate, taxType, taxDescription }) => (
-                  <tr
-                    key={id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">{taxName}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{taxRate}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{taxType}</td>
-                    <td className="px-4 py-3 text-sm text-foreground">{taxDescription}</td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
-                      <button
-                        onClick={() => handleEdit(id)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        aria-label={`Edit tax rate ${taxName}`}
-                        type="button"
-                      >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
-                        aria-label={`Delete tax rate ${taxName}`}
-                        type="button"
-                      >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={taxRates.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2 id="edit-modal-title" className="text-xl font-semibold mb-4 text-center">
-              Edit Tax Rate
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-              <label htmlFor="editTaxName" className="block text-sm font-medium mb-1">
-                Tax Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="editTaxName"
-                name="taxName"
-                type="text"
-                value={editForm.taxName}
-                onChange={handleEditInputChange}
-                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter tax name"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
-              <label htmlFor="editTaxRate" className="block text-sm font-medium mb-1">
-                Tax Rate <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="editTaxRate"
-                name="taxRate"
-                type="number"
-                min="0"
-                step="any"
-                value={editForm.taxRate}
-                onChange={handleEditInputChange}
-                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter tax rate"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center mt-4">
-              <label htmlFor="editTaxType" className="block text-sm font-medium mb-1">
-                Tax Type <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="editTaxType"
-                name="taxType"
-                value={editForm.taxType}
-                onChange={handleEditInputChange}
-                className="col-span-3 w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              >
-                {TAX_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start mt-4">
-              <label htmlFor="editTaxDescription" className="block text-sm font-medium mb-1 pt-2">
-                Tax Description
-              </label>
-              <textarea
-                id="editTaxDescription"
-                name="taxDescription"
-                value={editForm.taxDescription}
-                onChange={handleEditInputChange}
-                rows={3}
-                className="col-span-3 w-full border border-input rounded px-3 py-2 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter tax description"
-              />
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Tax Rates"
+      description="Manage tax rates for your business"
+      icon="fa fa-percent"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredTaxRates.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Tax Rate" : "Edit Tax Rate"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

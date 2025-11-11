@@ -301,7 +301,7 @@
         "url": "/settings/financial",
         "items": [
           { "title": "Payment Gateway", "url": "/settings/financial/payment-gateway", "icon": "fa fa-credit-card" },
-          { "title": "Bank Accounts", "url": "/settings/financial/bank-accounts", "icon": "fa fa-university" },
+          { "title": "Bank Accounts", "url": "/settings/financial/bank-settings", "icon": "fa fa-university" },
           { "title": "Tax Rates", "url": "/settings/financial/tax-rates", "icon": "fa fa-percentage" },
           { "title": "Currencies", "url": "/settings/financial/currencies", "icon": "fa fa-coins" }
         ]

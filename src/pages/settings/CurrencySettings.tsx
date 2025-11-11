@@ -1,53 +1,73 @@
-import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
-const PAGE_SIZES = [5, 10, 20];
+interface Currency {
+  id: number;
+  currencyName: string;
+  code: string;
+  symbol: string;
+  exchangeRate: string; // "Default" or number
+  createdOn: string; // YYYY-MM-DD
+}
 
 export default function CurrencySettings() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
+    id: null as number | null,
     currencyName: "",
-    currencyCode: "",
-    currencySymbol: "",
-    currencyRate: "",
-    currencyStatus: "Active",
+    code: "",
+    symbol: "",
+    exchangeRate: "",
   });
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [data, setData] = useState([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    currencyName: "",
-    currencyCode: "",
-    currencySymbol: "",
-    currencyRate: "",
-    currencyStatus: "Active",
-  });
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("CurrencySettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  // Filter & Pagination
+  const filteredCurrencies = useMemo(() => {
+    return !search.trim()
+      ? currencies
+      : currencies.filter(
+          (c) =>
+            c.currencyName.toLowerCase().includes(search.toLowerCase()) ||
+            c.code.toLowerCase().includes(search.toLowerCase()) ||
+            c.symbol.includes(search)
+        );
+  }, [search, currencies]);
 
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredCurrencies.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredCurrencies]);
+
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
-  const pagedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return data.slice(start, start + itemsPerPage);
-  }, [currentPage, itemsPerPage, data]);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<Currency[]>("CurrencySettings");
+      if (response.status.code === "S") {
+        setCurrencies(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch (err) {
+      setError("Failed to load currencies.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Input Change
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -55,495 +75,290 @@ export default function CurrencySettings() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      currencyName: "",
+      code: "",
+      symbol: "",
+      exchangeRate: "",
+    });
   };
 
-  const handleSave = () => {
-    if (
-      !form.currencyName.trim() ||
-      !form.currencyCode.trim() ||
-      !form.currencySymbol.trim() ||
-      !form.currencyRate.trim()
-    )
-      return;
+  // Edit
+  const handleEdit = (currency: Currency) => {
+    setFormMode("edit");
+    setForm({ ...currency });
+  };
 
-    if (editingId !== null) {
-      setData((d) =>
-        d.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                currencyName: form.currencyName,
-                currencyCode: form.currencyCode,
-                currencySymbol: form.currencySymbol,
-                currencyRate: form.currencyRate,
-                currencyStatus: form.currencyStatus,
-              }
-            : item
-        )
-      );
-    } else {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((d) => [
-        ...d,
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!form.currencyName.trim() || !form.code.trim() || !form.symbol.trim()) {
+      alert("Currency Name, Code, and Symbol are required.");
+      return;
+    }
+
+    if (form.code.length !== 3) {
+      alert("Currency Code must be exactly 3 characters (e.g., USD).");
+      return;
+    }
+
+    const isDefault = form.exchangeRate.toLowerCase() === "default";
+    if (
+      !isDefault &&
+      (isNaN(Number(form.exchangeRate)) || Number(form.exchangeRate) <= 0)
+    ) {
+      alert("Exchange Rate must be 'Default' or a positive number.");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (formMode === "add") {
+      const newId = currencies.length
+        ? Math.max(...currencies.map((c) => c.id)) + 1
+        : 1;
+      setCurrencies((prev) => [
+        ...prev,
         {
+          ...form,
           id: newId,
-          currencyName: form.currencyName,
-          currencyCode: form.currencyCode,
-          currencySymbol: form.currencySymbol,
-          currencyRate: form.currencyRate,
-          currencyStatus: form.currencyStatus,
+          exchangeRate: isDefault ? "Default" : form.exchangeRate,
+          createdOn: today,
         },
       ]);
-    }
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setForm({
-      currencyName: "",
-      currencyCode: "",
-      currencySymbol: "",
-      currencyRate: "",
-      currencyStatus: "Active",
-    });
-    setEditingId(null);
-  };
-
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (!item) return;
-    setEditForm({
-      currencyName: item.currencyName,
-      currencyCode: item.currencyCode,
-      currencySymbol: item.currencySymbol,
-      currencyRate: item.currencyRate,
-      currencyStatus: item.currencyStatus,
-    });
-    setEditingId(id);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditSave = () => {
-    if (
-      !editForm.currencyName.trim() ||
-      !editForm.currencyCode.trim() ||
-      !editForm.currencySymbol.trim() ||
-      !editForm.currencyRate.trim()
-    )
-      return;
-
-    if (editingId !== null) {
-      setData((d) =>
-        d.map((item) =>
-          item.id === editingId
+      const totalPages = Math.ceil(
+        (filteredCurrencies.length + 1) / itemsPerPage
+      );
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setCurrencies((prev) =>
+        prev.map((c) =>
+          c.id === form.id
             ? {
-                ...item,
-                currencyName: editForm.currencyName,
-                currencyCode: editForm.currencyCode,
-                currencySymbol: editForm.currencySymbol,
-                currencyRate: editForm.currencyRate,
-                currencyStatus: editForm.currencyStatus,
+                ...form,
+                id: form.id!,
+                exchangeRate: isDefault ? "Default" : form.exchangeRate,
+                createdOn: c.createdOn,
               }
-            : item
+            : c
         )
       );
     }
-    setIsEditModalOpen(false);
-    setEditingId(null);
+
+    setFormMode(null);
   };
 
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false);
-    setEditingId(null);
-  };
-
+  // Delete
   const handleDelete = (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this currency?")) return;
-    setData((d) => d.filter((item) => item.id !== id));
-    if (pagedData.length === 1 && currentPage > 1) {
-      setCurrentPage((p) => p - 1);
-    }
-    if (editingId === id) {
-      resetForm();
+    if (window.confirm("Are you sure you want to delete this currency?")) {
+      setCurrencies((prev) => prev.filter((c) => c.id !== id));
+      const totalPages = Math.ceil(
+        (filteredCurrencies.length - 1) / itemsPerPage
+      );
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+      }
     }
   };
 
+  // Clear / Refresh
   const handleClear = () => {
-    resetForm();
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">Currency Settings</h1>
+  // Search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Currency Name */}
-          <div>
-            <label
-              htmlFor="currencyName"
-              className="block text-sm font-medium mb-1"
-            >
-              Currency Name
-            </label>
-            <input
-              type="text"
-              id="currencyName"
-              name="currencyName"
-              value={form.currencyName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter currency name"
-              required
-            />
-          </div>
+  // Pagination
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredCurrencies.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+    }
+  };
 
-          {/* Currency Code */}
-          <div>
-            <label
-              htmlFor="currencyCode"
-              className="block text-sm font-medium mb-1"
-            >
-              Currency Code
-            </label>
-            <input
-              type="text"
-              id="currencyCode"
-              name="currencyCode"
-              value={form.currencyCode}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter currency code"
-              maxLength={3}
-              required
-            />
-          </div>
+  // Table Columns
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    { key: "currencyName", label: "Currency Name" },
+    {
+      key: "code",
+      label: "Code",
+      render: (value) => (
+        <span className="font-mono font-semibold">{value}</span>
+      ),
+    },
+    {
+      key: "symbol",
+      label: "Symbol",
+      render: (value) => <span className="text-lg">{value}</span>,
+    },
+    {
+      key: "exchangeRate",
+      label: "Exchange Rate",
+      render: (value) =>
+        value === "Default" ? (
+          <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+            Default
+          </span>
+        ) : (
+          value
+        ),
+    },
+    {
+      key: "createdOn",
+      label: "Created On",
+      render: (value) => {
+        const date = new Date(value);
+        const options: Intl.DateTimeFormatOptions = {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        };
+        return date.toLocaleDateString("en-GB", options); // e.g., 12 Jul 2025
+      },
+    },
+  ];
 
-          {/* Currency Symbol */}
-          <div>
-            <label
-              htmlFor="currencySymbol"
-              className="block text-sm font-medium mb-1"
-            >
-              Currency Symbol
-            </label>
-            <input
-              type="text"
-              id="currencySymbol"
-              name="currencySymbol"
-              value={form.currencySymbol}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter currency symbol"
-              maxLength={3}
-              required
-            />
-          </div>
+  // Row Actions
+  const rowActions = (row: Currency) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.currencyName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.currencyName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
 
-          {/* Currency Rate */}
-          <div>
-            <label
-              htmlFor="currencyRate"
-              className="block text-sm font-medium mb-1"
-            >
-              Currency Rate
-            </label>
-            <input
-              type="number"
-              step="any"
-              id="currencyRate"
-              name="currencyRate"
-              value={form.currencyRate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter currency rate"
-              required
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label
-              htmlFor="currencyStatus"
-              className="block text-sm font-medium mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="currencyStatus"
-              name="currencyStatus"
-              value={form.currencyStatus}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-        </div>
-      </section>
-
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Currency Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Currency Code
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Currency Symbol
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Currency Rate
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No currencies available.
-                  </td>
-                </tr>
-              )}
-              {pagedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.currencyName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground uppercase">
-                    {item.currencyCode}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.currencySymbol}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.currencyRate}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.currencyStatus === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {item.currencyStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit currency ${item.currencyName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete currency ${item.currencyName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
+  // Modal Form
+  const modalForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label
+          htmlFor="currencyName"
+          className="block text-sm font-medium mb-1"
         >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Currency
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Currency Name */}
-              <div>
-                <label
-                  htmlFor="editCurrencyName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Currency Name
-                </label>
-                <input
-                  type="text"
-                  id="editCurrencyName"
-                  name="currencyName"
-                  value={editForm.currencyName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter currency name"
-                />
-              </div>
-
-              {/* Currency Code */}
-              <div>
-                <label
-                  htmlFor="editCurrencyCode"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Currency Code
-                </label>
-                <input
-                  type="text"
-                  id="editCurrencyCode"
-                  name="currencyCode"
-                  value={editForm.currencyCode}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter currency code"
-                  maxLength={3}
-                />
-              </div>
-
-              {/* Currency Symbol */}
-              <div>
-                <label
-                  htmlFor="editCurrencySymbol"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Currency Symbol
-                </label>
-                <input
-                  type="text"
-                  id="editCurrencySymbol"
-                  name="currencySymbol"
-                  value={editForm.currencySymbol}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter currency symbol"
-                  maxLength={3}
-                />
-              </div>
-
-              {/* Currency Rate */}
-              <div>
-                <label
-                  htmlFor="editCurrencyRate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Currency Rate
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  id="editCurrencyRate"
-                  name="currencyRate"
-                  value={editForm.currencyRate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter currency rate"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editCurrencyStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editCurrencyStatus"
-                  name="currencyStatus"
-                  value={editForm.currencyStatus}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          Currency Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="currencyName"
+          name="currencyName"
+          type="text"
+          value={form.currencyName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., US Dollar"
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="code" className="block text-sm font-medium mb-1">
+          Code <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="code"
+          name="code"
+          type="text"
+          value={form.code}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring uppercase"
+          placeholder="e.g., USD"
+          maxLength={3}
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">3-letter ISO code</p>
+      </div>
+      <div>
+        <label htmlFor="symbol" className="block text-sm font-medium mb-1">
+          Symbol <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="symbol"
+          name="symbol"
+          type="text"
+          value={form.symbol}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., $"
+          maxLength={5}
+          required
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="exchangeRate"
+          className="block text-sm font-medium mb-1"
+        >
+          Exchange Rate
+        </label>
+        <input
+          id="exchangeRate"
+          name="exchangeRate"
+          type="text"
+          value={form.exchangeRate}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., 76.154 or 'Default'"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Use "Default" for base currency, otherwise enter rate vs base
+        </p>
+      </div>
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Currency Settings"
+      description="Manage currencies and exchange rates"
+      icon="fa fa-coins"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredCurrencies.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Currency" : "Edit Currency"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

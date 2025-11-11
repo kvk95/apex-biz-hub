@@ -87,7 +87,7 @@ import PosOrders from "./pages/sales/PosOrders";
 import Quotation from "./pages/sales/Quotation";
 import SalesReturn from "./pages/sales/SalesReturn"; 
 import BanIpAddress from "./pages/settings/BanIpAddress";
-import BankSettingsGrid from "./pages/settings/BankSettingsGrid";
+import BankSettings from "./pages/settings/BankSettings";
 import CompanySettings from "./pages/settings/CompanySettings";
 import ConnectedApps from "./pages/settings/ConnectedApps";
 import CurrencySettings from "./pages/settings/CurrencySettings";
@@ -459,8 +459,8 @@ const App = () => {
                   element={<PaymentGatewaySettings />}
                 />
                 <Route
-                  path="settings/financial/bank-accounts"
-                  element={<BankSettingsGrid />}
+                  path="settings/financial/bank-settings"
+                  element={<BankSettings />}
                 />
                 <Route
                   path="settings/financial/tax-rates"
