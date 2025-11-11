@@ -4,20 +4,140 @@
     "description": ""
   },
   "result": [
-    { "id": 1, "unitName": "Kilogram", "shortName": "Kg", "description": "Weight measurement" },
-    { "id": 2, "unitName": "Gram", "shortName": "Gm", "description": "Weight measurement" },
-    { "id": 3, "unitName": "Liter", "shortName": "Ltr", "description": "Volume measurement" },
-    { "id": 4, "unitName": "Meter", "shortName": "Mtr", "description": "Length measurement" },
-    { "id": 5, "unitName": "Piece", "shortName": "Pcs", "description": "Count measurement" },
-    { "id": 6, "unitName": "Box", "shortName": "Box", "description": "Packaging unit" },
-    { "id": 7, "unitName": "Packet", "shortName": "Pkt", "description": "Packaging unit" },
-    { "id": 8, "unitName": "Dozen", "shortName": "Doz", "description": "Count measurement" },
-    { "id": 9, "unitName": "Inch", "shortName": "In", "description": "Length measurement" },
-    { "id": 10, "unitName": "Feet", "shortName": "Ft", "description": "Length measurement" },
-    { "id": 11, "unitName": "Yard", "shortName": "Yd", "description": "Length measurement" },
-    { "id": 12, "unitName": "Milliliter", "shortName": "Ml", "description": "Volume measurement" },
-    { "id": 13, "unitName": "Centimeter", "shortName": "Cm", "description": "Length measurement" },
-    { "id": 14, "unitName": "Ounce", "shortName": "Oz", "description": "Weight measurement" },
-    { "id": 15, "unitName": "Pound", "shortName": "Lb", "description": "Weight measurement" }
+    {
+      "id": 1,
+      "unitName": "Kilogram",
+      "shortName": "Kg",
+      "noOfProducts": 120,
+      "description": "Weight measurement",
+      "createdDate": "2025-11-10T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "unitName": "Gram",
+      "shortName": "Gm",
+      "noOfProducts": 85,
+      "description": "Weight measurement",
+      "createdDate": "2025-11-08T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "unitName": "Liter",
+      "shortName": "Ltr",
+      "noOfProducts": 60,
+      "description": "Volume measurement",
+      "createdDate": "2025-11-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "unitName": "Meter",
+      "shortName": "Mtr",
+      "noOfProducts": 40,
+      "description": "Length measurement",
+      "createdDate": "2025-10-15T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "unitName": "Piece",
+      "shortName": "Pcs",
+      "noOfProducts": 200,
+      "description": "Count measurement",
+      "createdDate": "2025-10-01T09:00:00Z",
+      "status": "Inactive"
+    },
+    {
+      "id": 6,
+      "unitName": "Box",
+      "shortName": "Box",
+      "noOfProducts": 35,
+      "description": "Packaging unit",
+      "createdDate": "2025-09-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 7,
+      "unitName": "Packet",
+      "shortName": "Pkt",
+      "noOfProducts": 50,
+      "description": "Packaging unit",
+      "createdDate": "2025-08-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 8,
+      "unitName": "Dozen",
+      "shortName": "Doz",
+      "noOfProducts": 15,
+      "description": "Count measurement",
+      "createdDate": "2025-07-01T09:00:00Z",
+      "status": "Inactive"
+    },
+    {
+      "id": 9,
+      "unitName": "Inch",
+      "shortName": "In",
+      "noOfProducts": 25,
+      "description": "Length measurement",
+      "createdDate": "2025-06-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 10,
+      "unitName": "Feet",
+      "shortName": "Ft",
+      "noOfProducts": 30,
+      "description": "Length measurement",
+      "createdDate": "2025-05-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 11,
+      "unitName": "Yard",
+      "shortName": "Yd",
+      "noOfProducts": 18,
+      "description": "Length measurement",
+      "createdDate": "2025-04-01T09:00:00Z",
+      "status": "Inactive"
+    },
+    {
+      "id": 12,
+      "unitName": "Milliliter",
+      "shortName": "Ml",
+      "noOfProducts": 70,
+      "description": "Volume measurement",
+      "createdDate": "2025-03-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 13,
+      "unitName": "Centimeter",
+      "shortName": "Cm",
+      "noOfProducts": 22,
+      "description": "Length measurement",
+      "createdDate": "2025-02-01T09:00:00Z",
+      "status": "Active"
+    },
+    {
+      "id": 14,
+      "unitName": "Ounce",
+      "shortName": "Oz",
+      "noOfProducts": 10,
+      "description": "Weight measurement",
+      "createdDate": "2025-01-01T09:00:00Z",
+      "status": "Inactive"
+    },
+    {
+      "id": 15,
+      "unitName": "Pound",
+      "shortName": "Lb",
+      "noOfProducts": 12,
+      "description": "Weight measurement",
+      "createdDate": "2024-12-01T09:00:00Z",
+      "status": "Active"
+    }
   ]
 }
