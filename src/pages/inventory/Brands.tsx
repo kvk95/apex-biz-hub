@@ -278,7 +278,7 @@ export default function Brands() {
               brandCode: p.brandCode || generateBrandCode(e.target.value),
             }))
           }
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
           placeholder="Enter brand name"
           required
         />
@@ -292,7 +292,7 @@ export default function Brands() {
           type="text"
           value={form.brandCode}
           onChange={(e) => setForm((p) => ({ ...p, brandCode: e.target.value.toUpperCase() }))}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
           placeholder="Auto-generated"
           required
         />
@@ -305,7 +305,7 @@ export default function Brands() {
           value={form.brandDescription}
           onChange={(e) => setForm((p) => ({ ...p, brandDescription: e.target.value }))}
           rows={3}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition resize-none"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition resize-none"
           placeholder="Enter description (optional)"
         />
       </div>
