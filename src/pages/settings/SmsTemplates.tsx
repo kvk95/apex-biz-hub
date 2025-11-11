@@ -1,441 +1,266 @@
 import { apiService } from "@/services/ApiService";
 import React, { useEffect, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import { PageBase1 } from "@/pages/PageBase1";
 
-const pageSizeOptions = [5, 10, 20];
+interface SmsTemplate {
+  id: number;
+  title: string;
+  message: string;
+  enabled: boolean;
+}
+
+const defaultTemplates: SmsTemplate[] = [
+  { id: 1, title: "Order Confirmation", message: "Dear {customer_name}, your order #{order_id} has been confirmed. Thank you for shopping with us!", enabled: true },
+  { id: 2, title: "Delivery Update", message: "Hello {customer_name}, your order #{order_id} is out for delivery and will reach you soon.", enabled: true },
+  { id: 3, title: "Payment Reminder", message: "Dear {customer_name}, this is a reminder that your payment for order #{order_id} is due on {due_date}.", enabled: true },
+  { id: 4, title: "Promotional Offer", message: "Hi {customer_name}, enjoy a special discount of 20% on your next purchase. Use code SAVE20.", enabled: true },
+  { id: 5, title: "Account Activation", message: "Welcome {customer_name} Your account has been activated successfully. Start shopping now.", enabled: true },
+  { id: 6, title: "Password Reset", message: "Dear {customer_name}, click the link to reset your password: {reset_link}. If you didn't request this, ignore this message.", enabled: true },
+  { id: 7, title: "Feedback Request", message: "Hi {customer_name}, we value your feedback. Please rate your recent purchase experience.", enabled: true },
+  { id: 8, title: "Subscription Renewal", message: "Dear {customer_name}, your subscription will renew on {renewal_date}. Thank you for staying with us.", enabled: true },
+  { id: 9, title: "Event Invitation", message: "Hello {customer_name}, you're invited to our exclusive event on {event_date}. RSVP now!", enabled: true },
+  { id: 10, title: "Thank You Note", message: "Dear {customer_name}, thank you for your recent purchase. We appreciate your business!", enabled: true },
+  { id: 11, title: "Order Cancellation", message: "Dear {customer_name}, your order #{order_id} has been cancelled as per your request.", enabled: true },
+  { id: 12, title: "Shipping Delay", message: "Hello {customer_name}, due to unforeseen circumstances, your order #{order_id} delivery is delayed.", enabled: true },
+];
+
+const allTags = [
+  "{customer_name}",
+  "{order_id}",
+  "{due_date}",
+  "{reset_link}",
+  "{renewal_date}",
+  "{event_date}",
+];
 
 export default function SmsTemplates() {
-  const [data, setData] = useState([]);
+  const [templates, setTemplates] = useState<SmsTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [templates, setTemplates] = useState(data);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(pageSizeOptions[0]);
-  const [titleFilter, setTitleFilter] = useState("");
-  const [messageFilter, setMessageFilter] = useState("");
-  const [editingTemplate, setEditingTemplate] = useState<null | {
-    id: number;
-    title: string;
-    message: string;
-  }>(null);
-  const [formTitle, setFormTitle] = useState("");
-  const [formMessage, setFormMessage] = useState("");
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("SmsTemplates");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  const [activeTemplate, setActiveTemplate] = useState<number | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
 
   useEffect(() => {
     loadData();
   }, []);
 
-  useEffect(() => {
-    setTemplates(data);
-  }, [data]);
-
-  // Filter templates based on title and message filters
-  const filteredTemplates = templates.filter(
-    (t) =>
-      t?.title?.toLowerCase().includes(titleFilter.toLowerCase()) &&
-      t?.message?.toLowerCase().includes(messageFilter.toLowerCase())
-  );
-
-  // Pagination calculations
-  const paginatedTemplates = filteredTemplates.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Reset page if filters change and current page is out of range
-  useEffect(() => {
-    if (currentPage > Math.ceil(filteredTemplates.length / itemsPerPage))
-      setCurrentPage(1);
-  }, [titleFilter, messageFilter, itemsPerPage, currentPage]);
-
-  // Handlers
-  const handleEdit = (template: { id: number; title: string; message: string }) => {
-    setEditingTemplate(template);
-    setFormTitle(template.title);
-    setFormMessage(template.message);
-    setIsEditModalOpen(true);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<SmsTemplate[]>("SmsTemplates");
+      if (response.status.code === "S") {
+        const loaded = response.result;
+        const merged = defaultTemplates.map((def) => {
+          const existing = loaded.find((t) => t.id === def.id);
+          return existing || { ...def };
+        });
+        setTemplates(merged);
+      }
+    } catch {
+      setTemplates(defaultTemplates);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this SMS template? This action cannot be undone."
-      )
-    ) {
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      if (editingTemplate?.id === id) {
-        setEditingTemplate(null);
-        setFormTitle("");
-        setFormMessage("");
+  const handleContentChange = (id: number, newContent: string) => {
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, message: newContent } : t))
+    );
+  };
+
+  const handleToggle = (id: number) => {
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, enabled: !t.enabled } : t))
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      await apiService.post("SmsTemplates", templates);
+      alert("SMS templates saved successfully!");
+    } catch {
+      alert("Failed to save SMS templates.");
+    }
+  };
+
+  const handleDefault = (id: number) => {
+    if (window.confirm("Reset to default template?")) {
+      const def = defaultTemplates.find((t) => t.id === id);
+      if (def) {
+        setTemplates((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, message: def.message } : t))
+        );
       }
     }
   };
 
-  const handleSave = () => {
-    if (!formTitle.trim() || !formMessage.trim()) {
-      alert("Please fill in both Title and Message fields.");
-      return;
-    }
-    if (editingTemplate) {
-      setTemplates((prev) =>
-        prev.map((t) =>
-          t.id === editingTemplate.id ? { ...t, title: formTitle, message: formMessage } : t
-        )
-      );
-      setEditingTemplate(null);
-    } else {
-      const newId = Math.max(...templates.map((t) => t.id)) + 1;
-      setTemplates((prev) => [
-        ...prev,
-        { id: newId, title: formTitle, message: formMessage },
-      ]);
-    }
-    setFormTitle("");
-    setFormMessage("");
-  };
-
-  const handleCancel = () => {
-    setEditingTemplate(null);
-    setFormTitle("");
-    setFormMessage("");
-  };
-
-  const handleEditSave = () => {
-    handleSave();
-    setIsEditModalOpen(false);
-  };
-
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false);
-  };
-
-  const handleClear = () => {
-    setTitleFilter("");
-    setMessageFilter("");
-    setCurrentPage(1);
-    setFormTitle("");
-    setFormMessage("");
-  };
-
-  const handleReport = () => {
-    // For demo, just alert the JSON data of current filtered templates
-    alert(
-      "SMS Templates Report:\n\n" +
-        JSON.stringify(filteredTemplates, null, 2)
-    );
+  const handlePreview = (content: string) => {
+    setPreviewContent(content);
+    setPreviewOpen(true);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">SMS Templates</h1>
+    <PageBase1
+      title="SMS Templates"
+      description="Manage SMS notification templates"
+      icon="fa fa-sms"
+      onRefresh={loadData}
+      loading={loading}
+    >
+      <div className="space-y-1">
+        {templates.map((template) => {
+          const charCount = template.message.length;
+          const isOverLimit = charCount > 160;
 
-      {/* Filters Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Filter SMS Templates</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <div>
-            <label
-              htmlFor="filterTitle"
-              className="block text-sm font-medium mb-1"
+          return (
+            <div
+              key={template.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
             >
-              Title
-            </label>
-            <input
-              id="filterTitle"
-              type="text"
-              value={titleFilter}
-              onChange={(e) => setTitleFilter(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Search by title"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="filterMessage"
-              className="block text-sm font-medium mb-1"
-            >
-              Message
-            </label>
-            <input
-              id="filterMessage"
-              type="text"
-              value={messageFilter}
-              onChange={(e) => setMessageFilter(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Search by message"
-            />
-          </div>
-          <div className="flex items-end space-x-2">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Search"
-            >
-              <i className="fa fa-search fa-light mr-2" aria-hidden="true"></i> Search
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Clear"
-            >
-              <i className="fa fa-refresh fa-light mr-2" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title="Generate Report"
-            >
-              <i className="fa fa-file-text fa-light mr-2" aria-hidden="true"></i> Report
-            </button>
-          </div>
-        </form>
-      </section>
+              {/* Accordion Header */}
+              <div
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() =>
+                  setActiveTemplate(activeTemplate === template.id ? null : template.id)
+                }
+              >
+                <div className="flex items-center gap-3">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={template.enabled}
+                      onChange={() => handleToggle(template.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                  <h3 className="text-sm font-semibold text-gray-800">{template.title}</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs ${isOverLimit ? "text-red-600 font-bold" : "text-gray-500"}`}>
+                    {charCount}/160
+                  </span>
+                  <i
+                    className={`fa fa-chevron-down text-xs text-gray-500 transition-transform ${
+                      activeTemplate === template.id ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </div>
 
-      {/* SMS Templates Table Section */}
-      <section className="bg-card rounded shadow py-6 mb-6 overflow-x-auto">
-        <h2 className="text-lg font-semibold mb-4">SMS Templates List</h2>
-        {loading ? (
-          <div>Loading...</div>
-        ) : error ? (
-          <div>Error: {error}</div>
-        ) : (
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Title
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Message
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTemplates.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No SMS templates found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedTemplates.map((template, idx) => (
-                  <tr
-                    key={template.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {template.title}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground whitespace-pre-wrap">
-                      {template.message}
-                    </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
-                      <button
-                        onClick={() => handleEdit(template)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="Edit"
-                        aria-label={`Edit template ${template.title}`}
-                      >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
-                        title="Delete"
-                        aria-label={`Delete template ${template.title}`}
-                      >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+              {/* Accordion Body */}
+              {activeTemplate === template.id && (
+                <div className="p-3 border-t border-gray-200">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Editor */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SMS Message
+                      </label>
+                      <textarea
+                        value={template.message}
+                        onChange={(e) => handleContentChange(template.id, e.target.value)}
+                        className={`w-full p-3 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none resize-none font-mono text-xs ${
+                          isOverLimit ? "border-red-500" : "border-gray-300"
+                        }`}
+                        rows={6}
+                        maxLength={160}
+                        placeholder="Enter SMS text..."
+                        data-id={template.id}
+                      />
+                      <p className={`text-xs mt-1 text-right ${isOverLimit ? "text-red-600 font-bold" : "text-gray-500"}`}>
+                        {charCount}/160 characters
+                      </p>
+                    </div>
+
+                    {/* Tags */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Available Tags
+                      </label>
+                      <div className="max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-lg space-y-1">
+                        {allTags.map((tag) => (
+                          <div
+                            key={tag}
+                            className="text-xs font-mono bg-white px-2 py-1 rounded border border-gray-300 cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => {
+                              const textarea = document.querySelector(
+                                `textarea[data-id="${template.id}"]`
+                              ) as HTMLTextAreaElement;
+                              if (textarea) {
+                                const start = textarea.selectionStart;
+                                const end = textarea.selectionEnd;
+                                const text = textarea.value;
+                                const newText = text.substring(0, start) + tag + text.substring(end);
+                                handleContentChange(template.id, newText);
+                                setTimeout(() => {
+                                  textarea.focus();
+                                  textarea.setSelectionRange(start + tag.length, start + tag.length);
+                                }, 0);
+                              }
+                            }}
+                          >
+                            {tag}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-5 flex flex-wrap gap-2 justify-end">
+                    <button
+                      onClick={handleSave}
+                      className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Save Template
+                    </button>
+                    <button
+                      onClick={() => handleDefault(template.id)}
+                      className="px-3 py-1.5 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                    >
+                      Default Template
+                    </button>
+                    <button
+                      onClick={() => handlePreview(template.message)}
+                      className="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    >
+                      Preview Template
+                    </button>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
-        )}
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredTemplates.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Add Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">
-          {editingTemplate ? "Edit SMS Template" : "Add New SMS Template"}
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <div>
-            <label
-              htmlFor="templateTitle"
-              className="block text-sm font-medium mb-1"
-            >
-              Title <span className="text-red-600">*</span>
-            </label>
-            <input
-              id="templateTitle"
-              type="text"
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter template title"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="templateMessage"
-              className="block text-sm font-medium mb-1"
-            >
-              Message <span className="text-red-600">*</span>
-            </label>
-            <textarea
-              id="templateMessage"
-              value={formMessage}
-              onChange={(e) => setFormMessage(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 h-24 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter SMS message content"
-              required
-            />
-          </div>
-          <div className="md:col-span-2 flex space-x-4">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              title={editingTemplate ? "Save changes" : "Add template"}
-            >
-              <i className="fa fa-save fa-light mr-2" aria-hidden="true"></i>
-              {editingTemplate ? "Save" : "Add"}
-            </button>
-            {editingTemplate && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-6 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                title="Cancel editing"
-              >
-                <i className="fa fa-times fa-light mr-2" aria-hidden="true"></i> Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit SMS Template
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="editTemplateTitle"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="editTemplateTitle"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter template title"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editTemplateMessage"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="editTemplateMessage"
-                  value={formMessage}
-                  onChange={(e) => setFormMessage(e.target.value)}
-                  className="w-full border border-input rounded px-3 py-2 h-24 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter SMS message content"
-                />
-              </div>
             </div>
+          );
+        })}
+      </div>
 
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold">SMS Preview</h3>
               <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
-                Cancel
+                Close
               </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
+            </div>
+            <div className="p-6">
+              <div className="bg-gray-50 p-4 rounded-lg font-mono text-sm whitespace-pre-wrap break-words">
+                {previewContent}
+              </div>
+              <p className={`text-xs mt-2 text-right ${previewContent.length > 160 ? "text-red-600 font-bold" : "text-gray-500"}`}>
+                {previewContent.length}/160 characters
+              </p>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageBase1>
   );
 }

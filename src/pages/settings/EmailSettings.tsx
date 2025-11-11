@@ -1,608 +1,417 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
-const statusOptions = ["Active", "Inactive"];
+interface EmailSetting {
+  id: number;
+  email: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  status: boolean;
+  createdOn: string;
+}
 
 export default function EmailSettings() {
-  const [data, setData] = useState([]);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    email: "",
+    smtpHost: "",
+    smtpPort: "",
+    smtpUser: "",
+    smtpPassword: "",
+    status: true,
+  });
+  const [settings, setSettings] = useState<EmailSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [form, setForm] = useState({
-    email: "",
-    smtpHost: "",
-    smtpPort: "",
-    smtpUser: "",
-    smtpPass: "",
-    status: "Active",
-  });
+  // Filter & Pagination
+  const filteredSettings = useMemo(() => {
+    return !search.trim()
+      ? settings
+      : settings.filter(
+          (s) =>
+            s.email.toLowerCase().includes(search.toLowerCase()) ||
+            s.smtpHost.toLowerCase().includes(search.toLowerCase()) ||
+            s.smtpUser.toLowerCase().includes(search.toLowerCase())
+        );
+  }, [search, settings]);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    email: "",
-    smtpHost: "",
-    smtpPort: "",
-    smtpUser: "",
-    smtpPass: "",
-    status: "Active",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredSettings.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredSettings]);
 
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<[]>("EmailSettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
+    try {
+      const response = await apiService.get<EmailSetting[]>("EmailSettings");
+      if (response.status.code === "S") {
+        setSettings(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch (err) {
+      setError("Failed to load email settings.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Handlers for Add Section form inputs
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  // Input Change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleToggleChange = () => {
+    setForm((f) => ({ ...f, status: !f.status }));
   };
 
-  // Save handler for Add Section (Add new email setting)
-  const handleSave = () => {
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      email: "",
+      smtpHost: "",
+      smtpPort: "",
+      smtpUser: "",
+      smtpPassword: "",
+      status: true,
+    });
+  };
+
+  // Edit
+  const handleEdit = (setting: EmailSetting) => {
+    setFormMode("edit");
+    setForm({
+      id: setting.id,
+      email: setting.email,
+      smtpHost: setting.smtpHost,
+      smtpPort: setting.smtpPort.toString(),
+      smtpUser: setting.smtpUser,
+      smtpPassword: "", // Do not show password
+      status: setting.status,
+    });
+  };
+
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (
       !form.email.trim() ||
       !form.smtpHost.trim() ||
       !form.smtpPort.trim() ||
       !form.smtpUser.trim()
     ) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    const portNum = Number(form.smtpPort);
-    if (isNaN(portNum) || portNum <= 0) {
-      alert("SMTP Port must be a positive number.");
+      alert("Email, SMTP Host, Port, and User are required.");
       return;
     }
 
-    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-    setData((prev) => [
-      ...prev,
-      {
-        id: newId,
-        email: form.email.trim(),
-        smtpHost: form.smtpHost.trim(),
-        smtpPort: portNum,
-        smtpUser: form.smtpUser.trim(),
-        smtpPass: form.smtpPass,
-        status: form.status,
-      },
-    ]);
-    setForm({
-      email: "",
-      smtpHost: "",
-      smtpPort: "",
-      smtpUser: "",
-      smtpPass: "",
-      status: "Active",
-    });
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        email: item.email,
-        smtpHost: item.smtpHost,
-        smtpPort: item.smtpPort.toString(),
-        smtpUser: item.smtpUser,
-        smtpPass: "",
-        status: item.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.email.trim() ||
-      !editForm.smtpHost.trim() ||
-      !editForm.smtpPort.trim() ||
-      !editForm.smtpUser.trim()
-    ) {
-      alert("Please fill in all required fields.");
+    const port = parseInt(form.smtpPort);
+    if (isNaN(port) || port <= 0 || port > 65535) {
+      alert("SMTP Port must be a valid number (1–65535).");
       return;
     }
-    const portNum = Number(editForm.smtpPort);
-    if (isNaN(portNum) || portNum <= 0) {
-      alert("SMTP Port must be a positive number.");
-      return;
-    }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (formMode === "add") {
+      const newId = settings.length
+        ? Math.max(...settings.map((s) => s.id)) + 1
+        : 1;
+      setSettings((prev) => [
+        ...prev,
+        {
+          id: newId,
+          email: form.email.trim(),
+          smtpHost: form.smtpHost.trim(),
+          smtpPort: port,
+          smtpUser: form.smtpUser.trim(),
+          smtpPassword: form.smtpPassword || "******", // placeholder
+          status: form.status,
+          createdOn: today,
+        },
+      ]);
+      const totalPages = Math.ceil(
+        (filteredSettings.length + 1) / itemsPerPage
+      );
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setSettings((prev) =>
+        prev.map((s) =>
+          s.id === form.id
             ? {
-                ...item,
-                email: editForm.email.trim(),
-                smtpHost: editForm.smtpHost.trim(),
-                smtpPort: portNum,
-                smtpUser: editForm.smtpUser.trim(),
-                smtpPass: editForm.smtpPass ? editForm.smtpPass : item.smtpPass,
-                status: editForm.status,
+                ...s,
+                email: form.email.trim(),
+                smtpHost: form.smtpHost.trim(),
+                smtpPort: port,
+                smtpUser: form.smtpUser.trim(),
+                smtpPassword: form.smtpPassword
+                  ? form.smtpPassword
+                  : s.smtpPassword,
+                status: form.status,
               }
-            : item
+            : s
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
+
+    setFormMode(null);
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
+  // Delete
   const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this email setting? This action cannot be undone."
-      )
-    ) {
-      setData((prev) => prev.filter((item) => item.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+    if (window.confirm("Are you sure you want to delete this email setting?")) {
+      setSettings((prev) => prev.filter((s) => s.id !== id));
+      const totalPages = Math.ceil(
+        (filteredSettings.length - 1) / itemsPerPage
+      );
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
     }
   };
 
-  // Clear button handler (replaces Refresh)
+  // Clear / Refresh
   const handleClear = () => {
-    setForm({
-      email: "",
-      smtpHost: "",
-      smtpPort: "",
-      smtpUser: "",
-      smtpPass: "",
-      status: "Active",
-    });
-    setEditId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
   };
 
-  const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(data, null, 2));
+  // Search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
   };
 
-  // Calculate paginated data using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  // Pagination
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredSettings.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Table Columns
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    { key: "email", label: "Email" },
+    { key: "smtpHost", label: "SMTP Host" },
+    {
+      key: "smtpPort",
+      label: "Port",
+      render: (value) => <span className="font-mono">{value}</span>,
+    },
+    { key: "smtpUser", label: "User" },
+    {
+      key: "smtpPassword",
+      label: "Password",
+      render: () => <span className="font-mono">••••••••</span>,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={value}
+            disabled
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      ),
+    },
+  ];
+
+  // Row Actions
+  const rowActions = (row: EmailSetting) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.email}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.email}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
+
+  // Modal Form
+  const modalForm = () => (
+    <div className="space-y-4">
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium mb-1">
+          Email <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., no-reply@company.com"
+          required
+        />
+      </div>
+
+      {/* SMTP Host */}
+      <div>
+        <label htmlFor="smtpHost" className="block text-sm font-medium mb-1">
+          SMTP Host <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="smtpHost"
+          name="smtpHost"
+          type="text"
+          value={form.smtpHost}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., smtp.gmail.com"
+          required
+        />
+      </div>
+
+      {/* SMTP Port */}
+      <div>
+        <label htmlFor="smtpPort" className="block text-sm font-medium mb-1">
+          Port <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="smtpPort"
+          name="smtpPort"
+          type="number"
+          min="1"
+          max="65535"
+          value={form.smtpPort}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="587"
+          required
+        />
+      </div>
+
+      {/* SMTP User */}
+      <div>
+        <label htmlFor="smtpUser" className="block text-sm font-medium mb-1">
+          User <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="smtpUser"
+          name="smtpUser"
+          type="text"
+          value={form.smtpUser}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., username"
+          required
+        />
+      </div>
+
+      {/* SMTP Password */}
+      <div>
+        <label
+          htmlFor="smtpPassword"
+          className="block text-sm font-medium mb-1"
+        >
+          Password
+        </label>
+        <input
+          id="smtpPassword"
+          name="smtpPassword"
+          type="password"
+          value={form.smtpPassword}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="••••••••"
+          autoComplete="new-password"
+        />
+        {formMode === "edit" && (
+          <p className="text-xs text-gray-500 mt-1">
+            Leave blank to keep current password
+          </p>
+        )}
+      </div>
+
+      {/* Status */}
+      <div className="flex items-center justify-between">
+        <label htmlFor="status" className="text-sm font-medium">
+          Status
+        </label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.status}
+            onChange={handleToggleChange}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Email Settings</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium mb-1"
-            >
-              Email Address <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="example@domain.com"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="smtpHost"
-              className="block text-sm font-medium mb-1"
-            >
-              SMTP Host <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="smtpHost"
-              name="smtpHost"
-              value={form.smtpHost}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="smtp.domain.com"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="smtpPort"
-              className="block text-sm font-medium mb-1"
-            >
-              SMTP Port <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="number"
-              id="smtpPort"
-              name="smtpPort"
-              value={form.smtpPort}
-              onChange={handleInputChange}
-              min={1}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="587"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="smtpUser"
-              className="block text-sm font-medium mb-1"
-            >
-              SMTP User <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="smtpUser"
-              name="smtpUser"
-              value={form.smtpUser}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="username"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="smtpPass"
-              className="block text-sm font-medium mb-1"
-            >
-              SMTP Password
-            </label>
-            <input
-              type="password"
-              id="smtpPass"
-              name="smtpPass"
-              value={form.smtpPass}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Email Address
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  SMTP Host
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  SMTP Port
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  SMTP User
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No email settings found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.email}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.smtpHost}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.smtpPort}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.smtpUser}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit email setting ${item.email}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete email setting ${item.email}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Email Setting
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="editEmail"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Email Address <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="editEmail"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="example@domain.com"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editSmtpHost"
-                  className="block text-sm font-medium mb-1"
-                >
-                  SMTP Host <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editSmtpHost"
-                  name="smtpHost"
-                  value={editForm.smtpHost}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="smtp.domain.com"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editSmtpPort"
-                  className="block text-sm font-medium mb-1"
-                >
-                  SMTP Port <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="editSmtpPort"
-                  name="smtpPort"
-                  value={editForm.smtpPort}
-                  onChange={handleEditInputChange}
-                  min={1}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="587"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editSmtpUser"
-                  className="block text-sm font-medium mb-1"
-                >
-                  SMTP User <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editSmtpUser"
-                  name="smtpUser"
-                  value={editForm.smtpUser}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="username"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editSmtpPass"
-                  className="block text-sm font-medium mb-1"
-                >
-                  SMTP Password
-                </label>
-                <input
-                  type="password"
-                  id="editSmtpPass"
-                  name="smtpPass"
-                  value={editForm.smtpPass}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="Email Settings"
+      description="Manage SMTP email configurations"
+      icon="fa fa-envelope"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredSettings.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={
+        formMode === "add" ? "Add Email Setting" : "Edit Email Setting"
+      }
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

@@ -1,587 +1,411 @@
-import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
 
-const pageSizeOptions = [5, 10, 15];
+interface SmsGateway {
+  id: number;
+  gatewayName: string;
+  username: string;
+  password: string;
+  apiKey: string;
+  apiSecretKey: string;
+  senderId: string;
+  status: boolean;
+  createdOn: string;
+}
 
 export default function SmsSettings() {
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState({
-    smsGateway: "",
+    id: null as number | null,
+    gatewayName: "",
     username: "",
     password: "",
+    apiKey: "",
+    apiSecretKey: "",
     senderId: "",
-    status: "Active",
+    status: true,
   });
-
-  const [data, setData] = useState([]);
+  const [gateways, setGateways] = useState<SmsGateway[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    smsGateway: "",
-    username: "",
-    password: "",
-    senderId: "",
-    status: "Active",
-  });
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("SmsSettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  // Filter & Pagination
+  const filteredGateways = useMemo(() => {
+    return !search.trim()
+      ? gateways
+      : gateways.filter(
+          (g) =>
+            g.gatewayName.toLowerCase().includes(search.toLowerCase()) ||
+            g.senderId.toLowerCase().includes(search.toLowerCase()) ||
+            g.username.toLowerCase().includes(search.toLowerCase())
+        );
+  }, [search, gateways]);
 
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredGateways.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredGateways]);
+
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
-  // Pagination calculations
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return data.slice(start, start + pageSize);
-  }, [currentPage, pageSize, data]);
-
-  // Handlers
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<SmsGateway[]>("SmsSettings");
+      if (response.status.code === "S") {
+        setGateways(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch (err) {
+      setError("Failed to load SMS gateways.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  // Input Change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleSave = () => {
+  const handleToggleChange = () => {
+    setForm((f) => ({ ...f, status: !f.status }));
+  };
+
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      gatewayName: "",
+      username: "",
+      password: "",
+      apiKey: "",
+      apiSecretKey: "",
+      senderId: "",
+      status: true,
+    });
+  };
+
+  // Edit
+  const handleEdit = (gateway: SmsGateway) => {
+    setFormMode("edit");
+    setForm({ ...gateway });
+  };
+
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (
-      !form.smsGateway.trim() ||
+      !form.gatewayName.trim() ||
       !form.username.trim() ||
       !form.password.trim() ||
       !form.senderId.trim()
-    )
+    ) {
+      alert("Gateway Name, Username, Password, and Sender ID are required.");
       return;
+    }
 
-    if (editingId !== null) {
-      // Edit existing
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                smsGateway: form.smsGateway,
-                username: form.username,
-                password: form.password,
-                senderId: form.senderId,
-                status: form.status,
-              }
-            : item
-        )
-      );
-    } else {
-      // Add new
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [
+    const today = new Date().toISOString().split("T")[0];
+
+    if (formMode === "add") {
+      const newId = gateways.length
+        ? Math.max(...gateways.map((g) => g.id)) + 1
+        : 1;
+      setGateways((prev) => [
         ...prev,
         {
+          ...form,
           id: newId,
-          smsGateway: form.smsGateway,
-          username: form.username,
-          password: form.password,
-          senderId: form.senderId,
-          status: form.status,
+          createdOn: today,
         },
       ]);
-    }
-    setForm({
-      smsGateway: "",
-      username: "",
-      password: "",
-      senderId: "",
-      status: "Active",
-    });
-    setEditingId(null);
-    setCurrentPage(1);
-  };
-
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        smsGateway: item.smsGateway,
-        username: item.username,
-        password: item.password,
-        senderId: item.senderId,
-        status: item.status,
-      });
-      setEditingId(id);
-      setIsEditModalOpen(true);
-    }
-  };
-
-  const handleEditSave = () => {
-    if (
-      !editForm.smsGateway.trim() ||
-      !editForm.username.trim() ||
-      !editForm.password.trim() ||
-      !editForm.senderId.trim()
-    )
-      return;
-
-    if (editingId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                smsGateway: editForm.smsGateway,
-                username: editForm.username,
-                password: editForm.password,
-                senderId: editForm.senderId,
-                status: editForm.status,
-              }
-            : item
+      const totalPages = Math.ceil(
+        (filteredGateways.length + 1) / itemsPerPage
+      );
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setGateways((prev) =>
+        prev.map((g) =>
+          g.id === form.id
+            ? { ...form, id: form.id!, createdOn: g.createdOn }
+            : g
         )
       );
-      setEditingId(null);
-      setIsEditModalOpen(false);
     }
+
+    setFormMode(null);
   };
 
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false);
-    setEditingId(null);
-  };
-
+  // Delete
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this entry?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
-      if ((currentPage - 1) * pageSize >= data.length - 1) {
-        setCurrentPage((p) => Math.max(1, p - 1));
+    if (window.confirm("Are you sure you want to delete this SMS gateway?")) {
+      setGateways((prev) => prev.filter((g) => g.id !== id));
+      const totalPages = Math.ceil(
+        (filteredGateways.length - 1) / itemsPerPage
+      );
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
     }
   };
 
+  // Clear / Refresh
   const handleClear = () => {
-    setForm({
-      smsGateway: "",
-      username: "",
-      password: "",
-      senderId: "",
-      status: "Active",
-    });
-    setEditingId(null);
+    loadData();
+    setFormMode(null);
+    setSearch("");
     setCurrentPage(1);
   };
 
-  const handleReport = () => {
-    // For demo, just alert JSON data
-    alert(JSON.stringify(data, null, 2));
+  // Search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">SMS Settings</h1>
+  // Pagination
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredGateways.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+    }
+  };
 
-      {/* Form Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Add / Edit SMS Gateway</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label
-                htmlFor="smsGateway"
-                className="block text-sm font-medium mb-1"
-              >
-                SMS Gateway <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="smsGateway"
-                name="smsGateway"
-                type="text"
-                value={form.smsGateway}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter SMS Gateway"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium mb-1"
-              >
-                Username <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                value={form.username}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter Username"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-1"
-              >
-                Password <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter Password"
-                required
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
+  // Table Columns
+  const columns: Column[] = [
+    {
+      key: "index",
+      label: "#",
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
+    },
+    { key: "gatewayName", label: "SMS Gateway" },
+    { key: "username", label: "Username" },
+    {
+      key: "password",
+      label: "Password",
+      render: () => <span className="font-mono">••••••••</span>,
+    },
+    {
+      key: "apiKey",
+      label: "API Key",
+      render: (value) => (
+        <span className="font-mono text-xs">
+          {value ? `${value.slice(0, 8)}...${value.slice(-4)}` : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "apiSecretKey",
+      label: "API Secret Key",
+      render: (value) => (
+        <span className="font-mono text-xs">
+          {value ? `${value.slice(0, 4)}...${value.slice(-4)}` : "-"}
+        </span>
+      ),
+    },
+    { key: "senderId", label: "Sender ID" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={value}
+            disabled
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      ),
+    },
+  ];
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label
-                htmlFor="senderId"
-                className="block text-sm font-medium mb-1"
-              >
-                Sender ID <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="senderId"
-                name="senderId"
-                type="text"
-                value={form.senderId}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter Sender ID"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium mb-1"
-              >
-                Status <span className="text-red-600">*</span>
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                required
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="w-full md:w-auto px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                title={editingId !== null ? "Update" : "Save"}
-              >
-                {editingId !== null ? (
-                  <>
-                    <i className="fa fa-edit fa-light mr-2" aria-hidden="true"></i> Update
-                  </>
-                ) : (
-                  <>
-                    <i className="fa fa-save fa-light mr-2" aria-hidden="true"></i> Save
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </form>
+  // Row Actions
+  const rowActions = (row: SmsGateway) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.gatewayName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.gatewayName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
 
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  SMS Gateway
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Username
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Password
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Sender ID
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No SMS Gateway entries found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {(currentPage - 1) * pageSize + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.smsGateway}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.username}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground font-mono">
-                      {item.password}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground">
-                      {item.senderId}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-3">
-                      <button
-                        onClick={() => handleEdit(item.id)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        aria-label={`Edit SMS Gateway ${item.smsGateway}`}
-                        type="button"
-                      >
-                        <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-destructive hover:text-destructive/80 transition-colors"
-                        aria-label={`Delete SMS Gateway ${item.smsGateway}`}
-                        type="button"
-                      >
-                        <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={pageSize}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
+  // Modal Form
+  const modalForm = () => (
+    <div className="space-y-4">
+      {/* SMS Gateway */}
+      <div>
+        <label htmlFor="gatewayName" className="block text-sm font-medium mb-1">
+          SMS Gateway <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="gatewayName"
+          name="gatewayName"
+          type="text"
+          value={form.gatewayName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., Twilio, MSG91"
+          required
         />
-      </section>
+      </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
+      {/* Username */}
+      <div>
+        <label htmlFor="username" className="block text-sm font-medium mb-1">
+          Username <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          value={form.username}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., admin"
+          required
+        />
+      </div>
+
+      {/* Password */}
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium mb-1">
+          Password <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="••••••••"
+          required
+        />
+      </div>
+
+      {/* API Key */}
+      <div>
+        <label htmlFor="apiKey" className="block text-sm font-medium mb-1">
+          API Key
+        </label>
+        <input
+          id="apiKey"
+          name="apiKey"
+          type="text"
+          value={form.apiKey}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        />
+      </div>
+
+      {/* API Secret Key */}
+      <div>
+        <label
+          htmlFor="apiSecretKey"
+          className="block text-sm font-medium mb-1"
         >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit SMS Gateway
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* SMS Gateway */}
-              <div>
-                <label
-                  htmlFor="editSmsGateway"
-                  className="block text-sm font-medium mb-1"
-                >
-                  SMS Gateway
-                </label>
-                <input
-                  type="text"
-                  id="editSmsGateway"
-                  name="smsGateway"
-                  value={editForm.smsGateway}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter SMS Gateway"
-                />
-              </div>
+          API Secret Key
+        </label>
+        <input
+          id="apiSecretKey"
+          name="apiSecretKey"
+          type="text"
+          value={form.apiSecretKey}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., your-secret-key"
+        />
+      </div>
 
-              {/* Username */}
-              <div>
-                <label
-                  htmlFor="editUsername"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="editUsername"
-                  name="username"
-                  value={editForm.username}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter Username"
-                />
-              </div>
+      {/* Sender ID */}
+      <div>
+        <label htmlFor="senderId" className="block text-sm font-medium mb-1">
+          Sender ID <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="senderId"
+          name="senderId"
+          type="text"
+          value={form.senderId}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., MYBRAND"
+          maxLength={11}
+          required
+        />
+      </div>
 
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="editPassword"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="editPassword"
-                  name="password"
-                  value={editForm.password}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter Password"
-                  autoComplete="new-password"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Sender ID */}
-              <div>
-                <label
-                  htmlFor="editSenderId"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Sender ID
-                </label>
-                <input
-                  type="text"
-                  id="editSenderId"
-                  name="senderId"
-                  value={editForm.senderId}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter Sender ID"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Status */}
+      <div className="flex items-center justify-between">
+        <label htmlFor="status" className="text-sm font-medium">
+          Status
+        </label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.status}
+            onChange={handleToggleChange}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      </div>
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="SMS Settings"
+      description="Manage SMS gateway configurations"
+      icon="fa fa-sms"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredGateways.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add SMS Gateway" : "Edit SMS Gateway"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

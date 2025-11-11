@@ -1,7 +1,8 @@
 {
   "status": {
-    "code": "S",
-    "description": ""
+    "otpType": "SMS",
+    "digitLimit": 4,
+    "expireTime": 5
   },
   "result": []
-}
+} 

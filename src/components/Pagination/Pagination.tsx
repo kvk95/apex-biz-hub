@@ -163,7 +163,7 @@ export function Pagination({
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(Number(value))}
           >
-            <SelectTrigger className="h-5 w-16 text-xs">
+            <SelectTrigger className="h-6 w-16 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

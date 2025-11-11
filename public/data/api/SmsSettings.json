@@ -6,83 +6,25 @@
   "result": [
     {
       "id": 1,
-      "smsGateway": "Twilio",
-      "username": "twilio_user",
-      "password": "********",
-      "senderId": "TWILIO123",
-      "status": "Active"
+      "gatewayName": "MSG91",
+      "username": "admin",
+      "password": "secure123",
+      "apiKey": "abc123xyz789",
+      "apiSecretKey": "secret987",
+      "senderId": "MYBRAND",
+      "status": true,
+      "createdOn": "2025-11-11"
     },
     {
       "id": 2,
-      "smsGateway": "Nexmo",
-      "username": "nexmo_user",
-      "password": "********",
-      "senderId": "NEXMO456",
-      "status": "Inactive"
-    },
-    {
-      "id": 3,
-      "smsGateway": "Plivo",
-      "username": "plivo_user",
-      "password": "********",
-      "senderId": "PLIVO789",
-      "status": "Active"
-    },
-    {
-      "id": 4,
-      "smsGateway": "Clickatell",
-      "username": "click_user",
-      "password": "********",
-      "senderId": "CLICK101",
-      "status": "Active"
-    },
-    {
-      "id": 5,
-      "smsGateway": "MSG91",
-      "username": "msg91_user",
-      "password": "********",
-      "senderId": "MSG91111",
-      "status": "Inactive"
-    },
-    {
-      "id": 6,
-      "smsGateway": "Textlocal",
-      "username": "textlocal_user",
-      "password": "********",
-      "senderId": "TEXT222",
-      "status": "Active"
-    },
-    {
-      "id": 7,
-      "smsGateway": "Infobip",
-      "username": "infobip_user",
-      "password": "********",
-      "senderId": "INFO333",
-      "status": "Active"
-    },
-    {
-      "id": 8,
-      "smsGateway": "Routee",
-      "username": "routee_user",
-      "password": "********",
-      "senderId": "ROUTE444",
-      "status": "Inactive"
-    },
-    {
-      "id": 9,
-      "smsGateway": "Telesign",
-      "username": "telesign_user",
-      "password": "********",
-      "senderId": "TELE555",
-      "status": "Active"
-    },
-    {
-      "id": 10,
-      "smsGateway": "Sinch",
-      "username": "sinch_user",
-      "password": "********",
-      "senderId": "SINCH666",
-      "status": "Active"
+      "gatewayName": "Twilio",
+      "username": "twilio_user",
+      "password": "twilio_pass",
+      "apiKey": "SK1234567890abcdef",
+      "apiSecretKey": "your_secret_key_here",
+      "senderId": "TWILIO",
+      "status": false,
+      "createdOn": "2025-10-20"
     }
   ]
 }

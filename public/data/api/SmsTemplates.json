@@ -7,62 +7,14 @@
     {
       "id": 1,
       "title": "Order Confirmation",
-      "message": "Dear {customer_name}, your order #{order_id} has been confirmed. Thank you for shopping with us!"
+      "message": "Dear {customer_name}, your order #{order_id} has been confirmed. Thank you for shopping with us!",
+      "enabled": true
     },
     {
       "id": 2,
       "title": "Delivery Update",
-      "message": "Hello {customer_name}, your order #{order_id} is out for delivery and will reach you soon."
-    },
-    {
-      "id": 3,
-      "title": "Payment Reminder",
-      "message": "Dear {customer_name}, this is a reminder that your payment for order #{order_id} is due on {due_date}."
-    },
-    {
-      "id": 4,
-      "title": "Promotional Offer",
-      "message": "Hi {customer_name}, enjoy a special discount of 20% on your next purchase. Use code SAVE20."
-    },
-    {
-      "id": 5,
-      "title": "Account Activation",
-      "message": "Welcome {customer_name} Your account has been activated successfully. Start shopping now."
-    },
-    {
-      "id": 6,
-      "title": "Password Reset",
-      "message": "Dear {customer_name}, click the link to reset your password: {reset_link}. If you didn't request this, ignore this message."
-    },
-    {
-      "id": 7,
-      "title": "Feedback Request",
-      "message": "Hi {customer_name}, we value your feedback. Please rate your recent purchase experience."
-    },
-    {
-      "id": 8,
-      "title": "Subscription Renewal",
-      "message": "Dear {customer_name}, your subscription will renew on {renewal_date}. Thank you for staying with us."
-    },
-    {
-      "id": 9,
-      "title": "Event Invitation",
-      "message": "Hello {customer_name}, you're invited to our exclusive event on {event_date}. RSVP now!"
-    },
-    {
-      "id": 10,
-      "title": "Thank You Note",
-      "message": "Dear {customer_name}, thank you for your recent purchase. We appreciate your business!"
-    },
-    {
-      "id": 11,
-      "title": "Order Cancellation",
-      "message": "Dear {customer_name}, your order #{order_id} has been cancelled as per your request."
-    },
-    {
-      "id": 12,
-      "title": "Shipping Delay",
-      "message": "Hello {customer_name}, due to unforeseen circumstances, your order #{order_id} delivery is delayed."
+      "message": "Hello {customer_name}, your order #{order_id} is out for delivery and will reach you soon.",
+      "enabled": true
     }
   ]
 }

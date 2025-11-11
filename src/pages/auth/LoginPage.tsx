@@ -75,7 +75,7 @@ function LoginPage({ onLoginSuccess }) {
         className="flex items-center justify-center py-12 "
         style={{ paddingTop: "3px" }}
       >
-        <div className="mx-auto grid w-[350px] gap-6 glass-card">
+        <div className="mx-auto grid w-[350px] gap-6 glass-card shadow-lg">
           <div className="grid gap-2 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               {/* Replace Icons.logo with your own logo or text here if needed */}
@@ -86,9 +86,9 @@ function LoginPage({ onLoginSuccess }) {
             </p>
           </div>
           {/* Pass down onLoginSuccess prop to LoginForm */}
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="text-gray-500 ">
+          <form onSubmit={handleSubmit} className="grid gap-4 text-gray-500">
+            <div className="grid gap-2 text-left">
+              <Label htmlFor="email" className="">
                 Email
               </Label>
               <Input
@@ -99,6 +99,7 @@ function LoginPage({ onLoginSuccess }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoFocus
               />
             </div>
             <div className="grid gap-2">
@@ -123,7 +124,7 @@ function LoginPage({ onLoginSuccess }) {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={pending}>
+            <Button type="submit" className="w-full selected_color" disabled={pending}>
               {pending && (
                 <i
                   className="fa fa-spinner fa-spin mr-2 h-4 w-4"

@@ -1,394 +1,315 @@
-import React, { useMemo, useEffect, useState } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 
-const statusOptions = ["Active", "Inactive"];
+interface EmailTemplate {
+  id: string;
+  name: string;
+  content: string;
+  enabled: boolean;
+}
 
-const EmailTemplates: React.FC = () => {
-  const [data, setData] = useState([]);
+const defaultTemplates: Record<string, string> = {
+  "Welcome Email": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+Welcome to <span class="text-orange">{Company Name}</span>!<br><br>
+We’re thrilled to have you as part of our community and are eager to support you in optimizing your operations. Thank you for choosing us – we appreciate your trust and confidence.<br><br>
+At <span class="text-orange">{Company Name}</span>, our mission is to make your experience seamless and efficient. From managing day-to-day tasks to improving workflows, we’re here to help you get the most out of our solutions.<br><br>
+If you have any questions or need assistance, our dedicated support team is always ready to assist you. Feel free to reach out anytime – we’re committed to ensuring your success.<br><br>
+Thank you again for trusting <span class="text-orange">{Company Name}</span>. We’re excited to be part of your journey and look forward to supporting you every step of the way.<br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+
+  "Order Confirmation": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+Your order <strong>{Order ID}</strong> has been confirmed!<br><br>
+Thank you for shopping with <span class="text-orange">{Company Name}</span>. We’ve received your order and are preparing it for shipment.<br><br>
+<strong>Order Details:</strong><br>
+Product: {Product Name}<br>
+Total: {Order Total}<br>
+Order Date: {Order Date}<br>
+Expected Delivery: {Delivery Date}<br><br>
+Track your order: <a href="{Login Link}">Login to your account</a><br><br>
+Questions? Contact us at <a href="mailto:{Support Email}">{Support Email}</a><br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+
+  "Invoice Receipt": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+Here is your invoice for Order <strong>{Order ID}</strong>.<br><br>
+Invoice ID: {Invoice ID}<br>
+Amount Paid: {Order Total}<br>
+Date: {Order Date}<br><br>
+<a href="{Login Link}">View Invoice Online</a><br><br>
+Thank you for your purchase!<br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+
+  "Subscription Renewal Reminder": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+Your subscription will renew in 3 days.<br><br>
+Plan: Premium<br>
+Next Billing: {Order Date}<br>
+Amount: {Order Total}<br><br>
+<a href="{Login Link}">Manage Subscription</a><br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+
+  "Seasonal Promotion": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+<span class="text-2xl font-bold">Diwali Sale – 30% OFF!</span><br><br>
+Use code: <strong>{Discount Code}</strong><br>
+Valid until: {Delivery Date}<br><br>
+<a href="{Login Link}" class="bg-orange-600 text-white px-4 py-2 rounded">Shop Now</a><br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+
+  "System Update": `Hi <span class="text-orange">{Customer Name}</span>,<br>
+We’ve just released a new update!<br><br>
+New Features:<br>
+• Faster dashboard<br>
+• Improved reporting<br>
+• Mobile app sync<br><br>
+<a href="{Login Link}">Explore Now</a><br><br>
+Best,<br>
+The <span class="text-orange">{Company Name}</span> Team`,
+};
+
+const allTags = [
+  "{Customer Name}",
+  "{Company Name}",
+  "{Order ID}",
+  "{Invoice ID}",
+  "{Receipt ID}",
+  "{Login Link}",
+  "{Support Email}",
+  "{Password Reset Link}",
+  "{Product Name}",
+  "{Order Total}",
+  "{Order Date}",
+  "{Delivery Date}",
+  "{Discount Code}",
+];
+
+export default function EmailTemplates() {
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Filters and search
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editedTemplate, setEditedTemplate] = useState<{
-    title: string;
-    subject: string;
-    status: string;
-  }>({ title: "", subject: "", status: statusOptions[0] });
-
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("EmailTemplates");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // Filter and search
-  const filteredTemplates = useMemo(() => {
-    return data.filter((t: any) => {
-      const matchesSearch =
-        t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.subject.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        filterStatus === "All" ? true : t.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-  }, [data, searchTerm, filterStatus]);
-
-  // Paginated data slice
-  const paginatedData = filteredTemplates.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Open edit modal and populate form
-  const onEdit = (id: number) => {
-    const tpl = data.find((t: any) => t.id === id);
-    if (!tpl) return;
-    setEditingId(id);
-    setEditedTemplate({
-      title: tpl.title,
-      subject: tpl.subject,
-      status: tpl.status,
-    });
-    setIsEditModalOpen(true);
-  };
-
-  // Cancel editing modal
-  const onCancelEdit = () => {
-    setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
-    setIsEditModalOpen(false);
-  };
-
-  // Save changes from modal
-  const onSave = () => {
-    if (editingId === null) return;
-    if (!editedTemplate.title.trim() || !editedTemplate.subject.trim()) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    setData((prev: any[]) =>
-      prev.map((t) =>
-        t.id === editingId
-          ? {
-              ...t,
-              title: editedTemplate.title.trim(),
-              subject: editedTemplate.subject.trim(),
-              status: editedTemplate.status,
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<EmailTemplate[]>("EmailTemplates");
+      if (response.status.code === "S") {
+        const loaded = response.result;
+        const merged = Object.keys(defaultTemplates).map((name) => {
+          const existing = loaded.find((t) => t.id === name);
+          return (
+            existing || {
+              id: name,
+              name,
+              content: defaultTemplates[name],
+              enabled: true,
             }
-          : t
-      )
-    );
-    setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
-    setIsEditModalOpen(false);
-  };
-
-  const onDelete = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this email template? This action cannot be undone."
-      )
-    ) {
-      setData((prev) => prev.filter((t) => t.id !== id));
-      if ((currentPage - 1) * itemsPerPage >= filteredTemplates.length - 1) {
-        setCurrentPage(Math.max(currentPage - 1, 1));
+          );
+        });
+        setTemplates(merged);
       }
+    } catch {
+      // Fallback to defaults
+      setTemplates(
+        Object.keys(defaultTemplates).map((name) => ({
+          id: name,
+          name,
+          content: defaultTemplates[name],
+          enabled: true,
+        }))
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Clear button handler (replaces Refresh)
-  const onClear = () => {
-    setSearchTerm("");
-    setFilterStatus("All");
-    setCurrentPage(1);
-    setEditingId(null);
-    setEditedTemplate({ title: "", subject: "", status: statusOptions[0] });
+  const handleContentChange = (id: string, newContent: string) => {
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, content: newContent } : t))
+    );
   };
 
-  const onReport = () => {
-    alert("Report functionality is not implemented.");
+  const handleToggle = (id: string) => {
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, enabled: !t.enabled } : t))
+    );
   };
+
+  const handleSave = async () => {
+    try {
+      await apiService.post("EmailTemplates", templates);
+      alert("Templates saved successfully!");
+    } catch {
+      alert("Failed to save templates.");
+    }
+  };
+
+  const handleDefault = (id: string) => {
+    if (window.confirm("Reset to default template?")) {
+      setTemplates((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, content: defaultTemplates[id] } : t
+        )
+      );
+    }
+  };
+
+  const handlePreview = (content: string) => {
+    setPreviewContent(content);
+    setPreviewOpen(true);
+  };
+
+  const currentTemplate = templates.find((t) => t.id === activeTemplate);
 
   return (
-    <div className="min-h-screen bg-background font-sans p-6">
-      <h1 className="text-2xl font-semibold mb-6">Email Templates</h1>
-
-      {/* Controls: Search, Filter, Clear, Report */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-          <input
-            type="text"
-            placeholder="Search by Title or Subject"
-            className="w-full sm:w-72 border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            aria-label="Search email templates"
-          />
-          <select
-            className="border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              setCurrentPage(1);
-            }}
-            aria-label="Filter by status"
+    <PageBase1
+      title="Email Templates"
+      description="Customize email templates for notifications"
+      icon="fa fa-envelope-open-text"
+      onRefresh={() => loadData()}
+      loading={loading}
+    >
+      <div className="space-y-1">
+        {templates.map((template) => (
+          <div
+            key={template.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
           >
-            <option value="All">All Status</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={onClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            aria-label="Clear filters"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-          <button
-            onClick={onReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            aria-label="Generate report"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </div>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Title
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Subject
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Created Date
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No templates found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((tpl, idx) => (
-                <tr
-                  key={tpl.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">{tpl.title}</td>
-                  <td className="px-4 py-3 text-sm text-foreground">{tpl.subject}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        tpl.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {tpl.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {tpl.createdDate}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => onEdit(tpl.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit template ${tpl.title}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => onDelete(tpl.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete template ${tpl.title}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredTemplates.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
+            {/* Accordion Header */}
+            <div
+              className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50"
+              onClick={() =>
+                setActiveTemplate(
+                  activeTemplate === template.id ? null : template.id
+                )
+              }
             >
-              Edit Email Template
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Title */}
-              <div>
-                <label
-                  htmlFor="editTitle"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Title
+              <div className="flex items-center gap-3">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={template.enabled}
+                    onChange={() => handleToggle(template.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
                 </label>
-                <input
-                  type="text"
-                  id="editTitle"
-                  name="title"
-                  value={editedTemplate.title}
-                  onChange={(e) =>
-                    setEditedTemplate((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter title"
-                />
+                <h3 className="text-sm font-semibold">{template.name}</h3>
               </div>
-
-              {/* Subject */}
-              <div>
-                <label
-                  htmlFor="editSubject"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="editSubject"
-                  name="subject"
-                  value={editedTemplate.subject}
-                  onChange={(e) =>
-                    setEditedTemplate((prev) => ({
-                      ...prev,
-                      subject: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter subject"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editedTemplate.status}
-                  onChange={(e) =>
-                    setEditedTemplate((prev) => ({
-                      ...prev,
-                      status: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <i
+                className={`fa fa-chevron-down transition-transform ${
+                  activeTemplate === template.id ? "rotate-180" : ""
+                }`}
+              />
             </div>
 
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
+            {/* Accordion Content */}
+            {activeTemplate === template.id && (
+              <div className="p-3 border-t border-gray-200">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left: Editor */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Template Content
+                    </label>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) =>
+                        handleContentChange(
+                          template.id,
+                          e.currentTarget.innerHTML
+                        )
+                      }
+                      dangerouslySetInnerHTML={{ __html: template.content }}
+                      className="max-h-64 overflow-y-auto p-4 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500 outline-none"
+                    />
+                  </div>
+
+                  {/* Right: Tags */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Tags
+                    </label>
+                    <div className="space-y-1 max-h-64 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                      {allTags.map((tag) => (
+                        <div
+                          key={tag}
+                          className="text-xs font-mono bg-white px-3 py-1 rounded border border-gray-300 cursor-pointer hover:bg-gray-100"
+                          onClick={() => {
+                            const editor = document.querySelector(
+                              `[data-template="${template.id}"]`
+                            );
+                            if (editor) {
+                              document.execCommand("insertHTML", false, tag);
+                            }
+                          }}
+                        >
+                          {tag}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="mt-6 flex flex-wrap gap-3 justify-end">
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Save Template
+                  </button>
+                  <button
+                    onClick={() => handleDefault(template.id)}
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                  >
+                    Default Template
+                  </button>
+                  <button
+                    onClick={() => handlePreview(template.content)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    Preview Template
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-screen overflow-auto">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-xl font-semibold">Template Preview</h3>
               <button
-                onClick={onCancelEdit}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
-                Cancel
+                <i className="fa fa-times" />
               </button>
-              <button
-                onClick={onSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
+            </div>
+            <div className="p-6">
+              <div
+                dangerouslySetInnerHTML={{ __html: previewContent }}
+                className="prose max-w-none"
+              />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageBase1>
   );
-};
-
-export default EmailTemplates;
+}

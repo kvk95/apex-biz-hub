@@ -1,580 +1,215 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
 
-const requestTypes = ["Data Access", "Data Deletion", "Data Portability"];
-const statuses = ["Pending", "Completed"];
+interface GdprForm {
+  consentText: string;
+  position: "Left" | "Right" | "Center";
+  agreeButtonText: string;
+  declineButtonText: string;
+  showDeclineButton: boolean;
+  cookiesPageLink: string;
+}
 
 export default function GdprSettings() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState<GdprForm>({
+    consentText: "Type your message",
+    position: "Left",
+    agreeButtonText: "Agree",
+    declineButtonText: "Decline",
+    showDeclineButton: true,
+    cookiesPageLink: "",
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-
-  // Form state for GDPR Settings form
-  const [form, setForm] = useState({
-    requestType: "",
-    status: "",
-    startDate: "",
-    endDate: "",
-  });
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    customerName: "",
-    email: "",
-    phone: "",
-    requestType: "",
-    requestDate: "",
-    status: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("GdprSettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const response = await apiService.get<{ result: GdprForm }>("GdprSettings");
+        if (response.status.code === "S") {
+          setForm(response.result);
+        }
+      } catch (err) {
+        setError("Failed to load GDPR settings.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadData();
   }, []);
 
-  // Handle form input changes
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle edit modal input changes
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+  const handleToggleChange = () => {
+    setForm((prev) => ({ ...prev, showDeclineButton: !prev.showDeclineButton }));
   };
 
-  // Filtered data based on form filters
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      const matchesRequestType =
-        form.requestType === "" || item.requestType === form.requestType;
-      const matchesStatus = form.status === "" || item.status === form.status;
-      const matchesStartDate =
-        form.startDate === "" || item.requestDate >= form.startDate;
-      const matchesEndDate = form.endDate === "" || item.requestDate <= form.endDate;
-      return (
-        matchesRequestType && matchesStatus && matchesStartDate && matchesEndDate
-      );
-    });
-  }, [form, data]);
-
-  // Pagination calculations
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        customerName: item.customerName,
-        email: item.email,
-        phone: item.phone,
-        requestType: item.requestType,
-        requestDate: item.requestDate,
-        status: item.status,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await apiService.post("GdprSettings", form);
+      alert("GDPR settings saved successfully!");
+    } catch (err) {
+      setError("Failed to save GDPR settings.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (
-      !editForm.customerName.trim() ||
-      !editForm.email.trim() ||
-      !editForm.phone.trim() ||
-      !editForm.requestType ||
-      !editForm.requestDate ||
-      !editForm.status
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                customerName: editForm.customerName.trim(),
-                email: editForm.email.trim(),
-                phone: editForm.phone.trim(),
-                requestType: editForm.requestType,
-                requestDate: editForm.requestDate,
-                status: editForm.status,
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
-    }
-  };
-
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
-  // Delete handler
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this request?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
-  };
-
-  // Button handlers (simulate actions)
-  const handleSaveSettings = () => {
-    alert("GDPR settings saved successfully.");
-  };
-
-  const handleClear = () => {
-    setForm({
-      requestType: "",
-      status: "",
-      startDate: "",
-      endDate: "",
-    });
-    setEditId(null);
-    setCurrentPage(1);
-  };
-
-  const handleGenerateReport = () => {
-    alert("Report generated.");
+  const handleCancel = () => {
+    window.history.back();
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page Title */}
-      <h1 className="text-lg font-semibold mb-6">GDPR Settings</h1>
+    <PageBase1
+      title="GDPR Settings"
+      description="Configure cookie consent banner and privacy settings"
+      icon="fa fa-cookie-bite"
+    >
+      
+      <div className="w-full mx-auto mt-8">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
-      {/* GDPR Settings Form Section */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Filter Requests</h2>
-        <form
-          className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setCurrentPage(1);
-          }}
-        >
-          {/* Request Type */}
-          <div>
-            <label
-              htmlFor="requestType"
-              className="block text-sm font-medium mb-1"
-            >
-              Request Type
-            </label>
-            <select
-              id="requestType"
-              name="requestType"
-              value={form.requestType}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">All</option>
-              {requestTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+            {/* Cookies Consent Text */}
+            <div>
+              <label htmlFor="consentText" className="block text-sm font-medium text-gray-700 mb-2">
+                Cookies Consent Text
+              </label>
+              <p className="text-xs text-gray-500 mb-2">Your can configure the text here</p>
+              <textarea
+                id="consentText"
+                name="consentText"
+                value={form.consentText}
+                onChange={handleInputChange}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                placeholder="We use cookies to enhance your experience..."
+              />
+            </div>
+
+            {/* Cookies Position */}
+            <div>
+              <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
+                Cookies Position
+              </label>
+              <p className="text-xs text-gray-500 mb-2">Your can configure the type</p>
+              <select
+                id="position"
+                name="position"
+                value={form.position}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="Left">Left</option>
+                <option value="Right">Right</option>
+                <option value="Center">Center</option>
+              </select>
+            </div>
+
+            {/* Agree Button Text */}
+            <div>
+              <label htmlFor="agreeButtonText" className="block text-sm font-medium text-gray-700 mb-2">
+                Agree Button Text
+              </label>
+              <p className="text-xs text-gray-500 mb-2">Your can configure the text here</p>
+              <input
+                id="agreeButtonText"
+                name="agreeButtonText"
+                type="text"
+                value={form.agreeButtonText}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Agree"
+              />
+            </div>
+
+            {/* Decline Button Text */}
+            <div>
+              <label htmlFor="declineButtonText" className="block text-sm font-medium text-gray-700 mb-2">
+                Decline Button Text
+              </label>
+              <p className="text-xs text-gray-500 mb-2">Your can configure the text here</p>
+              <input
+                id="declineButtonText"
+                name="declineButtonText"
+                type="text"
+                value={form.declineButtonText}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Decline"
+              />
+            </div>
+
+            {/* Show Decline Button */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label htmlFor="showDeclineButton" className="block text-sm font-medium text-gray-700">
+                  Show Decline Button
+                </label>
+                <p className="text-xs text-gray-500">Your can configure the text here</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.showDeclineButton}
+                  onChange={handleToggleChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+              </label>
+            </div>
+
+            {/* Link for Cookies Page */}
+            <div>
+              <label htmlFor="cookiesPageLink" className="block text-sm font-medium text-gray-700 mb-2">
+                Link for Cookies Page
+              </label>
+              <p className="text-xs text-gray-500 mb-2">Your can configure the link here</p>
+              <input
+                id="cookiesPageLink"
+                name="cookiesPageLink"
+                type="url"
+                value={form.cookiesPageLink}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="https://yoursite.com/cookies"
+              />
+            </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium mb-1"
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
             >
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">All</option>
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Start Date */}
-          <div>
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label
-              htmlFor="endDate"
-              className="block text-sm font-medium mb-1"
-            >
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={form.endDate}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="md:col-span-4 flex flex-wrap gap-3 mt-6">
+              Cancel
+            </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              <i className="fa fa-filter fa-light" aria-hidden="true"></i> Filter
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveSettings}
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-save fa-light" aria-hidden="true"></i> Save Settings
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleGenerateReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Generate Report
+              {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
-      </section>
-
-      {/* GDPR Requests Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <h2 className="text-xl font-semibold mb-4 px-6">GDPR Requests</h2>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Customer Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Phone
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Request Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Request Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No GDPR requests found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.customerName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.email}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.phone}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.requestType}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.requestDate}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                          : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit request for ${item.customerName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete request for ${item.customerName}`}
-                      type="button"
-                    >
-                      <i className="fa fa-trash fa-light" aria-hidden="true"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredData.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit GDPR Request
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Customer Name */}
-              <div>
-                <label
-                  htmlFor="editCustomerName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  id="editCustomerName"
-                  name="customerName"
-                  value={editForm.customerName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter customer name"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="editEmail"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="editEmail"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter email"
-                />
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label
-                  htmlFor="editPhone"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  id="editPhone"
-                  name="phone"
-                  value={editForm.phone}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter phone"
-                />
-              </div>
-
-              {/* Request Type */}
-              <div>
-                <label
-                  htmlFor="editRequestType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Request Type
-                </label>
-                <select
-                  id="editRequestType"
-                  name="requestType"
-                  value={editForm.requestType}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {requestTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Request Date */}
-              <div>
-                <label
-                  htmlFor="editRequestDate"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Request Date
-                </label>
-                <input
-                  type="date"
-                  id="editRequestDate"
-                  name="requestDate"
-                  value={editForm.requestDate}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+    </PageBase1>
   );
 }
