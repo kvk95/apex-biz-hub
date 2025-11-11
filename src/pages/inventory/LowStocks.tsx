@@ -34,21 +34,27 @@ export default function LowStocks() {
     qtyAlert: 0,
   });
   const [editId, setEditId] = useState<number | null>(null);
+  const tabItems = [
+    { id: "low", label: "Low Stocks" },
+    { id: "out", label: "Out of Stock" },
+  ];
+  const [tabSelected, setTabSelected] = useState(tabItems[0].id);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<LowStockRecord[]>("LowStocks");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-    };
     loadData();
   }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const response = await apiService.get<LowStockRecord[]>("LowStocks");
+    if (response.status.code === "S") {
+      setData(response.result);
+      setError(null);
+    } else {
+      setError(response.status.description);
+    }
+    setLoading(false);
+  };
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -72,7 +78,6 @@ export default function LowStocks() {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [currentPage, itemsPerPage, filteredData]);
-
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -170,7 +175,7 @@ export default function LowStocks() {
     { key: "quantity", label: "Quantity", align: "right" },
     {
       key: "price",
-      label: "Price ($)",
+      label: "Price (₹)",
       align: "right",
       render: (value) => value.toFixed(2),
     },
@@ -201,7 +206,42 @@ export default function LowStocks() {
 
   const customFilters = () => (
     <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start">
+      <div className="flex justify-start gap-2">
+        <ul className="flex w-64 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          {tabItems.map((item, idx) => (
+            <li
+              key={item.id}
+              className={
+                `flex-1` +
+                (idx !== tabItems.length - 1
+                  ? " border-r border-gray-200 dark:border-gray-600"
+                  : "")
+              }
+            >
+              <label
+                htmlFor={`tab-radio-${item.id}`}
+                className={`flex items-center justify-center py-1.5 cursor-pointer
+               transition-colors
+               ${
+                 tabSelected === item.id
+                   ? "bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300 font-semibold"
+                   : "bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+               }`}
+              >
+                <input
+                  id={`tab-radio-${item.id}`}
+                  type="radio"
+                  value={item.id}
+                  name="list-radio"
+                  checked={tabSelected === item.id}
+                  onChange={() => setTabSelected(item.id)}
+                  className="sr-only"
+                />
+                {item.label}
+              </label>
+            </li>
+          ))}
+        </ul>
         <SearchInput
           className=""
           value={searchTerm}
