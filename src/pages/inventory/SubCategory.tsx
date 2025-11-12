@@ -13,7 +13,7 @@ type Category = {
 };
 
 type SubCategory = {
-  id: number;
+  subCategoryId: number;
   categoryId: string;
   categoryName: string;
   subCategoryName: string;
@@ -35,7 +35,7 @@ export default function SubCategory() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
 
   const [form, setForm] = useState({
-    id: 0,
+    subCategoryId: 0,
     categoryId: "",
     categoryName: "",
     subCategoryName: "",
@@ -104,7 +104,7 @@ export default function SubCategory() {
   /* ---------- Handlers ---------- */
   const handleAdd = () => {
     setForm({
-      id: 0,
+      subCategoryId: 0,
       categoryId: "",
       categoryName: "",
       subCategoryName: "",
@@ -119,7 +119,7 @@ export default function SubCategory() {
 
   const handleEdit = (record: SubCategory) => {
     setForm({
-      id: record.id,
+      subCategoryId: record.subCategoryId,
       categoryId: record.categoryId,
       categoryName: record.categoryName,
       subCategoryName: record.subCategoryName,
@@ -132,9 +132,9 @@ export default function SubCategory() {
     setFormMode("edit");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (subCategoryId: number) => {
     if (window.confirm("Delete this sub category?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
+      setData((prev) => prev.filter((d) => d.subCategoryId !== subCategoryId));
     }
   };
 
@@ -203,9 +203,9 @@ export default function SubCategory() {
     const finalCode = form.categoryCode || generateCode(form.categoryName, form.subCategoryName);
 
     if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map(d => d.id)) + 1 : 1;
+      const newSubCategoryId = data.length ? Math.max(...data.map(d => d.subCategoryId)) + 1 : 1;
       const newItem: SubCategory = {
-        id: newId,
+        subCategoryId: newSubCategoryId,
         categoryId: form.categoryId,
         categoryName: form.categoryName,
         subCategoryName: form.subCategoryName,
@@ -218,7 +218,7 @@ export default function SubCategory() {
     } else if (formMode === "edit") {
       setData((prev) =>
         prev.map((item) =>
-          item.id === form.id
+          item.subCategoryId === form.subCategoryId
             ? {
               ...item,
               categoryId: form.categoryId,
@@ -277,7 +277,7 @@ export default function SubCategory() {
         <i className="fa fa-edit"></i>
       </button>
       <button
-        onClick={() => handleDelete(row.id)}
+        onClick={() => handleDelete(row.subCategoryId)}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2"
       >
         <i className="fa fa-trash-can-xmark"></i>

@@ -5,7 +5,7 @@
   },
   "result": [
     {
-      "id": 1,
+      "categoryId": 1,
       "categoryName": "Beverages",
       "categorySlug": "beverages",
       "description": "Soft drinks, coffees, teas, beers, and ales",
@@ -13,7 +13,7 @@
       "image": "/assets/images/categories/beverages.jpg"
     },
     {
-      "id": 2,
+      "categoryId": 2,
       "categoryName": "Condiments",
       "categorySlug": "condiments",
       "description": "Sweet and savory sauces, relishes, spreads, and seasonings",
@@ -21,7 +21,7 @@
       "image": "/assets/images/categories/kitchen.jpg"
     },
     {
-      "id": 3,
+      "categoryId": 3,
       "categoryName": "Confections",
       "categorySlug": "confections",
       "description": "Desserts, candies, and sweet breads",
@@ -29,7 +29,7 @@
       "image": "/assets/images/categories/snacks.jpg"
     },
     {
-      "id": 4,
+      "categoryId": 4,
       "categoryName": "Dairy Products",
       "categorySlug": "dairy-products",
       "description": "Cheeses",
@@ -37,7 +37,7 @@
       "image": "/assets/images/categories/bakery.jpg"
     },
     {
-      "id": 5,
+      "categoryId": 5,
       "categoryName": "Grains/Cereals",
       "categorySlug": "grains-cereals",
       "description": "Breads, crackers, pasta, and cereal",
@@ -45,7 +45,7 @@
       "image": "/assets/images/categories/foodgrains.jpg"
     },
     {
-      "id": 6,
+      "categoryId": 6,
       "categoryName": "Meat/Poultry",
       "categorySlug": "meat-poultry",
       "description": "Prepared meats",
@@ -53,7 +53,7 @@
       "image": "/assets/images/categories/meat.jpg"
     },
     {
-      "id": 7,
+      "categoryId": 7,
       "categoryName": "Produce",
       "categorySlug": "produce",
       "description": "Dried fruit and bean curd",
@@ -61,7 +61,7 @@
       "image": "/assets/images/categories/fruits.jpg"
     },
     {
-      "id": 8,
+      "categoryId": 8,
       "categoryName": "Seafood",
       "categorySlug": "seafood",
       "description": "Seaweed and fish",
@@ -69,7 +69,7 @@
       "image": "/assets/images/categories/meat.jpg"
     },
     {
-      "id": 9,
+      "categoryId": 9,
       "categoryName": "Snacks",
       "categorySlug": "snacks",
       "description": "Chips, nuts, popcorn, and other snack foods",
@@ -77,7 +77,7 @@
       "image": "/assets/images/categories/snacks.jpg"
     },
     {
-      "id": 10,
+      "categoryId": 10,
       "categoryName": "Frozen Foods",
       "categorySlug": "frozen-foods",
       "description": "Frozen vegetables, ready meals, and desserts",
@@ -85,7 +85,7 @@
       "image": "/assets/images/categories/vegetables.jpg"
     },
     {
-      "id": 11,
+      "categoryId": 11,
       "categoryName": "Bakery",
       "categorySlug": "bakery",
       "description": "Cakes, pastries, and bread",
@@ -93,7 +93,7 @@
       "image": "/assets/images/categories/bakery.jpg"
     },
     {
-      "id": 12,
+      "categoryId": 12,
       "categoryName": "Health & Beauty",
       "categorySlug": "health-beauty",
       "description": "Cosmetics, skincare, and personal care products",
@@ -101,7 +101,7 @@
       "image": "/assets/images/categories/beauty.jpg"
     },
     {
-      "id": 13,
+      "categoryId": 13,
       "categoryName": "Household",
       "categorySlug": "household",
       "description": "Cleaning supplies, paper goods, and home essentials",
@@ -109,7 +109,7 @@
       "image": "/assets/images/categories/cleaning.jpg"
     },
     {
-      "id": 14,
+      "categoryId": 14,
       "categoryName": "Tobacco",
       "categorySlug": "tobacco",
       "description": "Cigarettes, cigars, and other tobacco products",
@@ -117,7 +117,7 @@
       "image": "/assets/images/categories/accessories.png"
     },
     {
-      "id": 15,
+      "categoryId": 15,
       "categoryName": "Pet Supplies",
       "categorySlug": "pet-supplies",
       "description": "Pet food, toys, and accessories",
@@ -125,7 +125,7 @@
       "image": "/assets/images/categories/pets.jpg"
     },
     {
-      "id": 16,
+      "categoryId": 16,
       "categoryName": "Electronics",
       "categorySlug": "electronics",
       "description": "Small electronics, gadgets, and accessories",
@@ -133,7 +133,7 @@
       "image": "/assets/images/categories/mobile.png"
     },
     {
-      "id": 17,
+      "categoryId": 17,
       "categoryName": "Cleaning Supplies",
       "categorySlug": "cleaning-supplies",
       "description": "Detergents, sanitizers, and cleaning tools",
@@ -141,7 +141,7 @@
       "image": "/assets/images/categories/cleaning.jpg"
     },
     {
-      "id": 18,
+      "categoryId": 18,
       "categoryName": "Office Supplies",
       "categorySlug": "office-supplies",
       "description": "Stationery, paper, pens, and other office essentials",

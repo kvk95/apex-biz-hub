@@ -8,7 +8,7 @@ import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
 
 type Category = {
-  id: number;
+  categoryId: number;
   categoryName: string;
   categorySlug: string;
   description?: string;
@@ -27,7 +27,7 @@ export default function Category() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
 
   const [form, setForm] = useState({
-    id: 0,
+    categoryId: 0,
     categoryName: "",
     categorySlug: "",
     description: "",
@@ -82,7 +82,7 @@ export default function Category() {
 
   const handleAdd = () => {
     setForm({
-      id: 0,
+      categoryId: 0,
       categoryName: "",
       categorySlug: "",
       description: "",
@@ -93,7 +93,7 @@ export default function Category() {
 
   const handleEdit = (record: Category) => {
     setForm({
-      id: record.id,
+      categoryId: record.categoryId,
       categoryName: record.categoryName,
       categorySlug: record.categorySlug,
       description: record.description || "",
@@ -102,9 +102,9 @@ export default function Category() {
     setFormMode("edit");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (categoryId: number) => {
     if (window.confirm("Delete this category?")) {
-      setData((prev) => prev.filter((c) => c.id !== id));
+      setData((prev) => prev.filter((c) => c.categoryId !== categoryId));
     }
   };
 
@@ -127,9 +127,9 @@ export default function Category() {
     const slug = form.categorySlug || generateSlug(form.categoryName);
 
     if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((c) => c.id)) + 1 : 1;
+      const newCategoryId = data.length ? Math.max(...data.map((c) => c.categoryId)) + 1 : 1;
       const newCategory: Category = {
-        id: newId,
+        categoryId: newCategoryId,
         categoryName: form.categoryName,
         categorySlug: slug,
         description: form.description,
@@ -140,7 +140,7 @@ export default function Category() {
     } else if (formMode === "edit") {
       setData((prev) =>
         prev.map((c) =>
-          c.id === form.id
+          c.categoryId === form.categoryId
             ? {
               ...c,
               categoryName: form.categoryName,
@@ -195,7 +195,7 @@ export default function Category() {
       </button>
       <button
         type="button"
-        onClick={() => handleDelete(row.id)}
+        onClick={() => handleDelete(row.categoryId)}
         aria-label={`Delete ${row.categoryName}`}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2"
       >
