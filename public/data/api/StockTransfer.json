@@ -5,124 +5,430 @@
   },
   "result": [
     {
-      "id": 1,
-      "date": "2023-08-01",
-      "referenceNo": "ST-001",
-      "fromStore": "Main Store",
-      "toStore": "Outlet 1",
-      "product": "Product A",
-      "quantity": 10,
-      "status": "Completed"
+      "stockTransferId": 1,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH003",
+      "toWarehouseName": "East Warehouse",
+      "referenceNumber": "#ST2024122401",
+      "date": "2024-12-24",
+      "totalProducts": 2,
+      "totalQuantity": 120,
+      "notes": "Routine stock rebalancing ahead of holiday demand.\n\nPriority: Beverages and snacks for East City promotions.",
+      "products": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "sku": "PT001",
+          "categoryId": "1",
+          "categoryName": "Beverages",
+          "quantity": 100
+        },
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "sku": "PT003",
+          "categoryId": "9",
+          "categoryName": "Snacks",
+          "quantity": 20
+        }
+      ]
     },
     {
-      "id": 2,
-      "date": "2023-08-02",
-      "referenceNo": "ST-002",
-      "fromStore": "Main Store",
-      "toStore": "Outlet 2",
-      "product": "Product B",
-      "quantity": 5,
-      "status": "Pending"
+      "stockTransferId": 2,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH005",
+      "toWarehouseName": "North Warehouse",
+      "referenceNumber": "#ST2024122302",
+      "date": "2024-12-23",
+      "totalProducts": 1,
+      "totalQuantity": 50,
+      "notes": "Emergency transfer due to stockout at North location.\n\nApproved by: Regional Manager\n\nUrgent delivery completed same day.",
+      "products": [
+        {
+          "productId": "PT015",
+          "productName": "Red Bull Energy Drink 250ml",
+          "productImage": "/assets/images/products/redbull.png",
+          "sku": "PT015",
+          "categoryId": "1",
+          "categoryName": "Beverages",
+          "quantity": 50
+        }
+      ]
     },
     {
-      "id": 3,
-      "date": "2023-08-03",
-      "referenceNo": "ST-003",
-      "fromStore": "Outlet 1",
-      "toStore": "Outlet 3",
-      "product": "Product C",
-      "quantity": 7,
-      "status": "Completed"
+      "stockTransferId": 3,
+      "fromWarehouseId": "WH002",
+      "fromWarehouseName": "Secondary Warehouse",
+      "toWarehouseId": "WH001",
+      "toWarehouseName": "Main Warehouse",
+      "referenceNumber": "#ST2024122203",
+      "date": "2024-12-22",
+      "totalProducts": 3,
+      "totalQuantity": 145,
+      "notes": "Consolidation ahead of year-end audit.\n\nCold storage items moved to Main for centralized control.\n\nAll items verified for expiry compliance.",
+      "products": [
+        {
+          "productId": "PT004",
+          "productName": "Amul Full Cream Milk 1L",
+          "productImage": "/assets/images/products/amul-milk.png",
+          "sku": "PT004",
+          "categoryId": "4",
+          "categoryName": "Dairy Products",
+          "quantity": 80
+        },
+        {
+          "productId": "PT005",
+          "productName": "Britannia Cheese Cubes 200g",
+          "productImage": "/assets/images/products/britannia-cheese.png",
+          "sku": "PT005",
+          "categoryId": "4",
+          "categoryName": "Dairy Products",
+          "quantity": 30
+        },
+        {
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "productImage": "/assets/images/products/icecream.png",
+          "sku": "PT008",
+          "categoryId": "10",
+          "categoryName": "Frozen Foods",
+          "quantity": 35
+        }
+      ]
     },
     {
-      "id": 4,
-      "date": "2023-08-04",
-      "referenceNo": "ST-004",
-      "fromStore": "Outlet 2",
-      "toStore": "Main Store",
-      "product": "Product D",
-      "quantity": 12,
-      "status": "Pending"
+      "stockTransferId": 4,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH006",
+      "toWarehouseName": "South Warehouse",
+      "referenceNumber": "#ST2024122104",
+      "date": "2024-12-21",
+      "totalProducts": 1,
+      "totalQuantity": 90,
+      "notes": "Seasonal stock push for South Town holiday campaign.\n\nBakery items require refrigerated transport.\n\nDelivered via partner logistics.",
+      "products": [
+        {
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "productImage": "/assets/images/products/chocolate-cake.png",
+          "sku": "PT007",
+          "categoryId": "11",
+          "categoryName": "Bakery",
+          "quantity": 90
+        }
+      ]
     },
     {
-      "id": 5,
-      "date": "2023-08-05",
-      "referenceNo": "ST-005",
-      "fromStore": "Main Store",
-      "toStore": "Outlet 1",
-      "product": "Product E",
-      "quantity": 9,
-      "status": "Completed"
+      "stockTransferId": 5,
+      "fromWarehouseId": "WH004",
+      "fromWarehouseName": "West Warehouse",
+      "toWarehouseId": "WH003",
+      "toWarehouseName": "East Warehouse",
+      "referenceNumber": "#ST2024122005",
+      "date": "2024-12-20",
+      "totalProducts": 2,
+      "totalQuantity": 260,
+      "notes": "Inter-regional support for East City store expansion.\n\nIncludes high-demand health & beauty items.\n\nBatch QC passed on Dec 19.",
+      "products": [
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "productImage": "/assets/images/products/dove-soap.png",
+          "sku": "PT011",
+          "categoryId": "12",
+          "categoryName": "Health & Beauty",
+          "quantity": 160
+        },
+        {
+          "productId": "PT010",
+          "productName": "Fresh Red Apples (1kg)",
+          "productImage": "/assets/images/products/apples.png",
+          "sku": "PT010",
+          "categoryId": "7",
+          "categoryName": "Produce",
+          "quantity": 100
+        }
+      ]
     },
     {
-      "id": 6,
-      "date": "2023-08-06",
-      "referenceNo": "ST-006",
-      "fromStore": "Outlet 3",
-      "toStore": "Outlet 2",
-      "product": "Product F",
-      "quantity": 4,
-      "status": "Pending"
+      "stockTransferId": 6,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH007",
+      "toWarehouseName": "Central Warehouse",
+      "referenceNumber": "#ST2024121906",
+      "date": "2024-12-19",
+      "totalProducts": 1,
+      "totalQuantity": 250,
+      "notes": "Bulk paper transfer for corporate clients.\n\nPart of Q4 office supply contract fulfillment.",
+      "products": [
+        {
+          "productId": "PT013",
+          "productName": "A4 Printer Paper 500 Sheets",
+          "productImage": "/assets/images/products/paper.png",
+          "sku": "PT013",
+          "categoryId": "18",
+          "categoryName": "Office Supplies",
+          "quantity": 250
+        }
+      ]
     },
     {
-      "id": 7,
-      "date": "2023-08-07",
-      "referenceNo": "ST-007",
-      "fromStore": "Outlet 1",
-      "toStore": "Main Store",
-      "product": "Product G",
-      "quantity": 15,
-      "status": "Completed"
+      "stockTransferId": 7,
+      "fromWarehouseId": "WH002",
+      "fromWarehouseName": "Secondary Warehouse",
+      "toWarehouseId": "WH009",
+      "toWarehouseName": "Overflow Warehouse",
+      "referenceNumber": "#ST2024121807",
+      "date": "2024-12-18",
+      "totalProducts": 2,
+      "totalQuantity": 175,
+      "notes": "Offloading surplus frozen stock to overflow.\n\nExpiry dates reviewed: all valid beyond March 2025.",
+      "products": [
+        {
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "productImage": "/assets/images/products/icecream.png",
+          "sku": "PT008",
+          "categoryId": "10",
+          "categoryName": "Frozen Foods",
+          "quantity": 90
+        },
+        {
+          "productId": "PT009",
+          "productName": "McCain Frozen French Fries 1kg",
+          "productImage": "/assets/images/products/mccain-fries.png",
+          "sku": "PT009",
+          "categoryId": "10",
+          "categoryName": "Frozen Foods",
+          "quantity": 85
+        }
+      ]
     },
     {
-      "id": 8,
-      "date": "2023-08-08",
-      "referenceNo": "ST-008",
-      "fromStore": "Outlet 2",
-      "toStore": "Outlet 3",
-      "product": "Product H",
-      "quantity": 6,
-      "status": "Pending"
+      "stockTransferId": 8,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH004",
+      "toWarehouseName": "West Warehouse",
+      "referenceNumber": "#ST2024121708",
+      "date": "2024-12-17",
+      "totalProducts": 1,
+      "totalQuantity": 90,
+      "notes": "Pet supply restock for West Town veterinary partners.\n\nHigh demand due to seasonal adoption drives.",
+      "products": [
+        {
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "productImage": "/assets/images/products/pedigree.png",
+          "sku": "PT014",
+          "categoryId": "15",
+          "categoryName": "Pet Supplies",
+          "quantity": 90
+        }
+      ]
     },
     {
-      "id": 9,
-      "date": "2023-08-09",
-      "referenceNo": "ST-009",
-      "fromStore": "Main Store",
-      "toStore": "Outlet 2",
-      "product": "Product I",
-      "quantity": 11,
-      "status": "Completed"
+      "stockTransferId": 9,
+      "fromWarehouseId": "WH003",
+      "fromWarehouseName": "East Warehouse",
+      "toWarehouseId": "WH001",
+      "toWarehouseName": "Main Warehouse",
+      "referenceNumber": "#ST2024121609",
+      "date": "2024-12-16",
+      "totalProducts": 2,
+      "totalQuantity": 420,
+      "notes": "Return of slow-moving items to central hub.\n\nTo be redistributed or discounted in Q1.",
+      "products": [
+        {
+          "productId": "PT002",
+          "productName": "Tropicana Orange Juice 1L",
+          "productImage": "/assets/images/products/tropicana.png",
+          "sku": "PT002",
+          "categoryId": "1",
+          "categoryName": "Beverages",
+          "quantity": 300
+        },
+        {
+          "productId": "PT006",
+          "productName": "Fresh White Bread 400g",
+          "productImage": "/assets/images/products/bread.png",
+          "sku": "PT006",
+          "categoryId": "11",
+          "categoryName": "Bakery",
+          "quantity": 120
+        }
+      ]
     },
     {
-      "id": 10,
-      "date": "2023-08-10",
-      "referenceNo": "ST-010",
-      "fromStore": "Outlet 3",
-      "toStore": "Main Store",
-      "product": "Product J",
-      "quantity": 8,
-      "status": "Pending"
+      "stockTransferId": 10,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH002",
+      "toWarehouseName": "Secondary Warehouse",
+      "referenceNumber": "#ST2024121510",
+      "date": "2024-12-15",
+      "totalProducts": 1,
+      "totalQuantity": 175,
+      "notes": "Cleaning supplies allocation for year-end deep cleaning.\n\nIncludes antiseptic and surface disinfectants.",
+      "products": [
+        {
+          "productId": "PT012",
+          "productName": "Dettol Antiseptic Liquid 500ml",
+          "productImage": "/assets/images/products/dettol.png",
+          "sku": "PT012",
+          "categoryId": "17",
+          "categoryName": "Cleaning Supplies",
+          "quantity": 175
+        }
+      ]
     },
     {
-      "id": 11,
-      "date": "2023-08-11",
-      "referenceNo": "ST-011",
-      "fromStore": "Outlet 1",
-      "toStore": "Outlet 2",
-      "product": "Product K",
-      "quantity": 14,
-      "status": "Completed"
+      "stockTransferId": 11,
+      "fromWarehouseId": "WH006",
+      "fromWarehouseName": "South Warehouse",
+      "toWarehouseId": "WH001",
+      "toWarehouseName": "Main Warehouse",
+      "referenceNumber": "#ST2024121411",
+      "date": "2024-12-14",
+      "totalProducts": 1,
+      "totalQuantity": 150,
+      "notes": "Consolidation of regional snack inventory.\n\nLay's chips to be included in national promo bundle.",
+      "products": [
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "sku": "PT003",
+          "categoryId": "9",
+          "categoryName": "Snacks",
+          "quantity": 150
+        }
+      ]
     },
     {
-      "id": 12,
-      "date": "2023-08-12",
-      "referenceNo": "ST-012",
-      "fromStore": "Main Store",
-      "toStore": "Outlet 3",
-      "product": "Product L",
-      "quantity": 3,
-      "status": "Pending"
+      "stockTransferId": 12,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH008",
+      "toWarehouseName": "Backup Warehouse",
+      "referenceNumber": "#ST2024121312",
+      "date": "2024-12-13",
+      "totalProducts": 3,
+      "totalQuantity": 610,
+      "notes": "Pre-disaster preparedness stockpiling.\n\nItems selected based on FEMA guidelines.\n\nStored in sealed, climate-controlled backup facility.",
+      "products": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "sku": "PT001",
+          "categoryId": "1",
+          "categoryName": "Beverages",
+          "quantity": 400
+        },
+        {
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "productImage": "/assets/images/products/pedigree.png",
+          "sku": "PT014",
+          "categoryId": "15",
+          "categoryName": "Pet Supplies",
+          "quantity": 60
+        },
+        {
+          "productId": "PT006",
+          "productName": "Fresh White Bread 400g",
+          "productImage": "/assets/images/products/bread.png",
+          "sku": "PT006",
+          "categoryId": "11",
+          "categoryName": "Bakery",
+          "quantity": 150
+        }
+      ]
+    },
+    {
+      "stockTransferId": 13,
+      "fromWarehouseId": "WH007",
+      "fromWarehouseName": "Central Warehouse",
+      "toWarehouseId": "WH005",
+      "toWarehouseName": "North Warehouse",
+      "referenceNumber": "#ST2024121213",
+      "date": "2024-12-12",
+      "totalProducts": 1,
+      "totalQuantity": 85,
+      "notes": "Special holiday cake delivery for North City premium clients.\n\nIncludes custom packaging and freshness guarantee.",
+      "products": [
+        {
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "productImage": "/assets/images/products/chocolate-cake.png",
+          "sku": "PT007",
+          "categoryId": "11",
+          "categoryName": "Bakery",
+          "quantity": 85
+        }
+      ]
+    },
+    {
+      "stockTransferId": 14,
+      "fromWarehouseId": "WH001",
+      "fromWarehouseName": "Main Warehouse",
+      "toWarehouseId": "WH010",
+      "toWarehouseName": "Temporary Warehouse",
+      "referenceNumber": "#ST2024121114",
+      "date": "2024-12-11",
+      "totalProducts": 2,
+      "totalQuantity": 530,
+      "notes": "Overflow handling during warehouse maintenance.\n\nTemporary storage for 14 days.\n\nAll items tagged with return-by date.",
+      "products": [
+        {
+          "productId": "PT010",
+          "productName": "Fresh Red Apples (1kg)",
+          "productImage": "/assets/images/products/apples.png",
+          "sku": "PT010",
+          "categoryId": "7",
+          "categoryName": "Produce",
+          "quantity": 330
+        },
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "sku": "PT003",
+          "categoryId": "9",
+          "categoryName": "Snacks",
+          "quantity": 200
+        }
+      ]
+    },
+    {
+      "stockTransferId": 15,
+      "fromWarehouseId": "WH002",
+      "fromWarehouseName": "Secondary Warehouse",
+      "toWarehouseId": "WH001",
+      "toWarehouseName": "Main Warehouse",
+      "referenceNumber": "#ST2024121015",
+      "date": "2024-12-10",
+      "totalProducts": 1,
+      "totalQuantity": 400,
+      "notes": "Return of excess health & beauty stock.\n\nDove soap over-ordered during Black Friday prep.\n\nNow reallocated to high-demand zones.",
+      "products": [
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "productImage": "/assets/images/products/dove-soap.png",
+          "sku": "PT011",
+          "categoryId": "12",
+          "categoryName": "Health & Beauty",
+          "quantity": 400
+        }
+      ]
     }
   ]
 }
