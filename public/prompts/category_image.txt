@@ -1,0 +1,40 @@
+**Aspect Ratio:** 1:1 (256x256 px)
+
+**Background:** White (clean and neutral to emphasize the products)
+
+**Main Elements:**
+
+* **Product Items:** Display 2-3 large images related to the [CATEGORY NAME] category, either in packaging or in glass bowls or ceramic plates. The products should be oversized, filling the frame with no space surrounding them, as if they are posing for a photoshoot. The items should be represented realistically, showcasing their unique features and packaging. Avoid displaying brand names—use product content items as the label (e.g., “Tea Leaves,” “Ground Coffee,” “Fresh Juice”).
+
+* **Category Name Representation:** Do not use 3D letters. The focus should be entirely on the oversized products.
+
+* **Proper Lighting:** The product items should be illuminated with soft, natural light, highlighting the textures and details of the packaging and labels. Adjust the lighting to suit the category’s vibe (e.g., warm, inviting light for food-related categories, or a clean, cool light for beverages).
+
+* **Slight Shadow:** Add a soft, subtle shadow beneath the products to give a realistic, grounded look.
+
+* **Mood:** Clean, professional, and polished, as if the product was photographed for an online retail catalog or POS system. Focus on clarity, realism, and high-quality representation of each category’s products.
+
+
+-----------------------
+
+
+
+**Aspect Ratio:** 1:1 (256x256 px)
+
+**Background:** White (clean and neutral to emphasize the products)
+
+**Main Elements:**
+
+* **Product Items:** Display 2-3 images related to the [CATEGORY NAME] category, either in packaging or in glass bowls or ceramic plates. The items should be represented realistically, showcasing their unique features and packaging. For example, if the category is **Beverages**, you could show products like tea bags, coffee packets, or juice bottles. Avoid displaying brand names—use product content items as the label (e.g., “Tea Leaves,” “Ground Coffee,” “Fresh Juice”).
+
+* **Category Name Representation:** Use 3D letters for the [Category Name], placed in a location that suits the composition of the image. Use a font that matches the environment and overall aesthetic of the category (e.g., organic fonts for natural or food-related categories, modern fonts for beverages or electronics). Only one word should be used for the category name.
+
+* **Proper Lighting:** The product items should be illuminated with soft, natural light, highlighting the textures and details of the packaging and labels. Adjust the lighting to suit the category’s vibe (e.g., warm, inviting light for food-related categories, or a clean, cool light for beverages).
+
+* **Slight Shadow:** Add a soft, subtle shadow beneath the products to give a realistic, grounded look.
+
+* **Mood:** Clean, professional, and polished, as if the product was photographed for an online retail catalog or POS system. Focus on clarity, realism, and high-quality representation of each category’s products.
+
+
+-----------------------
+
