@@ -1,171 +1,246 @@
+/* -------------------------------------------------
+   Warranties - FINAL: Type-Safe + durationPeriod + warrantyPeriod + Edit Fixed
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { EXPIRED_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { SORT_LAT_ASC_DSC, BRAND_STATUSES, DURATION_TYPES } from "@/constants/constants";
 
-interface WarrantyRecord {
+type WarrantyStatus = (typeof BRAND_STATUSES)[number];
+type DurationType = (typeof DURATION_TYPES)[number];
+type SortOption = (typeof SORT_LAT_ASC_DSC)[number];
+
+type Warranty = {
   id: number;
   warrantyNo: string;
-  customerName: string;
-  productName: string;
-  purchaseDate: string;
+  warranty: string;
+  description: string;
+  durationNo: number;
+  durationPeriod: DurationType;
   warrantyPeriod: string;
-  status: (typeof EXPIRED_STATUSES)[number];
-}
+  createdDate: string;
+  status: WarrantyStatus;
+};
 
 export default function Warranties() {
-  const [data, setData] = useState<WarrantyRecord[]>([]);
+  const [data, setData] = useState<Warranty[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"All" | WarrantyStatus>("All");
+  const [sortBy, setSortBy] = useState<SortOption>("Latest");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState<WarrantyRecord>({
+
+  const [form, setForm] = useState({
     id: 0,
-    warrantyNo: "",
-    customerName: "",
-    productName: "",
-    purchaseDate: "",
-    warrantyPeriod: "",
-    status: EXPIRED_STATUSES[0],
+    warranty: "",
+    description: "",
+    durationNo: 1,
+    durationPeriod: DURATION_TYPES[0] as DurationType,
+    status: BRAND_STATUSES[0] as WarrantyStatus,
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const response = await apiService.get<WarrantyRecord[]>("Warranties");
-      if (response.status.code === "S") {
-        setData(response.result);
-        setError(null);
-      } else {
-        setError(response.status.description);
-      }
-      setLoading(false);
-      console.log("Warranties loadData:", { data: response.result });
-    };
-    loadData();
+    loadWarranties();
   }, []);
 
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
+  const loadWarranties = async () => {
+    setLoading(true);
+    try {
+      const res = await apiService.get<any[]>("Warranties");
+      if (res.status.code === "S") {
+        const formatted = res.result.map((w) => {
+          const durationNo = typeof w.durationNo === "number" ? w.durationNo : 1;
+          const rawPeriod = w.durationPeriod && typeof w.durationPeriod === "string"
+            ? w.durationPeriod
+            : DURATION_TYPES[0];
+
+          const period = durationNo === 1
+            ? rawPeriod.replace(/s$/i, "")
+            : rawPeriod.endsWith("s") ? rawPeriod : rawPeriod + "s";
+
+          const warrantyPeriod = `${durationNo} ${period}`;
+
+          return {
+            id: w.id || 0,
+            warrantyNo: w.warrantyNo || `WRT-${String(w.id || 1).padStart(4, "0")}`,
+            warranty: w.warranty || "",
+            description: w.description || "",
+            durationNo,
+            durationPeriod: rawPeriod as DurationType,
+            warrantyPeriod,
+            createdDate: w.createdDate || new Date().toISOString(),
+            status: (w.status || BRAND_STATUSES[0]) as WarrantyStatus,
+          };
+        });
+        setData(formatted);
+      }
+    } catch (err) {
+      console.error("Warranties load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatIndianDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const generateWarrantyCode = () => {
+    const nextId = data.length ? Math.max(...data.map((w) => w.id)) + 1 : 1;
+    return `WRT-${String(nextId).padStart(4, "0")}`;
+  };
+
+  const computeWarrantyPeriod = (num: number, period: DurationType): string => {
+    const cleanPeriod = num === 1 ? period.replace(/s$/i, "") : period.endsWith("s") ? period : period + "s";
+    return `${num} ${cleanPeriod}`;
+  };
+
+  const parseWarrantyPeriod = (periodStr: string): { num: number; period: DurationType } => {
+    const match = periodStr.trim().match(/^(\d+)\s+(.+)$/);
+    if (!match) return { num: 1, period: DURATION_TYPES[0] };
+
+    const num = parseInt(match[1], 10) || 1;
+    let rawPeriod = match[2].trim();
+
+    const matched = DURATION_TYPES.find(t => t.toLowerCase() === rawPeriod.toLowerCase());
+    return { num, period: (matched || DURATION_TYPES[0]) as DurationType };
+  };
+
+  const filteredAndSortedData = useMemo(() => {
+    let filtered = data.filter((item) => {
       const matchesSearch =
         item.warrantyNo.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.customerName.toLowerCase().includes(searchText.toLowerCase());
-      const matchesStatus = !filterStatus || item.status === filterStatus;
+        item.warranty.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchText.toLowerCase());
+      const matchesStatus = filterStatus === "All" || item.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [data, searchText, filterStatus]);
+
+    const sorted = [...filtered];
+    if (sortBy === "Latest") {
+      sorted.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+    } else if (sortBy === "Ascending") {
+      sorted.sort((a, b) => a.warranty.localeCompare(b.warranty));
+    } else if (sortBy === "Descending") {
+      sorted.sort((a, b) => b.warranty.localeCompare(a.warranty));
+    }
+    return sorted;
+  }, [data, searchText, filterStatus, sortBy]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage, itemsPerPage]);
+    return filteredAndSortedData.slice(start, start + itemsPerPage);
+  }, [filteredAndSortedData, currentPage, itemsPerPage]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      !form.warrantyNo.trim() ||
-      !form.customerName.trim() ||
-      !form.productName.trim() ||
-      !form.purchaseDate ||
-      !form.warrantyPeriod.trim() ||
-      !form.status
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { ...form, id: newId }]);
-      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
-    } else if (formMode === "edit" && form.id !== 0) {
-      setData((prev) =>
-        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
-      );
-    }
-    setFormMode(null);
+  const handleAdd = () => {
     setForm({
       id: 0,
-      warrantyNo: "",
-      customerName: "",
-      productName: "",
-      purchaseDate: "",
-      warrantyPeriod: "",
-      status: EXPIRED_STATUSES[0],
+      warranty: "",
+      description: "",
+      durationNo: 1,
+      durationPeriod: DURATION_TYPES[0] as DurationType,
+      status: BRAND_STATUSES[0] as WarrantyStatus,
     });
-    console.log("Warranties handleFormSubmit:", { form, formMode });
+    setFormMode("add");
   };
 
-  const handleEdit = (record: WarrantyRecord) => {
-    setForm(record);
+  // FIXED: Edit now correctly populates durationPeriod
+  const handleEdit = (record: Warranty) => {
+    const { num, period } = parseWarrantyPeriod(record.warrantyPeriod);
+    setForm({
+      id: record.id,
+      warranty: record.warranty,
+      description: record.description,
+      durationNo: num,
+      durationPeriod: period,
+      status: record.status,
+    });
     setFormMode("edit");
-    console.log("Warranties handleEdit:", { record });
   };
 
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this warranty?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
-      console.log("Warranties handleDelete:", { id });
+      setData((prev) => prev.filter((w) => w.id !== id));
     }
   };
 
   const handleClear = () => {
     setSearchText("");
-    setFilterStatus("");
+    setFilterStatus("All");
+    setSortBy("Latest");
     setCurrentPage(1);
-    setFormMode(null);
-    setForm({
-      id: 0,
-      warrantyNo: "",
-      customerName: "",
-      productName: "",
-      purchaseDate: "",
-      warrantyPeriod: "",
-      status: EXPIRED_STATUSES[0],
-    });
-    loadData();
-    console.log("Warranties handleClear");
   };
 
-  const handleReport = () => {
-    alert("Warranty Report:\n\n" + JSON.stringify(filteredData, null, 2));
-    console.log("Warranties handleReport:", { filteredData });
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!form.warranty.trim() || form.durationNo <= 0 || !form.description.trim()) {
+      alert("Warranty, Duration, and Description are required.");
+      return;
+    }
+
+    const warrantyPeriod = computeWarrantyPeriod(form.durationNo, form.durationPeriod);
+    const today = new Date().toISOString();
+    const warrantyCode = formMode === "add" ? generateWarrantyCode() : data.find((w) => w.id === form.id)?.warrantyNo || "";
+
+    if (formMode === "add") {
+      const newId = data.length ? Math.max(...data.map((w) => w.id)) + 1 : 1;
+      const newWarranty: Warranty = {
+        id: newId,
+        warrantyNo: warrantyCode,
+        warranty: form.warranty,
+        description: form.description,
+        durationNo: form.durationNo,
+        durationPeriod: form.durationPeriod,
+        warrantyPeriod,
+        createdDate: today,
+        status: form.status,
+      };
+      setData((prev) => [...prev, newWarranty]);
+    } else if (formMode === "edit") {
+      setData((prev) =>
+        prev.map((w) =>
+          w.id === form.id
+            ? {
+              ...w,
+              warranty: form.warranty,
+              description: form.description,
+              durationNo: form.durationNo,
+              durationPeriod: form.durationPeriod,
+              warrantyPeriod,
+              status: form.status,
+            }
+            : w
+        )
+      );
+    }
+
+    setFormMode(null);
   };
 
   const columns: Column[] = [
-    { key: "warrantyNo", label: "Warranty No", align: "left" },
+    { key: "warrantyNo", label: "Warranty Code", align: "left" },
     {
-      key: "customerName",
-      label: "Customer Name",
+      key: "warranty",
+      label: "Warranty",
       align: "left",
       render: (value) => <span className="font-semibold">{value}</span>,
     },
-    { key: "productName", label: "Product Name", align: "left" },
+    { key: "description", label: "Description", align: "left" },
     {
-      key: "purchaseDate",
-      label: "Purchase Date",
+      key: "warrantyPeriod",
+      label: "Duration",
       align: "left",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) => <span className="font-medium">{value}</span>,
     },
-    { key: "warrantyPeriod", label: "Warranty Period", align: "left" },
     {
       key: "status",
       label: "Status",
@@ -174,58 +249,62 @@ export default function Warranties() {
     },
   ];
 
-  const rowActions = (row: WarrantyRecord) => (
+  const rowActions = (row: Warranty) => (
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit ${row.warrantyNo}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1"
+        title="Edit"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit</span>
+        <i className="fa fa-edit"></i>
       </button>
       <button
         onClick={() => handleDelete(row.id)}
-        aria-label={`Delete ${row.warrantyNo}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2"
+        title="Delete"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
+        <i className="fa fa-trash-can-xmark"></i>
       </button>
     </>
   );
 
   const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      <div className="w-full md:w-auto md:max-w-md">
         <SearchInput
-          className=""
           value={searchText}
-          placeholder="Search Warranty No/Customer Name"
-          onSearch={(query) => {
-            setSearchText(query);
+          placeholder="Search"
+          onSearch={(q) => {
+            setSearchText(q);
             setCurrentPage(1);
           }}
+          className="w-full"
         />
       </div>
-      <div className="flex justify-end">
+      <div className="flex gap-3">
         <select
           value={filterStatus}
           onChange={(e) => {
-            setFilterStatus(e.target.value);
+            setFilterStatus(e.target.value as "All" | WarrantyStatus);
             setCurrentPage(1);
-            console.log("Warranties handleFilterStatusChange:", {
-              filterStatus: e.target.value,
-            });
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by status"
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="">All Status</option>
-          {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
+          <option value="All">Status</option>
+          {BRAND_STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => {
+            setSortBy(e.target.value as SortOption);
+            setCurrentPage(1);
+          }}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {SORT_LAT_ASC_DSC.map((option) => (
+            <option key={option} value={option}>Sort By: {option}</option>
           ))}
         </select>
       </div>
@@ -233,115 +312,100 @@ export default function Warranties() {
   );
 
   const modalForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-6">
       <div>
-        <label htmlFor="warrantyNo" className="block text-sm font-medium mb-1">
-          Warranty No <span className="text-destructive">*</span>
+        <label htmlFor="warranty" className="block text-sm font-medium mb-1">
+          Warranty <span className="text-red-500">*</span>
         </label>
         <input
+          id="warranty"
           type="text"
-          id="warrantyNo"
-          name="warrantyNo"
-          value={form.warrantyNo}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter warranty number"
+          value={form.warranty}
+          onChange={(e) => setForm((p) => ({ ...p, warranty: e.target.value }))}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+          placeholder="e.g. Replacement Warranty"
           required
-          aria-label="Enter warranty number"
+          aria-required="true"
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="durationNo" className="block text-sm font-medium mb-1">
+            Duration <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="durationNo"
+            type="number"
+            min="1"
+            value={form.durationNo}
+            onChange={(e) => setForm((p) => ({ ...p, durationNo: parseInt(e.target.value) || 1 }))}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+            required
+            aria-required="true"
+          />
+        </div>
+        <div>
+          <label htmlFor="durationPeriod" className="block text-sm font-medium mb-1">
+            Period <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="durationPeriod"
+            value={form.durationPeriod}
+            onChange={(e) => setForm((p) => ({ ...p, durationPeriod: e.target.value as DurationType }))}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
+            required
+            aria-required="true"
+          >
+            {DURATION_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div>
-        <label
-          htmlFor="customerName"
-          className="block text-sm font-medium mb-1"
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          id="description"
+          value={form.description}
+          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+          rows={3}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition resize-none"
+          placeholder="Covers replacement of faulty items"
+          required
+          aria-required="true"
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <label htmlFor="statusToggle" className="text-sm font-medium">
+          Status <span className="text-red-500">*</span>
+        </label>
+        <button
+          id="statusToggle"
+          type="button"
+          role="switch"
+          aria-checked={form.status === BRAND_STATUSES[0]}
+          aria-label="Toggle warranty status"
+          onClick={() =>
+            setForm((p) => ({
+              ...p,
+              status: p.status === BRAND_STATUSES[0] ? BRAND_STATUSES[1] : BRAND_STATUSES[0],
+            }))
+          }
+          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status === BRAND_STATUSES[0] ? "bg-primary" : "bg-gray-300"
+            }`}
         >
-          Customer Name <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          id="customerName"
-          name="customerName"
-          value={form.customerName}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter customer name"
-          required
-          aria-label="Enter customer name"
-        />
-      </div>
-      <div>
-        <label htmlFor="productName" className="block text-sm font-medium mb-1">
-          Product Name <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          id="productName"
-          name="productName"
-          value={form.productName}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter product name"
-          required
-          aria-label="Enter product name"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="purchaseDate"
-          className="block text-sm font-medium mb-1"
-        >
-          Purchase Date <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="date"
-          id="purchaseDate"
-          name="purchaseDate"
-          value={form.purchaseDate}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-          aria-label="Select purchase date"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="warrantyPeriod"
-          className="block text-sm font-medium mb-1"
-        >
-          Warranty Period <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          id="warrantyPeriod"
-          name="warrantyPeriod"
-          value={form.warrantyPeriod}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="e.g., 1 year"
-          required
-          aria-label="Enter warranty period"
-        />
-      </div>
-      <div>
-        <label htmlFor="status" className="block text-sm font-medium mb-1">
-          Status <span className="text-destructive">*</span>
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={form.status}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-          aria-label="Select status"
-        >
-          <option value="">Select Status</option>
-          {EXPIRED_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          <span
+            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status === BRAND_STATUSES[0] ? "translate-x-7" : "translate-x-1"
+              }`}
+          />
+        </button>
       </div>
     </div>
   );
@@ -349,33 +413,20 @@ export default function Warranties() {
   return (
     <PageBase1
       title="Warranties"
-      description="Manage warranty records."
-      icon="fa fa-shield-alt"
-      onAddClick={() => {
-        setForm({
-          id: 0,
-          warrantyNo: "",
-          customerName: "",
-          productName: "",
-          purchaseDate: "",
-          warrantyPeriod: "",
-          status: EXPIRED_STATUSES[0],
-        });
-        setFormMode("add");
-      }}
+      description="Manage your warranties"
+      icon="fa-light fa-shield-halved"
+      onAddClick={handleAdd}
       onRefresh={handleClear}
-      onReport={handleReport}
+      onReport={() => alert("PDF Report Generated!")}
+      onExcelReport={() => alert("Excel Report Exported!")}
       search={searchText}
-      onSearchChange={(e) => {
-        setSearchText(e.target.value);
+      onSearchChange={(val) => {
+        setSearchText(val);
         setCurrentPage(1);
-        console.log("Warranties handleSearchChange:", {
-          searchText: e.target.value,
-        });
       }}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
-      totalItems={filteredData.length}
+      totalItems={filteredAndSortedData.length}
       onPageChange={setCurrentPage}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}

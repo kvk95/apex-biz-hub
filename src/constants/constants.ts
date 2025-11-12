@@ -343,3 +343,5 @@ export const EXPENSE_HEADS_STATUSES = [
   "Pending",
   "Approved"
 ] as const;
+
+export const DURATION_TYPES = ["Year", "Month"] as const;

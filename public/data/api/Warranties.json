@@ -1,116 +1,108 @@
 {
   "status": {
     "code": "S",
-    "description": ""
+    "description": "Success"
   },
   "result": [
     {
       "id": 1,
       "warrantyNo": "WRT-0001",
-      "customerName": "John Doe",
-      "productName": "Samsung Galaxy S21",
-      "purchaseDate": "2023-01-15",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
+      "warranty": "Replacement Warranty",
+      "description": "Covers replacement of faulty items",
+      "durationNo": 2,
+      "durationPeriod": "Year",
+      "status": "Active",
+      "createdDate": "2023-01-15"
     },
     {
       "id": 2,
       "warrantyNo": "WRT-0002",
-      "customerName": "Jane Smith",
-      "productName": "Apple MacBook Pro",
-      "purchaseDate": "2022-11-20",
-      "warrantyPeriod": "24 Months",
-      "status": "Expired"
+      "warranty": "On-Site Warranty",
+      "description": "Product repairs done at the customer’s location",
+      "durationNo": 1,
+      "durationPeriod": "Year",
+      "status": "Active",
+      "createdDate": "2023-02-10"
     },
     {
       "id": 3,
       "warrantyNo": "WRT-0003",
-      "customerName": "Michael Johnson",
-      "productName": "Sony WH-1000XM4",
-      "purchaseDate": "2023-05-05",
-      "warrantyPeriod": "18 Months",
-      "status": "Active"
+      "warranty": "Accidental Protection Plan",
+      "description": "Coverage for accidental damage",
+      "durationNo": 6,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-03-05"
     },
     {
       "id": 4,
       "warrantyNo": "WRT-0004",
-      "customerName": "Emily Davis",
-      "productName": "Dell XPS 13",
-      "purchaseDate": "2023-03-10",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
+      "warranty": "Labor-Only Warranty",
+      "description": "Covers only labor costs, not parts",
+      "durationNo": 6,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-04-01"
     },
     {
       "id": 5,
       "warrantyNo": "WRT-0005",
-      "customerName": "Chris Lee",
-      "productName": "Canon EOS R6",
-      "purchaseDate": "2022-09-30",
-      "warrantyPeriod": "24 Months",
-      "status": "Expired"
+      "warranty": "No-Cost Repairs",
+      "description": "No charge for repairs during warranty period",
+      "durationNo": 3,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-05-12"
     },
     {
       "id": 6,
       "warrantyNo": "WRT-0006",
-      "customerName": "Sarah Wilson",
-      "productName": "iPhone 13 Pro",
-      "purchaseDate": "2023-02-18",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
+      "warranty": "Accidental Damage",
+      "description": "Coverage for unexpected damage",
+      "durationNo": 6,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-06-18"
     },
     {
       "id": 7,
       "warrantyNo": "WRT-0007",
-      "customerName": "David Martinez",
-      "productName": "LG OLED TV",
-      "purchaseDate": "2022-12-01",
-      "warrantyPeriod": "36 Months",
-      "status": "Active"
+      "warranty": "Wear & Tear Warranty",
+      "description": "Covers specific product aging issues",
+      "durationNo": 1,
+      "durationPeriod": "Year",
+      "status": "Active",
+      "createdDate": "2023-07-22"
     },
     {
       "id": 8,
       "warrantyNo": "WRT-0008",
-      "customerName": "Anna Brown",
-      "productName": "Bose QuietComfort 35 II",
-      "purchaseDate": "2023-04-22",
-      "warrantyPeriod": "18 Months",
-      "status": "Active"
+      "warranty": "Money-Back Guarantee",
+      "description": "Refund within a specified period",
+      "durationNo": 3,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-08-10"
     },
     {
       "id": 9,
       "warrantyNo": "WRT-0009",
-      "customerName": "James Taylor",
-      "productName": "Microsoft Surface Pro 7",
-      "purchaseDate": "2022-10-15",
-      "warrantyPeriod": "12 Months",
-      "status": "Expired"
+      "warranty": "Water Damage Warranty",
+      "description": "Coverage for water-related issues",
+      "durationNo": 6,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-09-05"
     },
     {
       "id": 10,
       "warrantyNo": "WRT-0010",
-      "customerName": "Patricia Anderson",
-      "productName": "GoPro HERO9",
-      "purchaseDate": "2023-06-01",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
-    },
-    {
-      "id": 11,
-      "warrantyNo": "WRT-0011",
-      "customerName": "Robert Thomas",
-      "productName": "Nintendo Switch",
-      "purchaseDate": "2023-01-25",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
-    },
-    {
-      "id": 12,
-      "warrantyNo": "WRT-0012",
-      "customerName": "Linda Jackson",
-      "productName": "Fitbit Charge 5",
-      "purchaseDate": "2023-03-30",
-      "warrantyPeriod": "12 Months",
-      "status": "Active"
+      "warranty": "Power Surge Protection",
+      "description": "Covers damage from power surges",
+      "durationNo": 6,
+      "durationPeriod": "Months",
+      "status": "Active",
+      "createdDate": "2023-10-01"
     }
   ]
 }
