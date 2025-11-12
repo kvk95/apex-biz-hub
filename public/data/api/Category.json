@@ -6,147 +6,243 @@
   "result": [
     {
       "categoryId": 1,
+      "categoryName": "Staples & Dry Groceries",
+      "categorySlug": "staples_groceries",
+      "description": "Rice, flours, pulses, sugar, salt and more",
+      "status": "Active",
+      "image": "/assets/images/categories/staples_groceries.png"
+    },
+    {
+      "categoryId": 2,
+      "categoryName": "Spices, Herbs & Seasonings",
+      "categorySlug": "spices_seasonings",
+      "description": "Ground and whole spices, herbs and blends",
+      "status": "Active",
+      "image": "/assets/images/categories/spices_seasonings.png"
+    },
+    {
+      "categoryId": 3,
+      "categoryName": "Oils, Ghee, Fats & Vinegars",
+      "categorySlug": "oils_fats",
+      "description": "Cooking oils, ghee, creams and vinegars",
+      "status": "Active",
+      "image": "/assets/images/categories/oils_fats.png"
+    },
+    {
+      "categoryId": 4,
+      "categoryName": "Sauces, Condiments, Chutneys & Pickles",
+      "categorySlug": "sauces_condiments",
+      "description": "Sauces, pickles, chutneys and condiments",
+      "status": "Active",
+      "image": "/assets/images/categories/sauces_condiments.png"
+    },
+    {
+      "categoryId": 5,
       "categoryName": "Beverages",
       "categorySlug": "beverages",
       "description": "Soft drinks, coffees, teas, beers, and ales",
       "status": "Active",
-      "image": "/assets/images/categories/beverages.jpg"
-    },
-    {
-      "categoryId": 2,
-      "categoryName": "Condiments",
-      "categorySlug": "condiments",
-      "description": "Sweet and savory sauces, relishes, spreads, and seasonings",
-      "status": "Active",
-      "image": "/assets/images/categories/kitchen.jpg"
-    },
-    {
-      "categoryId": 3,
-      "categoryName": "Confections",
-      "categorySlug": "confections",
-      "description": "Desserts, candies, and sweet breads",
-      "status": "Active",
-      "image": "/assets/images/categories/snacks.jpg"
-    },
-    {
-      "categoryId": 4,
-      "categoryName": "Dairy Products",
-      "categorySlug": "dairy-products",
-      "description": "Cheeses",
-      "status": "Active",
-      "image": "/assets/images/categories/bakery.jpg"
-    },
-    {
-      "categoryId": 5,
-      "categoryName": "Grains/Cereals",
-      "categorySlug": "grains-cereals",
-      "description": "Breads, crackers, pasta, and cereal",
-      "status": "Active",
-      "image": "/assets/images/categories/foodgrains.jpg"
+      "image": "/assets/images/categories/beverages.png"
     },
     {
       "categoryId": 6,
-      "categoryName": "Meat/Poultry",
-      "categorySlug": "meat-poultry",
-      "description": "Prepared meats",
+      "categoryName": "Snacks, Sweets & Dry Fruits",
+      "categorySlug": "snacks_sweets",
+      "description": "Namkeen, biscuits, sweets, dry fruits and nuts",
       "status": "Active",
-      "image": "/assets/images/categories/meat.jpg"
+      "image": "/assets/images/categories/snacks_sweets.png"
     },
     {
       "categoryId": 7,
-      "categoryName": "Produce",
-      "categorySlug": "produce",
-      "description": "Dried fruit and bean curd",
-      "status": "Inactive",
-      "image": "/assets/images/categories/fruits.jpg"
+      "categoryName": "Dairy, Eggs & Plant-Based Alternatives",
+      "categorySlug": "dairy_alternatives",
+      "description": "Milk, cheese, yogurt, eggs and vegan alternatives",
+      "status": "Active",
+      "image": "/assets/images/categories/dairy_eggs.png"
     },
     {
       "categoryId": 8,
-      "categoryName": "Seafood",
-      "categorySlug": "seafood",
-      "description": "Seaweed and fish",
+      "categoryName": "Frozen Foods",
+      "categorySlug": "frozen_foods",
+      "description": "Frozen vegetables, snacks, meals and desserts",
       "status": "Active",
-      "image": "/assets/images/categories/meat.jpg"
+      "image": "/assets/images/categories/frozen_foods.png"
     },
     {
       "categoryId": 9,
-      "categoryName": "Snacks",
-      "categorySlug": "snacks",
-      "description": "Chips, nuts, popcorn, and other snack foods",
+      "categoryName": "Fresh Produce",
+      "categorySlug": "fresh_produce",
+      "description": "Fresh fruits and vegetables",
       "status": "Active",
-      "image": "/assets/images/categories/snacks.jpg"
+      "image": "/assets/images/categories/fresh_produce.png"
     },
     {
       "categoryId": 10,
-      "categoryName": "Frozen Foods",
-      "categorySlug": "frozen-foods",
-      "description": "Frozen vegetables, ready meals, and desserts",
+      "categoryName": "Meat, Poultry, Seafood & Processed Meats",
+      "categorySlug": "meat_seafood",
+      "description": "Fresh meat, seafood and processed meat products",
       "status": "Active",
-      "image": "/assets/images/categories/vegetables.jpg"
+      "image": "/assets/images/categories/meat_seafood.png"
     },
     {
       "categoryId": 11,
-      "categoryName": "Bakery",
-      "categorySlug": "bakery",
-      "description": "Cakes, pastries, and bread",
+      "categoryName": "Meat & Dairy Alternatives (Plant-Based)",
+      "categorySlug": "plant_based",
+      "description": "Plant proteins, veggie meats and dairy-free options",
       "status": "Active",
-      "image": "/assets/images/categories/bakery.jpg"
+      "image": "/assets/images/categories/plant_based.png"
     },
     {
       "categoryId": 12,
-      "categoryName": "Health & Beauty",
-      "categorySlug": "health-beauty",
-      "description": "Cosmetics, skincare, and personal care products",
+      "categoryName": "Packaged, Canned & Ready-to-Eat Foods",
+      "categorySlug": "canned_ready",
+      "description": "Canned goods, spreads, ready meals and instant foods",
       "status": "Active",
-      "image": "/assets/images/categories/beauty.jpg"
+      "image": "/assets/images/categories/ready_to_eat.png"
     },
     {
       "categoryId": 13,
-      "categoryName": "Household",
-      "categorySlug": "household",
-      "description": "Cleaning supplies, paper goods, and home essentials",
+      "categoryName": "Bakery, Breads & Fresh Baked Goods",
+      "categorySlug": "bakery_breads",
+      "description": "Fresh breads, baked goods and traditional treats",
       "status": "Active",
-      "image": "/assets/images/categories/cleaning.jpg"
+      "image": "/assets/images/categories/bakery_breads.png"
     },
     {
       "categoryId": 14,
-      "categoryName": "Tobacco",
-      "categorySlug": "tobacco",
-      "description": "Cigarettes, cigars, and other tobacco products",
-      "status": "Inactive",
-      "image": "/assets/images/categories/accessories.png"
+      "categoryName": "Instant & Quick Mixes",
+      "categorySlug": "instant_mixes",
+      "description": "Instant breakfast, dessert, beverage and soup mixes",
+      "status": "Active",
+      "image": "/assets/images/categories/instant_mixes.png"
     },
     {
       "categoryId": 15,
-      "categoryName": "Pet Supplies",
-      "categorySlug": "pet-supplies",
-      "description": "Pet food, toys, and accessories",
+      "categoryName": "Household Cleaning & Paper Products",
+      "categorySlug": "cleaning_supplies",
+      "description": "Cleaning agents, laundry, dishwashing and paper products",
       "status": "Active",
-      "image": "/assets/images/categories/pets.jpg"
+      "image": "/assets/images/categories/cleaning_supplies.png"
     },
     {
       "categoryId": 16,
-      "categoryName": "Electronics",
-      "categorySlug": "electronics",
-      "description": "Small electronics, gadgets, and accessories",
-      "status": "Inactive",
-      "image": "/assets/images/categories/mobile.png"
+      "categoryName": "Personal Care & Toiletries",
+      "categorySlug": "personal_care",
+      "description": "Bath, hair, oral care and grooming products",
+      "status": "Active",
+      "image": "/assets/images/categories/personal_care.png"
     },
     {
       "categoryId": 17,
-      "categoryName": "Cleaning Supplies",
-      "categorySlug": "cleaning-supplies",
-      "description": "Detergents, sanitizers, and cleaning tools",
+      "categoryName": "Beauty, Cosmetics & Makeup",
+      "categorySlug": "beauty_cosmetics",
+      "description": "Makeup, skincare and beauty accessories",
       "status": "Active",
-      "image": "/assets/images/categories/cleaning.jpg"
+      "image": "/assets/images/categories/beauty_cosmetics.png"
     },
     {
       "categoryId": 18,
-      "categoryName": "Office Supplies",
-      "categorySlug": "office-supplies",
-      "description": "Stationery, paper, pens, and other office essentials",
+      "categoryName": "Baby Care",
+      "categorySlug": "baby_care",
+      "description": "Feeding, hygiene and grooming products for babies",
       "status": "Active",
-      "image": "/assets/images/categories/paper.png"
+      "image": "/assets/images/categories/baby_care.png"
+    },
+    {
+      "categoryId": 19,
+      "categoryName": "Pet Care",
+      "categorySlug": "pet_care",
+      "description": "Pet food, hygiene and accessories",
+      "status": "Active",
+      "image": "/assets/images/categories/pet_care.png"
+    },
+    {
+      "categoryId": 20,
+      "categoryName": "School & Children Items",
+      "categorySlug": "school_supplies",
+      "description": "Stationery, school bags, art, lunchboxes and uniforms",
+      "status": "Active",
+      "image": "/assets/images/categories/school_supplies.png"
+    },
+    {
+      "categoryId": 21,
+      "categoryName": "Pooja & Religious Items",
+      "categorySlug": "pooja_items",
+      "description": "Religious supplies, idols, utensils and decorations",
+      "status": "Active",
+      "image": "/assets/images/categories/pooja_items.png"
+    },
+    {
+      "categoryId": 22,
+      "categoryName": "Fragrance & Aromatherapy",
+      "categorySlug": "fragrance_aroma",
+      "description": "Perfumes, deodorants, essential oils and room fragrances",
+      "status": "Active",
+      "image": "/assets/images/categories/fragrance_aroma.png"
+    },
+    {
+      "categoryId": 23,
+      "categoryName": "Bathroom Essentials",
+      "categorySlug": "bathroom_essentials",
+      "description": "Fixtures, storage, hygiene and safety items for bathroom",
+      "status": "Active",
+      "image": "/assets/images/categories/bathroom_essentials.png"
+    },
+    {
+      "categoryId": 24,
+      "categoryName": "Home Textiles & Bedding",
+      "categorySlug": "home_textiles",
+      "description": "Bed linen, blankets, curtains, and bath linen",
+      "status": "Active",
+      "image": "/assets/images/categories/home_textiles.png"
+    },
+    {
+      "categoryId": 25,
+      "categoryName": "Apparel & Fashion",
+      "categorySlug": "apparel_fashion",
+      "description": "Clothing, footwear, innerwear and fashion accessories",
+      "status": "Active",
+      "image": "/assets/images/categories/apparel_fashion.png"
+    },
+    {
+      "categoryId": 26,
+      "categoryName": "Home Furniture & Furnishings",
+      "categorySlug": "furniture_home",
+      "description": "Living room, bedroom, dining and outdoor furniture",
+      "status": "Active",
+      "image": "/assets/images/categories/furniture_home.png"
+    },
+    {
+      "categoryId": 27,
+      "categoryName": "Gardening & Indoor Plants",
+      "categorySlug": "gardening_plants",
+      "description": "Gardening tools, plants, pots and plant care supplies",
+      "status": "Active",
+      "image": "/assets/images/categories/gardening_plants.png"
+    },
+    {
+      "categoryId": 28,
+      "categoryName": "Electronics & House Appliances",
+      "categorySlug": "electronics_appliances",
+      "description": "Small appliances, lighting, fans, chargers and entertainment",
+      "status": "Active",
+      "image": "/assets/images/categories/electronics_appliances.png"
+    },
+    {
+      "categoryId": 29,
+      "categoryName": "Mini Repair & Hardware Kit",
+      "categorySlug": "hardware_repair",
+      "description": "Tools, fasteners, electrical, plumbing, and safety kits",
+      "status": "Active",
+      "image": "/assets/images/categories/hardware_repair.png"
+    },
+    {
+      "categoryId": 30,
+      "categoryName": "Computer & Office Essentials",
+      "categorySlug": "computer_office",
+      "description": "Peripherals, storage, printing, cables and office supplies",
+      "status": "Active",
+      "image": "/assets/images/categories/computer_office.png"
     }
   ]
 }

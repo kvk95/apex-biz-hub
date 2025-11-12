@@ -21,7 +21,9 @@ export default function Category() {
   const [data, setData] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
+  const [filterStatus, setFilterStatus] = useState<
+    "All" | "Active" | "Inactive"
+  >("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
@@ -61,8 +63,10 @@ export default function Category() {
       const matchesSearch =
         item.categoryName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.categorySlug.toLowerCase().includes(searchText.toLowerCase()) ||
-        (item.description?.toLowerCase().includes(searchText.toLowerCase()) ?? false);
-      const matchesStatus = filterStatus === "All" || item.status === filterStatus;
+        (item.description?.toLowerCase().includes(searchText.toLowerCase()) ??
+          false);
+      const matchesStatus =
+        filterStatus === "All" || item.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
   }, [data, searchText, filterStatus]);
@@ -127,7 +131,9 @@ export default function Category() {
     const slug = form.categorySlug || generateSlug(form.categoryName);
 
     if (formMode === "add") {
-      const newCategoryId = data.length ? Math.max(...data.map((c) => c.categoryId)) + 1 : 1;
+      const newCategoryId = data.length
+        ? Math.max(...data.map((c) => c.categoryId)) + 1
+        : 1;
       const newCategory: Category = {
         categoryId: newCategoryId,
         categoryName: form.categoryName,
@@ -142,12 +148,12 @@ export default function Category() {
         prev.map((c) =>
           c.categoryId === form.categoryId
             ? {
-              ...c,
-              categoryName: form.categoryName,
-              categorySlug: slug,
-              description: form.description,
-              status: form.status ? "Active" : "Inactive",
-            }
+                ...c,
+                categoryName: form.categoryName,
+                categorySlug: slug,
+                description: form.description,
+                status: form.status ? "Active" : "Inactive",
+              }
             : c
         )
       );
@@ -157,6 +163,18 @@ export default function Category() {
   };
 
   const columns: Column[] = [
+    {
+      key: "image",
+      label: "Image",
+      align: "center",
+      render: (value) => (
+        <img
+          src={value || "/assets/images/placeholder.jpg"}
+          alt="category"
+          className="w-8 h-8 object-cover rounded-lg border"
+        />
+      ),
+    },
     {
       key: "categoryName",
       label: "Category",
@@ -168,6 +186,7 @@ export default function Category() {
       label: "Category Slug",
       align: "left",
     },
+    { key: "description", label: "Description", align: "left" },
     {
       key: "createdOn",
       label: "Created On",
@@ -264,7 +283,9 @@ export default function Category() {
         <input
           type="text"
           value={form.categorySlug}
-          onChange={(e) => setForm((p) => ({ ...p, categorySlug: e.target.value }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, categorySlug: e.target.value }))
+          }
           className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
           placeholder="auto-generated"
           required
@@ -280,7 +301,9 @@ export default function Category() {
         <input
           type="text"
           value={form.description}
-          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, description: e.target.value }))
+          }
           className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
           placeholder="Enter description (optional)"
         />
@@ -296,12 +319,14 @@ export default function Category() {
           role="switch"
           aria-checked={form.status}
           onClick={() => setForm((p) => ({ ...p, status: !p.status }))}
-          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status ? "bg-primary" : "bg-gray-300"
-            }`}
+          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+            form.status ? "bg-primary" : "bg-gray-300"
+          }`}
         >
           <span
-            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status ? "translate-x-7" : "translate-x-1"
-              }`}
+            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
+              form.status ? "translate-x-7" : "translate-x-1"
+            }`}
           />
         </button>
       </div>
