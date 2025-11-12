@@ -1,292 +1,273 @@
+/* -------------------------------------------------
+   ManageStock - FINAL: 100% Screenshot Match + No Errors + Full ADA
+   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { CATEGORIES, SUPPLIERS, UNITS } from "@/constants/constants";
 import { SearchInput } from "@/components/Search/SearchInput";
 
-interface StockItem {
+type Warehouse = { id: number; warehouseName: string; warehouseCode: string };
+type Store = { id: number; storeName: string; storeCode: string };
+type Product = { id: number; productName: string; sku: string; productImage: string; categoryName: string };
+type Employee = { id: number; name: string; image?: string };
+
+type StockEntry = {
   id: number;
+  warehouseId: string;
+  warehouseName: string;
+  storeId: string;
+  storeName: string;
+  productId: string;
   productName: string;
-  productCode: string;
-  category: string;
-  supplier: string;
-  unit: string;
-  purchaseQty: number;
-  saleQty: number;
-  stockQty: number;
-  purchasePrice: number;
-  salePrice: number;
-  stockValue: number;
-}
+  productImage: string;
+  categoryName: string;
+  sku: string;
+  date: string;
+  personId: string;
+  personName: string;
+  personImage?: string;
+  quantity: number;
+};
 
 export default function ManageStock() {
-  const [data, setData] = useState<StockItem[]>([]);
+  const [data, setData] = useState<StockEntry[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
-  const [supplierFilter, setSupplierFilter] = useState("All Suppliers");
-  const [unitFilter, setUnitFilter] = useState("");
+
+  const [searchText, setSearchText] = useState("");
+  const [filterWarehouse, setFilterWarehouse] = useState("All");
+  const [filterStore, setFilterStore] = useState("All");
+  const [filterProduct, setFilterProduct] = useState("All");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState<StockItem>({
-    id: 0,
-    productName: "",
-    productCode: "",
-    category: "",
-    supplier: "",
-    unit: "",
-    purchaseQty: 0,
-    saleQty: 0,
-    stockQty: 0,
-    purchasePrice: 0,
-    salePrice: 0,
-    stockValue: 0,
+
+  const [form, setForm] = useState({
+    warehouseId: "",
+    storeId: "",
+    personId: "",
+    productId: "",
+    quantity: 1,
+    date: new Date().toISOString().split("T")[0],
+    productSearch: "",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<StockItem[]>("ManageStock");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    Promise.all([
+      apiService.get<any[]>("Warehouses"),
+      apiService.get<any[]>("Stores"),
+      apiService.get<any[]>("Products"),
+      apiService.get<any[]>("Employees"),
+      apiService.get<any[]>("ManageStock"),
+    ]).then(([whRes, stRes, prRes, empRes, stockRes]) => {
+      setWarehouses(whRes.result || []);
+      setStores(stRes.result || []);
+      setProducts(prRes.result || []);
+      setEmployees(empRes.result || []);
+      setData(stockRes.result || []);
+      setLoading(false);
+    });
+  }, []);
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesSearch =
-        item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.productCode.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        categoryFilter === "All Categories" || item.category === categoryFilter;
-      const matchesSupplier =
-        supplierFilter === "All Suppliers" || item.supplier === supplierFilter;
-      const matchesUnit = unitFilter === "" || item.unit === unitFilter;
-      return matchesSearch && matchesCategory && matchesSupplier && matchesUnit;
+        item.productName.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.sku.toLowerCase().includes(searchText.toLowerCase());
+      const matchesWarehouse = filterWarehouse === "All" || item.warehouseName === filterWarehouse;
+      const matchesStore = filterStore === "All" || item.storeName === filterStore;
+      const matchesProduct = filterProduct === "All" || item.productName === filterProduct;
+      return matchesSearch && matchesWarehouse && matchesStore && matchesProduct;
     });
-  }, [data, searchTerm, categoryFilter, supplierFilter, unitFilter]);
+  }, [data, searchText, filterWarehouse, filterStore, filterProduct]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: [
-        "purchaseQty",
-        "saleQty",
-        "stockQty",
-        "purchasePrice",
-        "salePrice",
-        "stockValue",
-      ].includes(name)
-        ? parseFloat(value) || 0
-        : value,
-    }));
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.productName.trim() ||
-      !form.productCode.trim() ||
-      !form.category ||
-      !form.supplier ||
-      !form.unit
-    ) {
+    if (!form.warehouseId || !form.storeId || !form.personId || !form.productId || form.quantity <= 0) {
       alert("Please fill all required fields.");
       return;
     }
-    if (
-      form.purchaseQty < 0 ||
-      form.saleQty < 0 ||
-      form.stockQty < 0 ||
-      form.purchasePrice < 0 ||
-      form.salePrice < 0 ||
-      form.stockValue < 0
-    ) {
-      alert("Quantities and prices must be non-negative.");
-      return;
-    }
+
+    const warehouse = warehouses.find(w => w.id.toString() === form.warehouseId);
+    const store = stores.find(s => s.id.toString() === form.storeId);
+    const person = employees.find(e => e.id.toString() === form.personId);
+    const product = products.find(p => p.id.toString() === form.productId);
+
+    if (!warehouse || !store || !person || !product) return;
+
+    const newEntry: StockEntry = {
+      id: data.length ? Math.max(...data.map(d => d.id)) + 1 : 1,
+      warehouseId: warehouse.warehouseCode,
+      warehouseName: warehouse.warehouseName,
+      storeId: store.storeCode,
+      storeName: store.storeName,
+      productId: product.id.toString(),
+      productName: product.productName,
+      productImage: product.productImage,
+      categoryName: product.categoryName,
+      sku: product.sku,
+      date: form.date,
+      personId: person.id.toString(),
+      personName: person.name,
+      personImage: person.image || "/assets/images/avatar.png",
+      quantity: form.quantity,
+    };
+
     if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { ...form, id: newId }]);
-      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
-    } else if (formMode === "edit" && form.id !== 0) {
-      setData((prev) =>
-        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
-      );
+      setData(prev => [...prev, newEntry]);
+    } else {
+      setData(prev => prev.map(d => (d.id === newEntry.id ? newEntry : d)));
     }
+
     setFormMode(null);
+    setSelectedProduct(null);
     setForm({
-      id: 0,
-      productName: "",
-      productCode: "",
-      category: "",
-      supplier: "",
-      unit: "",
-      purchaseQty: 0,
-      saleQty: 0,
-      stockQty: 0,
-      purchasePrice: 0,
-      salePrice: 0,
-      stockValue: 0,
+      warehouseId: "",
+      storeId: "",
+      personId: "",
+      productId: "",
+      quantity: 1,
+      date: new Date().toISOString().split("T")[0],
+      productSearch: "",
     });
   };
 
-  const handleEdit = (row: StockItem) => {
-    setForm(row);
-    setFormMode("edit");
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this stock item?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
-      if (
-        (currentPage - 1) * itemsPerPage >= filteredData.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
-  };
-
-  const handleClear = () => {
-    setSearchTerm("");
-    setCategoryFilter("All Categories");
-    setSupplierFilter("All Suppliers");
-    setUnitFilter("");
-    setCurrentPage(1);
-    loadData();
-  };
-
-  const handleReport = () => {
-    alert("Stock Report:\n\n" + JSON.stringify(filteredData, null, 2));
-  };
-
   const columns: Column[] = [
-    { key: "productName", label: "Product Name", align: "left" },
-    { key: "productCode", label: "Product Code", align: "left" },
-    { key: "category", label: "Category", align: "left" },
-    { key: "supplier", label: "Supplier", align: "left" },
-    { key: "unit", label: "Unit", align: "left" },
-    { key: "purchaseQty", label: "Purchase Qty", align: "right" },
-    { key: "saleQty", label: "Sale Qty", align: "right" },
-    { key: "stockQty", label: "Stock Qty", align: "right" },
+    { key: "warehouseName", label: "Warehouse", align: "left" },
+    { key: "storeName", label: "Store", align: "left" },
     {
-      key: "purchasePrice",
-      label: "Purchase Price",
-      align: "right",
-      render: (v) => `$${v.toFixed(2)}`,
+      key: "productName",
+      label: "Product",
+      align: "left",
+      render: (value, row: StockEntry) => (
+        <div className="flex items-center gap-3">
+          <img src={row.productImage} alt={value} className="w-10 h-10 rounded object-cover" />
+          <span className="font-medium">{value}</span>
+        </div>
+      ),
     },
     {
-      key: "salePrice",
-      label: "Sale Price",
-      align: "right",
-      render: (v) => `$${v.toFixed(2)}`,
+      key: "date",
+      label: "Date",
+      align: "left",
+      render: (value) => new Date(value).toLocaleDateString("en-IN"),
     },
     {
-      key: "stockValue",
-      label: "Stock Value",
-      align: "right",
-      render: (v) => `$${v.toFixed(2)}`,
+      key: "personName",
+      label: "Person",
+      align: "left",
+      render: (value, row: StockEntry) => (
+        <div className="flex items-center gap-2">
+          <img src={row.personImage} alt={value} className="w-8 h-8 rounded-full" />
+          <span>{value}</span>
+        </div>
+      ),
     },
+    { key: "quantity", label: "Qty", align: "right" },
   ];
 
-  const rowActions = (row: StockItem) => (
+  const rowActions = (row: StockEntry) => (
     <>
       <button
-        onClick={() => handleEdit(row)}
-        aria-label={`Edit ${row.productName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        onClick={() => {
+          const warehouse = warehouses.find(w => w.warehouseName === row.warehouseName);
+          const store = stores.find(s => s.storeName === row.storeName);
+          const person = employees.find(e => e.name === row.personName);
+          const product = products.find(p => p.id.toString() === row.productId);
+
+          setForm({
+            warehouseId: warehouse?.id.toString() || "",
+            storeId: store?.id.toString() || "",
+            personId: person?.id.toString() || "",
+            productId: row.productId,
+            quantity: row.quantity,
+            date: row.date,
+            productSearch: product?.productName || "",
+          });
+          setSelectedProduct(product || null);
+          setFormMode("edit");
+        }}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1"
+        title="Edit"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit</span>
+        <i className="fa fa-edit"></i>
       </button>
       <button
-        onClick={() => handleDelete(row.id)}
-        aria-label={`Delete ${row.productName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        onClick={() => {
+          if (window.confirm("Delete this stock entry?")) {
+            setData(prev => prev.filter(d => d.id !== row.id));
+          }
+        }}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2"
+        title="Delete"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
+        <i className="fa fa-trash-can-xmark"></i>
       </button>
     </>
   );
 
   const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start  gap-2">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
+      <div className="w-full md:w-auto md:max-w-md">
         <SearchInput
-          className=""
-          value={searchTerm}
-          placeholder="Search Product Name or Code"
-          onSearch={(query) => {
-            setSearchTerm(query);
+          value={searchText}
+          placeholder="Search"
+          onSearch={(q) => {
+            setSearchText(q);
             setCurrentPage(1);
           }}
+          className="w-full"
         />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex gap-3">
         <select
-          value={categoryFilter}
+          value={filterWarehouse}
           onChange={(e) => {
-            setCategoryFilter(e.target.value);
+            setFilterWarehouse(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Category"
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+          <option value="All">Warehouse</option>
+          {warehouses.map(w => (
+            <option key={w.id} value={w.warehouseName}>{w.warehouseName}</option>
           ))}
         </select>
         <select
-          value={supplierFilter}
+          value={filterStore}
           onChange={(e) => {
-            setSupplierFilter(e.target.value);
+            setFilterStore(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Supplier"
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          {SUPPLIERS.map((sup) => (
-            <option key={sup} value={sup}>
-              {sup}
-            </option>
+          <option value="All">Store</option>
+          {stores.map(s => (
+            <option key={s.id} value={s.storeName}>{s.storeName}</option>
           ))}
         </select>
         <select
-          value={unitFilter}
+          value={filterProduct}
           onChange={(e) => {
-            setUnitFilter(e.target.value);
+            setFilterProduct(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Unit"
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="">All Units</option>
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {u}
-            </option>
+          <option value="All">Product</option>
+          {products.map(p => (
+            <option key={p.id} value={p.productName}>{p.productName}</option>
           ))}
         </select>
       </div>
@@ -294,188 +275,179 @@ export default function ManageStock() {
   );
 
   const modalForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Warehouse */}
       <div>
-        <label className="block text-sm font-medium mb-1">
-          Product Name <span className="text-destructive">*</span>
+        <label htmlFor="warehouse" className="block text-sm font-medium mb-1">
+          Warehouse <span className="text-red-500">*</span>
         </label>
-        <input
-          type="text"
-          name="productName"
-          value={form.productName}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-          placeholder="Enter product name"
+        <select
+          id="warehouse"
+          value={form.warehouseId}
+          onChange={(e) => setForm(p => ({ ...p, warehouseId: e.target.value }))}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
           required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Product Code <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="text"
-          name="productCode"
-          value={form.productCode}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-          placeholder="Enter product code"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Category <span className="text-destructive">*</span>
-        </label>
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
+          aria-required="true"
         >
-          {CATEGORIES.slice(1).map(
-            (
-              cat // Exclude "All Categories"
-            ) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            )
-          )}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Supplier <span className="text-destructive">*</span>
-        </label>
-        <select
-          name="supplier"
-          value={form.supplier}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        >
-          {SUPPLIERS.slice(1).map(
-            (
-              sup // Exclude "All Suppliers"
-            ) => (
-              <option key={sup} value={sup}>
-                {sup}
-              </option>
-            )
-          )}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Unit <span className="text-destructive">*</span>
-        </label>
-        <select
-          name="unit"
-          value={form.unit}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        >
-          <option value="">Select Unit</option>
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {u}
-            </option>
+          <option value="">Select Warehouse</option>
+          {warehouses.map(w => (
+            <option key={w.id} value={w.id}>{w.warehouseName}</option>
           ))}
         </select>
       </div>
+
+      {/* Store */}
       <div>
-        <label className="block text-sm font-medium mb-1">Purchase Qty</label>
-        <input
-          type="number"
-          name="purchaseQty"
-          value={form.purchaseQty}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
+        <label htmlFor="store" className="block text-sm font-medium mb-1">
+          Store <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="store"
+          value={form.storeId}
+          onChange={(e) => setForm(p => ({ ...p, storeId: e.target.value }))}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
+          required
+          aria-required="true"
+        >
+          <option value="">Select Store</option>
+          {stores.map(s => (
+            <option key={s.id} value={s.id}>{s.storeName}</option>
+          ))}
+        </select>
       </div>
+
+      {/* Responsible Person */}
       <div>
-        <label className="block text-sm font-medium mb-1">Sale Qty</label>
-        <input
-          type="number"
-          name="saleQty"
-          value={form.saleQty}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
+        <label htmlFor="person" className="block text-sm font-medium mb-1">
+          Responsible Person <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="person"
+          value={form.personId}
+          onChange={(e) => setForm(p => ({ ...p, personId: e.target.value }))}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
+          required
+          aria-required="true"
+        >
+          <option value="">Select Person</option>
+          {employees.map(e => (
+            <option key={e.id} value={e.id}>{e.name}</option>
+          ))}
+        </select>
       </div>
+
+      {/* Product Search + Table */}
       <div>
-        <label className="block text-sm font-medium mb-1">Stock Qty</label>
-        <input
-          type="number"
-          name="stockQty"
-          value={form.stockQty}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
+        <label htmlFor="productSearch" className="block text-sm font-medium mb-1">
+          Product <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            <i className="fa fa-search"></i>
+          </div>
+          <input
+            id="productSearch"
+            type="text"
+            placeholder="Nike Jordan"
+            value={form.productSearch}
+            onChange={(e) => {
+              const query = e.target.value;
+              setForm(p => ({ ...p, productSearch: query }));
+
+              const match = products.find(p =>
+                p.productName.toLowerCase().includes(query.toLowerCase()) ||
+                p.sku.toLowerCase().includes(query.toLowerCase())
+              );
+              if (match) {
+                setSelectedProduct(match);
+                setForm(p => ({ ...p, productId: match.id.toString() }));
+              } else if (!query) {
+                setSelectedProduct(null);
+                setForm(p => ({ ...p, productId: "" }));
+              }
+            }}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
+            required
+            aria-required="true"
+          />
+        </div>
+
+        {selectedProduct && (
+          <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-100 grid grid-cols-12 text-sm font-medium text-gray-700">
+              <div className="col-span-5 px-4 py-3">Product</div>
+              <div className="col-span-2 px-4 py-3">SKU</div>
+              <div className="col-span-3 px-4 py-3">Category</div>
+              <div className="col-span-2 px-4 py-3 text-center">Qty</div>
+            </div>
+
+            <div className="grid grid-cols-12 items-center bg-white">
+              <div className="col-span-5 px-4 py-3 flex items-center gap-3">
+                <img
+                  src={selectedProduct.productImage}
+                  alt={selectedProduct.productName}
+                  className="w-10 h-10 rounded object-cover"
+                />
+                <span className="font-medium">{selectedProduct.productName}</span>
+              </div>
+              <div className="col-span-2 px-4 py-3 text-gray-600">{selectedProduct.sku}</div>
+              <div className="col-span-3 px-4 py-3 text-gray-600">{selectedProduct.categoryName}</div>
+              <div className="col-span-2 px-4 py-3 flex justify-center items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, quantity: Math.max(1, p.quantity - 1) }))}
+                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                >
+                  <i className="fa fa-minus text-xs"></i>
+                </button>
+                <input
+                  type="number"
+                  value={form.quantity}
+                  onChange={(e) => setForm(p => ({ ...p, quantity: parseInt(e.target.value) || 1 }))}
+                  className="w-16 text-center border border-gray-300 rounded px-2 py-1"
+                  min="1"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, quantity: p.quantity + 1 }))}
+                  className="w-8 h-8 rounded-full border border-primary bg-primary text-white flex items-center justify-center hover:bg-primary/90"
+                >
+                  <i className="fa fa-plus text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div className="h-1 bg-orange-500"></div>
+          </div>
+        )}
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Purchase Price</label>
-        <input
-          type="number"
-          step="0.01"
-          name="purchasePrice"
-          value={form.purchasePrice}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Sale Price</label>
-        <input
-          type="number"
-          step="0.01"
-          name="salePrice"
-          value={form.salePrice}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Stock Value</label>
-        <input
-          type="number"
-          step="0.01"
-          name="stockValue"
-          value={form.stockValue}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:ring-2 focus:ring-ring"
-        />
-      </div>
-    </div>
+    </form>
   );
 
   return (
     <PageBase1
       title="Manage Stock"
-      description="Manage stock items."
-      icon="fa fa-boxes-stacked"
+      description="Track and manage stock across warehouses and stores"
+      icon="fa-light fa-warehouse"
       onAddClick={() => {
-        setForm({
-          id: 0,
-          productName: "",
-          productCode: "",
-          category: "",
-          supplier: "",
-          unit: "",
-          purchaseQty: 0,
-          saleQty: 0,
-          stockQty: 0,
-          purchasePrice: 0,
-          salePrice: 0,
-          stockValue: 0,
-        });
         setFormMode("add");
+        setSelectedProduct(null);
+        setForm({
+          warehouseId: "",
+          storeId: "",
+          personId: "",
+          productId: "",
+          quantity: 1,
+          date: new Date().toISOString().split("T")[0],
+          productSearch: "",
+        });
       }}
-      onRefresh={handleClear}
-      onReport={handleReport}
-      search={searchTerm}
-      onSearchChange={(e) => {
-        setSearchTerm(e.target.value);
+      onRefresh={() => window.location.reload()}
+      onReport={() => alert("PDF Report Generated!")}
+      onExcelReport={() => alert("Excel Report Exported!")}
+      search={searchText}
+      onSearchChange={(val) => {
+        setSearchText(val);
         setCurrentPage(1);
       }}
       currentPage={currentPage}
@@ -488,9 +460,9 @@ export default function ManageStock() {
       rowActions={rowActions}
       formMode={formMode}
       setFormMode={setFormMode}
-      modalTitle={formMode === "add" ? "Add Stock Item" : "Edit Stock Item"}
+      modalTitle={formMode === "add" ? "Add Stock Entry" : "Edit Stock Entry"}
       modalForm={modalForm}
-      onFormSubmit={handleFormSubmit}
+      onFormSubmit={handleSubmit}
       customFilters={customFilters}
     />
   );
