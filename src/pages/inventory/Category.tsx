@@ -164,22 +164,19 @@ export default function Category() {
 
   const columns: Column[] = [
     {
-      key: "image",
-      label: "Image",
-      align: "center",
-      render: (value) => (
-        <img
-          src={value || "/assets/images/placeholder.jpg"}
-          alt="category"
-          className="w-8 h-8 object-cover rounded-lg border"
-        />
-      ),
-    },
-    {
       key: "categoryName",
       label: "Category",
       align: "left",
-      render: (value) => value,
+      render: (value, row: Category) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={row.image}
+            alt={value}
+            className="w-8 h-8 rounded object-cover"
+          />
+          <span className="font-medium">{value}</span>
+        </div>
+      ),
     },
     {
       key: "categorySlug",

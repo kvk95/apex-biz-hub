@@ -21,6 +21,7 @@ type SubCategory = {
   description: string;
   status: "Active" | "Inactive";
   image?: string;
+  categoryImage?: string;
 };
 
 export default function SubCategory() {
@@ -29,7 +30,9 @@ export default function SubCategory() {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
+  const [filterStatus, setFilterStatus] = useState<
+    "All" | "Active" | "Inactive"
+  >("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
@@ -43,6 +46,7 @@ export default function SubCategory() {
     description: "",
     status: true,
     image: "",
+    categoryImage: "",
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -69,11 +73,13 @@ export default function SubCategory() {
     try {
       const res = await apiService.get<SubCategory[]>("SubCategory");
       if (res.status.code === "S") {
-        setData(res.result.map((item) => ({
-          ...item,
-          status: item.status || "Active",
-          image: item.image || "/assets/images/placeholder.jpg",
-        })));
+        setData(
+          res.result.map((item) => ({
+            ...item,
+            status: item.status || "Active",
+            image: item.image || "/assets/images/placeholder.jpg",
+          }))
+        );
       }
     } catch (err) {
       console.error("SubCategory load error:", err);
@@ -90,8 +96,10 @@ export default function SubCategory() {
         item.categoryName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.categoryCode.toLowerCase().includes(searchText.toLowerCase()) ||
         item.description.toLowerCase().includes(searchText.toLowerCase());
-      const matchesCategory = !filterCategory || item.categoryName === filterCategory;
-      const matchesStatus = filterStatus === "All" || item.status === filterStatus;
+      const matchesCategory =
+        !filterCategory || item.categoryName === filterCategory;
+      const matchesStatus =
+        filterStatus === "All" || item.status === filterStatus;
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [data, searchText, filterCategory, filterStatus]);
@@ -112,6 +120,7 @@ export default function SubCategory() {
       description: "",
       status: true,
       image: "",
+      categoryImage: "",
     });
     setImagePreview(null);
     setFormMode("add");
@@ -127,6 +136,7 @@ export default function SubCategory() {
       description: record.description,
       status: record.status === "Active",
       image: record.image,
+      categoryImage: record.categoryImage,
     });
     setImagePreview(record.image || null);
     setFormMode("edit");
@@ -169,12 +179,14 @@ export default function SubCategory() {
   const generateCode = (categoryName: string, subCategoryName: string) => {
     const cat = categoryName.slice(0, 2).toUpperCase();
     const sub = subCategoryName.slice(0, 2).toUpperCase();
-    const num = String(data.filter(d => d.categoryCode.startsWith(cat)).length + 1).padStart(3, "0");
+    const num = String(
+      data.filter((d) => d.categoryCode.startsWith(cat)).length + 1
+    ).padStart(3, "0");
     return `${cat}${sub}${num}`;
   };
 
   const handleCategoryChange = (categoryName: string) => {
-    const selected = categories.find(c => c.categoryName === categoryName);
+    const selected = categories.find((c) => c.categoryName === categoryName);
     if (selected) {
       setForm((p) => ({
         ...p,
@@ -200,10 +212,14 @@ export default function SubCategory() {
       return;
     }
 
-    const finalCode = form.categoryCode || generateCode(form.categoryName, form.subCategoryName);
+    const finalCode =
+      form.categoryCode ||
+      generateCode(form.categoryName, form.subCategoryName);
 
     if (formMode === "add") {
-      const newSubCategoryId = data.length ? Math.max(...data.map(d => d.subCategoryId)) + 1 : 1;
+      const newSubCategoryId = data.length
+        ? Math.max(...data.map((d) => d.subCategoryId)) + 1
+        : 1;
       const newItem: SubCategory = {
         subCategoryId: newSubCategoryId,
         categoryId: form.categoryId,
@@ -220,15 +236,15 @@ export default function SubCategory() {
         prev.map((item) =>
           item.subCategoryId === form.subCategoryId
             ? {
-              ...item,
-              categoryId: form.categoryId,
-              categoryName: form.categoryName,
-              subCategoryName: form.subCategoryName,
-              categoryCode: finalCode,
-              description: form.description,
-              status: form.status ? "Active" : "Inactive",
-              image: form.image,
-            }
+                ...item,
+                categoryId: form.categoryId,
+                categoryName: form.categoryName,
+                subCategoryName: form.subCategoryName,
+                categoryCode: finalCode,
+                description: form.description,
+                status: form.status ? "Active" : "Inactive",
+                image: form.image,
+              }
             : item
         )
       );
@@ -240,22 +256,22 @@ export default function SubCategory() {
   /* ---------- Table Columns ---------- */
   const columns: Column[] = [
     {
-      key: "image",
-      label: "Image",
-      align: "center",
-      render: (value) => (
-        <img
-          src={value || "/assets/images/placeholder.jpg"}
-          alt="subcategory"
-          className="w-12 h-12 object-cover rounded-lg border"
-        />
-      ),
-    },
-    {
       key: "subCategoryName",
       label: "Sub Category",
       align: "left",
-      render: (value) => <span className="font-medium">{value}</span>,
+      render: (value, row: SubCategory) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={row.image}
+            alt={value}
+            className="w-8 h-8 rounded object-cover"
+            onError={(e) =>
+              ((e.target as HTMLImageElement).src = row.categoryImage)
+            }
+          />
+          <span className="font-medium">{value}</span>
+        </div>
+      ),
     },
     { key: "categoryName", label: "Category", align: "left" },
     { key: "categoryCode", label: "Category Code", align: "left" },
@@ -418,7 +434,9 @@ export default function SubCategory() {
           <input
             type="text"
             value={form.description}
-            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, description: e.target.value }))
+            }
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
             placeholder="Enter description"
             required
@@ -434,12 +452,14 @@ export default function SubCategory() {
             role="switch"
             aria-checked={form.status}
             onClick={() => setForm((p) => ({ ...p, status: !p.status }))}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status ? "bg-primary" : "bg-gray-300"
-              }`}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+              form.status ? "bg-primary" : "bg-gray-300"
+            }`}
           >
             <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status ? "translate-x-7" : "translate-x-1"
-                }`}
+              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
+                form.status ? "translate-x-7" : "translate-x-1"
+              }`}
             />
           </button>
         </div>
