@@ -323,6 +323,7 @@ export default function Holidays() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

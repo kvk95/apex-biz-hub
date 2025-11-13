@@ -435,6 +435,7 @@ export default function Stores() {
       modalTitle={formMode === "add" ? "Add Store" : "Edit Store"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

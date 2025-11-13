@@ -208,7 +208,7 @@ export default function TaxReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

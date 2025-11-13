@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   VariantAttributes - FINAL: Icons Fixed + Type-Safe + Multi-Value
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
@@ -72,7 +69,7 @@ export default function VariantAttributes() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.variantName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.variantValues.some((v) => v.toLowerCase().includes(searchText.toLowerCase()));
@@ -411,6 +408,7 @@ export default function VariantAttributes() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

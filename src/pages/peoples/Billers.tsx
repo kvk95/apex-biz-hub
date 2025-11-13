@@ -452,7 +452,7 @@ export default function Billers() {
       setFormMode={setFormMode}
       modalTitle={formMode === "add" ? "Add Biller" : "Edit Biller"}
       modalForm={modalForm}
-      onFormSubmit={handleFormSubmit}
+      onFormSubmit={handleFormSubmit} loading={loading}
     />
   );
 }

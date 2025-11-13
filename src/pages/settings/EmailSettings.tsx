@@ -213,12 +213,7 @@ export default function EmailSettings() {
   };
 
   // Table Columns
-  const columns: Column[] = [
-    {
-      key: "index",
-      label: "#",
-      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + idx + 1,
-    },
+  const columns: Column[] = [ 
     { key: "email", label: "Email" },
     { key: "smtpHost", label: "SMTP Host" },
     {

@@ -501,7 +501,7 @@ export default function OnlineOrders() {
                 formMode === "create-payment" ? "Create Payments" : ""
       }
       modalForm={modalForm}
-      onFormSubmit={handleFormSubmit}
+      onFormSubmit={handleFormSubmit} loading={loading}
     />
   );
 }

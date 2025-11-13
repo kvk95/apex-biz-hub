@@ -240,7 +240,7 @@ export default function SupplierReport() {
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
-      customFilters={customFilters}
+      customFilters={customFilters}  loading={loading}
     />
   );
 }

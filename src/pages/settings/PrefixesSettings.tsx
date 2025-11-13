@@ -88,6 +88,7 @@ export default function PrefixesSettings() {
       title="Prefixes Settings"
       description="Configure prefixes for various modules"
       icon="fa fa-hashtag"
+      loading={loading}
     >
       <div className="w-full mx-auto mt-8">
         {error && (

@@ -319,7 +319,7 @@ export default function ProductReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

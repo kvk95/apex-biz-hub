@@ -855,7 +855,7 @@ export default function PurchaseReturn() {
       modalTitle={formMode === "add" ? "Add Purchase Return" : "Edit Purchase Return"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     >
       <button
         type="button"

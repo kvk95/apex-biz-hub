@@ -342,6 +342,7 @@ export default function PrintBarcode() {
       modalTitle="Edit Quantity"
       modalForm={quantityModalForm}
       onFormSubmit={handleQuantitySubmit}
+      loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-card rounded shadow">
         {error && (

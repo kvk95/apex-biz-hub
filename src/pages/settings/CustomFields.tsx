@@ -329,6 +329,7 @@ export default function CustomFields() {
       modalTitle={formMode === "add" ? "Add Custom Field" : "Edit Custom Field"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

@@ -295,6 +295,7 @@ export default function Departments() {
       modalTitle={formMode === "add" ? "Add Department" : "Edit Department"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

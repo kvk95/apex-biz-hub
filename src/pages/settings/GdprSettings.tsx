@@ -73,6 +73,7 @@ export default function GdprSettings() {
       title="GDPR Settings"
       description="Configure cookie consent banner and privacy settings"
       icon="fa fa-cookie-bite"
+      loading={loading}
     >
       
       <div className="w-full mx-auto mt-8">

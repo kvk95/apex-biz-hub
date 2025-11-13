@@ -107,13 +107,9 @@ export default function AdminAttendance() {
     alert("Attendance Report:\n\n" + JSON.stringify(filteredData, null, 2));
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchEmployee(e.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearchEmployee(value);
     setCurrentPage(1);
-    console.log("AdminAttendance handleSearchChange:", {
-      searchEmployee: e.target.value,
-      currentPage: 1,
-    });
   };
 
   const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -261,6 +257,7 @@ export default function AdminAttendance() {
       tableColumns={columns}
       tableData={paginatedData}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

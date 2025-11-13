@@ -248,6 +248,7 @@ const IncomeReport: React.FC = () => {
       tableData={paginatedData}
       tableFooter={tableFooter}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

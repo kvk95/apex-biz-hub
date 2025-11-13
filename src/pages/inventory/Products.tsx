@@ -363,6 +363,7 @@ export default function Products() {
       onFormSubmit={() => {}}
       customFilters={customFilters}
       customHeaderFields={customHeaderFields}
+      loading={loading}
     >
       {loading && (
         <div className="flex justify-center items-center h-64">

@@ -743,7 +743,7 @@ export default function SalesReturn() {
       modalTitle={formMode === "add" ? "Add Sales Return" : "Edit Sales Return"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

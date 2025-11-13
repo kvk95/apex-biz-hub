@@ -233,7 +233,7 @@ export default function ProfitLoss() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

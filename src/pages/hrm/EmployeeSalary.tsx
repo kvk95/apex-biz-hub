@@ -560,6 +560,7 @@ export default function EmployeeSalary() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

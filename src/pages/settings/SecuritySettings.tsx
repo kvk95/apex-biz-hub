@@ -53,7 +53,7 @@ export default function SecuritySettings() {
     <PageBase1
       title="Security Settings"
       description="Manage your account security and access"
-      icon="fa fa-shield-alt"
+      icon="fa fa-shield-alt" 
     >
       <div className="p-6 bg-card rounded shadow">
         {/* Password */}

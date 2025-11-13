@@ -341,6 +341,7 @@ export default function Employees() {
       modalTitle={formMode === "add" ? "Add Employee" : "Edit Employee"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

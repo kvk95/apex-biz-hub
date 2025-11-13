@@ -495,6 +495,7 @@ export default function SubCategory() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

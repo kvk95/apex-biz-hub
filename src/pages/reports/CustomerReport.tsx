@@ -218,6 +218,7 @@ export default function CustomerReport() {
       tableData={paginatedData}
       tableFooter={tableFooter} // Optional: Omit if totals are not needed
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

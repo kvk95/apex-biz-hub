@@ -415,6 +415,7 @@ export default function BankAccounts() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

@@ -382,6 +382,7 @@ export default function EmployeeLeaves() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

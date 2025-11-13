@@ -262,6 +262,7 @@ export default function CustomerDueReport() {
       tableData={paginatedData}
       tableFooter={tableFooter}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

@@ -230,6 +230,7 @@ export default function ProductQuantityAlert() {
       tableData={paginatedData}
       tableFooter={tableFooter}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

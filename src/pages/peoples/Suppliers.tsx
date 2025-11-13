@@ -406,6 +406,7 @@ export default function Suppliers() {
       modalTitle={formMode === "add" ? "Add Supplier" : "Edit Supplier"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

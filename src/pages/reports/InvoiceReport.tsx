@@ -228,7 +228,7 @@ const InvoiceReport: React.FC = () => {
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={filteredInvoices} // Pass filteredInvoices for pagination by PageBase1
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 };

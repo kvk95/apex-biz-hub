@@ -214,7 +214,7 @@ const PurchaseReport: React.FC = () => {
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 };

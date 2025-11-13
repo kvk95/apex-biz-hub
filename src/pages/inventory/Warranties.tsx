@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   Warranties - FINAL: Type-Safe + durationPeriod + warrantyPeriod + Edit Fixed
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
@@ -109,14 +106,14 @@ export default function Warranties() {
     if (!match) return { num: 1, period: DURATION_TYPES[0] };
 
     const num = parseInt(match[1], 10) || 1;
-    let rawPeriod = match[2].trim();
+    const rawPeriod = match[2].trim();
 
     const matched = DURATION_TYPES.find(t => t.toLowerCase() === rawPeriod.toLowerCase());
     return { num, period: (matched || DURATION_TYPES[0]) as DurationType };
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.warrantyNo.toLowerCase().includes(searchText.toLowerCase()) ||
         item.warranty.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -438,6 +435,7 @@ export default function Warranties() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

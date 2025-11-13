@@ -365,6 +365,7 @@ export default function Signatures() {
       modalTitle={formMode === "add" ? "Add Signature" : "Edit Signature"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

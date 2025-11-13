@@ -146,6 +146,7 @@ const BestSeller: React.FC = () => {
       tableColumns={columns}
       tableData={paginatedData}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

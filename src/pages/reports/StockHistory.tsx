@@ -220,7 +220,7 @@ const StockHistory: React.FC = () => {
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={filteredData} // Pass filteredData for pagination by PageBase1
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 };

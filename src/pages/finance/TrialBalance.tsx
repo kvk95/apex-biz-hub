@@ -181,6 +181,7 @@ const TrialBalance: React.FC = () => {
           </tr>
         </tfoot>
       )}
+      loading={loading}
     />
   );
 };

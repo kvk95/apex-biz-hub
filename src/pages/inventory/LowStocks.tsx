@@ -458,6 +458,7 @@ export default function LowStocks() {
       customFilters={customFilters}
       customHeaderFields={customHeaderFields}
       customHeaderRow={customHeaderRow}
+      loading={loading}
     >
       {loading && (
         <div className="flex justify-center items-center h-64">

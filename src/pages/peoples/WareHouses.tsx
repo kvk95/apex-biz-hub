@@ -391,6 +391,7 @@ export default function Warehouses() {
       modalTitle={formMode === "add" ? "Add Warehouse" : "Edit Warehouse"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

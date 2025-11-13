@@ -205,7 +205,7 @@ export default function PurchaseOrder() {
       setFormMode={setFormMode}
       modalTitle=""
       modalForm={() => null}
-      onFormSubmit={handleFormSubmit}
+      onFormSubmit={handleFormSubmit}  loading={loading}
     />
   );
 }

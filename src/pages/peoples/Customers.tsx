@@ -404,6 +404,7 @@ export default function Customers() {
       modalTitle={formMode === "add" ? "Add Customer" : "Edit Customer"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

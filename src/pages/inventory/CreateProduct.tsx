@@ -293,6 +293,7 @@ export default function ProductDetails() {
         }
       }}
       customHeaderFields={customHeaderFields}
+      loading={loading}
     >
       <div className=" ">
         <form onSubmit={handleSubmit} className="space-y-6">

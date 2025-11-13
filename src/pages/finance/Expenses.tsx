@@ -534,8 +534,8 @@ export default function Expenses() {
         onRefresh={handleClear}
         onReport={handleReport}
         search={search}
-        onSearchChange={(e) => {
-          setSearch(e.target.value);
+        onSearchChange={(value) => {
+          setSearch( value);
           setCurrentPage(1);
         }}
         currentPage={currentPage}
@@ -552,6 +552,7 @@ export default function Expenses() {
         modalForm={modalForm}
         onFormSubmit={handleFormSubmit}
         customFilters={customFilters}
+        loading={loading}
       >
         <button
           type="button"

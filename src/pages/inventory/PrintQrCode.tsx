@@ -668,6 +668,7 @@ export default function PrintQrCode() {
         modalForm={null}
         onFormSubmit={null}
         customFilters={null}
+        
       >
         {formContent}
       </PageBase1>

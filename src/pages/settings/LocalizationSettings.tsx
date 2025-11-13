@@ -171,6 +171,7 @@ export default function LocalizationSettings() {
       title="Localization Settings"
       description="Configure language, timezone, currency, and file settings"
       icon="fa fa-globe"
+      loading={loading}
     >
       <div className="w-full mx-auto mt-2">
         {error && (

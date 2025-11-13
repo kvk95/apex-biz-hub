@@ -754,7 +754,7 @@ export default function Quotation() {
       modalTitle={formMode === "add" ? "Add Quotation" : "Edit Quotation"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

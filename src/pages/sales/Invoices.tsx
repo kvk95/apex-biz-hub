@@ -518,7 +518,7 @@ export default function Invoices() {
       modalTitle={formMode === "add" ? "Add Invoice" : "Edit Invoice"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters}
+      customFilters={customFilters}  loading={loading}
     />
   );
 }

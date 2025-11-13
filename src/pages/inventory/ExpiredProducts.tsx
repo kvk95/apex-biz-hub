@@ -437,6 +437,7 @@ export default function ExpiredProducts() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

@@ -292,6 +292,7 @@ export default function ExpenseCategory() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

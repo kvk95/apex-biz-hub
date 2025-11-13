@@ -448,6 +448,7 @@ export default function MoneyTransfer() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

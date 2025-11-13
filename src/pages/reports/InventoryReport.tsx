@@ -217,6 +217,7 @@ const InventoryReport: React.FC = () => {
       tableColumns={columns}
       tableData={filteredData} // Pass filteredData as the full dataset for pagination
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

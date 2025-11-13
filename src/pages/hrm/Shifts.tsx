@@ -321,6 +321,7 @@ export default function Shifts() {
       modalTitle={formMode === "add" ? "Add Shift" : "Edit Shift"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

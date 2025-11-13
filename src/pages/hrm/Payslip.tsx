@@ -117,6 +117,7 @@ export default function Payslip() {
       icon="fa fa-file-invoice"
       onRefresh={handleClear}
       onReport={generateReport}
+      loading={loading}
     >
       <div
         className="min-h-screen  bg-card rounded shadow-md border border-border p-6"

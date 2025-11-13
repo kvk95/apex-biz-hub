@@ -291,6 +291,7 @@ const IncomeCategory: React.FC = () => {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

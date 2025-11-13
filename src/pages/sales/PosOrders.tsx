@@ -406,7 +406,7 @@ export default function PosOrders() {
                 formMode === "create-payment" ? "Create Payment" : ""
       }
       modalForm={modalForm}
-      onFormSubmit={handleFormSubmit}
+      onFormSubmit={handleFormSubmit} loading={loading}
     />
   );
 }

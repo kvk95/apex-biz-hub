@@ -169,6 +169,7 @@ export default function EmployeeAttendance() {
       tableColumns={columns}
       tableData={paginatedData}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

@@ -261,7 +261,7 @@ export default function ExpenseReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 }

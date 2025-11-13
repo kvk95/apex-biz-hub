@@ -384,6 +384,7 @@ export default function ProductExpiryReport() {
       tableData={paginatedData}
       tableFooter={tableFooter}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

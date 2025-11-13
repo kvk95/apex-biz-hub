@@ -807,7 +807,7 @@ export default function Purchases() {
       modalTitle={formMode === "add" ? "Add Purchase" : "Edit Purchase"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     >
       <button
         type="button"

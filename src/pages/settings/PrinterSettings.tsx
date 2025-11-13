@@ -168,13 +168,9 @@ export default function PrinterSettings() {
     alert("Printer Report:\n\n" + JSON.stringify(printers, null, 2));
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = (value:string) => {
+    setSearch(value);
     setCurrentPage(1);
-    console.log("Printers handleSearchChange:", {
-      search: e.target.value,
-      currentPage: 1,
-    });
   };
 
   const handlePageChange = (page: number) => {

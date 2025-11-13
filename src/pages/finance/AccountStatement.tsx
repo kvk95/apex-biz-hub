@@ -163,6 +163,7 @@ const AccountStatement: React.FC = () => {
       tableColumns={columns}
       tableData={paginatedData} // Use paginatedData for display
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

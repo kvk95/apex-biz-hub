@@ -134,6 +134,7 @@ export default function InvoiceSettings() {
       title={mode === "edit" ? "Invoice Settings" : "View Invoice Settings"}
       description="Manage invoice settings"
       icon="fa fa-file-invoice"
+      loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
         {error && (

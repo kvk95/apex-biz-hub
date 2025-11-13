@@ -146,6 +146,7 @@ const CashFlow: React.FC = () => {
       tableColumns={columns}
       tableData={filteredData} // Pass filteredData for pagination by PageBase1
       customFilters={customFilters}
+      loading={loading}
     />
   );
 };

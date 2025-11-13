@@ -184,7 +184,7 @@ const SalesReport: React.FC = () => {
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
-      customFilters={customFilters}
+      customFilters={customFilters} loading={loading}
     />
   );
 };

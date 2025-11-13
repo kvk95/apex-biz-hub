@@ -147,6 +147,7 @@ const BalanceSheet: React.FC = () => {
           </tr>
         </tfoot>
       )}
+      loading={loading}
     />
   );
 };

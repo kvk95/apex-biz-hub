@@ -103,6 +103,7 @@ export default function InvoiceTemplates() {
       title="Invoice Templates"
       description="Manage and select default templates for invoices, purchases, and receipts"
       icon="fa fa-file-invoice"
+      loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
         {error && (

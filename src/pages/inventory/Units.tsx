@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   Units - FINAL: 100% Type-Safe + BRAND_STATUSES + No Errors
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
@@ -75,7 +72,7 @@ export default function Units() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.unitName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.shortName.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -359,6 +356,7 @@ export default function Units() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

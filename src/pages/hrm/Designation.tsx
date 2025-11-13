@@ -270,6 +270,7 @@ export default function Designation() {
       modalTitle={formMode === "add" ? "Add Designation" : "Edit Designation"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

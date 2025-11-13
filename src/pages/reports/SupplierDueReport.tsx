@@ -216,7 +216,7 @@ export default function SupplierDueReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters}
+      customFilters={customFilters}  loading={loading}
     />
   );
 }

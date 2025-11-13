@@ -73,7 +73,7 @@ export default function Brands() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.brandName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.brandCode.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -377,6 +377,7 @@ export default function Brands() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

@@ -143,6 +143,7 @@ export default function CompanySettings() {
       title="Company Settings"
       description="Manage company information and branding"
       icon="fa fa-building"
+      loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
         {error && (
