@@ -14,6 +14,7 @@ import {
   ORDER_STATUSES,
   ONLINE_PAYMENT_STATUSES as PAYMENT_STATUSES,
   SORT_OPTIONS,
+  ORDER_TYPES,
 } from "@/constants/constants";
 
 
@@ -24,6 +25,7 @@ type OrderStatusesOption = typeof ORDER_STATUSES[number];
 
 type Order = {
   orderId: string;
+  orderType: (typeof ORDER_TYPES)[number];
   reference: string;
   date: string;
   customerId: string;
@@ -63,6 +65,7 @@ export default function OnlineOrders() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const currentOrderType = "ONLINE" as const;
 
   const [formMode, setFormMode] = useState<"add" | "edit" | "detail" | "show-payments" | "create-payment" | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -188,6 +191,7 @@ export default function OnlineOrders() {
 
     const completeOrder: Order = {
       orderId: data.orderId || `SL${String(orders.length + 1).padStart(3, "0")}`,
+      orderType: data.orderType || currentOrderType,
       reference: data.reference || `#SL${String(orders.length + 1).padStart(3, "0")}`,
       date: data.date || now,
       customerId: data.customerId || "1",
@@ -456,7 +460,7 @@ export default function OnlineOrders() {
           isOpen={true}
           onClose={() => { setFormMode(null); setSelectedOrder(null); }}
           onSave={handleFormSubmit}
-          orderType="ONLINE"
+          orderType={currentOrderType}
           initialData={formMode === "edit" ? selectedOrder : undefined}
         />
       );

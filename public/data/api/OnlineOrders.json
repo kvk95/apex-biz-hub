@@ -6,6 +6,7 @@
   "result": [
     {
       "orderId": "SL001",
+      "orderType": "ONLINE",
       "reference": "#SL001",
       "date": "2025-11-13",
       "customerId": "CUST001",
@@ -87,6 +88,7 @@
     },
     {
       "orderId": "SL002",
+      "orderType": "ONLINE",
       "reference": "#SL002",
       "date": "2025-11-11",
       "customerId": "CUST002",
@@ -140,6 +142,7 @@
     },
     {
       "orderId": "SL003",
+      "orderType": "ONLINE",
       "reference": "#SL003",
       "date": "2025-11-05",
       "customerId": "CUST003",
@@ -193,6 +196,7 @@
     },
     {
       "orderId": "SL004",
+      "orderType": "ONLINE",
       "reference": "#SL004",
       "date": "2025-10-28",
       "customerId": "CUST004",
@@ -246,6 +250,7 @@
     },
     {
       "orderId": "SL005",
+      "orderType": "ONLINE",
       "reference": "#SL005",
       "date": "2025-10-15",
       "customerId": "CUST005",
@@ -299,6 +304,7 @@
     },
     {
       "orderId": "SL006",
+      "orderType": "ONLINE",
       "reference": "#SL006",
       "date": "2025-10-03",
       "customerId": "CUST006",
@@ -344,6 +350,7 @@
     },
     {
       "orderId": "SL007",
+      "orderType": "ONLINE",
       "reference": "#SL007",
       "date": "2025-11-10",
       "customerId": "CUST007",
@@ -397,6 +404,7 @@
     },
     {
       "orderId": "SL008",
+      "orderType": "ONLINE",
       "reference": "#SL008",
       "date": "2025-11-01",
       "customerId": "CUST008",
