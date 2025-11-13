@@ -75,7 +75,7 @@ export function DropdownTable({ dropdownOpen, setDropdownOpen }) {
                     }}
                   >
                     <i
-                      className={`fa ${item.icon} text-xl mr-2 selected_color_text`}
+                      className={`fa ${item.icon} text-xl mr-2 theme-color-text`}
                     />
                     <br />
                     <span className="font-medium">{item.name}</span>
@@ -166,7 +166,7 @@ export function AppNavbar({ isPosPage }) {
       >
         {!isPosPage ? (
           <SidebarTrigger
-            className="h-8 w-8 absolute selected_color hover:bg-primary-dark"
+            className="h-8 w-8 absolute theme-color-bg hover:bg-primary-dark"
             style={{
               left: "-13px",
               width: "25px",
@@ -202,7 +202,7 @@ export function AppNavbar({ isPosPage }) {
             <>
               <button
                 id="dropdownRadioHelperButton"
-                className="selected_color hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className="theme-color-bg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 type="button"
                 onClick={() => setDropdownOpen((v) => !v)}
               >

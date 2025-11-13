@@ -311,6 +311,7 @@ export default function RolesPermissions() {
       modalTitle={formMode === "add" ? "Add New Role" : "Edit Role"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

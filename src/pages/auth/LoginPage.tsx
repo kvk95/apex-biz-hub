@@ -124,7 +124,7 @@ function LoginPage({ onLoginSuccess }) {
                 required
               />
             </div>
-            <Button type="submit" className="w-full selected_color" disabled={pending}>
+            <Button type="submit" className="w-full theme-color-bg" disabled={pending}>
               {pending && (
                 <i
                   className="fa fa-spinner fa-spin mr-2 h-4 w-4"

@@ -322,6 +322,7 @@ export default function Users() {
       modalTitle={formMode === "add" ? "Add New User" : "Edit User"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }

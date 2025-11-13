@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   StockTransfer - Stock Transfer Screen
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { apiService } from "@/services/ApiService";
@@ -142,7 +139,7 @@ export default function StockTransfer() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.referenceNumber.toLowerCase().includes(searchText.toLowerCase()) ||
         item.fromWarehouseName.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -631,6 +628,7 @@ export default function StockTransfer() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

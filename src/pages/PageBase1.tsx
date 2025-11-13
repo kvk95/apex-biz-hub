@@ -202,9 +202,18 @@ export function PageBase1({
     <>
       {/* Full-screen loader (on top of everything) */}
       {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-[1000]">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-[1000]">
+            <div className="w-16 h-16 border-4 theme-color-spinner  rounded-full animate-spin"></div>
+            <input
+              type="color"
+              className="p-1 h-8 w-8 block bg-white border border-gray-200 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700"
+              id="hs-color-input"
+              value="#2563eb"
+              title="Choose your color"
+            />
+          </div>
+        </>
       )}
       <div className="min-h-screen bg-background">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">

@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   StockAdjustment - Final Version (FontAwesome Only)
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { apiService } from "@/services/ApiService";
@@ -171,7 +168,7 @@ export default function StockAdjustment() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let filtered = data.filter((item) => {
+    const filtered = data.filter((item) => {
       const matchesSearch =
         item.productName.toLowerCase().includes(searchText.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -680,6 +677,7 @@ export default function StockAdjustment() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }

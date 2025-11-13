@@ -159,14 +159,24 @@ All colors MUST be HSL.
     overflow-x: hidden;
   }
 }
-
-.selected_color {
+  
+.theme-color-bg {
   background-color: hsl(var(--primary));
   color: white;
 }
 
-.selected_color_text {
+.theme-color-text {
   color: hsl(var(--primary));
+}
+
+.theme-color-border {
+  border-color:  hsl(var(--primary)); 
+}
+
+.theme-color-spinner {
+  border-color:  hsl(var(--primary)); 
+  border-top-color: transparent;
+  border-bottom-color: transparent;
 }
 
 .font-oswald {

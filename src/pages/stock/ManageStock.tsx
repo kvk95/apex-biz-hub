@@ -1,6 +1,3 @@
-/* -------------------------------------------------
-   ManageStock - FINAL: 100% Screenshot Match + No Errors + Full ADA
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
@@ -464,6 +461,7 @@ export default function ManageStock() {
       modalForm={modalForm}
       onFormSubmit={handleSubmit}
       customFilters={customFilters}
+      loading={loading}
     />
   );
 }
