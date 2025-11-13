@@ -1,5 +1,5 @@
-
-export const PATH_HOMESCREEN = "/dashboard/admindb" as const;
+export const PATH_HOMESCREEN: string = "/dashboard/admindb";
+export const DEFAULT_PAGE_SIZE: number = 10;
 
 export const STATUSES = [
   "Active",
@@ -18,10 +18,7 @@ export const EXPIRED_STATUSES = [
   "Grace Period",
 ] as const;
 
-export const BRAND_STATUSES = [
-  "Active",
-  "Inactive"
-] as const;
+export const BRAND_STATUSES = ["Active", "Inactive"] as const;
 
 export const STORE_TYPES = [
   "Retail",
@@ -69,9 +66,9 @@ export const PURCHASE_STATUSES = [
 
 export const PAYMENT_STATUSES = [
   /**
- * @deprecated For Search Drop down.
- * Need to inject using API.
- */
+   * @deprecated For Search Drop down.
+   * Need to inject using API.
+   */
   "All", // For Search Drop down
   "Paid",
   "UnPaid",
@@ -179,7 +176,6 @@ export const PAYMENT_TYPES = [
   "UPI",
 ] as const;
 
-
 export const EXPENSE_HEADS = [
   "Office Rent",
   "Electricity Bill",
@@ -213,11 +209,7 @@ export const SORT_OPTIONS = [
   "All Time",
 ] as const;
 
-export const SORT_LAT_ASC_DSC = [
-  "Latest",
-  "Ascending",
-  "Descending",
-] as const;
+export const SORT_LAT_ASC_DSC = ["Latest", "Ascending", "Descending"] as const;
 
 export const ORDER_TYPES = ["ONLINE", "POS"] as const;
 
@@ -330,20 +322,12 @@ export const CUSTOMERS = [
   "Customer B",
 ] as const;
 
-
 export const INVOICE_STATUSES = ["All", "Paid", "Unpaid", "Partial"] as const;
 
 export const ONLINE_PAYMENT_STATUSES = ["Paid", "Unpaid", "Overdue"] as const;
 
-export const QUOTATION_STATUSES = [
-  "Ordered",
-  "Pending",
-  "Sent"
-] as const;
+export const QUOTATION_STATUSES = ["Ordered", "Pending", "Sent"] as const;
 
-export const EXPENSE_HEADS_STATUSES = [
-  "Pending",
-  "Approved"
-] as const;
+export const EXPENSE_HEADS_STATUSES = ["Pending", "Approved"] as const;
 
 export const DURATION_TYPES = ["Year", "Month"] as const;

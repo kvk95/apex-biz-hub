@@ -1,556 +1,392 @@
 import { apiService } from "@/services/ApiService";
-import { useEffect, useState } from "react";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
+import { DEFAULT_PAGE_SIZE } from "@/constants/constants";
 
-const statusOptions = ["Active", "Inactive"];
+interface Integration {
+  id: number;
+  name: string;
+  icon: string;
+  description: string;
+  enabled: boolean;
+  integrationUrl?: string;
+}
+
+const defaultIntegrations: Integration[] = [
+  {
+    id: 1,
+    name: "Google Captcha",
+    icon: "fa-shield-alt",
+    description: "Captcha helps protect you from spam and password decryption.",
+    enabled: true,
+    integrationUrl: "https://www.google.com/recaptcha/admin",
+  },
+  {
+    id: 2,
+    name: "Google Analytics",
+    icon: "fa-chart-bar",
+    description:
+      "Provides statistics and basic analytical tools for SEO and marketing purposes.",
+    enabled: true,
+    integrationUrl: "https://analytics.google.com",
+  },
+  {
+    id: 3,
+    name: "Google Adsense Code",
+    icon: "fa-dollar-sign",
+    description:
+      "Provides a way for publishers to earn money from their online content.",
+    enabled: true,
+    integrationUrl: "https://www.google.com/adsense",
+  },
+  {
+    id: 4,
+    name: "Google Map",
+    icon: "fa-map-marked-alt",
+    description:
+      "Provides detailed information about geographical regions and sites worldwide.",
+    enabled: true,
+    integrationUrl: "https://console.cloud.google.com/google/maps-apis",
+  },
+];
 
 export default function SystemSettings() {
-  const [data, setData] = useState<any>({});
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
+    name: "",
+    icon: "",
+    description: "",
+    enabled: true,
+    integrationUrl: "",
+  });
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<any>("SystemSettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  // Filter & Pagination
+  const filteredData = useMemo(() => {
+    return !search.trim()
+      ? integrations
+      : integrations.filter(
+          (item) =>
+            item.name.toLowerCase().includes(search.toLowerCase()) ||
+            item.description.toLowerCase().includes(search.toLowerCase())
+        );
+  }, [search, integrations]);
 
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredData.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredData]);
+
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
-  // Pagination state for User Permissions table
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Controlled form states for General Settings
-  const [companyName, setCompanyName] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [address, setAddress] = useState("");
-  const [currency, setCurrency] = useState("");
-  const [timezone, setTimezone] = useState("");
-
-  // Controlled form states for Invoice Settings
-  const [invoicePrefix, setInvoicePrefix] = useState("");
-  const [invoiceStartNumber, setInvoiceStartNumber] = useState(0);
-  const [invoiceFooterNote, setInvoiceFooterNote] = useState("");
-
-  // User Permissions state (editable)
-  const [userPermissions, setUserPermissions] = useState([]);
-
-  // Modal editing state for User Permissions
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    role: "",
-    canEdit: false,
-    canDelete: false,
-    canViewReports: false,
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (data && Object.keys(data).length > 0) {
-      setCompanyName(data.generalSettings?.companyName || "");
-      setCompanyEmail(data.generalSettings?.companyEmail || "");
-      setPhoneNumber(data.generalSettings?.phoneNumber || "");
-      setAddress(data.generalSettings?.address || "");
-      setCurrency(data.generalSettings?.currency || "");
-      setTimezone(data.generalSettings?.timezone || "");
-
-      setInvoicePrefix(data.invoiceSettings?.invoicePrefix || "");
-      setInvoiceStartNumber(data.invoiceSettings?.invoiceStartNumber || 0);
-      setInvoiceFooterNote(data.invoiceSettings?.invoiceFooterNote || "");
-
-      setUserPermissions(data.userPermissions || []);
-      setCurrentPage(1);
-    }
-  }, [data]);
-
-  // Handlers for pagination are encapsulated in Pagination component
-
-  // Handlers for User Permissions toggles (disabled during edit modal open)
-  const togglePermission = (id: number, permission: "canEdit" | "canDelete" | "canViewReports") => {
-    setUserPermissions((prev) =>
-      prev.map((user) =>
-        user.id === id ? { ...user, [permission]: !user[permission] } : user
-      )
-    );
-  };
-
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = userPermissions.find((u) => u.id === id);
-    if (item) {
-      setEditForm({
-        role: item.role,
-        canEdit: item.canEdit,
-        canDelete: item.canDelete,
-        canViewReports: item.canViewReports,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<Integration[]>("SystemSettings");
+      if (response.status.code === "S") {
+        setIntegrations(response.result);
+      } else {
+        setIntegrations(defaultIntegrations);
+      }
+    } catch {
+      setIntegrations(defaultIntegrations);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+  // Input Change
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, type, checked } = e.target;
-    const value = type === "checkbox" ? checked : e.target.value;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (editId !== null) {
-      setUserPermissions((prev) =>
-        prev.map((item) =>
-          item.id === editId
+  const handleToggleChange = () => {
+    setForm((f) => ({ ...f, enabled: !f.enabled }));
+  };
+
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      name: "",
+      icon: "",
+      description: "",
+      enabled: true,
+      integrationUrl: "",
+    });
+  };
+
+  // Edit
+  const handleEdit = (item: Integration) => {
+    setFormMode("edit");
+    setForm({
+      id: item.id,
+      name: item.name,
+      icon: item.icon,
+      description: item.description,
+      enabled: item.enabled,
+      integrationUrl: item.integrationUrl || "",
+    });
+  };
+
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!form.name.trim()) {
+      alert("Name is required.");
+      return;
+    }
+
+    if (formMode === "add") {
+      const newId = integrations.length
+        ? Math.max(...integrations.map((i) => i.id)) + 1
+        : 1;
+      setIntegrations((prev) => [
+        ...prev,
+        {
+          id: newId,
+          name: form.name.trim(),
+          icon: form.icon.trim() || "fa-circle",
+          description: form.description.trim(),
+          enabled: form.enabled,
+          integrationUrl: form.integrationUrl.trim(),
+        },
+      ]);
+      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setIntegrations((prev) =>
+        prev.map((i) =>
+          i.id === form.id
             ? {
-                ...item,
-                role: editForm.role,
-                canEdit: editForm.canEdit,
-                canDelete: editForm.canDelete,
-                canViewReports: editForm.canViewReports,
+                ...i,
+                name: form.name.trim(),
+                icon: form.icon.trim(),
+                description: form.description.trim(),
+                enabled: form.enabled,
+                integrationUrl: form.integrationUrl.trim(),
               }
-            : item
+            : i
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
+    }
+
+    setFormMode(null);
+  };
+
+  // Delete
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this integration?")) {
+      setIntegrations((prev) => prev.filter((i) => i.id !== id));
+      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
+      }
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
-  // Clear button handler (replaces Refresh)
+  // Clear / Refresh
   const handleClear = () => {
-    if (data && Object.keys(data).length > 0) {
-      setCompanyName(data.generalSettings?.companyName || "");
-      setCompanyEmail(data.generalSettings?.companyEmail || "");
-      setPhoneNumber(data.generalSettings?.phoneNumber || "");
-      setAddress(data.generalSettings?.address || "");
-      setCurrency(data.generalSettings?.currency || "");
-      setTimezone(data.generalSettings?.timezone || "");
-
-      setInvoicePrefix(data.invoiceSettings?.invoicePrefix || "");
-      setInvoiceStartNumber(data.invoiceSettings?.invoiceStartNumber || 0);
-      setInvoiceFooterNote(data.invoiceSettings?.invoiceFooterNote || "");
-
-      setUserPermissions(data.userPermissions || []);
-      setCurrentPage(1);
-    }
+    loadData();
+    setFormMode(null);
+    setSearch("");
+    setCurrentPage(1);
   };
 
-  const handleSave = () => {
-    alert("Settings saved successfully.");
+  // Search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
   };
 
-  const handleReport = () => {
-    alert("Generating report...");
-  };
+  // Table Columns
+  const columns: Column[] = [
+    { key: "name", label: "Name" },
+    {
+      key: "icon",
+      label: "Icon",
+      render: (value) => (
+        <i className={`fa ${value || "fa-circle"} text-2xl text-primary`}></i>
+      ),
+    },
+    { key: "description", label: "Description" },
+    {
+      key: "enabled",
+      label: "Enabled",
+      render: (value) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={value}
+            disabled
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      ),
+    },
+    {
+      key: "integrationUrl",
+      label: "Integration URL",
+      render: (value) =>
+        value ? (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Open
+          </a>
+        ) : (
+          <span className="text-muted-foreground">N/A</span>
+        ),
+    },
+  ];
 
-  // Pagination slice for current page
-  const paginatedPermissions = userPermissions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  // Row Actions
+  const rowActions = (row: Integration) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.name}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.name}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center"
+      >
+        <i className="fa fa-trash" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
+
+  // Modal Form
+  const modalForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium mb-1">
+          Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value={form.name}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., Google Analytics"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="icon" className="block text-sm font-medium mb-1">
+          Icon Class
+        </label>
+        <input
+          id="icon"
+          name="icon"
+          type="text"
+          value={form.icon}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., fa-google"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={form.description}
+          onChange={handleInputChange}
+          rows={3}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          placeholder="Brief description of the integration"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="integrationUrl"
+          className="block text-sm font-medium mb-1"
+        >
+          Integration URL
+        </label>
+        <input
+          id="integrationUrl"
+          name="integrationUrl"
+          type="url"
+          value={form.integrationUrl}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="https://console.developers.google.com"
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">Enabled</label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.enabled}
+            onChange={handleToggleChange}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <h1 className="text-lg font-semibold mb-6">System Settings</h1>
-
-      {/* General Settings Section */}
-      <section className="bg-card rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center">
-          <i className="fa fa-cogs fa-light mr-2 text-blue-600"></i> General Settings
-        </h2>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="companyName" className="block font-medium mb-1">
-              Company Name
-            </label>
-            <input
-              id="companyName"
-              type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter company name"
-            />
-          </div>
-          <div>
-            <label htmlFor="companyEmail" className="block font-medium mb-1">
-              Company Email
-            </label>
-            <input
-              id="companyEmail"
-              type="email"
-              value={companyEmail}
-              onChange={(e) => setCompanyEmail(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter company email"
-            />
-          </div>
-          <div>
-            <label htmlFor="phoneNumber" className="block font-medium mb-1">
-              Phone Number
-            </label>
-            <input
-              id="phoneNumber"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter phone number"
-            />
-          </div>
-          <div>
-            <label htmlFor="address" className="block font-medium mb-1">
-              Address
-            </label>
-            <input
-              id="address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter address"
-            />
-          </div>
-          <div>
-            <label htmlFor="currency" className="block font-medium mb-1">
-              Currency
-            </label>
-            <select
-              id="currency"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="USD">USD - US Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-              <option value="JPY">JPY - Japanese Yen</option>
-              <option value="INR">INR - Indian Rupee</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="timezone" className="block font-medium mb-1">
-              Timezone
-            </label>
-            <select
-              id="timezone"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="(GMT-08:00) Pacific Time (US & Canada)">
-                (GMT-08:00) Pacific Time (US & Canada)
-              </option>
-              <option value="(GMT-07:00) Mountain Time (US & Canada)">
-                (GMT-07:00) Mountain Time (US & Canada)
-              </option>
-              <option value="(GMT-06:00) Central Time (US & Canada)">
-                (GMT-06:00) Central Time (US & Canada)
-              </option>
-              <option value="(GMT-05:00) Eastern Time (US & Canada)">
-                (GMT-05:00) Eastern Time (US & Canada)
-              </option>
-              <option value="(GMT+00:00) Greenwich Mean Time">
-                (GMT+00:00) Greenwich Mean Time
-              </option>
-              <option value="(GMT+05:30) India Standard Time">
-                (GMT+05:30) India Standard Time
-              </option>
-            </select>
-          </div>
-        </form>
-      </section>
-
-      {/* Invoice Settings Section */}
-      <section className="bg-card rounded shadow p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center">
-          <i className="fa fa-file-invoice-dollar fa-light mr-2 text-green-600"></i> Invoice Settings
-        </h2>
-        <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label htmlFor="invoicePrefix" className="block font-medium mb-1">
-              Invoice Prefix
-            </label>
-            <input
-              id="invoicePrefix"
-              type="text"
-              value={invoicePrefix}
-              onChange={(e) => setInvoicePrefix(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter invoice prefix"
-            />
-          </div>
-          <div>
-            <label htmlFor="invoiceStartNumber" className="block font-medium mb-1">
-              Invoice Start Number
-            </label>
-            <input
-              id="invoiceStartNumber"
-              type="number"
-              min={1}
-              value={invoiceStartNumber}
-              onChange={(e) => setInvoiceStartNumber(Number(e.target.value))}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter start number"
-            />
-          </div>
-          <div>
-            <label htmlFor="invoiceFooterNote" className="block font-medium mb-1">
-              Invoice Footer Note
-            </label>
-            <input
-              id="invoiceFooterNote"
-              type="text"
-              value={invoiceFooterNote}
-              onChange={(e) => setInvoiceFooterNote(e.target.value)}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter footer note"
-            />
-          </div>
-        </form>
-      </section>
-
-      {/* User Permissions Section */}
-      <section className="bg-card rounded shadow p-6 mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold flex items-center">
-            <i className="fa fa-users-cog fa-light mr-2 text-purple-600"></i> User Permissions
-          </h2>
-          <div className="space-x-2">
-            <button
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-              title="Generate Report"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-            </button>
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-              title="Clear Data"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Role
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Can Edit
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Can Delete
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Can View Reports
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPermissions.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No user permissions found.
-                  </td>
-                </tr>
-              )}
-              {paginatedPermissions.map(({ id, role, canEdit, canDelete, canViewReports }) => (
-                <tr
-                  key={id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors text-sm text-gray-500"
-                >
-                  <td className="px-4 py-2">{role}</td>
-                  <td className="px-4 py-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={canEdit}
-                      onChange={() => togglePermission(id, "canEdit")}
-                      className="cursor-pointer"
-                      aria-label={`Toggle Can Edit for ${role}`}
-                      disabled={isEditModalOpen}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={canDelete}
-                      onChange={() => togglePermission(id, "canDelete")}
-                      className="cursor-pointer"
-                      aria-label={`Toggle Can Delete for ${role}`}
-                      disabled={isEditModalOpen}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={canViewReports}
-                      onChange={() => togglePermission(id, "canViewReports")}
-                      className="cursor-pointer"
-                      aria-label={`Toggle Can View Reports for ${role}`}
-                      disabled={isEditModalOpen}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-center text-sm space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(id)}
-                      aria-label={`Edit permissions for ${role}`}
-                      className="text-gray-900 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-                      disabled={isEditModalOpen}
-                    >
-                      <i className="fa fa-edit fa-light" aria-hidden="true"></i>
-                      <span className="sr-only">Edit record</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={userPermissions.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
-
-      {/* Save Button Section */}
-      <section className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-          type="button"
-          title="Save Settings"
-        >
-          <i className="fa fa-save fa-light" aria-hidden="true"></i> Save Settings
-        </button>
-      </section>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit User Permission
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="editRole"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Role
-                </label>
-                <input
-                  type="text"
-                  id="editRole"
-                  name="role"
-                  value={editForm.role}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter role"
-                  disabled
-                />
-              </div>
-              <div className="flex items-center space-x-4">
-                <label className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="canEdit"
-                    checked={editForm.canEdit}
-                    onChange={handleEditInputChange}
-                    className="w-5 h-5 cursor-pointer text-primary focus:ring-primary border-gray-300 rounded"
-                  />
-                  <span>Can Edit</span>
-                </label>
-                <label className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="canDelete"
-                    checked={editForm.canDelete}
-                    onChange={handleEditInputChange}
-                    className="w-5 h-5 cursor-pointer text-primary focus:ring-primary border-gray-300 rounded"
-                  />
-                  <span>Can Delete</span>
-                </label>
-                <label className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="canViewReports"
-                    checked={editForm.canViewReports}
-                    onChange={handleEditInputChange}
-                    className="w-5 h-5 cursor-pointer text-primary focus:ring-primary border-gray-300 rounded"
-                  />
-                  <span>Can View Reports</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PageBase1
+      title="System Settings"
+      description="Manage system integrations and services"
+      icon="fa fa-cogs"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredData.length}
+      onPageChange={setCurrentPage}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={formMode === "add" ? "Add Integration" : "Edit Integration"}
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

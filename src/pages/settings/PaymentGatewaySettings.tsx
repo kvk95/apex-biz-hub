@@ -1,490 +1,251 @@
-import React, { useState, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useState } from "react";
+import { PageBase1 } from "@/pages/PageBase1";
 
-const PaymentGatewaySettings: React.FC = () => {
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+interface PaymentGateway {
+  id: string;
+  name: string;
+  logo: string; // URL
+  description: string;
+  enabled: boolean;
+  connected: boolean;
+  integrationUrl?: string;
+  merchantId?: string;
+  apiKey?: string;
+  redirectUrl?: string;
+}
 
-  // Form state for Add Section
-  const [form, setForm] = useState({
-    gatewayName: "",
-    gatewayType: "Online",
-    gatewayStatus: "Active",
-    description: "",
-  });
-
-  // Data state
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function PaymentGatewaySettings() {
+  const [gateways, setGateways] = useState<PaymentGateway[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    gatewayName: "",
-    gatewayType: "Online",
-    gatewayStatus: "Active",
-    description: "",
-  });
-  const [editId, setEditId] = useState<number | null>(null);
-
   useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const response = await apiService.get<{ result: PaymentGateway[] }>(
+          "PaymentGatewaySettings"
+        );
+        if (response.status.code === "S") {
+          setGateways(response.result);
+        }
+      } catch (err) {
+        setError("Failed to load payment gateway settings.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadData();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("PaymentGatewaySettings");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
+  const handleToggleEnable = (id: string) => {
+    setGateways((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g))
+    );
   };
 
-  // Handlers for Add Section form inputs
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    id: string,
+    field: "merchantId" | "apiKey" | "redirectUrl",
+    value: string
   ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setGateways((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, [field]: value } : g))
+    );
   };
 
-  // Handlers for Edit Modal form inputs
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Save handler for Add Section (Add new gateway)
-  const handleSave = () => {
-    if (!form.gatewayName.trim()) {
-      alert("Please fill all required fields.");
+  const handleConnectNow = (id: string) => {
+    const gateway = gateways.find((g) => g.id === id);
+    if (!gateway?.merchantId || !gateway?.apiKey) {
+      alert("Please enter Merchant ID and API Key first.");
       return;
     }
-    const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-    setData((prev) => [
-      ...prev,
-      {
-        id: newId,
-        gatewayName: form.gatewayName.trim(),
-        type: form.gatewayType,
-        status: form.gatewayStatus,
-        description: form.description,
-      },
-    ]);
-    setForm({
-      gatewayName: "",
-      gatewayType: "Online",
-      gatewayStatus: "Active",
-      description: "",
-    });
+    alert(`Connecting to ${gateway.name}...`);
   };
 
-  // Open edit modal and populate edit form
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        gatewayName: item.gatewayName,
-        gatewayType: item.type,
-        gatewayStatus: item.status,
-        description: item.description,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
+  const handleViewIntegration = (url?: string) => {
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      alert("No integration URL configured.");
     }
   };
 
-  // Save handler for Edit Modal
-  const handleEditSave = () => {
-    if (!editForm.gatewayName.trim()) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                gatewayName: editForm.gatewayName.trim(),
-                type: editForm.gatewayType,
-                status: editForm.gatewayStatus,
-                description: editForm.description,
-              }
-            : item
-        )
-      );
-      setEditId(null);
-      setIsEditModalOpen(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await apiService.post("PaymentGatewaySettings", { gateways });
+      alert("Payment gateway settings saved successfully!");
+    } catch {
+      setError("Failed to save payment gateway settings.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Cancel editing modal
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
+  const handleCancel = () => {
+    window.history.back();
   };
-
-  // Clear button handler (replaces Refresh)
-  const handleClear = () => {
-    setForm({
-      gatewayName: "",
-      gatewayType: "Online",
-      gatewayStatus: "Active",
-      description: "",
-    });
-    setEditId(null);
-    setCurrentPage(1);
-  };
-
-  const handleReport = () => {
-    alert("Report Data:\n" + JSON.stringify(data, null, 2));
-  };
-
-  // Calculate paginated data using Pagination component props
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Payment Gateway Settings</h1>
-
-      {/* Form Section (Add Section) - preserved exactly */}
-      <section className="bg-card rounded shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Payment Gateway</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Gateway Name */}
-          <div>
-            <label
-              htmlFor="gatewayName"
-              className="block text-sm font-medium mb-1"
-            >
-              Gateway Name <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="text"
-              id="gatewayName"
-              name="gatewayName"
-              value={form.gatewayName}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Enter gateway name"
-              required
-            />
+    <PageBase1
+      title="Payment Gateway Settings"
+      description="Configure and manage payment gateway integrations"
+      icon="fa fa-credit-card"
+    >
+      <div className="w-full mx-auto mt-8">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
           </div>
+        )}
 
-          {/* Gateway Type */}
-          <div>
-            <label
-              htmlFor="gatewayType"
-              className="block text-sm font-medium mb-1"
-            >
-              Gateway Type
-            </label>
-            <select
-              id="gatewayType"
-              name="gatewayType"
-              value={form.gatewayType}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option>Online</option>
-              <option>Offline</option>
-            </select>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label
-              htmlFor="gatewayStatus"
-              className="block text-sm font-medium mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="gatewayStatus"
-              name="gatewayStatus"
-              value={form.gatewayStatus}
-              onChange={handleInputChange}
-              className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="mt-6">
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium mb-1"
-          >
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={3}
-            value={form.description}
-            onChange={handleInputChange}
-            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter description"
-          />
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-          >
-            <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-          </button>
-        </div>
-      </section>
-
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 px-6">
-          <h2 className="text-xl font-semibold">Payment Gateway List</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Gateway Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Description
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {gateways.map((gateway) => (
+              <div
+                key={gateway.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={gateway.logo}
+                      alt={gateway.name}
+                      className="h-8 w-auto object-contain"
+                    />
+                    <h3 className="font-semibold text-lg">{gateway.name}</h3>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      gateway.connected
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
                   >
-                    No payment gateways found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {(currentPage - 1) * itemsPerPage + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.gatewayName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.type}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        item.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {item.description}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
+                    {gateway.connected ? "Connected" : "Not Connected"}
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-600 mb-4">
+                  {gateway.description}
+                </p>
+
+                {/* Toggle Enable */}
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-medium">Enabled</label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={gateway.enabled}
+                      onChange={() => handleToggleEnable(gateway.id)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                </div>
+
+                {/* Connect / View Button */}
+                <div className="flex items-center justify-between mb-4">
+                  {gateway.connected ? (
                     <button
-                      onClick={() => handleEdit(item.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit gateway ${item.gatewayName}`}
                       type="button"
+                      onClick={() =>
+                        handleViewIntegration(gateway.integrationUrl)
+                      }
+                      className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 border border-primary rounded-md px-3 py-1"
                     >
-                      <i className="fa fa-pencil fa-light" aria-hidden="true"></i>
+                      <i className="fa fa-external-link-alt text-xs"></i>
+                      View Integration
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleConnectNow(gateway.id)}
+                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 border border-blue-600 rounded-md px-3 py-1"
+                    >
+                      <i className="fa fa-plug text-xs"></i>
+                      Connect Now
+                    </button>
+                  )}
+                </div>
 
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={data.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setItemsPerPage}
-        />
-      </section>
+                {/* Configuration Fields */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Merchant ID
+                    </label>
+                    <input
+                      type="text"
+                      value={gateway.merchantId || ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          gateway.id,
+                          "merchantId",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder={`Enter ${gateway.name} Merchant ID`}
+                    />
+                  </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Payment Gateway
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Gateway Name */}
-              <div>
-                <label
-                  htmlFor="editGatewayName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Gateway Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editGatewayName"
-                  name="gatewayName"
-                  value={editForm.gatewayName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter gateway name"
-                  required
-                />
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      API Key / Secret
+                    </label>
+                    <input
+                      type="password"
+                      value={gateway.apiKey || ""}
+                      onChange={(e) =>
+                        handleInputChange(gateway.id, "apiKey", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder={`Enter ${gateway.name} API Key`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Redirect URL
+                    </label>
+                    <input
+                      type="url"
+                      value={gateway.redirectUrl || ""}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use this URL in your {gateway.name} dashboard.
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              {/* Gateway Type */}
-              <div>
-                <label
-                  htmlFor="editGatewayType"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Gateway Type
-                </label>
-                <select
-                  id="editGatewayType"
-                  name="gatewayType"
-                  value={editForm.gatewayType}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option>Online</option>
-                  <option>Offline</option>
-                </select>
-              </div>
-
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editGatewayStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editGatewayStatus"
-                  name="gatewayStatus"
-                  value={editForm.gatewayStatus}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="mt-6">
-              <label
-                htmlFor="editDescription"
-                className="block text-sm font-medium mb-1"
-              >
-                Description
-              </label>
-              <textarea
-                id="editDescription"
-                name="description"
-                rows={3}
-                value={editForm.description}
-                onChange={handleEditInputChange}
-                className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter description"
-              />
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
+            ))}
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
-export default PaymentGatewaySettings;
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </PageBase1>
+  );
+}

@@ -1,510 +1,364 @@
-import React, { useState, useMemo, useEffect } from "react";
 import { apiService } from "@/services/ApiService";
-import { Pagination } from "@/components/Pagination/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageBase1, Column } from "@/pages/PageBase1";
+import { DEFAULT_PAGE_SIZE } from "@/constants/constants";
+
+interface ConnectedApp {
+  id: number;
+  appName: string;
+  appIcon: string;
+  connectedOn: string;
+  status: boolean;
+  description: string;
+}
 
 export default function ConnectedApps() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Modal editing state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [form, setForm] = useState({
+    id: null as number | null,
     appName: "",
     appIcon: "",
     connectedOn: "",
-    status: "",
+    status: true,
     description: "",
   });
-  const [editId, setEditId] = useState<number | null>(null);
-
-  // Pagination state
+  const [apps, setApps] = useState<ConnectedApp[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
 
-  // Sorting state
-  const [sortField, setSortField] = useState<keyof typeof data[0] | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  // Filter & Pagination
+  const filteredApps = useMemo(() => {
+    return !search.trim()
+      ? apps
+      : apps.filter(
+          (app) =>
+            app.appName.toLowerCase().includes(search.toLowerCase()) ||
+            app.description.toLowerCase().includes(search.toLowerCase())
+        );
+  }, [search, apps]);
 
-  const loadData = async () => {
-    setLoading(true);
-    const response = await apiService.get<[]>("ConnectedApps");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
-    }
-    setLoading(false);
-  };
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredApps.slice(start, end);
+  }, [currentPage, itemsPerPage, filteredApps]);
 
+  // Load Data
   useEffect(() => {
     loadData();
   }, []);
 
-  // Sort and paginate data
-  const paginatedData = useMemo(() => {
-    const sortedData = [...data];
-    if (sortField) {
-      sortedData.sort((a, b) => {
-        if (a[sortField] < b[sortField]) return sortOrder === "asc" ? -1 : 1;
-        if (a[sortField] > b[sortField]) return sortOrder === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortedData.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-  }, [currentPage, itemsPerPage, sortField, sortOrder, data]);
-
-  // Handle sorting click
-  function handleSort(field: keyof typeof data[0]) {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  }
-
-  // Format date to readable format
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-
-  // Clear button handler (replaces Refresh)
-  function handleClear() {
-    setCurrentPage(1);
-    setSortField(null);
-    setSortOrder("asc");
-  }
-
-  // Report button handler
-  function handleReport() {
-    alert("Report generated!");
-  }
-
-  // Save button handler
-  function handleSave() {
-    alert("Changes saved successfully!");
-  }
-
-  // Edit modal handlers
-  const handleEdit = (id: number) => {
-    const item = data.find((d) => d.id === id);
-    if (item) {
-      setEditForm({
-        appName: item.appName,
-        appIcon: item.appIcon,
-        connectedOn: item.connectedOn,
-        status: item.status,
-        description: item.description,
-      });
-      setEditId(id);
-      setIsEditModalOpen(true);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.get<ConnectedApp[]>("ConnectedApps");
+      if (response.status.code === "S") {
+        setApps(response.result);
+        setError(null);
+      } else {
+        setError(response.status.description);
+      }
+    } catch {
+      setError("Failed to load connected apps.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditInputChange = (
+  // Input Change
+  const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleEditSave = () => {
-    if (!editForm.appName.trim()) {
-      alert("Please fill all required fields.");
+  const handleToggleChange = () => {
+    setForm((f) => ({ ...f, status: !f.status }));
+  };
+
+  // Add Click
+  const handleAddClick = () => {
+    setFormMode("add");
+    setForm({
+      id: null,
+      appName: "",
+      appIcon: "",
+      connectedOn: new Date().toISOString().split("T")[0],
+      status: true,
+      description: "",
+    });
+  };
+
+  // Edit
+  const handleEdit = (app: ConnectedApp) => {
+    setFormMode("edit");
+    setForm({
+      id: app.id,
+      appName: app.appName,
+      appIcon: app.appIcon,
+      connectedOn: app.connectedOn,
+      status: app.status,
+      description: app.description,
+    });
+  };
+
+  // Form Submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!form.appName.trim()) {
+      alert("App Name is required.");
       return;
     }
-    if (editId !== null) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editId
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (formMode === "add") {
+      const newId = apps.length ? Math.max(...apps.map((a) => a.id)) + 1 : 1;
+      setApps((prev) => [
+        ...prev,
+        {
+          id: newId,
+          appName: form.appName.trim(),
+          appIcon: form.appIcon.trim() || "fa-circle",
+          connectedOn: form.connectedOn || today,
+          status: form.status,
+          description: form.description.trim(),
+        },
+      ]);
+      const totalPages = Math.ceil((filteredApps.length + 1) / itemsPerPage);
+      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setApps((prev) =>
+        prev.map((a) =>
+          a.id === form.id
             ? {
-                ...item,
-                appName: editForm.appName.trim(),
-                appIcon: editForm.appIcon,
-                connectedOn: editForm.connectedOn,
-                status: editForm.status,
-                description: editForm.description,
+                ...a,
+                appName: form.appName.trim(),
+                appIcon: form.appIcon.trim(),
+                connectedOn: form.connectedOn,
+                status: form.status,
+                description: form.description.trim(),
               }
-            : item
+            : a
         )
       );
-      setEditId(null);
-      setIsEditModalOpen(false);
     }
+
+    setFormMode(null);
   };
 
-  const handleEditCancel = () => {
-    setEditId(null);
-    setIsEditModalOpen(false);
-  };
-
+  // Delete
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this app?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
-      // If deleting last item on page, go to previous page if needed
-      if (
-        (currentPage - 1) * itemsPerPage >= data.length - 1 &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
+      setApps((prev) => prev.filter((a) => a.id !== id));
+      const totalPages = Math.ceil((filteredApps.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      } else if (totalPages === 0) {
+        setCurrentPage(1);
       }
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Title */}
-      <h1 className="text-lg font-semibold mb-6">Connected Apps</h1>
+  // Clear / Refresh
+  const handleClear = () => {
+    loadData();
+    setFormMode(null);
+    setSearch("");
+    setCurrentPage(1);
+  };
 
-      {/* Table Section */}
-      <section className="bg-card rounded shadow py-6">
-        {/* Header with buttons */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 px-6">
-          <h2 className="text-xl font-semibold mb-3 sm:mb-0">
-            Connected Applications
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleReport}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-              aria-label="Generate Report"
-            >
-              <i className="fa fa-file-text fa-light" aria-hidden="true"></i> Report
-            </button>
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-              type="button"
-              aria-label="Clear"
-            >
-              <i className="fa fa-refresh fa-light" aria-hidden="true"></i> Clear
-            </button>
-          </div>
-        </div>
+  // Search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
-        {/* Table */}
-        <div className="overflow-x-auto px-6">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer"
-                  onClick={() => handleSort("appName")}
-                  aria-sort={
-                    sortField === "appName"
-                      ? sortOrder === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                >
-                  App Name
-                  {sortField === "appName" && (
-                    <i
-                      className={`fa fa-sort-${sortOrder === "asc" ? "up" : "down"} fa-light ml-1`}
-                      aria-hidden="true"
-                    ></i>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
-                >
-                  Icon
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer"
-                  onClick={() => handleSort("connectedOn")}
-                  aria-sort={
-                    sortField === "connectedOn"
-                      ? sortOrder === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                >
-                  Connected On
-                  {sortField === "connectedOn" && (
-                    <i
-                      className={`fa fa-sort-${sortOrder === "asc" ? "up" : "down"} fa-light ml-1`}
-                      aria-hidden="true"
-                    ></i>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer"
-                  onClick={() => handleSort("status")}
-                  aria-sort={
-                    sortField === "status"
-                      ? sortOrder === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                >
-                  Status
-                  {sortField === "status" && (
-                    <i
-                      className={`fa fa-sort-${sortOrder === "asc" ? "up" : "down"} fa-light ml-1`}
-                      aria-hidden="true"
-                    ></i>
-                  )}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
-                >
-                  Description
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-center text-sm font-medium text-muted-foreground"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center px-4 py-6 text-muted-foreground italic"
-                  >
-                    No connected apps found.
-                  </td>
-                </tr>
-              )}
-              {paginatedData.map((app, idx) => (
-                <tr
-                  key={app.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {app.appName}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <i
-                      className={`fab ${app.appIcon} text-2xl text-blue-600`}
-                    ></i>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {formatDate(app.connectedOn)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
-                        app.status === "Active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
-                    >
-                      {app.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {app.description}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm space-x-3">
-                    <button
-                      onClick={() => handleEdit(app.id)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      aria-label={`Edit ${app.appName}`}
-                      type="button"
-                    >
-                      <i
-                        className="fa fa-pencil fa-light"
-                        aria-hidden="true"
-                      ></i>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(app.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                      aria-label={`Delete ${app.appName}`}
-                      type="button"
-                    >
-                      <i
-                        className="fa fa-trash fa-light"
-                        aria-hidden="true"
-                      ></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  // Pagination
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(filteredApps.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+    }
+  };
 
-        {/* Pagination */}
-        <div className="px-6 mt-4">
-          <Pagination
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={data.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
+  // Table Columns
+  const columns: Column[] = [ 
+    { key: "appName", label: "App Name" },
+    {
+      key: "appIcon",
+      label: "Icon",
+      render: (value) => (
+        <i className={`fab ${value || "fa-circle"} text-2xl text-blue-600`}></i>
+      ),
+    },
+    {
+      key: "connectedOn",
+      label: "Connected On",
+      render: (value) => {
+        const d = new Date(value);
+        return d.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={value}
+            disabled
+            className="sr-only peer"
           />
-        </div>
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      ),
+    },
+    { key: "description", label: "Description" },
+  ];
 
-        {/* Save Button */}
-        <div className="mt-6 px-6 flex justify-end">
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-            type="button"
-            aria-label="Save changes"
-          >
-            <i className="fa fa-save fa-light" aria-hidden="true"></i> Save
-          </button>
-        </div>
-      </section>
+  // Row Actions
+  const rowActions = (row: ConnectedApp) => (
+    <>
+      <button
+        onClick={() => handleEdit(row)}
+        aria-label={`Edit ${row.appName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-edit" aria-hidden="true"></i>
+        <span className="sr-only">Edit</span>
+      </button>
+      <button
+        onClick={() => handleDelete(row.id)}
+        aria-label={`Delete ${row.appName}`}
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+      >
+        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+        <span className="sr-only">Delete</span>
+      </button>
+    </>
+  );
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="bg-white rounded shadow-lg max-w-xl w-full p-6 relative">
-            <h2
-              id="edit-modal-title"
-              className="text-xl font-semibold mb-4 text-center"
-            >
-              Edit Connected App
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* App Name */}
-              <div>
-                <label
-                  htmlFor="editAppName"
-                  className="block text-sm font-medium mb-1"
-                >
-                  App Name
-                </label>
-                <input
-                  type="text"
-                  id="editAppName"
-                  name="appName"
-                  value={editForm.appName}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter app name"
-                />
-              </div>
+  // Modal Form
+  const modalForm = () => (
+    <div className="space-y-4">
+      {/* App Name */}
+      <div>
+        <label htmlFor="appName" className="block text-sm font-medium mb-1">
+          App Name <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="appName"
+          name="appName"
+          type="text"
+          value={form.appName}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., Google Drive"
+          required
+        />
+      </div>
 
-              {/* App Icon */}
-              <div>
-                <label
-                  htmlFor="editAppIcon"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Icon
-                </label>
-                <input
-                  type="text"
-                  id="editAppIcon"
-                  name="appIcon"
-                  value={editForm.appIcon}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter icon class (e.g., fa-apple)"
-                />
-              </div>
+      {/* App Icon */}
+      <div>
+        <label htmlFor="appIcon" className="block text-sm font-medium mb-1">
+          Icon Class
+        </label>
+        <input
+          id="appIcon"
+          name="appIcon"
+          type="text"
+          value={form.appIcon}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., fa-google-drive"
+        />
+      </div>
 
-              {/* Connected On */}
-              <div>
-                <label
-                  htmlFor="editConnectedOn"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Connected On
-                </label>
-                <input
-                  type="date"
-                  id="editConnectedOn"
-                  name="connectedOn"
-                  value={editForm.connectedOn}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+      {/* Connected On */}
+      <div>
+        <label htmlFor="connectedOn" className="block text-sm font-medium mb-1">
+          Connected On
+        </label>
+        <input
+          id="connectedOn"
+          name="connectedOn"
+          type="date"
+          value={form.connectedOn}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
 
-              {/* Status */}
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+      {/* Description */}
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">
+          Description
+        </label>
+        <input
+          id="description"
+          name="description"
+          type="text"
+          value={form.description}
+          onChange={handleInputChange}
+          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="e.g., Cloud storage integration"
+        />
+      </div>
 
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="editDescription"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Description
-                </label>
-                <input
-                  type="text"
-                  id="editDescription"
-                  name="description"
-                  value={editForm.description}
-                  onChange={handleEditInputChange}
-                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter description"
-                />
-              </div>
-            </div>
-
-            {/* Modal Buttons */}
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                type="button"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Status */}
+      <div className="flex items-center justify-between">
+        <label htmlFor="status" className="text-sm font-medium">
+          Status
+        </label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.status}
+            onChange={handleToggleChange}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      </div>
     </div>
+  );
+
+  return (
+    <PageBase1
+      title="Connected Apps"
+      description="Manage third-party app integrations"
+      icon="fa fa-plug"
+      onAddClick={handleAddClick}
+      onRefresh={handleClear}
+      search={search}
+      onSearchChange={handleSearchChange}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      totalItems={filteredApps.length}
+      onPageChange={handlePageChange}
+      onPageSizeChange={setItemsPerPage}
+      tableColumns={columns}
+      tableData={paginatedData}
+      rowActions={rowActions}
+      formMode={formMode}
+      setFormMode={setFormMode}
+      modalTitle={
+        formMode === "add" ? "Add Connected App" : "Edit Connected App"
+      }
+      modalForm={modalForm}
+      onFormSubmit={handleFormSubmit}
+      loading={loading}
+    />
   );
 }

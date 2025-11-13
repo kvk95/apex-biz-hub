@@ -3,90 +3,114 @@
     "code": "S",
     "description": ""
   },
-  "result": [
+  "result":[
     {
-      "id": 1,
-      "gatewayName": "Paypal",
-      "type": "Online",
-      "status": "Active",
-      "description": "Paypal payment gateway"
+      "id": "payu",
+      "name": "PayU",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2c/PayU_Logo.png",
+      "description": "Provide payment solution to individuals to make payments",
+      "enabled": true,
+      "connected": true,
+      "integrationUrl": "https://www.payu.in",
+      "merchantId": "payu_merchant_123",
+      "apiKey": "payu_key_abc",
+      "redirectUrl": "https://yourdomain.com/payment/payu/callback"
     },
     {
-      "id": 2,
-      "gatewayName": "Stripe",
-      "type": "Online",
-      "status": "Inactive",
-      "description": "Stripe payment gateway"
+      "id": "applepay",
+      "name": "Apple Pay",
+      "logo": "https://developer.apple.com/assets/elements/icons/apple-pay/apple-pay-64x64.png",
+      "description": "Replaces your physical cards and cash with private and secure",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "https://developer.apple.com/apple-pay/",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": "https://yourdomain.com/payment/applepay/callback"
     },
     {
-      "id": 3,
-      "gatewayName": "Payoneer",
-      "type": "Online",
-      "status": "Active",
-      "description": "Payoneer payment gateway"
+      "id": "payoneer",
+      "name": "Payoneer",
+      "logo": "https://www.payoneer.com/wp-content/themes/payoneer/assets/images/logo.svg",
+      "description": "Fast, Low-Cost Solution for your International Business.",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "https://www.payoneer.com",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": "https://yourdomain.com/payment/payoneer/callback"
     },
     {
-      "id": 4,
-      "gatewayName": "Authorize.net",
-      "type": "Online",
-      "status": "Active",
-      "description": "Authorize.net payment gateway"
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "logo": "https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.3/mercadopago/logo__large@2x.png",
+      "description": "Online payment platform that enables to send & receive money",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "https://www.mercadopago.com",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": "https://yourdomain.com/payment/mercadopago/callback"
     },
     {
-      "id": 5,
-      "gatewayName": "2Checkout",
-      "type": "Online",
-      "status": "Inactive",
-      "description": "2Checkout payment gateway"
+      "id": "paytm",
+      "name": "Paytm",
+      "logo": "https://assetscdn.paytm.com/images/catalog/view_item/728127/1613736937499.png",
+      "description": "Paytm stands for Pay through mobile",
+      "enabled": true,
+      "connected": true,
+      "integrationUrl": "https://business.paytm.com",
+      "merchantId": "paytm_merchant_789",
+      "apiKey": "paytm_key_xyz",
+      "redirectUrl": "https://yourdomain.com/payment/paytm/callback"
     },
     {
-      "id": 6,
-      "gatewayName": "Skrill",
-      "type": "Online",
-      "status": "Active",
-      "description": "Skrill payment gateway"
+      "id": "midtrans",
+      "name": "Midtrans",
+      "logo": "https://midtrans.com/assets/images/logo.png",
+      "description": "Midtrans provides the maximum number of payment methods",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "https://midtrans.com",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": "https://yourdomain.com/payment/midtrans/callback"
     },
     {
-      "id": 7,
-      "gatewayName": "WorldPay",
-      "type": "Online",
-      "status": "Inactive",
-      "description": "WorldPay payment gateway"
+      "id": "pytorch",
+      "name": "PyTorch",
+      "logo": "https://pytorch.org/assets/images/logo-icon.svg",
+      "description": "PyTorch, a network through which your customers transfer funds",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "https://pytorch.org",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": "https://yourdomain.com/payment/pytorch/callback"
     },
     {
-      "id": 8,
-      "gatewayName": "Google Pay",
-      "type": "Online",
-      "status": "Active",
-      "description": "Google Pay payment gateway"
+      "id": "banktransfer",
+      "name": "Bank Transfer",
+      "logo": "https://cdn-icons-png.flaticon.com/512/3004/3004670.png",
+      "description": "Direct transfer of funds from one bank account into another.",
+      "enabled": true,
+      "connected": true,
+      "integrationUrl": "https://yourbank.com",
+      "merchantId": "bank_acc_456",
+      "apiKey": "bank_key_123",
+      "redirectUrl": "https://yourdomain.com/payment/bank/callback"
     },
     {
-      "id": 9,
-      "gatewayName": "Apple Pay",
-      "type": "Online",
-      "status": "Active",
-      "description": "Apple Pay payment gateway"
-    },
-    {
-      "id": 10,
-      "gatewayName": "Amazon Pay",
-      "type": "Online",
-      "status": "Inactive",
-      "description": "Amazon Pay payment gateway"
-    },
-    {
-      "id": 11,
-      "gatewayName": "Square",
-      "type": "Online",
-      "status": "Active",
-      "description": "Square payment gateway"
-    },
-    {
-      "id": 12,
-      "gatewayName": "Alipay",
-      "type": "Online",
-      "status": "Inactive",
-      "description": "Alipay payment gateway"
+      "id": "cod",
+      "name": "Cash on Delivery",
+      "logo": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png",
+      "description": "Indicating that goods must be paid for at the time of delivery.",
+      "enabled": false,
+      "connected": false,
+      "integrationUrl": "",
+      "merchantId": "",
+      "apiKey": "",
+      "redirectUrl": ""
     }
   ]
 }

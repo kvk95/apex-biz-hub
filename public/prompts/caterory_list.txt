@@ -1,0 +1,90 @@
+1. Staples & Dry Groceries
+Rice, Flours, Pulses (Dal), Sugar & Sweeteners, Salt, Cereals & Grains, Noodles & Pasta, Baking Essentials, Other Staples
+
+2. Spices, Herbs & Seasonings
+Ground Spices, Whole Spices, Herbs & Blends, Specialty Blends
+
+3. Oils, Ghee, Fats & Vinegars
+Cooking Oils, Ghee & Butter, Fats & Creams, Vinegars & Acids
+
+4. Sauces, Condiments, Chutneys & Pickles
+Sauces, Condiments, Chutneys & Pickles
+
+5. Beverages
+Tea, Coffee, Health Drinks, Soft Drinks & Juices, Water & Specialty, Alcohol (where permitted)
+
+6. Snacks, Sweets & Dry Fruits
+Biscuits & Cookies, Namkeen & Savories, Packaged Snacks, Sweets & Candies, Dry Fruits & Nuts, Health Snacks
+
+7. Dairy, Eggs & Plant-Based Alternatives
+Milk & Cream, Butter & Cheese, Yogurt & Curd, Paneer & Tofu, Eggs, Plant Alternatives
+
+8. Frozen Foods
+Frozen Vegetables, Frozen Snacks & Meals, Frozen Desserts
+
+9. Fresh Produce
+Fruits, Vegetables
+
+10. Meat, Poultry, Seafood & Processed Meats
+Poultry, Red Meat, Seafood, Processed Meats
+
+11. Meat & Dairy Alternatives (Plant-Based)
+Plant Proteins, Veggie Meats, Dairy-Free
+
+12. Packaged, Canned & Ready-to-Eat Foods
+Canned Vegetables, Canned Fruits, Legumes & Beans, Spreads & Preserves, Ready Meals
+
+13. Bakery, Breads & Fresh Baked Goods
+Breads, Baked Goods, Traditional
+
+14. Instant & Quick Mixes
+Breakfast, Dessert, Beverage & Soup
+
+15. Household Cleaning & Paper Products
+Laundry, Dishwashing, Surface Cleaners, Cleaning Tools, Paper Products
+
+16. Personal Care & Toiletries
+Bath & Body, Hair Care, Oral Care, Fragrance, Men’s Grooming, Women’s Hygiene, Skincare
+
+17. Beauty, Cosmetics & Makeup
+Face Makeup, Eye Makeup, Lip Products, Nail Care, Makeup Tools, Advanced Skincare, Beauty Accessories
+
+18. Baby Care
+Feeding, Hygiene, Grooming
+
+19. Pet Care
+Food, Hygiene, Accessories
+
+20. School & Children Items
+Stationery, School Bags, Art & Craft, Learning Aids, Lunch & Drink, Uniform & Accessories
+
+21. Pooja & Religious Items
+Pooja Samagri, Idols & Pictures, Pooja Utensils, Ritual Items, Festival Decor
+
+22. Fragrance & Aromatherapy
+Perfumes, Deodorants, Room Fragrance, Essential Oils, Car Perfumes
+
+23. Bathroom Essentials
+Fixtures, Storage, Hygiene, Personal, Safety
+
+24. Home Textiles & Bedding
+Bed Linen, Blankets & Quilts, Bath Linen, Floor Mats, Curtains, Cushion Covers
+
+25. Apparel & Fashion
+Men’s Clothing, Women’s Clothing, Kids’ Clothing, Footwear, Innerwear, Activewear, Fashion Accessories
+
+26. Home Furniture & Furnishings
+Living Room, Bedroom, Dining, Study, Modular, Outdoor
+
+27. Gardening & Indoor Plants
+Gardening Tools, Supplies, Pots & Plants, Plant Care
+
+28. Electronics & House Appliances
+Small Appliances, Lighting, Batteries, Cables & Chargers, Fans, Switches & Sockets, Home Entertainment, Power Protection, Computing
+
+29. Mini Repair & Hardware Kit
+Basic Tools, Fasteners, Adhesives, Electrical, Plumbing, Safety
+
+30. Computer & Office Essentials
+Peripherals, Storage, Printing, Cables & Adapters, Office Supplies, Desk Organizers
+
