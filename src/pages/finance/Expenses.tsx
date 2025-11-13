@@ -78,6 +78,7 @@ export default function Expenses() {
   const [filteredCategories, setFilteredCategories] = useState<ExpenseHead[]>(
     []
   );
+    const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ExpenseHead | "All">(
     "All"
@@ -114,11 +115,13 @@ export default function Expenses() {
 
   const loadExpenses = async () => {
     try {
+      setLoading(true);
       const res = await apiService.get<Expense[]>("Expenses");
       if (res.status.code === "S") {
         console.log("Expenses loaded:", res.result.length, "records");
         setExpenses(res.result);
       }
+      setLoading(false);
     } catch (err) {
       console.error("Expenses load error:", err);
     }
