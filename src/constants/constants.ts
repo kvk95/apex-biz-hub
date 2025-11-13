@@ -333,6 +333,8 @@ export const CUSTOMERS = [
 
 export const INVOICE_STATUSES = ["All", "Paid", "Unpaid", "Partial"] as const;
 
+export const ONLINE_PAYMENT_STATUSES = ["Paid", "Unpaid", "Overdue"] as const;
+
 export const QUOTATION_STATUSES = [
   "Ordered",
   "Pending",

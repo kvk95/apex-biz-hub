@@ -5,254 +5,440 @@
   },
   "result": [
     {
-      "id": 1,
-      "orderId": "S001",
-      "orderType": "ONLINE",
-      "date": "2025-10-01",
-      "customerId": 1,
-      "supplierId": 1,
+      "orderId": "SL001",
+      "reference": "#SL001",
+      "date": "2025-11-13",
+      "customerId": "CUST001",
       "customerName": "John Doe",
-      "paymentMethod": "Cash",
-      "status": "Paid",
+      "customerImage": "/assets/images/avathar2.png",
+      "customerAddress": "123 Main St, Cityville, NY 10001",
+      "customerEmail": "john.doe@example.com",
+      "customerPhone": "+1 234 567 8901",
+      "biller": "James Kirwin",
+      "supplierId": "1",
+      "supplierName": "Nyainfo Technologies",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 1450.00,
+      "paid": 1450.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 20.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 1,
-          "productName": "Apple iPhone 14 Pro Max",
-          "sku": "SHU-001",
-          "quantity": 1,
-          "price": 1200,
-          "discount": 0,
-          "tax": 18,
-          "total": 1200
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "sku": "PT001",
+          "category": "Beverages",
+          "quantity": 10,
+          "purchasePrice": 150.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 15.00,
+          "totalCost": 150.00
         },
         {
-          "productId": 2,
-          "productName": "Samsung Galaxy S23",
-          "sku": "SHU-002",
-          "quantity": 2,
-          "price": 800,
-          "discount": 5,
-          "tax": 18,
-          "total": 1520
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "sku": "PT003",
+          "category": "Snacks",
+          "quantity": 20,
+          "purchasePrice": 500.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 25.00,
+          "totalCost": 500.00
+        },
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "productImage": "/assets/images/products/dove-soap.png",
+          "sku": "PT011",
+          "category": "Health & Beauty",
+          "quantity": 40,
+          "purchasePrice": 800.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 20.00,
+          "totalCost": 800.00
         }
       ],
-      "totals": {
-        "subTotal": 2720,
-        "tax": 36,
-        "discount": 5,
-        "shipping": 20,
-        "grandTotal": 2771
-      }
+      "payments": [
+        {
+          "paymentId": "PAY001",
+          "date": "2025-11-13",
+          "reference": "INV/SL001",
+          "amount": 1450.00,
+          "paidBy": "Cash"
+        }
+      ]
     },
     {
-      "id": 2,
-      "orderId": "S002",
-      "orderType": "ONLINE",
-      "date": "2025-10-10",
-      "customerId": 2,
-      "supplierId": 1,
+      "orderId": "SL002",
+      "reference": "#SL002",
+      "date": "2025-11-11",
+      "customerId": "CUST002",
       "customerName": "Jane Smith",
-      "paymentMethod": "Credit Card",
-      "status": "Pending",
+      "customerImage": "/assets/images/avathar1.png",
+      "customerAddress": "456 Oak Ave, Los Angeles, CA 90210",
+      "customerEmail": "jane.smith@example.com",
+      "customerPhone": "+1 345 678 9012",
+      "biller": "Priya Sharma",
+      "supplierId": "10",
+      "supplierName": "Iota Supplies",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 413.00,
+      "paid": 413.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 5.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 3,
-          "productName": "Sony WH-1000XM5",
-          "sku": "SHU-003",
+          "productId": "PT013",
+          "productName": "A4 Printer Paper 500 Sheets",
+          "productImage": "/assets/images/products/paper.png",
+          "sku": "PT013",
+          "category": "Office Supplies",
           "quantity": 1,
-          "price": 400,
-          "discount": 10,
-          "tax": 18,
-          "total": 428
+          "purchasePrice": 400.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 400.00,
+          "totalCost": 400.00
         }
       ],
-      "totals": {
-        "subTotal": 400,
-        "tax": 18,
-        "discount": 10,
-        "shipping": 5,
-        "grandTotal": 413
-      }
+      "payments": [
+        {
+          "paymentId": "PAY002",
+          "date": "2025-11-11",
+          "reference": "INV/SL002",
+          "amount": 413.00,
+          "paidBy": "Card"
+        }
+      ]
     },
     {
-      "id": 3,
-      "orderId": "S003",
-      "orderType": "ONLINE",
-      "date": "2025-10-03",
-      "customerId": 3,
-      "supplierId": 1,
-      "customerName": "Carlos Ruiz",
-      "paymentMethod": "Cash",
-      "status": "Paid",
+      "orderId": "SL003",
+      "reference": "#SL003",
+      "date": "2025-11-05",
+      "customerId": "CUST003",
+      "customerName": "Michael Johnson",
+      "customerImage": "/assets/images/avathar2.png",
+      "customerAddress": "789 Pine Rd, Chicago, IL 60601",
+      "customerEmail": "michael.j@example.com",
+      "customerPhone": "+1 456 789 0123",
+      "biller": "Ahmed Khan",
+      "supplierId": "2",
+      "supplierName": "Alpha Supplies",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 2548.00,
+      "paid": 2548.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 30.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 4,
-          "productName": "Apple MacBook Pro 16\"",
-          "sku": "SHU-004",
-          "quantity": 1,
-          "price": 2500,
-          "discount": 0,
-          "tax": 18,
-          "total": 2500
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "productImage": "/assets/images/products/chocolate-cake.png",
+          "sku": "PT007",
+          "category": "Bakery",
+          "quantity": 120,
+          "purchasePrice": 2500.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 20.83,
+          "totalCost": 2500.00
         }
       ],
-      "totals": {
-        "subTotal": 2500,
-        "tax": 18,
-        "discount": 0,
-        "shipping": 30,
-        "grandTotal": 2548
-      }
+      "payments": [
+        {
+          "paymentId": "PAY003",
+          "date": "2025-11-05",
+          "reference": "INV/SL003",
+          "amount": 2548.00,
+          "paidBy": "Bank Transfer"
+        }
+      ]
     },
     {
-      "id": 4,
-      "orderId": "S004",
-      "orderType": "ONLINE",
-      "date": "2025-10-04",
-      "customerId": 4,
-      "supplierId": 1,
-      "customerName": "Anna Müller",
-      "paymentMethod": "PayPal",
-      "status": "Paid",
+      "orderId": "SL004",
+      "reference": "#SL004",
+      "date": "2025-10-28",
+      "customerId": "CUST004",
+      "customerName": "Emily Davis",
+      "customerImage": "/assets/images/avathar1.png",
+      "customerAddress": "321 Elm Blvd, Houston, TX 77001",
+      "customerEmail": "emily.davis@example.com",
+      "customerPhone": "+1 567 890 1234",
+      "biller": "Sarah Miller",
+      "supplierId": "9",
+      "supplierName": "Theta Imports",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 223.00,
+      "paid": 223.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 10.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 6,
-          "productName": "Logitech MX Master 3 Mouse",
-          "sku": "SHU-006",
+          "productId": "PT012",
+          "productName": "Dettol Antiseptic Liquid 500ml",
+          "productImage": "/assets/images/products/dettol.png",
+          "sku": "PT012",
+          "category": "Cleaning Supplies",
           "quantity": 2,
-          "price": 100,
-          "discount": 5,
-          "tax": 18,
-          "total": 190
+          "purchasePrice": 140.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 70.00,
+          "totalCost": 140.00
         }
       ],
-      "totals": {
-        "subTotal": 200,
-        "tax": 18,
-        "discount": 5,
-        "shipping": 10,
-        "grandTotal": 223
-      }
+      "payments": [
+        {
+          "paymentId": "PAY004",
+          "date": "2025-10-28",
+          "reference": "INV/SL004",
+          "amount": 223.00,
+          "paidBy": "UPI"
+        }
+      ]
     },
     {
-      "id": 5,
-      "orderId": "S005",
-      "orderType": "ONLINE",
-      "date": "2025-10-05",
-      "customerId": 5,
-      "supplierId": 1,
-      "customerName": "Liu Wei",
-      "paymentMethod": "Cash",
-      "status": "Paid",
+      "orderId": "SL005",
+      "reference": "#SL005",
+      "date": "2025-10-15",
+      "customerId": "CUST005",
+      "customerName": "William Brown",
+      "customerImage": "/assets/images/avathar2.png",
+      "customerAddress": "654 Maple St, Phoenix, AZ 85001",
+      "customerEmail": "will.brown@example.com",
+      "customerPhone": "+1 678 901 2345",
+      "biller": "James Kirwin",
+      "supplierId": "4",
+      "supplierName": "Gamma Corp",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 423.00,
+      "paid": 423.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 5.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 7,
-          "productName": "Apple Watch Series 7",
-          "sku": "SHU-007",
-          "quantity": 1,
-          "price": 400,
-          "discount": 0,
-          "tax": 18,
-          "total": 400
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "productImage": "/assets/images/products/pedigree.png",
+          "sku": "PT014",
+          "category": "Pet Supplies",
+          "quantity": 20,
+          "purchasePrice": 400.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 20.00,
+          "totalCost": 400.00
         }
       ],
-      "totals": {
-        "subTotal": 400,
-        "tax": 18,
-        "discount": 0,
-        "shipping": 5,
-        "grandTotal": 423
-      }
+      "payments": [
+        {
+          "paymentId": "PAY005",
+          "date": "2025-10-15",
+          "reference": "INV/SL005",
+          "amount": 423.00,
+          "paidBy": "Cash"
+        }
+      ]
     },
     {
-      "id": 6,
-      "orderId": "S006",
-      "orderType": "ONLINE",
-      "date": "2025-10-06",
-      "customerId": 6,
-      "supplierId": 1,
-      "customerName": "Fatima Al Farsi",
-      "paymentMethod": "Credit Card",
-      "status": "Pending",
+      "orderId": "SL006",
+      "reference": "#SL006",
+      "date": "2025-10-03",
+      "customerId": "CUST006",
+      "customerName": "Olivia Wilson",
+      "customerImage": "/assets/images/avathar1.png",
+      "customerAddress": "987 Cedar Ln, Philadelphia, PA 19101",
+      "customerEmail": "olivia.w@example.com",
+      "customerPhone": "+1 789 012 3456",
+      "biller": "Sarah Miller",
+      "supplierId": "2",
+      "supplierName": "Alpha Supplies",
+      "status": "Processing",
+      "paymentStatus": "Unpaid",
+      "grandTotal": 918.00,
+      "paid": 0.00,
+      "due": 918.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 10.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 8,
-          "productName": "Google Pixel 7 Pro",
-          "sku": "SHU-008",
-          "quantity": 1,
-          "price": 900,
-          "discount": 10,
-          "tax": 18,
-          "total": 918
+          "productId": "PT002",
+          "productName": "Tropicana Orange Juice 1L",
+          "productImage": "/assets/images/products/tropicana.png",
+          "sku": "PT002",
+          "category": "Beverages",
+          "quantity": 15,
+          "purchasePrice": 900.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 60.00,
+          "totalCost": 900.00
         }
       ],
-      "totals": {
-        "subTotal": 900,
-        "tax": 18,
-        "discount": 10,
-        "shipping": 10,
-        "grandTotal": 918
-      }
+      "payments": []
     },
     {
-      "id": 7,
-      "orderId": "S007",
-      "orderType": "ONLINE",
-      "date": "2025-10-07",
-      "customerId": 7,
-      "supplierId": 1,
-      "customerName": "Mohamed Salah",
-      "paymentMethod": "Cash",
-      "status": "Paid",
+      "orderId": "SL007",
+      "reference": "#SL007",
+      "date": "2025-11-10",
+      "customerId": "CUST007",
+      "customerName": "James Taylor",
+      "customerImage": "/assets/images/avathar2.png",
+      "customerAddress": "159 Birch Dr, San Antonio, TX 78201",
+      "customerEmail": "james.t@example.com",
+      "customerPhone": "+1 890 123 4567",
+      "biller": "James Kirwin",
+      "supplierId": "7",
+      "supplierName": "Zeta Wholesale",
+      "status": "Completed",
+      "paymentStatus": "Paid",
+      "grandTotal": 303.00,
+      "paid": 303.00,
+      "due": 0.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 5.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 9,
-          "productName": "Bose QuietComfort Earbuds",
-          "sku": "SHU-009",
-          "quantity": 1,
-          "price": 280,
-          "discount": 0,
-          "tax": 18,
-          "total": 280
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "productImage": "/assets/images/products/icecream.png",
+          "sku": "PT008",
+          "category": "Frozen Foods",
+          "quantity": 35,
+          "purchasePrice": 280.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 8.00,
+          "totalCost": 280.00
         }
       ],
-      "totals": {
-        "subTotal": 280,
-        "tax": 18,
-        "discount": 0,
-        "shipping": 5,
-        "grandTotal": 303
-      }
+      "payments": [
+        {
+          "paymentId": "PAY007",
+          "date": "2025-11-10",
+          "reference": "INV/SL007",
+          "amount": 303.00,
+          "paidBy": "Cheque"
+        }
+      ]
     },
     {
-      "id": 8,
-      "orderId": "S008",
-      "orderType": "ONLINE",
-      "date": "2025-10-08",
-      "customerId": 8,
-      "supplierId": 1,
-      "customerName": "Sofia Rossi",
-      "paymentMethod": "Credit Card",
-      "status": "Paid",
+      "orderId": "SL008",
+      "reference": "#SL008",
+      "date": "2025-11-01",
+      "customerId": "CUST008",
+      "customerName": "Sophia Martinez",
+      "customerImage": "/assets/images/avathar1.png",
+      "customerAddress": "753 Spruce St, San Diego, CA 92101",
+      "customerEmail": "sophia.m@example.com",
+      "customerPhone": "+1 901 234 5678",
+      "biller": "Ahmed Khan",
+      "supplierId": "7",
+      "supplierName": "Zeta Wholesale",
+      "status": "Overdue",
+      "paymentStatus": "Overdue",
+      "grandTotal": 1588.00,
+      "paid": 0.00,
+      "due": 1588.00,
+      "orderTax": 0.00,
+      "discount": 0.00,
+      "shipping": 20.00,
+      "companyInfo": {
+        "name": "DGT",
+        "address": "2077 Chicago Avenue Orosi, CA 93647",
+        "email": "admin@example.com",
+        "phone": "+1 893 174 0385"
+      },
       "items": [
         {
-          "productId": 10,
-          "productName": "Microsoft Surface Laptop 5",
-          "sku": "SHU-010",
-          "quantity": 1,
-          "price": 1600,
-          "discount": 50,
-          "tax": 18,
-          "total": 1550
+          "productId": "PT009",
+          "productName": "McCain Frozen French Fries 1kg",
+          "productImage": "/assets/images/products/mccain-fries.png",
+          "sku": "PT009",
+          "category": "Frozen Foods",
+          "quantity": 100,
+          "purchasePrice": 1600.00,
+          "discount": 0.00,
+          "taxPercent": 0.00,
+          "taxAmount": 0.00,
+          "unitCost": 16.00,
+          "totalCost": 1600.00
         }
       ],
-      "totals": {
-        "subTotal": 1600,
-        "tax": 18,
-        "discount": 50,
-        "shipping": 20,
-        "grandTotal": 1588
-      }
+      "payments": []
     }
   ]
 }

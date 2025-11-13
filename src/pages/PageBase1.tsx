@@ -35,8 +35,8 @@ interface PageBase1Props {
   tableData: any[];
   tableFooter?: () => JSX.Element;
   rowActions?: (row: any) => JSX.Element;
-  formMode: "add" | "edit" | null;
-  setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | null>>;
+  formMode: "add" | "edit" | string | null;
+  setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | string | null>>;
   modalTitle: string;
   modalForm: () => JSX.Element;
   onFormSubmit: (e: React.FormEvent) => void;
@@ -292,9 +292,8 @@ export function PageBase1({
                     {tableColumns.map((col) => (
                       <th
                         key={col.key}
-                        className={`px-4 py-3 text-sm font-medium text-muted-foreground ${
-                          col.align ? `text-${col.align}` : "text-left"
-                        } ${col.className || ""}`}
+                        className={`px-4 py-3 text-sm font-medium text-muted-foreground ${col.align ? `text-${col.align}` : "text-left"
+                          } ${col.className || ""}`}
                       >
                         {col.label}
                       </th>
@@ -325,9 +324,8 @@ export function PageBase1({
                         {tableColumns.map((col) => (
                           <td
                             key={col.key}
-                            className={`px-4 py-2 text-sm ${
-                              col.align ? `text-${col.align}` : "text-left"
-                            } ${col.className || ""}`}
+                            className={`px-4 py-2 text-sm ${col.align ? `text-${col.align}` : "text-left"
+                              } ${col.className || ""}`}
                             style={{ fontSize: "14px" }}
                           >
                             {col.render
@@ -367,11 +365,10 @@ export function PageBase1({
           >
             <div
               className={`bg-white rounded shadow-lg w-full max-w-4xl max-h-full transition-all duration-300 
-                  ${
-                    formMode === "add"
-                      ? "border-l-4 border-green-500"
-                      : "border-l-4 border-gray-300"
-                  }`}
+                  ${formMode === "add"
+                  ? "border-l-4 border-green-500"
+                  : "border-l-4 border-gray-300"
+                }`}
             >
               <div className="flex justify-between items-center border-b border-border px-4 py-2">
                 <h2

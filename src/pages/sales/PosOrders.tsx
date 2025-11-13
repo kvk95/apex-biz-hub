@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
-import AddSalesModal from "./AddSalesModal";
+import AddSalesModal from "./salesdialog/AddSalesModal";
 import { SearchInput } from "@/components/Search/SearchInput";
 import {
   ORDER_STATUSES,
