@@ -36,10 +36,13 @@ interface PageBase1Props {
   tableFooter?: () => JSX.Element;
   rowActions?: (row: any) => JSX.Element;
   formMode: "add" | "edit" | string | null;
-  setFormMode: React.Dispatch<React.SetStateAction<"add" | "edit" | string | null>>;
+  setFormMode: React.Dispatch<
+    React.SetStateAction<"add" | "edit" | string | null>
+  >;
   modalTitle: string;
   modalForm: () => JSX.Element;
   onFormSubmit: (e: React.FormEvent) => void;
+  loading?: boolean;
   customFilters?: () => JSX.Element;
   customHeaderFields?: () => JSX.Element;
   customHeaderRow?: () => JSX.Element;
@@ -183,6 +186,7 @@ export function PageBase1({
   modalTitle,
   modalForm,
   onFormSubmit,
+  loading,
   customFilters,
   customHeaderFields,
   customHeaderRow,
@@ -196,6 +200,12 @@ export function PageBase1({
 
   return (
     <>
+      {/* Full-screen loader (on top of everything) */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-[1000]">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="min-h-screen bg-background">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div className="flex-1 flex items-center gap-3">
@@ -292,8 +302,9 @@ export function PageBase1({
                     {tableColumns.map((col) => (
                       <th
                         key={col.key}
-                        className={`px-4 py-3 text-sm font-medium text-muted-foreground ${col.align ? `text-${col.align}` : "text-left"
-                          } ${col.className || ""}`}
+                        className={`px-4 py-3 text-sm font-medium text-muted-foreground ${
+                          col.align ? `text-${col.align}` : "text-left"
+                        } ${col.className || ""}`}
                       >
                         {col.label}
                       </th>
@@ -324,8 +335,9 @@ export function PageBase1({
                         {tableColumns.map((col) => (
                           <td
                             key={col.key}
-                            className={`px-4 py-2 text-sm ${col.align ? `text-${col.align}` : "text-left"
-                              } ${col.className || ""}`}
+                            className={`px-4 py-2 text-sm ${
+                              col.align ? `text-${col.align}` : "text-left"
+                            } ${col.className || ""}`}
                             style={{ fontSize: "14px" }}
                           >
                             {col.render
@@ -365,10 +377,11 @@ export function PageBase1({
           >
             <div
               className={`bg-white rounded shadow-lg w-full max-w-4xl max-h-full transition-all duration-300 
-                  ${formMode === "add"
-                  ? "border-l-4 border-green-500"
-                  : "border-l-4 border-gray-300"
-                }`}
+                  ${
+                    formMode === "add"
+                      ? "border-l-4 border-green-500"
+                      : "border-l-4 border-gray-300"
+                  }`}
             >
               <div className="flex justify-between items-center border-b border-border px-4 py-2">
                 <h2

@@ -168,13 +168,9 @@ export default function DiscountPlan() {
     alert("Discount Plans Report:\n\n" + JSON.stringify(plans, null, 2));
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
     setCurrentPage(1);
-    console.log("DiscountPlan handleSearchChange:", {
-      search: e.target.value,
-      currentPage: 1,
-    });
   };
 
   const handlePageChange = (page: number) => {
@@ -373,6 +369,7 @@ export default function DiscountPlan() {
       }
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
+      loading={loading}
     />
   );
 }
