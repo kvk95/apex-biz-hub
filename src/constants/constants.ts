@@ -331,3 +331,5 @@ export const QUOTATION_STATUSES = ["Ordered", "Pending", "Sent"] as const;
 export const EXPENSE_HEADS_STATUSES = ["Pending", "Approved"] as const;
 
 export const DURATION_TYPES = ["Year", "Month"] as const;
+
+export const USER_ROLE_STATUSES = ["Active", "Inactive"] as const;

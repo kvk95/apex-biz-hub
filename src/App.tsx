@@ -85,7 +85,7 @@ import OnlineOrders from "./pages/sales/OnlineOrders";
 import Pos from "./pages/sales/Pos";
 import PosOrders from "./pages/sales/PosOrders";
 import Quotation from "./pages/sales/Quotation";
-import SalesReturn from "./pages/sales/SalesReturn"; 
+import SalesReturn from "./pages/sales/SalesReturn";
 import BanIpAddress from "./pages/settings/BanIpAddress";
 import BankSettings from "./pages/settings/BankSettings";
 import CompanySettings from "./pages/settings/CompanySettings";
@@ -126,6 +126,7 @@ import Subscriptions from "./pages/super-admin/Subscriptions";
 import SuperadminDashboard from "./pages/super-admin/SuperadminDashboard";
 import DeleteAccountRequest from "./pages/user-management/DeleteAccountRequest";
 import RolesPermissions from "./pages/user-management/RolesPermissions";
+import Permissions from "./pages/user-management/Permissions";
 import Users from "./pages/user-management/Users";
 
 const queryClient = new QueryClient();
@@ -134,9 +135,9 @@ function RouteChangeHandler() {
   const location = useLocation();
 
   useEffect(() => {
-     // Scroll to top
+    // Scroll to top
     window.scrollTo(0, 0);
-    
+
     const parts = location.pathname.split("/").filter(Boolean);
     let page = parts.length > 0 ? parts[parts.length - 1] : "Dashboard";
     page = page.charAt(0).toUpperCase() + page.slice(1);
@@ -363,6 +364,10 @@ const App = () => {
                   element={<RolesPermissions />}
                 />
                 <Route
+                  path="user-management/permissions"
+                  element={<Permissions />}
+                />
+                <Route
                   path="user-management/delete-account-request"
                   element={<DeleteAccountRequest />}
                 />
@@ -403,7 +408,7 @@ const App = () => {
                 <Route
                   path="settings/website/preference"
                   element={<Preference />}
-                /> 
+                />
                 <Route
                   path="settings/website/social-auth"
                   element={<SocialAuthentication />}

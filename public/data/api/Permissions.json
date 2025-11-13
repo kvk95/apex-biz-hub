@@ -1,0 +1,88 @@
+{
+  "status": {
+    "code": "S",
+    "description": ""
+  }, 
+  "result": [
+    {
+      "module": "Employee",
+      "allowAll": false,
+      "read": true,
+      "write": true,
+      "create": false,
+      "delete": false,
+      "import": false,
+      "export": false
+    },
+    {
+      "module": "Events",
+      "allowAll": false,
+      "read": true,
+      "write": false,
+      "create": true,
+      "delete": false,
+      "import": false,
+      "export": true
+    },
+    {
+      "module": "Holidays",
+      "allowAll": false,
+      "read": true,
+      "write": false,
+      "create": false,
+      "delete": false,
+      "import": false,
+      "export": true
+    },
+    {
+      "module": "Leaves",
+      "allowAll": false,
+      "read": true,
+      "write": true,
+      "create": true,
+      "delete": false,
+      "import": false,
+      "export": false
+    },
+    {
+      "module": "Payroll",
+      "allowAll": true,
+      "read": true,
+      "write": true,
+      "create": true,
+      "delete": true,
+      "import": true,
+      "export": true
+    },
+    {
+      "module": "Reports",
+      "allowAll": false,
+      "read": true,
+      "write": false,
+      "create": false,
+      "delete": false,
+      "import": false,
+      "export": true
+    },
+    {
+      "module": "Sales",
+      "allowAll": false,
+      "read": true,
+      "write": true,
+      "create": true,
+      "delete": false,
+      "import": true,
+      "export": true
+    },
+    {
+      "module": "Training",
+      "allowAll": false,
+      "read": true,
+      "write": true,
+      "create": true,
+      "delete": false,
+      "import": false,
+      "export": false
+    }
+  ]
+}

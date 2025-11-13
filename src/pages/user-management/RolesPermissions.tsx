@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { STATUSES } from "@/constants/constants";
+import { USER_ROLE_STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { useNavigate } from "react-router-dom";
+import { SearchInput } from "@/components/Search/SearchInput";
 
 type Role = {
   id: number;
   roleName: string;
-  description: string;
-  status: (typeof STATUSES)[number];
+  status: (typeof USER_ROLE_STATUSES)[number];
   createdDate: string;
 };
 
@@ -17,16 +18,18 @@ export default function RolesPermissions() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState<Role>({
     id: null as number | null,
     roleName: "",
-    description: "",
-    status: STATUSES[0],
+    status: USER_ROLE_STATUSES[0],
     createdDate: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const loadData = async () => {
     setLoading(true);
@@ -44,16 +47,22 @@ export default function RolesPermissions() {
   useEffect(() => {
     loadData();
   }, []);
-
   const filteredRoles = useMemo(() => {
-    const result = !search.trim()
-      ? data
-      : data.filter((r) =>
-          r.roleName.toLowerCase().includes(search.toLowerCase())
-        );
-    console.log("RolesPermissions filteredRoles:", result, { search });
-    return result;
-  }, [search, data]);
+    return data.filter((item) => {
+      // Search filter
+      const matchesSearch =
+        !search.trim() ||
+        item.roleName.toLowerCase().includes(search.toLowerCase());
+
+      // Status filter
+      const matchesStatus =
+        !statusFilter ||
+        statusFilter === "All Status" ||
+        item.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [data, search, statusFilter]);
 
   const paginatedRoles = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -74,8 +83,7 @@ export default function RolesPermissions() {
     setForm({
       id: null,
       roleName: "",
-      description: "",
-      status: STATUSES[0],
+      status: USER_ROLE_STATUSES[0],
       createdDate: "",
     });
     console.log("RolesPermissions handleAddClick: Modal opened for add");
@@ -85,8 +93,8 @@ export default function RolesPermissions() {
     loadData();
     setFormMode(null);
     setSearch("");
+    setStatusFilter("");
     setCurrentPage(1);
-    console.log("RolesPermissions handleRefresh");
   };
 
   const handleReport = () => {
@@ -137,6 +145,15 @@ export default function RolesPermissions() {
       }
       console.log("RolesPermissions handleDelete:", { id, totalPages });
     }
+  };
+
+  const handlePermissionClick = (role: Role) => {
+    navigate("/user-management/permissions", {
+      state: {
+        mode: "edit",
+        roleRecord: role,
+      },
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -201,15 +218,19 @@ export default function RolesPermissions() {
         <span className="font-semibold text-gray-900">{value}</span>
       ),
     },
-    { key: "description", label: "Description" },
-    { key: "createdDate", label: "Created Date" },
-    { key: "status", label: "Status", render: renderStatusBadge },
+    { key: "createdDate", label: "Created Date", align: "center" },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: renderStatusBadge,
+    },
   ];
 
   const rowActions = (row: Role) => (
     <>
       <button
-        onClick={() => handleEdit(row)}
+        onClick={() => handlePermissionClick(row)}
         aria-label={`Edit permissions for ${row.roleName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
@@ -235,6 +256,41 @@ export default function RolesPermissions() {
     </>
   );
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+  };
+
+  const customFilters = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      <div className="flex items-center">
+        <SearchInput
+          className=""
+          value={search}
+          placeholder="Search by role name..."
+          onSearch={handleSearchChange}
+        />
+      </div>
+      <div className="flex justify-end">
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">All Status</option>
+          {USER_ROLE_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+
   const modalForm = () => (
     <div className="grid grid-cols-1 gap-4">
       <div>
@@ -254,20 +310,6 @@ export default function RolesPermissions() {
         />
       </div>
       <div>
-        <label htmlFor="description" className="block text-sm font-medium mb-1">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={3}
-          value={form.description}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-          placeholder="Enter role description"
-        />
-      </div>
-      <div>
         <label htmlFor="status" className="block text-sm font-medium mb-1">
           Status
         </label>
@@ -278,7 +320,7 @@ export default function RolesPermissions() {
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {STATUSES.map((status) => (
+          {USER_ROLE_STATUSES.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
@@ -312,6 +354,7 @@ export default function RolesPermissions() {
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       loading={loading}
+      customFilters={customFilters}
     />
   );
 }
