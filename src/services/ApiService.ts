@@ -102,8 +102,12 @@ class ApiService {
     }
   }
 
+  async getFromRemote<T>(endpoint: string): Promise<ApiResponse<T>> { 
+    return this.fetchFromRemote<T>(endpoint); 
+  }
+
   async post<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
-    if (API_CONFIG.dataSource === 'local') {
+    /*if (API_CONFIG.dataSource === 'local') {
       // For local mode, simulate a successful post
       console.log('Local mode: POST simulation', endpoint, data);
       return {
@@ -113,7 +117,9 @@ class ApiService {
         },
         result: data as T
       };
-    } else {
+    } else 
+      */
+     {
       try {
         const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}/${endpoint}`, {
           method: 'POST',

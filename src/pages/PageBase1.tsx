@@ -233,6 +233,12 @@ export function PageBase1({
   const selectionBg = `hsl(${primaryColor})`;
   const themeStyles: ThemeStyles = { selectionBg, hoverColor };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onFormSubmit(e);
+    setFormMode(null); // Close modal and reset mode
+  };
+
   return (
     <>
       {/* Full-screen loader (on top of everything) */}
@@ -447,31 +453,31 @@ export function PageBase1({
                   <i className="fa fa-window-close" aria-hidden="true"></i>
                 </button>
               </div>
-              <form onSubmit={onFormSubmit} className="px-4 py-4">
+              <form onSubmit={handleFormSubmit} className="px-4 py-4">
                 {modalForm()}
+                <div className="border-t border-border px-0 pt-3 pb-1  flex justify-end gap-3">
+                  <button
+                    onClick={() => setFormMode(null)}
+                    className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-white font-semibold px-3 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    type="button"
+                  >
+                    <i className="fa fa-times me-2"></i> Cancel
+                  </button>
+                  <button
+                    type="submit" // Changed to submit; removes onClick
+                    className="inline-flex items-center gap-2 text-white font-semibold px-3 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={
+                      {
+                        backgroundColor: themeStyles.selectionBg,
+                        "--hover-bg": themeStyles.hoverColor,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <i className="fa fa-save me-2"></i>{" "}
+                    {formMode === "add" ? "Save" : "Update"}
+                  </button>
+                </div>
               </form>
-              <div className="border-t border-border px-4 pt-2 pb-3 flex justify-end gap-4">
-                <button
-                  onClick={() => setFormMode(null)}
-                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-white font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  type="button"
-                >
-                  <i className="fa fa-times me-2"></i> Cancel
-                </button>
-                <button
-                  type="submit" // Changed to submit; removes onClick
-                  className="inline-flex items-center gap-2 text-white font-semibold px-3 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-ring"
-                  style={
-                    {
-                      backgroundColor: themeStyles.selectionBg,
-                      "--hover-bg": themeStyles.hoverColor,
-                    } as React.CSSProperties
-                  }
-                >
-                  <i className="fa fa-save me-2"></i>{" "}
-                  {formMode === "add" ? "Save" : "Update"}
-                </button>
-              </div>
             </div>
           </div>
         )}
