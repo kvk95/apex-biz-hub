@@ -240,9 +240,9 @@ export default function PosOrders() {
       label: "Status",
       render: v => (
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${v === "Completed" ? "bg-green-100 text-green-800" :
-            v === "Pending" ? "bg-blue-100 text-blue-800" :
-              v === "Overdue" ? "bg-red-100 text-red-800" :
-                "bg-yellow-100 text-yellow-800"
+          v === "Pending" ? "bg-blue-100 text-blue-800" :
+            v === "Overdue" ? "bg-red-100 text-red-800" :
+              "bg-yellow-100 text-yellow-800"
           }`}>{v}</span>
       ),
     },
@@ -254,9 +254,9 @@ export default function PosOrders() {
       label: "Payment Status",
       render: v => (
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${v === "Paid" ? "bg-green-100 text-green-800" :
-            v === "UnPaid" ? "bg-red-100 text-red-800" :
-              v === "Overdue" ? "bg-red-100 text-red-800" :
-                "bg-yellow-100 text-yellow-800"
+          v === "UnPaid" ? "bg-red-100 text-red-800" :
+            v === "Overdue" ? "bg-red-100 text-red-800" :
+              "bg-yellow-100 text-yellow-800"
           }`}>
           <i className="fa fa-circle mr-1 text-xs"></i> {v}
         </span>
@@ -378,7 +378,7 @@ export default function PosOrders() {
     <PageBase1
       title="POS Orders"
       description="Manage Your POS Orders"
-      icon="fa-light fa-cash-register"
+      icon="fa-light fa-store"
       onAddClick={() => {
         setSelectedOrder(null);
         setFormMode("add");

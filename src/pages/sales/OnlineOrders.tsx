@@ -471,7 +471,7 @@ export default function OnlineOrders() {
     <PageBase1
       title="Online Orders"
       description="Manage Your Online Orders"
-      icon="fa-light fa-shopping-cart"
+      icon="fa-light fa-globe"
       onAddClick={() => {
         setSelectedOrder(null);
         setFormMode("add");

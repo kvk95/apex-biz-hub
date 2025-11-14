@@ -604,7 +604,7 @@ export default function StockTransfer() {
     <PageBase1
       title="Stock Transfer"
       description="Transfer stock between warehouses"
-      icon="fa-light fa-arrow-right-arrow-left"
+      icon="fa-light fa fa-truck"
       onAddClick={handleAdd}
       onRefresh={handleClear}
       onReport={() => alert("PDF Report Generated!")}

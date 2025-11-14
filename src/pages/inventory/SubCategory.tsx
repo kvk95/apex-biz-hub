@@ -236,15 +236,15 @@ export default function SubCategory() {
         prev.map((item) =>
           item.subCategoryId === form.subCategoryId
             ? {
-                ...item,
-                categoryId: form.categoryId,
-                categoryName: form.categoryName,
-                subCategoryName: form.subCategoryName,
-                categoryCode: finalCode,
-                description: form.description,
-                status: form.status ? "Active" : "Inactive",
-                image: form.image,
-              }
+              ...item,
+              categoryId: form.categoryId,
+              categoryName: form.categoryName,
+              subCategoryName: form.subCategoryName,
+              categoryCode: finalCode,
+              description: form.description,
+              status: form.status ? "Active" : "Inactive",
+              image: form.image,
+            }
             : item
         )
       );
@@ -452,14 +452,12 @@ export default function SubCategory() {
             role="switch"
             aria-checked={form.status}
             onClick={() => setForm((p) => ({ ...p, status: !p.status }))}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-              form.status ? "bg-primary" : "bg-gray-300"
-            }`}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status ? "bg-primary" : "bg-gray-300"
+              }`}
           >
             <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
-                form.status ? "translate-x-7" : "translate-x-1"
-              }`}
+              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status ? "translate-x-7" : "translate-x-1"
+                }`}
             />
           </button>
         </div>
@@ -471,7 +469,7 @@ export default function SubCategory() {
     <PageBase1
       title="Sub Category"
       description="Manage your sub categories"
-      icon="fa-light fa-folder-tree"
+      icon="fa-light fa-tags"
       onAddClick={handleAdd}
       onRefresh={handleClear}
       onReport={() => alert("PDF Report Generated!")}

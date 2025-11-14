@@ -425,7 +425,7 @@ export default function ManageStock() {
     <PageBase1
       title="Manage Stock"
       description="Track and manage stock across warehouses and stores"
-      icon="fa-light fa-warehouse"
+      icon="fa-light fa-boxes"
       onAddClick={() => {
         setFormMode("add");
         setSelectedProduct(null);

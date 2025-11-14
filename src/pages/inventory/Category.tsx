@@ -148,12 +148,12 @@ export default function Category() {
         prev.map((c) =>
           c.categoryId === form.categoryId
             ? {
-                ...c,
-                categoryName: form.categoryName,
-                categorySlug: slug,
-                description: form.description,
-                status: form.status ? "Active" : "Inactive",
-              }
+              ...c,
+              categoryName: form.categoryName,
+              categorySlug: slug,
+              description: form.description,
+              status: form.status ? "Active" : "Inactive",
+            }
             : c
         )
       );
@@ -316,14 +316,12 @@ export default function Category() {
           role="switch"
           aria-checked={form.status}
           onClick={() => setForm((p) => ({ ...p, status: !p.status }))}
-          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-            form.status ? "bg-primary" : "bg-gray-300"
-          }`}
+          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${form.status ? "bg-primary" : "bg-gray-300"
+            }`}
         >
           <span
-            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
-              form.status ? "translate-x-7" : "translate-x-1"
-            }`}
+            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.status ? "translate-x-7" : "translate-x-1"
+              }`}
           />
         </button>
       </div>
@@ -334,7 +332,7 @@ export default function Category() {
     <PageBase1
       title="Category"
       description="Manage your categories"
-      icon="fa-light fa-folder-tree"
+      icon="fa-light fa-tags"
       onAddClick={handleAdd}
       onRefresh={handleClear}
       onReport={handleReport}
