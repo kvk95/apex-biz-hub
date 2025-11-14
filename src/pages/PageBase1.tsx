@@ -2,6 +2,8 @@ import React from "react";
 import { Pagination } from "@/components/Pagination/Pagination";
 import { useTheme } from "@/components/theme/theme-provider";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { useLocation } from "react-router-dom";
+import menuItems from "@/data/menuItems.json";
 
 export interface Column {
   key: string;
@@ -18,8 +20,8 @@ interface ThemeStyles {
 
 interface PageBase1Props {
   title: string;
-  description: string;
-  icon: string;
+  description: React.ReactNode;
+  pageIcon?: string;
   onAddClick?: () => void;
   onRefresh: () => void;
   onReport?: () => void;
@@ -162,10 +164,37 @@ const pluralToSingular = (word: string): string => {
   return word; // No change
 };
 
+function findIconByUrl(items: any[], url: string): string | null {
+  for (const item of items) {
+    if (item.url === url) {
+      return item.icon || null;
+    }
+    if (item.items) {
+      const found = findIconByUrl(item.items, url);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function findIconByTitle(items: any[], targetTitle: string): string | null {
+  const lowerTitle = targetTitle.toLowerCase();
+  for (const item of items) {
+    if (item.title && item.title.toLowerCase() === lowerTitle) {
+      return item.icon || null;
+    }
+    if (item.items) {
+      const found = findIconByTitle(item.items, targetTitle);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export function PageBase1({
   title,
   description,
-  icon,
+  pageIcon,
   onAddClick,
   onRefresh,
   onReport,
@@ -193,6 +222,12 @@ export function PageBase1({
   children,
 }: PageBase1Props) {
   const { theme } = useTheme();
+  const location = useLocation();
+
+  // Derive icon from menuItems.json using current pathname
+  const currentIcon =
+    findIconByUrl(menuItems, location.pathname) || "fa fa-question-circle";
+
   const primaryColor = theme.primaryColor || "#f97316";
   const hoverColor = adjustColor(primaryColor, -20);
   const selectionBg = `hsl(${primaryColor})`;
@@ -203,7 +238,7 @@ export function PageBase1({
       {/* Full-screen loader (on top of everything) */}
       {loading && (
         <>
-          <div className="fixed inset-0 bg-gray-5001 bg-opacity-10 flex items-center justify-center z-[1000]"> 
+          <div className="fixed inset-0 bg-gray-5001 bg-opacity-10 flex items-center justify-center z-[1000]">
             <span className="loader"></span>
           </div>
         </>
@@ -212,7 +247,7 @@ export function PageBase1({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div className="flex-1 flex items-center gap-3">
             <i
-              className={`${icon} fa-light text-4xl`}
+              className={`${pageIcon || currentIcon} fa-light text-4xl`}
               style={{ color: selectionBg }}
               aria-hidden="true"
             ></i>

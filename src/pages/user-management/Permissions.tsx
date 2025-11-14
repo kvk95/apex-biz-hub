@@ -152,7 +152,7 @@ export default function Permissions() {
           </span>
         </>
       }
-      icon="fa fa-shield"
+      pageIcon="fa fa-shield"
       search={search}
       onSearchChange={handleSearchChange}
       currentPage={currentPage}

@@ -222,7 +222,7 @@ export default function RolesPermissions() {
       key: "createdDate",
       label: "Created Date",
       align: "center",
-      render: (value) => <>{formatDate(value, "DD MMM YYYY")}</>,
+      render: (value) => formatDate(value, "dd MMM yyyy"),
     },
     {
       key: "status",
@@ -339,7 +339,6 @@ export default function RolesPermissions() {
     <PageBase1
       title="Roles & Permissions"
       description="Manage roles and their permissions for your application."
-      icon="fa fa-user-shield"
       onAddClick={handleAddClick}
       onRefresh={handleRefresh}
       onReport={handleReport}
