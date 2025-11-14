@@ -6,99 +6,138 @@
   "result": [
     {
       "id": 1,
-      "name": "John Doe",
-      "email": "john.doe@example.com",
-      "phone": "123-456-7890",
+      "name": "Arjun Kumar",
+      "email": "arjun.kumar@example.com",
+      "phone": "+919876543210",
       "role": "Admin",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/avathar/m1.png"
     },
     {
       "id": 2,
-      "name": "Jane Smith",
-      "email": "jane.smith@example.com",
-      "phone": "987-654-3210",
-      "role": "User",
-      "status": "Inactive"
+      "name": "Priya Lakshmi",
+      "email": "priya.l@example.com",
+      "phone": "+919876543211",
+      "role": "Manager",
+      "status": "Active",
+      "image": "/assets/images/avathar/f2.png"
     },
     {
       "id": 3,
-      "name": "Michael Johnson",
-      "email": "michael.johnson@example.com",
-      "phone": "555-123-4567",
+      "name": "Karthik Rajan",
+      "email": "karthik.r@example.com",
+      "phone": "+919876543212",
       "role": "User",
-      "status": "Active"
+      "status": "Inactive",
+      "image": "/assets/images/avathar/m3.png"
     },
     {
       "id": 4,
-      "name": "Emily Davis",
-      "email": "emily.davis@example.com",
-      "phone": "444-987-6543",
-      "role": "Admin",
-      "status": "Active"
+      "name": "Anjali Devi",
+      "email": "anjali.d@example.com",
+      "phone": "+919876543213",
+      "role": "User",
+      "status": "Active",
+      "image": "/assets/images/avathar/f1.png"
     },
     {
       "id": 5,
-      "name": "William Brown",
-      "email": "william.brown@example.com",
-      "phone": "333-222-1111",
-      "role": "User",
-      "status": "Inactive"
+      "name": "Vikram Srinivasan",
+      "email": "vikram.s@example.com",
+      "phone": "+919876543214",
+      "role": "Admin",
+      "status": "Active",
+      "image": "/assets/images/avathar/m2.png"
     },
     {
       "id": 6,
-      "name": "Olivia Wilson",
-      "email": "olivia.wilson@example.com",
-      "phone": "222-333-4444",
-      "role": "User",
-      "status": "Active"
+      "name": "Meera Subramaniam",
+      "email": "meera.s@example.com",
+      "phone": "+919876543215",
+      "role": "Manager",
+      "status": "Active",
+      "image": "/assets/images/avathar/f3.png"
     },
     {
       "id": 7,
-      "name": "James Taylor",
-      "email": "james.taylor@example.com",
-      "phone": "111-222-3333",
-      "role": "Admin",
-      "status": "Active"
+      "name": "Suresh Kannan",
+      "email": "suresh.k@example.com",
+      "phone": "+919876543216",
+      "role": "User",
+      "status": "Inactive",
+      "image": "/assets/images/avathar/m4.png"
     },
     {
       "id": 8,
-      "name": "Sophia Martinez",
-      "email": "sophia.martinez@example.com",
-      "phone": "999-888-7777",
+      "name": "Lakshmi Narayanan",
+      "email": "lakshmi.n@example.com",
+      "phone": "+919876543217",
       "role": "User",
-      "status": "Inactive"
+      "status": "Active",
+      "image": "/assets/images/avathar/f4.png"
     },
     {
       "id": 9,
-      "name": "Benjamin Anderson",
-      "email": "benjamin.anderson@example.com",
-      "phone": "666-555-4444",
-      "role": "User",
-      "status": "Active"
+      "name": "Ravi Shankar",
+      "email": "ravi.s@example.com",
+      "phone": "+919876543218",
+      "role": "Manager",
+      "status": "Active",
+      "image": "/assets/images/avathar/m5.png"
     },
     {
       "id": 10,
-      "name": "Isabella Thomas",
-      "email": "isabella.thomas@example.com",
-      "phone": "777-666-5555",
-      "role": "Admin",
-      "status": "Active"
+      "name": "Divya Mohan",
+      "email": "divya.m@example.com",
+      "phone": "+919876543219",
+      "role": "User",
+      "status": "Active",
+      "image": "/assets/images/avathar/f5.png"
     },
     {
       "id": 11,
-      "name": "Daniel Jackson",
-      "email": "daniel.jackson@example.com",
-      "phone": "888-777-6666",
-      "role": "User",
-      "status": "Inactive"
+      "name": "Manoj Pillai",
+      "email": "manoj.p@example.com",
+      "phone": "+919876543220",
+      "role": "Admin",
+      "status": "Inactive",
+      "image": "/assets/images/avathar/m6.png"
     },
     {
       "id": 12,
-      "name": "Mia White",
-      "email": "mia.white@example.com",
-      "phone": "555-666-7777",
+      "name": "Nisha Rani",
+      "email": "nisha.r@example.com",
+      "phone": "+919876543221",
       "role": "User",
-      "status": "Active"
+      "status": "Active",
+      "image": "/assets/images/avathar/f1.png"
+    },
+    {
+      "id": 13,
+      "name": "Senthil Kumar",
+      "email": "senthil.k@example.com",
+      "phone": "+919876543222",
+      "role": "Manager",
+      "status": "Active",
+      "image": "/assets/images/avathar/m7.png"
+    },
+    {
+      "id": 14,
+      "name": "Kavitha Menon",
+      "email": "kavitha.m@example.com",
+      "phone": "+919876543223",
+      "role": "User",
+      "status": "Active",
+      "image": "/assets/images/avathar/f6.png"
+    },
+    {
+      "id": 15,
+      "name": "Ganesh Iyer",
+      "email": "ganesh.i@example.com",
+      "phone": "+919876543224",
+      "role": "Admin",
+      "status": "Active",
+      "image": "/assets/images/avathar/m1.png"
     }
   ]
 }

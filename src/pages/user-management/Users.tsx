@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { ROLES, STATUSES } from "@/constants/constants";
@@ -11,6 +11,7 @@ type User = {
   phone: string;
   role: (typeof ROLES)[number];
   status: (typeof STATUSES)[number];
+  image: string;
 };
 
 export default function Users() {
@@ -19,28 +20,41 @@ export default function Users() {
   const [data, setData] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
-  const [form, setForm] = useState<User>({
-    id: null as number | null,
+
+  // Form state WITHOUT password
+  const [form, setForm] = useState<Omit<User, "id"> & { id: number | null }>({
+    id: null,
     name: "",
     email: "",
     phone: "",
     role: ROLES[0],
     status: STATUSES[0],
+    image: "",
   });
+
+  const [preview, setPreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Separate password states (only for Add)
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const loadData = async () => {
     setLoading(true);
-    const response = await apiService.get<User[]>("Users");
-    if (response.status.code === "S") {
-      setData(response.result);
-      setError(null);
-    } else {
-      setError(response.status.description);
+    try {
+      const response = await apiService.get<{ status: { code: string }; result: User[] }>("Users");
+      if (response.status.code === "S") {
+        setData(response.result || []);
+      } else {
+        setData([]);
+      }
+    } catch (error) {
+      console.error("Failed to load users:", error);
+      setData([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    console.log("Users loadData:", { data: response.result });
   };
 
   useEffect(() => {
@@ -48,32 +62,21 @@ export default function Users() {
   }, []);
 
   const filteredUsers = useMemo(() => {
-    const result = !search.trim()
-      ? data
-      : data.filter(
-          (u) =>
-            u.name.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase()) ||
-            u.phone.toLowerCase().includes(search.toLowerCase()) ||
-            u.role.toLowerCase().includes(search.toLowerCase()) ||
-            u.status.toLowerCase().includes(search.toLowerCase())
-        );
-    console.log("Users filteredUsers:", result, { search });
-    return result;
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
+    return data.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.phone.includes(q) ||
+        u.role.toLowerCase().includes(q) ||
+        u.status.toLowerCase().includes(q)
+    );
   }, [search, data]);
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const result = filteredUsers.slice(start, end);
-    console.log("Users paginatedUsers:", result, {
-      currentPage,
-      start,
-      end,
-      itemsPerPage,
-      totalItems: filteredUsers.length,
-    });
-    return result;
+    return filteredUsers.slice(start, start + itemsPerPage);
   }, [currentPage, itemsPerPage, filteredUsers]);
 
   const handleAddClick = () => {
@@ -83,10 +86,13 @@ export default function Users() {
       name: "",
       email: "",
       phone: "",
-    role: ROLES[0],
-    status: STATUSES[0],
+      role: ROLES[0],
+      status: STATUSES[0],
+      image: "",
     });
-    console.log("Users handleAddClick: Modal opened for add");
+    setPreview("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   const handleRefresh = () => {
@@ -94,20 +100,27 @@ export default function Users() {
     setFormMode(null);
     setSearch("");
     setCurrentPage(1);
-    console.log("Users handleRefresh");
   };
 
-  const handleReport = () => {
-    alert("Users Report:\n\n" + JSON.stringify(data, null, 2));
-  };
-
-  const handleSearchChange = (query) => {
-    setSearch(query);
+  const handleSearchChange = (q: string) => {
+    setSearch(q);
     setCurrentPage(1);
-    console.log("Users handleSearchChange:", {
-      search: query,
-      currentPage: 1,
-    });
+  };
+
+  const handleEdit = (user: User) => {
+    setFormMode("edit");
+    setForm(user);
+    setPreview(user.image);
+  };
+
+  const handleDelete = (id: number) => {
+    if (!window.confirm("Delete this user?")) return;
+    setData((prev) => prev.filter((u) => u.id !== id));
+  };
+
+  const handlePageChange = (page: number) => {
+    const pages = Math.ceil(filteredUsers.length / itemsPerPage);
+    if (page >= 1 && page <= pages) setCurrentPage(page);
   };
 
   const handleInputChange = (
@@ -117,76 +130,83 @@ export default function Users() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleEdit = (user: User) => {
-    setFormMode("edit");
-    setForm(user);
-    console.log("Users handleEdit: Modal opened for edit", { user });
-  };
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      setData((prev) => prev.filter((u) => u.id !== id));
-      const totalPages = Math.ceil((filteredUsers.length - 1) / itemsPerPage);
-      if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(totalPages);
-        console.log("Users handleDelete: Adjusted to last page", {
-          id,
-          currentPage,
-          totalPages,
-        });
-      } else if (totalPages === 0) {
-        setCurrentPage(1);
-        console.log("Users handleDelete: Reset to page 1 (no data)", {
-          id,
-          currentPage,
-          totalPages,
-        });
-      }
-      console.log("Users handleDelete:", { id, totalPages });
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image must be ≤ 2 MB");
+      return;
     }
-  };
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      alert("Only JPEG/PNG allowed");
+      return;
+    }
 
-  const handlePageChange = (page: number) => {
-    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-    if (page >= 1 && page <= totalPages && page !== currentPage) {
-      setCurrentPage(page);
-      console.log("Users handlePageChange:", { page, totalPages, currentPage });
-    } else {
-      console.warn("Users handlePageChange: Invalid page or same page", {
-        page,
-        totalPages,
-        currentPage,
-      });
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setForm((f) => ({ ...f, image: base64 }));
+      setPreview(base64);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!form.name.trim() || !form.email.trim()) {
       alert("Name and Email are required.");
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      alert("Please enter a valid email address.");
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(form.email)) {
+      alert("Invalid email.");
       return;
     }
-    if (formMode === "edit" && form.id !== null) {
-      setData((prev) =>
-        prev.map((u) => (u.id === form.id ? { ...form, id: form.id } : u))
-      );
-    } else if (formMode === "add") {
+
+    if (formMode === "add") {
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+      }
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters.");
+        return;
+      }
+    }
+
+    if (formMode === "add") {
       const newId = data.length ? Math.max(...data.map((u) => u.id)) + 1 : 1;
       setData((prev) => [...prev, { ...form, id: newId }]);
-      const totalPages = Math.ceil((filteredUsers.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
+    } else if (formMode === "edit" && form.id !== null) {
+      setData((prev) => prev.map((u) => (u.id === form.id ? form : u)));
     }
+
     setFormMode(null);
-    console.log("Users handleFormSubmit:", { form, formMode });
   };
 
   const columns: Column[] = [
-    { key: "name", label: "Name" },
+    {
+      key: "name",
+      label: "Name",
+      render: (_, row: User) => (
+        <div className="flex items-center gap-3">
+          {row.image ? (
+            <img
+              src={row.image}
+              alt={row.name}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-white">
+              {row.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <span className="font-medium">{row.name}</span>
+        </div>
+      ),
+    },
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
     { key: "role", label: "Role" },
@@ -197,104 +217,193 @@ export default function Users() {
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit user ${row.name}`}
-        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 inline-flex items-center me-1"
       >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit user</span>
+        <i className="fa fa-edit" />
       </button>
       <button
         onClick={() => handleDelete(row.id)}
-        aria-label={`Delete user ${row.name}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
+        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2 inline-flex items-center me-1"
       >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete user</span>
+        <i className="fa fa-trash-can-xmark" />
       </button>
     </>
   );
 
   const modalForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1">
-          Name <span className="text-destructive">*</span>
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          value={form.name}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter full name"
-          required
-        />
+    <div className="space-y-6">
+      {/* Image Upload */}
+      <div className="flex items-start gap-4">
+        <div className="relative">
+          {preview ? (
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-24 h-24 rounded-full object-cover border"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gray-200 border flex items-center justify-center text-2xl font-bold text-gray-500">
+              {form.name.charAt(0).toUpperCase() || "?"}
+            </div>
+          )}
+          {preview && (
+            <button
+              type="button"
+              onClick={() => {
+                setPreview("");
+                setForm((f) => ({ ...f, image: "" }));
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+              className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+            >
+              X
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col justify-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={handleImageChange}
+            className="hidden"
+            id="user-image"
+          />
+          <label
+            htmlFor="user-image"
+            className="cursor-pointer inline-block px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+          >
+            Change Image
+          </label>
+          <p className="text-xs text-muted-foreground mt-1">
+            JPEG, PNG up to 2 MB
+          </p>
+        </div>
       </div>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">
-          Email <span className="text-destructive">*</span>
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter email address"
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium mb-1">
-          Phone
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          value={form.phone}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Enter phone number"
-        />
-      </div>
-      <div>
-        <label htmlFor="role" className="block text-sm font-medium mb-1">
-          Role
-        </label>
-        <select
-          id="role"
-          name="role"
-          value={form.role}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {ROLES.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="status" className="block text-sm font-medium mb-1">
-          Status
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={form.status}
-          onChange={handleInputChange}
-          className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+
+      {/* Form Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            User <span className="text-destructive">*</span>
+          </label>
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleInputChange}
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter full name"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Role <span className="text-destructive">*</span>
+          </label>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleInputChange}
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Email <span className="text-destructive">*</span>
+          </label>
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleInputChange}
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter email address"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Phone <span className="text-destructive">*</span>
+          </label>
+          <input
+            name="phone"
+            value={form.phone}
+            onChange={handleInputChange}
+            className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter phone number"
+            required
+          />
+        </div>
+
+        {/* Password Fields – Only on Add */}
+        {formMode === "add" && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Password <span className="text-destructive">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring pr-10"
+                  placeholder="••••••••"
+                  required
+                />
+                <i className="fa fa-sync absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Confirm Password <span className="text-destructive">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring pr-10"
+                  placeholder="••••••••"
+                  required
+                />
+                <i className="fa fa-sync absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer" />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Status Toggle */}
+        <div className="md:col-span-2 flex items-center justify-between">
+          <label className="text-sm font-medium">Status</label>
+          <button
+            type="button"
+            onClick={() =>
+              setForm((f) => ({
+                ...f,
+                status: f.status === "Active" ? "Inactive" : "Active",
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              form.status === "Active" ? "bg-green-500" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                form.status === "Active" ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -305,7 +414,6 @@ export default function Users() {
       description="Manage users and their roles for your application."
       onAddClick={handleAddClick}
       onRefresh={handleRefresh}
-      onReport={handleReport}
       search={search}
       onSearchChange={handleSearchChange}
       currentPage={currentPage}
