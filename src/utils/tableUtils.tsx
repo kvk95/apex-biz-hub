@@ -1,3 +1,4 @@
+import { format, parse, parseISO, isValid } from "date-fns";
 import {
   STATUSES,
   LEAVE_STATUSES,
@@ -93,18 +94,22 @@ const RAW_STATUS_COLORS: Record<string, string> = {
 function normalizeValue(value: string): string {
   return value
     .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 /**
  * Normalized export of status colors.
  * All keys are transformed using normalizeValue to ensure consistent lookup.
  */
-export const UNIVERSAL_STATUS_COLORS: Record<string, string> = Object.fromEntries(
-  Object.entries(RAW_STATUS_COLORS).map(([key, val]) => [normalizeValue(key), val])
-);
+export const UNIVERSAL_STATUS_COLORS: Record<string, string> =
+  Object.fromEntries(
+    Object.entries(RAW_STATUS_COLORS).map(([key, val]) => [
+      normalizeValue(key),
+      val,
+    ])
+  );
 
 /**
  * Renders a styled badge for any known status value.
@@ -132,3 +137,77 @@ export const renderStatusBadge = (value: string): JSX.Element => {
     </span>
   );
 };
+
+/***************************************************************** */
+
+// Supported input examples: "2025-01-15T10:30:00Z", "2025-01-15", "15/10/2025", "15-10-2025", "15 JAN 2025"
+// Output format examples: "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD MMM YYYY"
+
+// Helper: Detect ISO and fallback formats
+function getDateObj(value: string): Date | null {
+  // Try native Date
+  let date = new Date(value);
+  if (isValid(date)) return date;
+
+  // Try known fallback formats
+  const formats = [
+    "yyyy-MM-dd",
+    "dd/MM/yyyy",
+    "dd-MM-yyyy",
+    "dd MMM yyyy",
+    "yyyy-MM-dd'T'HH:mm:ss'Z'",
+    "yyyy-MM-dd HH:mm:ss",
+    "HH:mm:ss",
+    "HH:mm",
+  ];
+  for (const fmt of formats) {
+    date = parse(value, fmt, new Date());
+    if (isValid(date)) return date;
+  }
+  return null;
+}
+
+// Date only
+//formatDate("2025-01-15", "DD/MM/YYYY");     // "15/01/2025"
+//formatDate("15/10/2025", "YYYY-MM-DD");     // "2025-10-15"
+export const formatDate = (value: string, outputFormat: string): string => {
+  const date = getDateObj(value);
+  if (!date) return value;
+  // Convert format tokens to date-fns tokens
+  const tokens = outputFormat
+    .replace(/DD/g, "dd")
+    .replace(/YYYY/g, "yyyy")
+    .replace(/MM/g, "MM")
+    .replace(/MMM/g, "MMM");
+  return format(date, tokens);
+};
+
+// Date + time
+//formatDateTime("2025-01-15T10:30:00Z", "DD MMM YYYY HH:mm");  // "15 Jan 2025 10:30"
+export const formatDateTime = (value: string, outputFormat: string): string => {
+  const date = getDateObj(value);
+  if (!date) return value;
+  const tokens = outputFormat
+    .replace(/DD/g, "dd")
+    .replace(/YYYY/g, "yyyy")
+    .replace(/MM/g, "MM")
+    .replace(/MMM/g, "MMM")
+    .replace(/HH/g, "HH")
+    .replace(/mm/g, "mm")
+    .replace(/ss/g, "ss");
+  return format(date, tokens);
+};
+
+// Time only
+//formatTime("2025-01-15T10:30:00Z", "HH:mm:ss");   // "10:30:00"
+export const formatTime = (value: string, outputFormat: string): string => {
+  const date = getDateObj(value);
+  if (!date) return value;
+  const tokens = outputFormat
+    .replace(/HH/g, "HH")
+    .replace(/mm/g, "mm")
+    .replace(/ss/g, "ss");
+  return format(date, tokens);
+};
+
+/***************************************************************** */

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { USER_ROLE_STATUSES } from "@/constants/constants";
-import { renderStatusBadge } from "@/utils/tableUtils";
+import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
 import { useNavigate } from "react-router-dom";
 import { SearchInput } from "@/components/Search/SearchInput";
 
@@ -218,7 +218,12 @@ export default function RolesPermissions() {
         <span className="font-semibold text-gray-900">{value}</span>
       ),
     },
-    { key: "createdDate", label: "Created Date", align: "center" },
+    {
+      key: "createdDate",
+      label: "Created Date",
+      align: "center",
+      render: (value) => <>{formatDate(value, "DD MMM YYYY")}</>,
+    },
     {
       key: "status",
       label: "Status",

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { APPROVAL_STATUSES } from "@/constants/constants";
-import { renderStatusBadge } from "@/utils/tableUtils";
+import { renderStatusBadge,formatDate } from "@/utils/tableUtils";
 
 interface DeleteAccountRecord {
   id: number;
@@ -166,14 +166,7 @@ export default function DeleteAccountRequest() {
       key: "requestDate",
       label: "Request Date",
       align: "left",
-      render: (value) =>
-        value
-          ? new Date(value).toLocaleDateString("en-IN", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })
-          : "N/A",
+      render: (value) => <>{formatDate(value, "DD MMM YYYY")}</>, 
     },
     {
       key: "status",
