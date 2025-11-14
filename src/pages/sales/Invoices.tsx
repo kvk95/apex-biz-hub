@@ -551,7 +551,7 @@ export default function Invoices() {
     <PageBase1
       title="Invoices"
       description="Manage your invoices"
-      onAddClick={() => { }}
+      onAddClick={null}
       onRefresh={handleClear}
       onReport={handleReport}
       search={search}
