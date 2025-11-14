@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { format } from "date-fns";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
+import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
 import AddSalesModal from "./salesdialog/AddSalesModal";
 import SaleDetailModal from "./salesdialog/SaleDetailModal";
@@ -264,16 +265,12 @@ export default function OnlineOrders() {
       ),
     },
     { key: "reference", label: "Reference" },
-    { key: "date", label: "Date", render: v => format(new Date(v), "dd MMM yyyy") },
+    { key: "date", label: "Date", render: v => <>{formatDate(v, "DD MMM YYYY")}</> },
     {
       key: "status",
       label: "Status",
-      render: v => (
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${v === "Completed" ? "bg-green-100 text-green-800" :
-          v === "Pending" ? "bg-blue-100 text-blue-800" :
-            "bg-yellow-100 text-yellow-800"
-          }`}>{v}</span>
-      ),
+      render: renderStatusBadge,
+      align: "center",
     },
     { key: "grandTotal", label: "Grand Total", render: (_, r) => `$${r.grandTotal.toFixed(2)}`, align: "right" },
     { key: "paid", label: "Paid", render: (_, r) => `$${r.paid.toFixed(2)}`, align: "right" },
@@ -281,14 +278,8 @@ export default function OnlineOrders() {
     {
       key: "paymentStatus",
       label: "Payment Status",
-      render: v => (
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${v === "Paid" ? "bg-green-100 text-green-800" :
-          v === "Unpaid" ? "bg-red-100 text-red-800" :
-            "bg-yellow-100 text-yellow-800"
-          }`}>
-          <i className="fa fa-circle mr-1 text-xs"></i> {v}
-        </span>
-      ),
+      render: renderStatusBadge,
+      align: "center",
     },
     { key: "supplierName", label: "Biller" },
   ];
