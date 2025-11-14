@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge } from "@/utils/tableUtils";
+import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
 import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 
@@ -462,7 +462,7 @@ export default function Purchases() {
     },
     { key: "supplierName", label: "Supplier Name" },
     { key: "reference", label: "Reference" },
-    { key: "date", label: "Date" },
+    { key: "date", label: "Date", render: v => <>{formatDate(v, "DD MMM YYYY")}</> },
     {
       key: "status",
       label: "Status",
