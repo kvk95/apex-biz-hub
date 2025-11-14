@@ -166,7 +166,7 @@ export default function DeleteAccountRequest() {
       key: "requestDate",
       label: "Request Date",
       align: "left",
-      render: (value) => <>{formatDate(value, "DD MMM YYYY")}</>, 
+      render: (value) => <>{formatDate(value, "dd MMM yyyy")}</>, 
     },
     {
       key: "status",
@@ -240,7 +240,6 @@ export default function DeleteAccountRequest() {
     <PageBase1
       title="Delete Account Requests"
       description="View and manage account deletion requests."
-      icon="fa fa-user-slash"
       onRefresh={handleClear}
       onReport={handleReport}
       search=""

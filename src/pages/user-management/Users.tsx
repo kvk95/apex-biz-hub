@@ -303,7 +303,6 @@ export default function Users() {
     <PageBase1
       title="Users"
       description="Manage users and their roles for your application."
-      icon="fa fa-user"
       onAddClick={handleAddClick}
       onRefresh={handleRefresh}
       onReport={handleReport}
