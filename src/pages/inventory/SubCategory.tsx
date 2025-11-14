@@ -469,7 +469,6 @@ export default function SubCategory() {
     <PageBase1
       title="Sub Category"
       description="Manage your sub categories"
-      icon="fa-light fa-tags"
       onAddClick={handleAdd}
       onRefresh={handleClear}
       onReport={() => alert("PDF Report Generated!")}

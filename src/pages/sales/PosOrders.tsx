@@ -367,7 +367,6 @@ export default function PosOrders() {
     <PageBase1
       title="POS Orders"
       description="Manage Your POS Orders"
-      icon="fa-light fa-store"
       onAddClick={() => {
         setSelectedOrder(null);
         setFormMode("add");

@@ -332,7 +332,6 @@ export default function Category() {
     <PageBase1
       title="Category"
       description="Manage your categories"
-      icon="fa-light fa-tags"
       onAddClick={handleAdd}
       onRefresh={handleClear}
       onReport={handleReport}
