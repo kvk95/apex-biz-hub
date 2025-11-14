@@ -173,7 +173,7 @@ const SalesReport: React.FC = () => {
     <PageBase1
       title="Sales Report"
       description="View and filter sales report records."
-      icon="fa fa-chart-line"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       onSave={handleSave}

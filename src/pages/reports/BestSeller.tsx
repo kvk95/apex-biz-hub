@@ -135,7 +135,7 @@ const BestSeller: React.FC = () => {
     <PageBase1
       title="Best Seller"
       description="View and filter best seller products."
-      icon="fa fa-star"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       currentPage={currentPage}

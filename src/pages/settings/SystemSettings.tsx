@@ -368,7 +368,7 @@ export default function SystemSettings() {
     <PageBase1
       title="System Settings"
       description="Manage system integrations and services"
-      icon="fa fa-cogs"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

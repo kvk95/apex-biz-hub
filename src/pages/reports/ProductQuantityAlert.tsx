@@ -210,7 +210,7 @@ export default function ProductQuantityAlert() {
     <PageBase1
       title="Product Quantity Alert"
       description="View products with quantities at or below alert levels."
-      icon="fa fa-bell"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={productName}

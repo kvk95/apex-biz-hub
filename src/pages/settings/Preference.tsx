@@ -89,7 +89,7 @@ export default function Preference() {
     <PageBase1
       title="Preference Settings"
       description="Enable or disable system modules and features"
-      icon="fa fa-cogs"
+      
       loading={loading}
     >
        <div className="min-h-screen bg-background">

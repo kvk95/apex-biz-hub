@@ -135,7 +135,7 @@ const CashFlow: React.FC = () => {
     <PageBase1
       title="Cash Flow"
       description="View and filter cash flow records."
-      icon="fa fa-chart-line"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

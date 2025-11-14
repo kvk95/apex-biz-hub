@@ -197,7 +197,7 @@ export default function SupplierDueReport() {
     <PageBase1
       title="Supplier Due Report"
       description="View and filter supplier due records."
-      icon="fa fa-truck-supplier"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={supplierName}

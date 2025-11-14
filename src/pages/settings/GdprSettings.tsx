@@ -72,7 +72,7 @@ export default function GdprSettings() {
     <PageBase1
       title="GDPR Settings"
       description="Configure cookie consent banner and privacy settings"
-      icon="fa fa-cookie-bite"
+      
       loading={loading}
     >
       

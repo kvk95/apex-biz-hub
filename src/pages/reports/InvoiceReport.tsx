@@ -218,7 +218,7 @@ const InvoiceReport: React.FC = () => {
     <PageBase1
       title="Invoice Report"
       description="View and filter invoice report records."
-      icon="fa fa-file-invoice"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

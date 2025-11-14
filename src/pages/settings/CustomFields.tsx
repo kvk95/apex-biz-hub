@@ -311,7 +311,7 @@ export default function CustomFields() {
     <PageBase1
       title="Custom Fields"
       description="Manage custom fields for your modules."
-      icon="fa fa-columns"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

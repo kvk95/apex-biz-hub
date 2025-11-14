@@ -173,7 +173,7 @@ export default function EmailTemplates() {
     <PageBase1
       title="Email Templates"
       description="Customize email templates for notifications"
-      icon="fa fa-envelope-open-text"
+      
       onRefresh={() => loadData()}
       loading={loading}
     >

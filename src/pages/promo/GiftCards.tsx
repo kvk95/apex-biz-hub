@@ -360,7 +360,7 @@ export default function GiftCards() {
     <PageBase1
       title="Gift Cards"
       description="Manage gift cards for your application."
-      icon="fa fa-gift"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

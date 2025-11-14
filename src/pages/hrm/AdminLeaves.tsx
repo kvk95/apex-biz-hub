@@ -393,7 +393,7 @@ export default function AdminLeaves() {
     <PageBase1
       title="Admin Leaves"
       description="Manage leave requests."
-      icon="fa fa-calendar-alt"
+      
       onAddClick={() => {
         setForm({
           id: 0,

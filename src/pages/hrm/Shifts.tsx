@@ -302,7 +302,7 @@ export default function Shifts() {
     <PageBase1
       title="Shifts"
       description="Manage shifts for your application."
-      icon="fa fa-clock"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

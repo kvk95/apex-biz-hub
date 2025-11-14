@@ -268,7 +268,7 @@ export default function TaxRates() {
     <PageBase1
       title="Tax Rates"
       description="Manage tax rates for your business"
-      icon="fa fa-percent"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

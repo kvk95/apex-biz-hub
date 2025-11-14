@@ -331,7 +331,7 @@ export default function PrinterSettings() {
     <PageBase1
       title="Printer Settings"
       description="Manage printer settings for your application."
-      icon="fa fa-print"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear} 
       search={search}

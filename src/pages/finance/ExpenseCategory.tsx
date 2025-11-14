@@ -264,7 +264,7 @@ export default function ExpenseCategory() {
     <PageBase1
       title="Expense Category"
       description="Manage expense category records."
-      icon="fa fa-tags"
+      
       onAddClick={() => {
         setForm({
           id: 0,

@@ -90,7 +90,7 @@ export default function SocialAuthentication() {
     <PageBase1
       title="Social Authentication"
       description="Configure social login integrations for your platform"
-      icon="fa fa-sign-in-alt"
+      
       loading={loading}
     >
       <div className="w-full mx-auto mt-8">

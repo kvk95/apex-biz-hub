@@ -153,7 +153,7 @@ export default function EmployeeAttendance() {
     <PageBase1
       title="Employee Attendance"
       description="View and filter employee attendance records."
-      icon="fa fa-user-check"
+      
       onRefresh={handleClear}
       onReport={() => alert("Report generated")}
       search={searchText}

@@ -394,7 +394,7 @@ export default function BankAccounts() {
     <PageBase1
       title="Bank Accounts"
       description="Manage bank account records."
-      icon="fa fa-university"
+      
       onAddClick={() => {
         setForm(initialFormState);
         setFormMode("add");

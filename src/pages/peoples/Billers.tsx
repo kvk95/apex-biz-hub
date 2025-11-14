@@ -434,7 +434,7 @@ export default function Billers() {
     <PageBase1
       title="Billers"
       description="Manage billers for your application."
-      icon="fa fa-user-tie"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

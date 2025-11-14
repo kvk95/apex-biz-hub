@@ -276,7 +276,7 @@ export default function Departments() {
     <PageBase1
       title="Departments"
       description="Manage departments for your application."
-      icon="fa fa-building"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

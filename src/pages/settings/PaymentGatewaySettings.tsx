@@ -93,7 +93,7 @@ export default function PaymentGatewaySettings() {
     <PageBase1
       title="Payment Gateway Settings"
       description="Configure and manage payment gateway integrations"
-      icon="fa fa-credit-card"
+      
       loading={loading}
     >
       <div className="w-full mx-auto mt-8">

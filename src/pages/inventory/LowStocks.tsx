@@ -434,7 +434,7 @@ export default function LowStocks() {
     <PageBase1
       title="Low Stocks"
       description="View and manage low stock items."
-      icon="fa fa-exclamation-triangle"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchTerm}

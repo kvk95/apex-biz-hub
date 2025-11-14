@@ -385,7 +385,7 @@ export default function Customers() {
     <PageBase1
       title="Customers"
       description="Manage customers for your application."
-      icon="fa fa-user"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

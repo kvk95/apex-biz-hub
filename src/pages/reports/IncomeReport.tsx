@@ -228,7 +228,7 @@ const IncomeReport: React.FC = () => {
     <PageBase1
       title="Income Report"
       description="View and filter income records."
-      icon="fa fa-coins"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchInvoice}

@@ -242,7 +242,7 @@ export default function CustomerDueReport() {
     <PageBase1
       title="Customer Due Report"
       description="View and filter customer due records."
-      icon="fa fa-user-clock"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchName}

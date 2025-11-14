@@ -387,7 +387,7 @@ export default function SmsSettings() {
     <PageBase1
       title="SMS Settings"
       description="Manage SMS gateway configurations"
-      icon="fa fa-sms"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

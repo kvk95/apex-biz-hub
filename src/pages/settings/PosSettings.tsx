@@ -102,7 +102,7 @@ export default function PosSettings() {
     <PageBase1
       title="POS Settings"
       description="Manage POS settings for your system"
-      icon="fa fa-cash-register"
+      
       loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">

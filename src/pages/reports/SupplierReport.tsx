@@ -222,7 +222,7 @@ export default function SupplierReport() {
     <PageBase1
       title="Supplier Report"
       description="View and filter supplier records."
-      icon="fa fa-truck"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchSupplier}

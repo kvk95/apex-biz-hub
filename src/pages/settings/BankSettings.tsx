@@ -397,7 +397,7 @@ export default function BankSettings() {
     <PageBase1
       title="Bank Settings"
       description="Manage your bank accounts"
-      icon="fa fa-university"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

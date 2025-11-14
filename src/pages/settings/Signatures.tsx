@@ -346,7 +346,7 @@ export default function Signatures() {
     <PageBase1
       title="Signatures"
       description="Manage signatures for your application."
-      icon="fa fa-signature"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

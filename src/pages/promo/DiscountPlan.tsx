@@ -348,7 +348,7 @@ export default function DiscountPlan() {
     <PageBase1
       title="Discount Plans"
       description="Manage discount plans for your application."
-      icon="fa fa-project-diagram"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

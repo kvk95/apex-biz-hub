@@ -139,7 +139,7 @@ export default function ProfileSettings() {
     <PageBase1
       title="Profile Settings"
       description="Manage your profile information"
-      icon="fa fa-user-circle"
+      
       loading={loading}
     >
       <div className="p-6 bg-card rounded shadow">

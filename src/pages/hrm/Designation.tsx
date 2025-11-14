@@ -251,7 +251,7 @@ export default function Designation() {
     <PageBase1
       title="Designation"
       description="Manage designations for your application."
-      icon="fa fa-id-badge"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

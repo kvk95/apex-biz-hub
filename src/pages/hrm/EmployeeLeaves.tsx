@@ -346,7 +346,7 @@ export default function EmployeeLeaves() {
     <PageBase1
       title="Employee Leaves"
       description="Apply and manage employee leave requests."
-      icon="fa fa-user-clock"
+      
       onAddClick={() => {
         setForm({
           id: 0,

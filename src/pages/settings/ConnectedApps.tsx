@@ -338,7 +338,7 @@ export default function ConnectedApps() {
     <PageBase1
       title="Connected Apps"
       description="Manage third-party app integrations"
-      icon="fa fa-plug"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

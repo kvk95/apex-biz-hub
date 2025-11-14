@@ -376,7 +376,7 @@ export default function Income() {
     <PageBase1
       title="Income"
       description="Manage income records."
-      icon="fa fa-coins"
+      
       onAddClick={() => {
         setForm({
           id: 0,

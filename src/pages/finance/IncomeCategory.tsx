@@ -263,7 +263,7 @@ const IncomeCategory: React.FC = () => {
     <PageBase1
       title="Income Category"
       description="Manage income category records."
-      icon="fa fa-tags"
+      
       onAddClick={() => {
         setForm({
           id: 0,

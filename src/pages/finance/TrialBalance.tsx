@@ -156,7 +156,7 @@ const TrialBalance: React.FC = () => {
     <PageBase1
       title="Trial Balance"
       description="View Your Balance Sheet."
-      icon="fa fa-file-contract"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

@@ -322,7 +322,7 @@ export default function Employees() {
     <PageBase1
       title="Employees"
       description="Manage employees for your application."
-      icon="fa fa-users"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

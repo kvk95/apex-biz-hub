@@ -348,7 +348,7 @@ export default function Discount() {
     <PageBase1
       title="Discounts"
       description="Manage discounts for your application."
-      icon="fa fa-credit-card"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

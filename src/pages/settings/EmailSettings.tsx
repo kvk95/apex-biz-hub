@@ -386,7 +386,7 @@ export default function EmailSettings() {
     <PageBase1
       title="Email Settings"
       description="Manage SMTP email configurations"
-      icon="fa fa-envelope"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

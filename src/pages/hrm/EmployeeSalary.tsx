@@ -520,7 +520,7 @@ export default function EmployeeSalary() {
     <PageBase1
       title="Employee Salary"
       description="Manage employee salary records."
-      icon="fa fa fa-rupee-sign"
+      
       onAddClick={() => {
         setForm({
           id: 0,

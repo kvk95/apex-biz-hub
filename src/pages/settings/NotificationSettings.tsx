@@ -111,7 +111,7 @@ export default function Notification() {
     <PageBase1
       title="Notification Settings"
       description="Manage your notification preferences"
-      icon="fa fa-bell"
+      
       loading={loading}
     >
       <div className="p-6 bg-card rounded shadow">

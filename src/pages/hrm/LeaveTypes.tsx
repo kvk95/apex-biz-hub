@@ -289,7 +289,7 @@ export default function LeaveTypes() {
     <PageBase1
       title="Leave Types"
       description="Manage leave type records."
-      icon="fa fa-list"
+      
       onAddClick={() => {
         setForm({ id: 0, leaveType: "", days: 0, status: "Active" });
         setFormMode("add");

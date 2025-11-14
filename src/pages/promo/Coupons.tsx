@@ -407,7 +407,7 @@ export default function Coupons() {
     <PageBase1
       title="Coupons"
       description="Manage coupons for your application."
-      icon="fa fa-ticket-alt"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

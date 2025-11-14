@@ -114,7 +114,7 @@ export default function Payslip() {
     <PageBase1
       title="Payslip"
       description={data.employee?.payslipMonth || "Loading..."}
-      icon="fa fa-file-invoice"
+      
       onRefresh={handleClear}
       onReport={generateReport}
       loading={loading}

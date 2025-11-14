@@ -104,7 +104,7 @@ export default function SmsTemplates() {
     <PageBase1
       title="SMS Templates"
       description="Manage SMS notification templates"
-      icon="fa fa-sms"
+      
       onRefresh={loadData}
       loading={loading}
     >

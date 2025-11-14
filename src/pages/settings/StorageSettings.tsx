@@ -78,7 +78,7 @@ export default function StorageSettings() {
     <PageBase1
       title="Storage Settings"
       description="Choose where your data is stored"
-      icon="fa fa-database"
+      
       loading={loading}
     >
        <div className="min-h-screen bg-background">

@@ -248,7 +248,7 @@ export default function BanIpAddress() {
     <PageBase1
       title="Ban IP Address"
       description="Block suspicious or malicious IP addresses"
-      icon="fa fa-ban"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

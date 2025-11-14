@@ -416,7 +416,7 @@ export default function Stores() {
     <PageBase1
       title="Stores"
       description="Manage stores for your application."
-      icon="fa fa-store"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

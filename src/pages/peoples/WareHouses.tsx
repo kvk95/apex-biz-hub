@@ -372,7 +372,7 @@ export default function Warehouses() {
     <PageBase1
       title="Warehouses"
       description="Manage warehouses for your application."
-      icon="fa fa-warehouse"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

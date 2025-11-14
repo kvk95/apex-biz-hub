@@ -300,7 +300,7 @@ export default function ProductReport() {
     <PageBase1
       title="Product Report"
       description="View and filter product records."
-      icon="fa fa-cube"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={productName}

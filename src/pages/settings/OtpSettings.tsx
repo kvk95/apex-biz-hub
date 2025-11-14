@@ -67,7 +67,7 @@ export default function OtpSettings() {
     <PageBase1
       title="OTP Settings"
       description="Configure one-time password verification"
-      icon="fa fa-key"
+      
       loading={loading}
     >
       <div className="w-full mx-auto mt-8">

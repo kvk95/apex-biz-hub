@@ -427,7 +427,7 @@ export default function MoneyTransfer() {
     <PageBase1
       title="Money Transfer"
       description="Manage money transfer records."
-      icon="fa fa-exchange-alt"
+      
       onAddClick={() => {
         setForm(initialFormState);
         setFormMode("add");

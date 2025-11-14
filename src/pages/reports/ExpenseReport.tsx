@@ -242,7 +242,7 @@ export default function ExpenseReport() {
     <PageBase1
       title="Expense Report"
       description="View and filter expense records."
-      icon="fa fa-money-bill-wave"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={description}

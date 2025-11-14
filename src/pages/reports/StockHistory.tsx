@@ -210,7 +210,7 @@ const StockHistory: React.FC = () => {
     <PageBase1
       title="Stock History"
       description="View and filter stock history records."
-      icon="fa fa-history"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

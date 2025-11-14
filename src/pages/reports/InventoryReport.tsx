@@ -206,7 +206,7 @@ const InventoryReport: React.FC = () => {
     <PageBase1
       title="Inventory Report"
       description="View and filter inventory report records."
-      icon="fa fa-boxes"
+      
       onRefresh={handleResetFilters}
       onReport={handleReport}
       currentPage={currentPage}

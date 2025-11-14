@@ -291,7 +291,7 @@ export default function Holidays() {
     <PageBase1
       title="Holidays"
       description="Manage holiday records."
-      icon="fa fa-calendar-day"
+      
       onAddClick={() => {
         setForm({
           id: 0,

@@ -198,7 +198,7 @@ export default function CustomerReport() {
     <PageBase1
       title="Customer Report"
       description="View and filter customer records."
-      icon="fa fa-user"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchName}

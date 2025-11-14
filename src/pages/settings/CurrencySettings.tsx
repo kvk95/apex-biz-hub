@@ -340,7 +340,7 @@ export default function CurrencySettings() {
     <PageBase1
       title="Currency Settings"
       description="Manage currencies and exchange rates"
-      icon="fa fa-coins"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       search={search}

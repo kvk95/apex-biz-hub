@@ -128,7 +128,7 @@ const BalanceSheet: React.FC = () => {
     <PageBase1
       title="Balance Sheet"
       description="View and filter balance sheet records."
-      icon="fa fa-balance-scale-left"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

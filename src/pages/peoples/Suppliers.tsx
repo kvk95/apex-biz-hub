@@ -387,7 +387,7 @@ export default function Suppliers() {
     <PageBase1
       title="Suppliers"
       description="Manage suppliers for your application."
-      icon="fa fa-truck"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

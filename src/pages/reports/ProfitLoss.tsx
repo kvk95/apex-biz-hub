@@ -220,7 +220,7 @@ export default function ProfitLoss() {
     <PageBase1
       title="Profit Loss Report"
       description="View and filter profit and loss records."
-      icon="fa fa-balance-scale"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search=""

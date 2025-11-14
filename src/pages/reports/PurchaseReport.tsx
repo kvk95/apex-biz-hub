@@ -204,7 +204,7 @@ const PurchaseReport: React.FC = () => {
     <PageBase1
       title="Purchase Report"
       description="View and filter purchase report records."
-      icon="fa fa-shopping-basket"
+      
       onRefresh={handleReset}
       onReport={handleReport}
       currentPage={currentPage}

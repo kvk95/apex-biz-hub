@@ -190,7 +190,7 @@ export default function AnnualReport() {
     <PageBase1
       title="Annual Report"
       description="View and filter annual customer records."
-      icon="fa fa-calendar-alt"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search=""

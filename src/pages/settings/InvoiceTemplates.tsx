@@ -89,7 +89,7 @@ export default function InvoiceTemplates() {
       <PageBase1
         title="Invoice Templates"
         description="Manage invoice templates"
-        icon="fa fa-file-invoice"
+        
       >
         <div className="flex justify-center items-center h-64">
           <p>Loading templates...</p>
@@ -102,7 +102,7 @@ export default function InvoiceTemplates() {
     <PageBase1
       title="Invoice Templates"
       description="Manage and select default templates for invoices, purchases, and receipts"
-      icon="fa fa-file-invoice"
+      
       loading={loading}
     >
       <div className="w-full mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">

@@ -335,7 +335,7 @@ export default function PrintBarcode() {
     <PageBase1
       title="Print Barcode"
       description="Select products and configure print options for barcodes"
-      icon="fa fa-barcode"
+      
       onRefresh={handleRefresh}
       formMode={formMode}
       setFormMode={setFormMode}

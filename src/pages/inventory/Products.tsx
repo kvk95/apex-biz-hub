@@ -338,7 +338,7 @@ export default function Products() {
     <PageBase1
       title="Product List"
       description="Manage your products"
-      icon="fa fa-boxes"
+      
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}

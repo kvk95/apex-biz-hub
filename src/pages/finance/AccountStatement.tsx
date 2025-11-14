@@ -152,7 +152,7 @@ const AccountStatement: React.FC = () => {
     <PageBase1
       title="Account Statement"
       description="View and filter account statement records."
-      icon="fa fa-file-invoice-dollar"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

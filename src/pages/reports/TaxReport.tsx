@@ -195,7 +195,7 @@ export default function TaxReport() {
     <PageBase1
       title="Tax Report"
       description="View and filter tax records."
-      icon="fa fa-file-invoice-dollar"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search=""

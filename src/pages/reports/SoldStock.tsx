@@ -198,7 +198,7 @@ const SoldStock: React.FC = () => {
     <PageBase1
       title="Sold Stock"
       description="View and filter sold stock records."
-      icon="fa fa-box-open"
+      
       onRefresh={handleRefresh}
       onReport={handleReport}
       currentPage={currentPage}

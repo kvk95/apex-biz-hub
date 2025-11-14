@@ -364,7 +364,7 @@ export default function ProductExpiryReport() {
     <PageBase1
       title="Product Expiry Report"
       description="View and filter product expiry records."
-      icon="fa fa-calendar-times"
+      
       onRefresh={handleClear}
       onReport={handleReport}
       search={productName}
