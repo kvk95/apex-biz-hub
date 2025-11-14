@@ -1,98 +1,929 @@
 {
   "status": {
     "code": "S",
-    "description": ""
+    "description": "Success"
   },
   "result": [
     {
-      "id": 1,
+      "invoiceId": "INV-001",
       "invoiceNo": "INV-001",
-      "customer": "John Doe",
-      "date": "2025-09-01",
-      "dueDate": "2025-09-15",
-      "amount": 250.0,
-      "status": "Paid"
+      "customerId": "CUST101",
+      "customerName": "Arjun Venkatesh",
+      "customerImage": "/assets/images/avathar/m1.png",
+      "customerAddress": "No. 45, Velachery Main Road, Velachery, Chennai, Tamil Nadu 600042",
+      "customerEmail": "arjun.venkatesh@example.com",
+      "customerPhone": "+91 98412 56789",
+      "date": "2025-11-12",
+      "dueDate": "2025-11-27",
+      "amount": 5775.00,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Senthil Traders",
+        "address": "12, NSK Salai, T. Nagar, Chennai, Tamil Nadu 600017",
+        "email": "senthil@traders.in",
+        "phone": "+91 44 2812 3456"
+      },
+      "invoiceFor": "Retail Store Supplies",
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "sku": "PT001",
+          "category": "Beverages",
+          "quantity": 100,
+          "unitPrice": 1.50,
+          "discount": 12.00,
+          "taxPercent": 5,
+          "taxAmount": 6.90,
+          "total": 144.90
+        },
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "sku": "PT003",
+          "category": "Snacks",
+          "quantity": 50,
+          "unitPrice": 2.79,
+          "discount": 20.93,
+          "taxPercent": 18,
+          "taxAmount": 21.57,
+          "total": 140.54
+        }
+      ],
+      "summary": {
+        "subTotal": 285.44,
+        "discountPercent": 12,
+        "discountAmount": 32.93,
+        "vatPercent": 13,
+        "vatAmount": 28.47,
+        "totalAmount": 280.98,
+        "amountInWords": "Rupees Two Hundred Eighty Only"
+      },
+      "terms": "Please pay within 15 days from the date of invoice, overdue interest @ 14% will be charged on delayed payments.",
+      "notes": "Please quote invoice number when remitting funds.",
+      "bankDetails": {
+        "bankName": "HDFC Bank",
+        "branch": "T.Nagar, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "485628878",
+        "ifsc": "HDFC0001819"
+      },
+      "signature": {
+        "name": "Muthukumar",
+        "designation": "Assistant Manager",
+        "image": "/assets/images/avathar/m2.png"
+      }
     },
     {
-      "id": 2,
+      "invoiceId": "INV-002",
       "invoiceNo": "INV-002",
-      "customer": "Jane Smith",
-      "date": "2025-09-05",
-      "dueDate": "2025-09-20",
-      "amount": 450.5,
-      "status": "Pending"
+      "customerId": "CUST102",
+      "customerName": "Priya Selvam",
+      "customerImage": "/assets/images/avathar/f1.png",
+      "customerAddress": "32, Anna Nagar West, Chennai, Tamil Nadu 600040",
+      "customerEmail": "priya.s@example.com",
+      "customerPhone": "+91 99401 23456",
+      "date": "2025-11-10",
+      "dueDate": "2025-11-25",
+      "amount": 1260.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Karthik Electronics",
+        "address": "45, Poonamallee High Road, Chennai, Tamil Nadu 600012",
+        "email": "karthik@electronics.in",
+        "phone": "+91 44 2510 7890"
+      },
+      "invoiceFor": "Office Stationery",
+      "items": [
+        {
+          "productId": "PT013",
+          "productName": "A4 Printer Paper 500 Sheets",
+          "sku": "PT013",
+          "category": "Office Supplies",
+          "quantity": 10,
+          "unitPrice": 4.79,
+          "discount": 7.19,
+          "taxPercent": 18,
+          "taxAmount": 7.30,
+          "total": 42.91
+        }
+      ],
+      "summary": {
+        "subTotal": 47.90,
+        "discountPercent": 15,
+        "discountAmount": 7.19,
+        "vatPercent": 18,
+        "vatAmount": 7.30,
+        "totalAmount": 48.01,
+        "amountInWords": "Rupees Forty Eight Only"
+      },
+      "terms": "Payment due within 15 days.",
+      "notes": "Warranty: 1 year on hardware.",
+      "bankDetails": {
+        "bankName": "ICICI Bank",
+        "branch": "Anna Nagar, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "609876543210",
+        "ifsc": "ICIC0001234"
+      },
+      "signature": {
+        "name": "Selvi",
+        "designation": "Billing Executive",
+        "image": "/assets/images/avathar/f2.png"
+      }
     },
     {
-      "id": 3,
+      "invoiceId": "INV-003",
       "invoiceNo": "INV-003",
-      "customer": "Acme Corp",
+      "customerId": "CUST103",
+      "customerName": "Karthik Rajan",
+      "customerImage": "/assets/images/avathar/m3.png",
+      "customerAddress": "78, KK Nagar, Madurai, Tamil Nadu 625020",
+      "customerEmail": "karthik.r@example.com",
+      "customerPhone": "+91 98765 43210",
+      "date": "2025-11-08",
+      "dueDate": "2025-11-23",
+      "amount": 840.00,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Meena Software Solutions",
+        "address": "10, Alagar Koil Main Road, Madurai, Tamil Nadu 625002",
+        "email": "meena@softsol.in",
+        "phone": "+91 452 234 5678"
+      },
+      "invoiceFor": "Dairy & Bakery Supplies",
+      "items": [
+        {
+          "productId": "PT004",
+          "productName": "Amul Full Cream Milk 1L",
+          "sku": "PT004",
+          "category": "Dairy Products",
+          "quantity": 200,
+          "unitPrice": 3.25,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "total": 650.00
+        },
+        {
+          "productId": "PT006",
+          "productName": "Fresh White Bread 400g",
+          "sku": "PT006",
+          "category": "Bakery",
+          "quantity": 100,
+          "unitPrice": 1.89,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "total": 189.00
+        }
+      ],
+      "summary": {
+        "subTotal": 839.00,
+        "discountPercent": 0,
+        "discountAmount": 0.00,
+        "vatPercent": 0,
+        "vatAmount": 0.00,
+        "totalAmount": 839.00,
+        "amountInWords": "Rupees Eight Hundred Thirty Nine Only"
+      },
+      "terms": "15 days payment terms.",
+      "notes": "Renewal reminder will be sent 30 days before expiry.",
+      "bankDetails": {
+        "bankName": "Axis Bank",
+        "branch": "Madurai Main",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "918273645012",
+        "ifsc": "UTIB0000123"
+      },
+      "signature": {
+        "name": "Aravind",
+        "designation": "Sales Manager",
+        "image": "/assets/images/avathar/m4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-004",
+      "invoiceNo": "INV-004",
+      "customerId": "CUST104",
+      "customerName": "Meena Kumari",
+      "customerImage": "/assets/images/avathar/f3.png",
+      "customerAddress": "15, R.S. Puram, Coimbatore, Tamil Nadu 641002",
+      "customerEmail": "meena.k@example.com",
+      "customerPhone": "+91 90876 54321",
+      "date": "2025-10-28",
+      "dueDate": "2025-11-12",
+      "amount": 315.00,
+      "status": "Overdue",
+      "paymentStatus": "Overdue",
+      "fromInfo": {
+        "name": "Ramesh IT Services",
+        "address": "22, Avinashi Road, Coimbatore, Tamil Nadu 641014",
+        "email": "ramesh@itservices.in",
+        "phone": "+91 422 256 7890"
+      },
+      "invoiceFor": "Frozen Foods",
+      "items": [
+        {
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "sku": "PT008",
+          "category": "Frozen Foods",
+          "quantity": 35,
+          "unitPrice": 7.49,
+          "discount": 35.00,
+          "taxPercent": 18,
+          "taxAmount": 39.55,
+          "total": 266.55
+        }
+      ],
+      "summary": {
+        "subTotal": 300.00,
+        "discountPercent": 10,
+        "discountAmount": 30.00,
+        "vatPercent": 18,
+        "vatAmount": 45.00,
+        "totalAmount": 315.00,
+        "amountInWords": "Rupees Three Hundred Fifteen Only"
+      },
+      "terms": "Overdue: Interest @ 14% applicable.",
+      "notes": "Please settle immediately to avoid service disruption.",
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "branch": "Coimbatore RS Puram",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "302010987654",
+        "ifsc": "SBIN0002456"
+      },
+      "signature": {
+        "name": "Divya",
+        "designation": "Accounts Officer",
+        "image": "/assets/images/avathar/f4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-005",
+      "invoiceNo": "INV-005",
+      "customerId": "CUST105",
+      "customerName": "Siva Shankar",
+      "customerImage": "/assets/images/avathar/m5.png",
+      "customerAddress": "56, T. Nagar, Chennai, Tamil Nadu 600017",
+      "customerEmail": "siva.s@example.com",
+      "customerPhone": "+91 97654 32109",
+      "date": "2025-10-15",
+      "dueDate": "2025-10-30",
+      "amount": 1710.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Nithya Hardware",
+        "address": "88, Pondy Bazaar, T. Nagar, Chennai, Tamil Nadu 600017",
+        "email": "nithya@hardware.in",
+        "phone": "+91 44 2834 5678"
+      },
+      "invoiceFor": "Pet & Beauty Supplies",
+      "items": [
+        {
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "sku": "PT014",
+          "category": "Pet Supplies",
+          "quantity": 60,
+          "unitPrice": 18.99,
+          "discount": 113.94,
+          "taxPercent": 18,
+          "taxAmount": 183.30,
+          "total": 1218.36
+        },
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "sku": "PT011",
+          "category": "Health & Beauty",
+          "quantity": 200,
+          "unitPrice": 2.49,
+          "discount": 99.60,
+          "taxPercent": 18,
+          "taxAmount": 71.88,
+          "total": 420.28
+        }
+      ],
+      "summary": {
+        "subTotal": 1806.00,
+        "discountPercent": 10,
+        "discountAmount": 180.60,
+        "vatPercent": 18,
+        "vatAmount": 255.19,
+        "totalAmount": 1880.59,
+        "amountInWords": "Rupees One Thousand Eight Hundred Eighty Only"
+      },
+      "terms": "Paid via NEFT on 2025-10-28.",
+      "notes": "Hardware warranty: 1 year.",
+      "bankDetails": {
+        "bankName": "HDFC Bank",
+        "branch": "T.Nagar, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "485628878",
+        "ifsc": "HDFC0001819"
+      },
+      "signature": {
+        "name": "Muthukumar",
+        "designation": "Assistant Manager",
+        "image": "/assets/images/avathar/m2.png"
+      }
+    },
+    {
+      "invoiceId": "INV-006",
+      "invoiceNo": "INV-006",
+      "customerId": "CUST106",
+      "customerName": "Nithya Devi",
+      "customerImage": "/assets/images/avathar/f5.png",
+      "customerAddress": "23, Gandhi Nagar, Tiruchirappalli, Tamil Nadu 620001",
+      "customerEmail": "nithya.d@example.com",
+      "customerPhone": "+91 95432 10987",
+      "date": "2025-11-01",
+      "dueDate": "2025-11-16",
+      "amount": 472.50,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Arjun Digital Solutions",
+        "address": "5, Teppakulam, Tiruchirappalli, Tamil Nadu 620002",
+        "email": "arjun@digitalsol.in",
+        "phone": "+91 431 245 6789"
+      },
+      "invoiceFor": "Beverages & Juices",
+      "items": [
+        {
+          "productId": "PT002",
+          "productName": "Tropicana Orange Juice 1L",
+          "sku": "PT002",
+          "category": "Beverages",
+          "quantity": 90,
+          "unitPrice": 4.99,
+          "discount": 45.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "total": 449.10
+        }
+      ],
+      "summary": {
+        "subTotal": 449.10,
+        "discountPercent": 9,
+        "discountAmount": 40.42,
+        "vatPercent": 0,
+        "vatAmount": 0.00,
+        "totalAmount": 408.68,
+        "amountInWords": "Rupees Four Hundred Nine Only"
+      },
+      "terms": "15 days payment term.",
+      "notes": "Includes 30 days free support.",
+      "bankDetails": {
+        "bankName": "Indian Bank",
+        "branch": "Trichy Main",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "501234567890",
+        "ifsc": "IDIB000T001"
+      },
+      "signature": {
+        "name": "Selvi",
+        "designation": "Billing Executive",
+        "image": "/assets/images/avathar/f2.png"
+      }
+    },
+    {
+      "invoiceId": "INV-007",
+      "invoiceNo": "INV-007",
+      "customerId": "CUST107",
+      "customerName": "Ramesh Kumar",
+      "customerImage": "/assets/images/avathar/m6.png",
+      "customerAddress": "89, West Mambalam, Chennai, Tamil Nadu 600033",
+      "customerEmail": "ramesh.k@example.com",
+      "customerPhone": "+91 93210 98765",
+      "date": "2025-11-13",
+      "dueDate": "2025-11-28",
+      "amount": 500.00,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Lakshmi Printers",
+        "address": "17, Luz Church Road, Mylapore, Chennai, Tamil Nadu 600004",
+        "email": "lakshmi@printers.in",
+        "phone": "+91 44 2845 6789"
+      },
+      "invoiceFor": "Cleaning & Disinfectants",
+      "items": [
+        {
+          "productId": "PT012",
+          "productName": "Dettol Antiseptic Liquid 500ml",
+          "sku": "PT012",
+          "category": "Cleaning Supplies",
+          "quantity": 70,
+          "unitPrice": 6.99,
+          "discount": 70.00,
+          "taxPercent": 18,
+          "taxAmount": 75.54,
+          "total": 500.84
+        }
+      ],
+      "summary": {
+        "subTotal": 489.30,
+        "discountPercent": 14,
+        "discountAmount": 68.50,
+        "vatPercent": 18,
+        "vatAmount": 73.39,
+        "totalAmount": 500.00,
+        "amountInWords": "Rupees Five Hundred Only"
+      },
+      "terms": "Cash on delivery accepted.",
+      "notes": "Delivery within 2 days.",
+      "bankDetails": {
+        "bankName": "Canara Bank",
+        "branch": "Mylapore, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "701234567890",
+        "ifsc": "CNRB0002345"
+      },
+      "signature": {
+        "name": "Aravind",
+        "designation": "Procurement Head",
+        "image": "/assets/images/avathar/m4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-008",
+      "invoiceNo": "INV-008",
+      "customerId": "CUST108",
+      "customerName": "Divya Saravanan",
+      "customerImage": "/assets/images/avathar/f6.png",
+      "customerAddress": "41, Thiruvanmiyur, Chennai, Tamil Nadu 600041",
+      "customerEmail": "divya.s@example.com",
+      "customerPhone": "+91 91234 56789",
+      "date": "2025-10-20",
+      "dueDate": "2025-11-04",
+      "amount": 630.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Siva Security Solutions",
+        "address": "33, Velachery Road, Chennai, Tamil Nadu 600042",
+        "email": "siva@security.in",
+        "phone": "+91 44 2256 7890"
+      },
+      "invoiceFor": "Frozen Meals",
+      "items": [
+        {
+          "productId": "PT009",
+          "productName": "McCain Frozen French Fries 1kg",
+          "sku": "PT009",
+          "category": "Frozen Foods",
+          "quantity": 100,
+          "unitPrice": 4.29,
+          "discount": 51.48,
+          "taxPercent": 5,
+          "taxAmount": 18.88,
+          "total": 405.40
+        }
+      ],
+      "summary": {
+        "subTotal": 429.00,
+        "discountPercent": 12,
+        "discountAmount": 51.48,
+        "vatPercent": 5,
+        "vatAmount": 18.88,
+        "totalAmount": 405.40,
+        "amountInWords": "Rupees Four Hundred Five Only"
+      },
+      "terms": "Installation completed on 2025-10-22.",
+      "notes": "1-year warranty on cameras.",
+      "bankDetails": {
+        "bankName": "Bank of Baroda",
+        "branch": "Thiruvanmiyur",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "801234567890",
+        "ifsc": "BARB0THIRU1"
+      },
+      "signature": {
+        "name": "Muthukumar",
+        "designation": "Assistant Manager",
+        "image": "/assets/images/avathar/m2.png"
+      }
+    },
+    {
+      "invoiceId": "INV-009",
+      "invoiceNo": "INV-009",
+      "customerId": "CUST109",
+      "customerName": "Lakshmi Narayanan",
+      "customerImage": "/assets/images/avathar/f7.png",
+      "customerAddress": "67, Gandhipuram, Coimbatore, Tamil Nadu 641012",
+      "customerEmail": "lakshmi.n@example.com",
+      "customerPhone": "+91 98765 12345",
       "date": "2025-09-10",
       "dueDate": "2025-09-25",
-      "amount": 1200.75,
-      "status": "Overdue"
+      "amount": 359.40,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Kumar Furniture",
+        "address": "120, Avinashi Road, Coimbatore, Tamil Nadu 641014",
+        "email": "kumar@furniture.in",
+        "phone": "+91 422 234 5678"
+      },
+      "invoiceFor": "Dairy Products",
+      "items": [
+        {
+          "productId": "PT005",
+          "productName": "Britannia Cheese Cubes 200g",
+          "sku": "PT005",
+          "category": "Dairy Products",
+          "quantity": 60,
+          "unitPrice": 5.99,
+          "discount": 35.94,
+          "taxPercent": 12,
+          "taxAmount": 60.00,
+          "total": 359.40
+        }
+      ],
+      "summary": {
+        "subTotal": 359.40,
+        "discountPercent": 10,
+        "discountAmount": 35.94,
+        "vatPercent": 12,
+        "vatAmount": 39.38,
+        "totalAmount": 362.84,
+        "amountInWords": "Rupees Three Hundred Sixty Three Only"
+      },
+      "terms": "Payment received on 2025-09-22.",
+      "notes": "Assembly included.",
+      "bankDetails": {
+        "bankName": "HDFC Bank",
+        "branch": "Gandhipuram, Coimbatore",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "485628878",
+        "ifsc": "HDFC0001819"
+      },
+      "signature": {
+        "name": "Selvi",
+        "designation": "Billing Executive",
+        "image": "/assets/images/avathar/f2.png"
+      }
     },
     {
-      "id": 4,
-      "invoiceNo": "INV-004",
-      "customer": "Global Industries",
-      "date": "2025-09-12",
-      "dueDate": "2025-09-27",
-      "amount": 980.0,
-      "status": "Paid"
-    },
-    {
-      "id": 5,
-      "invoiceNo": "INV-005",
-      "customer": "Mary Johnson",
-      "date": "2025-09-15",
-      "dueDate": "2025-09-30",
-      "amount": 300.0,
-      "status": "Pending"
-    },
-    {
-      "id": 6,
-      "invoiceNo": "INV-006",
-      "customer": "XYZ Enterprises",
-      "date": "2025-09-18",
-      "dueDate": "2025-10-03",
-      "amount": 675.25,
-      "status": "Paid"
-    },
-    {
-      "id": 7,
-      "invoiceNo": "INV-007",
-      "customer": "Alpha Solutions",
-      "date": "2025-09-20",
-      "dueDate": "2025-10-05",
-      "amount": 150.0,
-      "status": "Pending"
-    },
-    {
-      "id": 8,
-      "invoiceNo": "INV-008",
-      "customer": "Beta Technologies",
-      "date": "2025-09-22",
-      "dueDate": "2025-10-07",
-      "amount": 890.0,
-      "status": "Overdue"
-    },
-    {
-      "id": 9,
-      "invoiceNo": "INV-009",
-      "customer": "Delta Services",
-      "date": "2025-09-25",
-      "dueDate": "2025-10-10",
-      "amount": 430.0,
-      "status": "Paid"
-    },
-    {
-      "id": 10,
+      "invoiceId": "INV-010",
       "invoiceNo": "INV-010",
-      "customer": "Omega Corp",
-      "date": "2025-09-28",
-      "dueDate": "2025-10-13",
-      "amount": 1120.0,
-      "status": "Pending"
+      "customerId": "CUST110",
+      "customerName": "Saravanan Muthu",
+      "customerImage": "/assets/images/avathar/m7.png",
+      "customerAddress": "29, Anna Salai, Chennai, Tamil Nadu 600002",
+      "customerEmail": "saran.m@example.com",
+      "customerPhone": "+91 90123 45678",
+      "date": "2025-11-05",
+      "dueDate": "2025-11-20",
+      "amount": 262.50,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Priya Telecom",
+        "address": "7, Mount Road, Chennai, Tamil Nadu 600002",
+        "email": "priya@telecom.in",
+        "phone": "+91 44 2856 7890"
+      },
+      "invoiceFor": "Fresh Produce",
+      "items": [
+        {
+          "productId": "PT010",
+          "productName": "Fresh Red Apples (1kg)",
+          "sku": "PT010",
+          "category": "Produce",
+          "quantity": 60,
+          "unitPrice": 3.99,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "total": 239.40
+        }
+      ],
+      "summary": {
+        "subTotal": 239.40,
+        "discountPercent": 0,
+        "discountAmount": 0.00,
+        "vatPercent": 0,
+        "vatAmount": 0.00,
+        "totalAmount": 239.40,
+        "amountInWords": "Rupees Two Hundred Thirty Nine Only"
+      },
+      "terms": "Service active from 2025-11-01.",
+      "notes": "Bill includes router cost.",
+      "bankDetails": {
+        "bankName": "ICICI Bank",
+        "branch": "Mount Road, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "609876543210",
+        "ifsc": "ICIC0001234"
+      },
+      "signature": {
+        "name": "Divya",
+        "designation": "Accounts Officer",
+        "image": "/assets/images/avathar/f4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-011",
+      "invoiceNo": "INV-011",
+      "customerId": "CUST111",
+      "customerName": "Anitha Raj",
+      "customerImage": "/assets/images/avathar/f8.png",
+      "customerAddress": "55, Anna Nagar, Chennai, Tamil Nadu 600040",
+      "customerEmail": "anitha.r@example.com",
+      "customerPhone": "+91 98456 78901",
+      "date": "2025-10-05",
+      "dueDate": "2025-10-20",
+      "amount": 200.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Raj Electricals",
+        "address": "25, Kilpauk Garden Road, Chennai, Tamil Nadu 600010",
+        "email": "raj@electricals.in",
+        "phone": "+91 44 2612 3456"
+      },
+      "invoiceFor": "Bakery Items",
+      "items": [
+        {
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "sku": "PT007",
+          "category": "Bakery",
+          "quantity": 15,
+          "unitPrice": 12.99,
+          "discount": 9.74,
+          "taxPercent": 18,
+          "taxAmount": 22.00,
+          "total": 200.00
+        }
+      ],
+      "summary": {
+        "subTotal": 194.85,
+        "discountPercent": 5,
+        "discountAmount": 9.74,
+        "vatPercent": 18,
+        "vatAmount": 31.62,
+        "totalAmount": 216.73,
+        "amountInWords": "Rupees Two Hundred Sixteen Only"
+      },
+      "terms": "Work completed on 2025-10-03.",
+      "notes": "5-year warranty on wiring.",
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "branch": "Anna Nagar, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "302010987654",
+        "ifsc": "SBIN0002456"
+      },
+      "signature": {
+        "name": "Aravind",
+        "designation": "Facilities Manager",
+        "image": "/assets/images/avathar/m4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-012",
+      "invoiceNo": "INV-012",
+      "customerId": "CUST112",
+      "customerName": "Vignesh Kumar",
+      "customerImage": "/assets/images/avathar/m8.png",
+      "customerAddress": "14, Chromepet, Chennai, Tamil Nadu 600044",
+      "customerEmail": "vignesh.k@example.com",
+      "customerPhone": "+91 97654 32101",
+      "date": "2025-11-11",
+      "dueDate": "2025-11-26",
+      "amount": 1200.00,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Meenakshi Catering",
+        "address": "8, GST Road, Chromepet, Chennai, Tamil Nadu 600044",
+        "email": "meenakshi@catering.in",
+        "phone": "+91 44 2267 8901"
+      },
+      "invoiceFor": "Energy Drinks",
+      "items": [
+        {
+          "productId": "PT015",
+          "productName": "Red Bull Energy Drink 250ml",
+          "sku": "PT015",
+          "category": "Beverages",
+          "quantity": 400,
+          "unitPrice": 2.99,
+          "discount": 398.68,
+          "taxPercent": 18,
+          "taxAmount": 51.30,
+          "total": 850.30
+        }
+      ],
+      "summary": {
+        "subTotal": 1196.00,
+        "discountPercent": 33,
+        "discountAmount": 394.68,
+        "vatPercent": 18,
+        "vatAmount": 144.22,
+        "totalAmount": 945.54,
+        "amountInWords": "Rupees Nine Hundred Forty Six Only"
+      },
+      "terms": "Event held on 2025-11-10.",
+      "notes": "Menu: South Indian vegetarian.",
+      "bankDetails": {
+        "bankName": "Indian Overseas Bank",
+        "branch": "Chromepet",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "901234567890",
+        "ifsc": "IOBA0001234"
+      },
+      "signature": {
+        "name": "Muthukumar",
+        "designation": "Assistant Manager",
+        "image": "/assets/images/avathar/m2.png"
+      }
+    },
+    {
+      "invoiceId": "INV-013",
+      "invoiceNo": "INV-013",
+      "customerId": "CUST113",
+      "customerName": "Gayathri Senthil",
+      "customerImage": "/assets/images/avathar/f9.png",
+      "customerAddress": "36, Valasaravakkam, Chennai, Tamil Nadu 600087",
+      "customerEmail": "gayathri.s@example.com",
+      "customerPhone": "+91 96543 21098",
+      "date": "2025-10-12",
+      "dueDate": "2025-10-27",
+      "amount": 1050.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Senthil Interiors",
+        "address": "44, Arcot Road, Chennai, Tamil Nadu 600019",
+        "email": "senthil@interiors.in",
+        "phone": "+91 44 2478 9012"
+      },
+      "invoiceFor": "Health & Beauty",
+      "items": [
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "sku": "PT011",
+          "category": "Health & Beauty",
+          "quantity": 400,
+          "unitPrice": 2.49,
+          "discount": 199.20,
+          "taxPercent": 18,
+          "taxAmount": 143.50,
+          "total": 938.30
+        }
+      ],
+      "summary": {
+        "subTotal": 996.00,
+        "discountPercent": 20,
+        "discountAmount": 199.20,
+        "vatPercent": 18,
+        "vatAmount": 143.50,
+        "totalAmount": 940.30,
+        "amountInWords": "Rupees Nine Hundred Forty Only"
+      },
+      "terms": "Paid on 2025-10-25.",
+      "notes": "Includes 2 revision rounds.",
+      "bankDetails": {
+        "bankName": "Axis Bank",
+        "branch": "Valasaravakkam",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "918273645012",
+        "ifsc": "UTIB0000123"
+      },
+      "signature": {
+        "name": "Selvi",
+        "designation": "Billing Executive",
+        "image": "/assets/images/avathar/f2.png"
+      }
+    },
+    {
+      "invoiceId": "INV-014",
+      "invoiceNo": "INV-014",
+      "customerId": "CUST114",
+      "customerName": "Balaji Ram",
+      "customerImage": "/assets/images/avathar/m9.png",
+      "customerAddress": "72, Saidapet, Chennai, Tamil Nadu 600015",
+      "customerEmail": "balaji.r@example.com",
+      "customerPhone": "+91 95432 10987",
+      "date": "2025-11-02",
+      "dueDate": "2025-11-17",
+      "amount": 367.50,
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "fromInfo": {
+        "name": "Ram Software House",
+        "address": "9, West Mambalam, Chennai, Tamil Nadu 600033",
+        "email": "ram@softwarehouse.in",
+        "phone": "+91 44 2432 1098"
+      },
+      "invoiceFor": "Snacks & Beverages",
+      "items": [
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "sku": "PT003",
+          "category": "Snacks",
+          "quantity": 100,
+          "unitPrice": 2.79,
+          "discount": 41.85,
+          "taxPercent": 18,
+          "taxAmount": 42.25,
+          "total": 279.40
+        }
+      ],
+      "summary": {
+        "subTotal": 279.00,
+        "discountPercent": 15,
+        "discountAmount": 41.85,
+        "vatPercent": 18,
+        "vatAmount": 42.25,
+        "totalAmount": 279.40,
+        "amountInWords": "Rupees Two Hundred Seventy Nine Only"
+      },
+      "terms": "Work completed on 2025-11-01.",
+      "notes": "Includes 7 days post-fix support.",
+      "bankDetails": {
+        "bankName": "HDFC Bank",
+        "branch": "Saidapet, Chennai",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "485628878",
+        "ifsc": "HDFC0001819"
+      },
+      "signature": {
+        "name": "Divya",
+        "designation": "Accounts Officer",
+        "image": "/assets/images/avathar/f4.png"
+      }
+    },
+    {
+      "invoiceId": "INV-015",
+      "invoiceNo": "INV-015",
+      "customerId": "CUST115",
+      "customerName": "Indira Krishnan",
+      "customerImage": "/assets/images/avathar/f1.png",
+      "customerAddress": "21, Besant Nagar, Chennai, Tamil Nadu 600090",
+      "customerEmail": "indira.k@example.com",
+      "customerPhone": "+91 94321 09876",
+      "date": "2025-08-15",
+      "dueDate": "2025-08-30",
+      "amount": 1890.00,
+      "status": "Paid",
+      "paymentStatus": "Paid",
+      "fromInfo": {
+        "name": "Krishnan Cloud Services",
+        "address": "50, OMR, Sholinganallur, Chennai, Tamil Nadu 600119",
+        "email": "krishnan@cloud.in",
+        "phone": "+91 44 3098 7654"
+      },
+      "invoiceFor": "Beverages Bulk Order",
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "sku": "PT001",
+          "category": "Beverages",
+          "quantity": 1000,
+          "unitPrice": 1.50,
+          "discount": 120.00,
+          "taxPercent": 5,
+          "taxAmount": 69.00,
+          "total": 1449.00
+        }
+      ],
+      "summary": {
+        "subTotal": 1500.00,
+        "discountPercent": 8,
+        "discountAmount": 120.00,
+        "vatPercent": 5,
+        "vatAmount": 69.00,
+        "totalAmount": 1449.00,
+        "amountInWords": "Rupees One Thousand Four Hundred Forty Nine Only"
+      },
+      "terms": "Service active from 2025-08-01 to 2026-07-31.",
+      "notes": "Includes 24/7 support.",
+      "bankDetails": {
+        "bankName": "ICICI Bank",
+        "branch": "Sholinganallur",
+        "accountName": "Dreams POS Pvt Ltd",
+        "accountNumber": "609876543210",
+        "ifsc": "ICIC0001234"
+      },
+      "signature": {
+        "name": "Aravind",
+        "designation": "IT Head",
+        "image": "/assets/images/avathar/m4.png"
+      }
     }
   ]
 }

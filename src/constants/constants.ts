@@ -1,5 +1,6 @@
 export const PATH_HOMESCREEN: string = "/dashboard/admindb";
 export const DEFAULT_PAGE_SIZE: number = 10;
+export const CURRENCY_SYMBOL = "₹";
 
 export const STATUSES = [
   "Active",
