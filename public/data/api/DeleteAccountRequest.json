@@ -1,98 +1,158 @@
 {
   "status": {
     "code": "S",
-    "description": ""
+    "description": "Data extracted successfully."
   },
   "result": [
     {
       "id": 1,
-      "requestNo": "REQ-001",
-      "customerName": "John Doe",
-      "email": "john.doe@example.com",
-      "phone": "+1 234 567 890",
-      "requestDate": "2025-09-01",
-      "status": "Pending"
+      "requestNo": "REQ-DEL-001",
+      "userName": "Arjun Kumar",
+      "email": "arjun.kumar@example.com",
+      "phone": "+919876543210",
+      "requestDate": "2025-03-15",
+      "role": "Admin",
+      "image": "/assets/images/avathar/m1.png"
     },
     {
       "id": 2,
-      "requestNo": "REQ-002",
-      "customerName": "Jane Smith",
-      "email": "jane.smith@example.com",
-      "phone": "+1 987 654 321",
-      "requestDate": "2025-09-05",
-      "status": "Approved"
+      "requestNo": "REQ-DEL-002",
+      "userName": "Priya Lakshmi",
+      "email": "priya.l@example.com",
+      "phone": "+919876543211",
+      "requestDate": "2025-03-14",
+      "role": "Manager",
+      "image": "/assets/images/avathar/f2.png"
     },
     {
       "id": 3,
-      "requestNo": "REQ-003",
-      "customerName": "Alice Johnson",
-      "email": "alice.johnson@example.com",
-      "phone": "+44 20 7946 0958",
-      "requestDate": "2025-09-10",
-      "status": "Rejected"
+      "requestNo": "REQ-DEL-003",
+      "userName": "Karthik Rajan",
+      "email": "karthik.r@example.com",
+      "phone": "+919876543212",
+      "requestDate": "2025-03-13",
+      "role": "User",
+      "image": "/assets/images/avathar/m3.png"
     },
     {
       "id": 4,
-      "requestNo": "REQ-004",
-      "customerName": "Bob Williams",
-      "email": "bob.williams@example.com",
-      "phone": "+61 2 9876 5432",
-      "requestDate": "2025-09-15",
-      "status": "Pending"
+      "requestNo": "REQ-DEL-004",
+      "userName": "Anjali Devi",
+      "email": "anjali.d@example.com",
+      "phone": "+919876543213",
+      "requestDate": "2025-03-12",
+      "role": "User",
+      "image": "/assets/images/avathar/f1.png"
     },
     {
       "id": 5,
-      "requestNo": "REQ-005",
-      "customerName": "Carol Davis",
-      "email": "carol.davis@example.com",
-      "phone": "+49 30 123456",
-      "requestDate": "2025-09-20",
-      "status": "Pending"
+      "requestNo": "REQ-DEL-005",
+      "userName": "Vikram Srinivasan",
+      "email": "vikram.s@example.com",
+      "phone": "+919876543214",
+      "requestDate": "2025-03-11",
+      "role": "Admin",
+      "image": "/assets/images/avathar/m2.png"
     },
     {
       "id": 6,
-      "requestNo": "REQ-006",
-      "customerName": "David Brown",
-      "email": "david.brown@example.com",
-      "phone": "+81 3 1234 5678",
-      "requestDate": "2025-09-25",
-      "status": "Approved"
+      "requestNo": "REQ-DEL-006",
+      "userName": "Meera Subramaniam",
+      "email": "meera.s@example.com",
+      "phone": "+919876543215",
+      "requestDate": "2025-03-10",
+      "role": "Manager",
+      "image": "/assets/images/avathar/f3.png"
     },
     {
       "id": 7,
-      "requestNo": "REQ-007",
-      "customerName": "Eva Green",
-      "email": "eva.green@example.com",
-      "phone": "+33 1 2345 6789",
-      "requestDate": "2025-09-28",
-      "status": "Pending"
+      "requestNo": "REQ-DEL-007",
+      "userName": "Suresh Kannan",
+      "email": "suresh.k@example.com",
+      "phone": "+919876543216",
+      "requestDate": "2025-03-09",
+      "role": "User",
+      "image": "/assets/images/avathar/m4.png"
     },
     {
       "id": 8,
-      "requestNo": "REQ-008",
-      "customerName": "Frank Moore",
-      "email": "frank.moore@example.com",
-      "phone": "+39 06 12345678",
-      "requestDate": "2025-10-01",
-      "status": "Rejected"
+      "requestNo": "REQ-DEL-008",
+      "userName": "Lakshmi Narayanan",
+      "email": "lakshmi.n@example.com",
+      "phone": "+919876543217",
+      "requestDate": "2025-03-08",
+      "role": "User",
+      "image": "/assets/images/avathar/f4.png"
     },
     {
       "id": 9,
-      "requestNo": "REQ-009",
-      "customerName": "Grace Lee",
-      "email": "grace.lee@example.com",
-      "phone": "+86 10 1234 5678",
-      "requestDate": "2025-10-05",
-      "status": "Pending"
+      "requestNo": "REQ-DEL-009",
+      "userName": "Ravi Shankar",
+      "email": "ravi.s@example.com",
+      "phone": "+919876543218",
+      "requestDate": "2025-03-07",
+      "role": "Manager",
+      "image": "/assets/images/avathar/m5.png"
     },
     {
       "id": 10,
-      "requestNo": "REQ-010",
-      "customerName": "Henry King",
-      "email": "henry.king@example.com",
-      "phone": "+91 22 1234 5678",
-      "requestDate": "2025-10-08",
-      "status": "Approved"
+      "requestNo": "REQ-DEL-010",
+      "userName": "Divya Mohan",
+      "email": "divya.m@example.com",
+      "phone": "+919876543219",
+      "requestDate": "2025-03-06",
+      "role": "User",
+      "image": "/assets/images/avathar/f5.png"
+    },
+    {
+      "id": 11,
+      "requestNo": "REQ-DEL-011",
+      "userName": "Manoj Pillai",
+      "email": "manoj.p@example.com",
+      "phone": "+919876543220",
+      "requestDate": "2025-03-05",
+      "role": "Admin",
+      "image": "/assets/images/avathar/m6.png"
+    },
+    {
+      "id": 12,
+      "requestNo": "REQ-DEL-012",
+      "userName": "Nisha Rani",
+      "email": "nisha.r@example.com",
+      "phone": "+919876543221",
+      "requestDate": "2025-03-04",
+      "role": "User",
+      "image": "/assets/images/avathar/f1.png"
+    },
+    {
+      "id": 13,
+      "requestNo": "REQ-DEL-013",
+      "userName": "Senthil Kumar",
+      "email": "senthil.k@example.com",
+      "phone": "+919876543222",
+      "requestDate": "2025-03-03",
+      "role": "Manager",
+      "image": "/assets/images/avathar/m7.png"
+    },
+    {
+      "id": 14,
+      "requestNo": "REQ-DEL-014",
+      "userName": "Kavitha Menon",
+      "email": "kavitha.m@example.com",
+      "phone": "+919876543223",
+      "requestDate": "2025-03-02",
+      "role": "User",
+      "image": "/assets/images/avathar/f6.png"
+    },
+    {
+      "id": 15,
+      "requestNo": "REQ-DEL-015",
+      "userName": "Ganesh Iyer",
+      "email": "ganesh.i@example.com",
+      "phone": "+919876543224",
+      "requestDate": "2025-03-01",
+      "role": "Admin",
+      "image": "/assets/images/avathar/m1.png"
     }
   ]
 }

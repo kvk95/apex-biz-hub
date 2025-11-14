@@ -1,33 +1,30 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { APPROVAL_STATUSES } from "@/constants/constants";
-import { renderStatusBadge,formatDate } from "@/utils/tableUtils";
+import { formatDate } from "@/utils/tableUtils";
 
 interface DeleteAccountRecord {
   id: number;
   requestNo: string;
-  customerName: string;
+  userName: string;
   email: string;
   phone: string;
   requestDate: string;
-  status: (typeof APPROVAL_STATUSES)[number];
-}
-
-interface RowAction {
-  label: string;
-  onClick: (row: any, idx: number) => void;
-  className?: string;
+  role: string; // ← NEW
+  image: string;
 }
 
 export default function DeleteAccountRequest() {
   const [data, setData] = useState<DeleteAccountRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [requestDate, setRequestDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingRecord, setDeletingRecord] =
+    useState<DeleteAccountRecord | null>(null);
 
   useEffect(() => {
     loadData();
@@ -36,225 +33,178 @@ export default function DeleteAccountRequest() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await apiService.get<DeleteAccountRecord[]>(
-        "DeleteAccountRequest"
-      );
-      console.log("DeleteAccountRequest loadData response:", response);
+      const response = await apiService.get<{
+        status: { code: string };
+        result: DeleteAccountRecord[];
+      }>("DeleteAccountRequest");
+
       if (response.status.code === "S") {
         setData(response.result || []);
         setError(null);
       } else {
         setError(response.status.description || "Failed to fetch data");
+        setData([]);
       }
     } catch (err) {
       setError("Error fetching data: " + (err as Error).message);
+      setData([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-  const filteredData = useMemo(() => {
-    const result = data.filter((item) => {
-      const matchStatus =
-        statusFilter !== "All" ? item.status === statusFilter : true;
-      const matchDate = requestDate ? item.requestDate === requestDate : true;
-      return matchStatus && matchDate;
-    });
-    console.log("DeleteAccountRequest filteredData:", {
-      result,
-      count: result.length,
-      statusFilter,
-      requestDate,
-      inputDataCount: data.length,
-    });
-    // Reset currentPage if it exceeds available pages
-    const maxPage = Math.max(1, Math.ceil(result.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(1);
-    }
-    return result;
-  }, [data, statusFilter, requestDate, itemsPerPage, currentPage]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const result = filteredData.slice(start, end);
-    console.log("DeleteAccountRequest paginatedData:", {
-      result,
-      count: result.length,
-      currentPage,
-      start,
-      end,
-      itemsPerPage,
-      totalItems: filteredData.length,
-    });
-    return result;
-  }, [filteredData, currentPage, itemsPerPage]);
+    return data.slice(start, start + itemsPerPage);
+  }, [data, currentPage, itemsPerPage]);
 
-  const handleClear = () => {
-    setStatusFilter("All");
-    setRequestDate("");
-    setCurrentPage(1);
+  const handleRefresh = () => {
     loadData();
-    console.log("DeleteAccountRequest handleClear");
+    setCurrentPage(1);
   };
 
   const handleReport = () => {
-    const reportData = {
-      statusFilter,
-      requestDate,
-      records: filteredData,
-    };
-    alert(
-      "Delete Account Requests Report:\n\n" +
-        JSON.stringify(reportData, null, 2)
-    );
-    console.log("DeleteAccountRequest handleReport:", reportData);
+    alert("Report:\n" + JSON.stringify(data, null, 2));
   };
 
-  const handleDelete = (row: DeleteAccountRecord) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete request ${row.requestNo}?`
-      )
-    ) {
-      setData((prev) => prev.filter((item) => item.id !== row.id));
-      console.log("DeleteAccountRequest handleDelete:", {
-        id: row.id,
-        requestNo: row.requestNo,
-      });
-      // Reset currentPage if the current page becomes empty
-      const maxPage = Math.max(
-        1,
-        Math.ceil((filteredData.length - 1) / itemsPerPage)
-      );
-      if (currentPage > maxPage) {
-        setCurrentPage(maxPage);
-      }
-    }
+  const handleDeleteClick = (row: DeleteAccountRecord) => {
+    setDeletingRecord(row);
+    setShowDeleteModal(true);
   };
 
+  const confirmDelete = () => {
+    if (!deletingRecord) return;
+
+    setData((prev) => prev.filter((r) => r.id !== deletingRecord.id));
+
+    const remaining = data.length - 1;
+    const maxPage = Math.max(1, Math.ceil(remaining / itemsPerPage));
+    if (currentPage > maxPage) setCurrentPage(maxPage);
+
+    setShowDeleteModal(false);
+    setDeletingRecord(null);
+  };
+
+  /* ------------------------------------------------------------------ */
   const columns: Column[] = [
     {
-      key: "requestNo",
-      label: "Request No",
-      align: "left",
-      render: (value) => (
-        <span className="font-semibold font-mono text-blue-600 dark:text-blue-400">
-          {value || "N/A"}
-        </span>
+      key: "userName",
+      label: "User Name",
+      render: (_, row: DeleteAccountRecord) => (
+        <div className="flex items-center gap-3">
+          {row.image ? (
+            <img
+              src={row.image}
+              alt={row.userName}
+              className="w-8 h-8 rounded-full object-cover border"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-white">
+              {row.userName.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <span className="font-medium">{row.userName}</span>
+        </div>
       ),
-    },
-    {
-      key: "customerName",
-      label: "Customer Name",
-      align: "left",
-      render: (value) => value || "N/A",
     },
     {
       key: "email",
       label: "Email",
-      align: "left",
-      render: (value) => value || "N/A",
+      render: (v) => v || "N/A",
     },
     {
-      key: "phone",
-      label: "Phone",
-      align: "left",
-      render: (value) => value || "N/A",
+      key: "role",
+      label: "Role",
+      render: (role: string) => (
+        <span
+          className={`
+            inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+            ${
+              role === "Admin"
+                ? "bg-purple-100 text-purple-800"
+                : role === "Manager"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-800"
+            }
+          `}
+        >
+          {role}
+        </span>
+      ),
     },
     {
       key: "requestDate",
-      label: "Request Date",
-      align: "left",
-      render: (value) => <>{formatDate(value, "dd MMM yyyy")}</>, 
-    },
-    {
-      key: "status",
-      label: "Status",
-      align: "center",
-      render: renderStatusBadge,
-    },
-  ];
-
-  const rowActions1: RowAction[] = [
-    {
-      label: "Delete",
-      onClick: handleDelete,
-      className: "text-red-600 hover:text-red-800",
+      label: "Delete Request Date",
+      align:"center",
+      render: (v) => formatDate(v, "dd MMM yyyy"),
     },
   ];
 
   const rowActions = (row: DeleteAccountRecord) => (
-    <>
-      <button
-        onClick={() => handleDelete(row)}
-        aria-label={`Delete  ${row.customerName}`}
-        className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
-      >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete</span>
-      </button>
-    </>
+    <button
+      onClick={() => handleDeleteClick(row)}
+      aria-label={`Delete request ${row.requestNo}`}
+      className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2 inline-flex items-center"
+    >
+      <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
+    </button>
   );
-
-  const customFilters = () => (
-    <div className="grid grid-cols-2 w-full justify-stretch px-3">
-      <div className="flex justify-start"></div>
-      <div className="flex justify-end gap-2">
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setCurrentPage(1);
-            console.log("DeleteAccountRequest handleStatusFilterChange:", {
-              statusFilter: e.target.value,
-            });
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by status"
-        >
-          {["All", ...APPROVAL_STATUSES].map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={requestDate}
-          onChange={(e) => {
-            setRequestDate(e.target.value);
-            setCurrentPage(1);
-            console.log("DeleteAccountRequest handleRequestDateChange:", {
-              requestDate: e.target.value,
-            });
-          }}
-          className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Filter by request date"
-        />
-      </div>
-    </div>
-  );
+  /* ------------------------------------------------------------------ */
 
   return (
-    <PageBase1
-      title="Delete Account Requests"
-      description="View and manage account deletion requests."
-      onRefresh={handleClear}
-      onReport={handleReport}
-      search=""
-      onSearchChange={() => {}} // No text-based search field
-      currentPage={currentPage}
-      itemsPerPage={itemsPerPage}
-      totalItems={filteredData.length}
-      onPageChange={setCurrentPage}
-      onPageSizeChange={setItemsPerPage}
-      tableColumns={columns}
-      tableData={paginatedData}
-      rowActions={rowActions}
-      customFilters={customFilters}
-      loading={loading}
-      error={error}
-    />
+    <>
+      <PageBase1
+        title="Delete Account Requests"
+        description="View and manage account deletion requests."
+        onRefresh={handleRefresh}
+        onReport={handleReport}
+        search=""
+        onSearchChange={() => {}}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={data.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+        tableColumns={columns}
+        tableData={paginatedData}
+        rowActions={rowActions}
+        loading={loading}
+        error={error}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <i className="fa fa-trash text-red-500 text-2xl"></i>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Request Account
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete request account?
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletingRecord(null);
+                }}
+                className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
