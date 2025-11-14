@@ -551,7 +551,6 @@ export default function Invoices() {
     <PageBase1
       title="Invoices"
       description="Manage your invoices"
-      pageIcon="fa-light fa-file-invoice-dollar"
       onAddClick={() => { }}
       onRefresh={handleClear}
       onReport={handleReport}
