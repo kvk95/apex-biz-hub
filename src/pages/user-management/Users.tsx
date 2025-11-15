@@ -3,6 +3,8 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { ROLES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { DeleteConfirmDialog } from "@/components/Modal";
+import { toast } from "@/hooks/use-toast";
 
 type User = {
   id: number;
@@ -35,6 +37,10 @@ export default function Users() {
   const [preview, setPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
+
+  // Delete confirmation state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
   // Separate password states (only for Add)
   const [password, setPassword] = useState("");
@@ -113,9 +119,29 @@ export default function Users() {
     setPreview(user.image);
   };
 
-  const handleDelete = (id: number) => {
-    if (!window.confirm("Delete this user?")) return;
-    setData((prev) => prev.filter((u) => u.id !== id));
+  const handleDelete = (user: User) => {
+    setDeletingUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (!deletingUser) return;
+
+    setData((prev) => prev.filter((u) => u.id !== deletingUser.id));
+    
+    // Show success toast
+    toast({
+      title: "Success",
+      description: (
+        <div className="flex items-center gap-2">
+          <i className="fa fa-check-circle text-green-500"></i>
+          <span>User deleted successfully</span>
+        </div>
+      ),
+    });
+
+    setShowDeleteModal(false);
+    setDeletingUser(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -179,8 +205,30 @@ export default function Users() {
     if (formMode === "add") {
       const newId = data.length ? Math.max(...data.map((u) => u.id)) + 1 : 1;
       setData((prev) => [...prev, { ...form, id: newId }]);
+      
+      // Show success toast
+      toast({
+        title: "Success",
+        description: (
+          <div className="flex items-center gap-2">
+            <i className="fa fa-check-circle text-green-500"></i>
+            <span>User added successfully</span>
+          </div>
+        ),
+      });
     } else if (formMode === "edit" && form.id !== null) {
       setData((prev) => prev.map((u) => (u.id === form.id ? form : u)));
+      
+      // Show success toast
+      toast({
+        title: "Success",
+        description: (
+          <div className="flex items-center gap-2">
+            <i className="fa fa-check-circle text-green-500"></i>
+            <span>User updated successfully</span>
+          </div>
+        ),
+      });
     }
 
     setFormMode(null);
@@ -222,7 +270,7 @@ export default function Users() {
         <i className="fa fa-edit" />
       </button>
       <button
-        onClick={() => handleDelete(row.id)}
+        onClick={() => handleDelete(row)}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2 inline-flex items-center me-1"
       >
         <i className="fa fa-trash-can-xmark" />
@@ -409,27 +457,41 @@ export default function Users() {
   );
 
   return (
-    <PageBase1
-      title="Users"
-      description="Manage users and their roles for your application."
-      onAddClick={handleAddClick}
-      onRefresh={handleRefresh}
-      search={search}
-      onSearchChange={handleSearchChange}
-      currentPage={currentPage}
-      itemsPerPage={itemsPerPage}
-      totalItems={filteredUsers.length}
-      onPageChange={handlePageChange}
-      onPageSizeChange={setItemsPerPage}
-      tableColumns={columns}
-      tableData={paginatedUsers}
-      rowActions={rowActions}
-      formMode={formMode}
-      setFormMode={setFormMode}
-      modalTitle={formMode === "add" ? "Add New User" : "Edit User"}
-      modalForm={modalForm}
-      onFormSubmit={handleFormSubmit}
-      loading={loading}
-    />
+    <>
+      <PageBase1
+        title="Users"
+        description="Manage users and their roles for your application."
+        onAddClick={handleAddClick}
+        onRefresh={handleRefresh}
+        search={search}
+        onSearchChange={handleSearchChange}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredUsers.length}
+        onPageChange={handlePageChange}
+        onPageSizeChange={setItemsPerPage}
+        tableColumns={columns}
+        tableData={paginatedUsers}
+        rowActions={rowActions}
+        formMode={formMode}
+        setFormMode={setFormMode}
+        modalTitle={formMode === "add" ? "Add New User" : "Edit User"}
+        modalForm={modalForm}
+        onFormSubmit={handleFormSubmit}
+        loading={loading}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingUser(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this user?"
+        itemName={deletingUser?.name}
+      />
+    </>
   );
 }
