@@ -1,642 +1,597 @@
 /* -------------------------------------------------
-   Quotation – with description, no footer buttons
+   Quotation – Final Production Version (₹ India Ready)
    ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge } from "@/utils/tableUtils";
-import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
+import {
+  AutoCompleteTextBox,
+  AutoCompleteItem,
+} from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
-import { QUOTATION_STATUSES, SORT_OPTIONS } from "@/constants/constants";
+import { QUOTATION_STATUSES } from "@/constants/constants";
 
-/* ---------- Types ---------- */
-type Customer = {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
+/* ---------- Type-Safe AutoComplete ---------- */
+type CustomerOption = AutoCompleteItem<string>;
+type ProductOption = AutoCompleteItem<string> & {
+  extra: { SKU: string; purchasePrice: string; ProductImage?: string };
 };
 
+const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
+const ProductAutoComplete = AutoCompleteTextBox<ProductOption>;
+
+/* ---------- Types ---------- */
+type Customer = { id: string; name: string };
 type Product = {
-  id: number;
+  id: string;
   productName: string;
   sku: string;
   price: number;
-  unit: string;
+  productImage?: string;
 };
 
-type QuotationStatus = typeof QUOTATION_STATUSES[number];
-const statusSent: QuotationStatus = "Sent";
-
-type Quotation = {
-  id: number;
+type QuotationItem = {
   productId: string;
   productName: string;
-  customerName: string;
+  sku: string;
+  productImage?: string;
+  quantity: number;
+  purchasePrice: number;
+  discount: number;
+  taxPercent: number;
+  totalCost: number;
+};
+
+type Quotation = {
+  reference: string;
+  date: string;
   customerId: string;
-  status: QuotationStatus;
-  Total: string;
+  customerName: string;
+  status: typeof QUOTATION_STATUSES[number];
+  total: number;
+  items: QuotationItem[];
+  summary: {
+    orderTax: number;
+    discount: number;
+    shipping: number;
+    grandTotal: number;
+  };
   description?: string;
 };
 
-type CustomerOption = AutoCompleteItem;
-type ProductOption = AutoCompleteItem & { extra: { SKU: string; Price: string } };
-
-type ProductRow = {
-  id: number;
-  productId: number;
-  productName: string;
-  sku: string;
-  price: number;
-  quantity: number;
-  unit: string;
-  total: number;
-};
-
-interface FormState {
-  id?: number;
-  quotationNo: string;
-  quotationDate: string;
-  customerId: string;
-  customerName: string;
-  reference: string;
-  productRows: ProductRow[];
-  orderTax: string;
-  discount: string;
-  shipping: string;
-  status?: QuotationStatus;
-  description: string;
-}
-
-/* ------------------------------------------------------------------ */
+/* ---------- Main Component ---------- */
 export default function Quotation() {
-  /* ---------- state ---------- */
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState<QuotationStatus | "All">("All");
-  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("Recently Added");
+  const [selectedStatus, setSelectedStatus] = useState<string | "All">("All");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState<FormState>({
-    quotationNo: "",
-    quotationDate: "",
+  const [form, setForm] = useState<{
+    reference: string;
+    date: string;
+    customerId: string;
+    customerName: string;
+    items: QuotationItem[];
+    orderTax: string;
+    discount: string;
+    shipping: string;
+    status: typeof QUOTATION_STATUSES[number];
+    description: string;
+  }>({
+    reference: "",
+    date: new Date().toISOString().split("T")[0],
     customerId: "",
     customerName: "",
-    reference: "",
-    productRows: [],
+    items: [],
     orderTax: "0",
     discount: "0",
     shipping: "0",
+    status: "Pending",
     description: "",
   });
 
-  /* ---------- load data ---------- */
+  /* Load Data */
   useEffect(() => {
-    console.log("[Quotation] Initial loadData triggered");
-    loadData();
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [custRes, prodRes, quotRes] = await Promise.all([
+          apiService.get<Customer[]>("Customers"),
+          apiService.get<Product[]>("Products"),
+          apiService.get<Quotation[]>("Quotation"),
+        ]);
+        if (custRes.status.code === "S") setAllCustomers(custRes.result);
+        if (prodRes.status.code === "S") setAllProducts(prodRes.result);
+        if (quotRes.status.code === "S") setQuotations(quotRes.result);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
-  const loadData = async () => {
-    console.log("[Quotation] loadData started");
-    setLoading(true);
-    try {
-      const [quotRes, custRes, prodRes] = await Promise.all([
-        apiService.get<Quotation[]>("Quotation"),
-        apiService.get<Customer[]>("Customers"),
-        apiService.get<Product[]>("Products"),
-      ]);
-
-      if (quotRes.status.code === "S") {
-        setQuotations(quotRes.result);
-        console.log("[Quotation] Loaded quotations:", quotRes.result.length);
-      } else {
-        console.warn("[Quotation] Failed to load quotations:", quotRes.status);
-      }
-
-      if (custRes.status.code === "S") {
-        setAllCustomers(custRes.result);
-        setFilteredCustomers(custRes.result);
-        console.log("[Quotation] Loaded customers:", custRes.result.length);
-      }
-
-      if (prodRes.status.code === "S") {
-        setAllProducts(prodRes.result);
-        setFilteredProducts(prodRes.result);
-        console.log("[Quotation] Loaded products:", prodRes.result.length);
-      }
-
-      setError(null);
-      console.log("[Quotation] loadData completed successfully");
-    } catch (err) {
-      setError("Failed to load data.");
-      console.error("[Quotation] loadData error:", err);
-    } finally {
-      setLoading(false);
-      console.log("[Quotation] loadData finished, loading:", false);
-    }
-  };
-
-  /* ---------- filtering & pagination ---------- */
+  /* Filtering & Pagination */
   const filteredData = useMemo(() => {
-    console.log("[Quotation] filteredData recompute", { search, selectedCustomer, selectedStatus, selectedSort });
-
-    let res = [...quotations];
-    if (search.trim()) {
-      res = res.filter(q =>
-        q.productName.toLowerCase().includes(search.toLowerCase()) ||
-        q.customerName.toLowerCase().includes(search.toLowerCase()) ||
-        (q.description?.toLowerCase().includes(search.toLowerCase()) ?? false)
+    let list = [...quotations];
+    if (search)
+      list = list.filter(
+        (q) =>
+          q.reference.includes(search) ||
+          q.customerName.toLowerCase().includes(search.toLowerCase())
       );
-      console.log("[Quotation] After search filter:", res.length);
-    }
-
-    if (selectedCustomer !== "All") {
-      res = res.filter(q => q.customerName === selectedCustomer);
-      console.log("[Quotation] After customer filter:", res.length);
-    }
-
-    if (selectedStatus !== "All") {
-      res = res.filter(q => q.status === selectedStatus);
-      console.log("[Quotation] After status filter:", res.length);
-    }
-
-    if (selectedSort === "Recently Added") {
-      res.sort((a, b) => b.id - a.id);
-    } else if (selectedSort === "Ascending") {
-      res.sort((a, b) => parseFloat(a.Total) - parseFloat(b.Total));
-    } else if (selectedSort === "Descending") {
-      res.sort((a, b) => parseFloat(b.Total) - parseFloat(a.Total));
-    }
-
-    console.log("[Quotation] Final filtered data:", res.length);
-    return res;
-  }, [quotations, search, selectedCustomer, selectedStatus, selectedSort]);
+    if (selectedCustomer !== "All") list = list.filter((q) => q.customerName === selectedCustomer);
+    if (selectedStatus !== "All") list = list.filter((q) => q.status === selectedStatus);
+    return list.sort((a, b) => b.reference.localeCompare(a.reference));
+  }, [quotations, search, selectedCustomer, selectedStatus]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const result = filteredData.slice(start, end);
-    console.log("[Quotation] paginatedData:", { currentPage, start, end, total: filteredData.length, result: result.length });
-    return result;
+    return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(() => {
-    const opts = ["All", ...Array.from(new Set(quotations.map(q => q.customerName)))];
-    console.log("[Quotation] customerOptions:", opts);
-    return opts;
-  }, [quotations]);
+  const customerOptions = useMemo(
+    () => ["All", ...new Set(quotations.map((q) => q.customerName))],
+    [quotations]
+  );
 
-  /* ---------- handlers ---------- */
+  /* Handlers */
+  const generateRef = () => `QTN-${Date.now().toString().slice(-6)}`;
+
   const handleAddClick = () => {
-    const newId = quotations.length ? Math.max(...quotations.map(q => q.id)) + 1 : 1;
-    const newQuotationNo = `QTN-${String(newId).padStart(4, "0")}`;
-    console.log("[Quotation] handleAddClick - new ID:", newId, "Quotation No:", newQuotationNo);
-
+    setFormMode("add");
     setForm({
-      id: undefined,
-      quotationNo: newQuotationNo,
-      quotationDate: new Date().toISOString().split("T")[0],
+      reference: generateRef(),
+      date: new Date().toISOString().split("T")[0],
       customerId: "",
       customerName: "",
-      reference: "",
-      productRows: [{ id: 1, productId: 0, productName: "", sku: "", price: 0, quantity: 1, unit: "", total: 0 }],
+      items: [
+        {
+          productId: "",
+          productName: "",
+          sku: "",
+          quantity: 1,
+          purchasePrice: 0,
+          discount: 0,
+          taxPercent: 0,
+          totalCost: 0,
+        },
+      ],
       orderTax: "0",
       discount: "0",
       shipping: "0",
+      status: "Pending",
       description: "",
     });
-    setFormMode("add");
   };
 
-  const handleEdit = (row: Quotation) => {
-    console.log("[Quotation] handleEdit - row:", row);
-    const prod = allProducts.find(p => p.id.toString() === row.productId);
-    const price = prod?.price ?? 0;
-    const quantity = price ? Math.round(parseFloat(row.Total) / price) : 1;
-    const total = price * quantity;
+  const recalculateItem = (item: QuotationItem): QuotationItem => {
+    const price = Number(item.purchasePrice) || 0;
+    const qty = Number(item.quantity) || 0;
+    const discountPercent = Number(item.discount) || 0;
+    const taxPercent = Number(item.taxPercent) || 0;
 
-    setForm({
-      id: row.id,
-      quotationNo: `QTN-${String(row.id).padStart(4, "0")}`,
-      quotationDate: new Date().toISOString().split("T")[0],
-      customerId: row.customerId,
-      customerName: row.customerName,
-      reference: "",
-      productRows: [{
-        id: 1,
-        productId: parseInt(row.productId) || 0,
-        productName: row.productName,
-        sku: prod?.sku ?? "",
-        price,
-        quantity,
-        unit: prod?.unit ?? "",
-        total,
-      }],
-      orderTax: "0",
-      discount: "0",
-      shipping: "0",
-      description: row.description ?? "",
-      status: row.status,
-    });
+    // 1. Discount amount (percentage)
+    const discountAmount = price * (discountPercent / 100);
+
+    // 2. Price after discount per unit
+    const priceAfterDiscount = price - discountAmount;
+
+    // 3. Taxable amount
+    const taxable = priceAfterDiscount * qty;
+
+    // 4. Tax amount
+    const tax = taxable * (taxPercent / 100);
+
+    // 5. Final total
+    const totalCost = taxable + tax;
+
+    return {
+      ...item,
+      totalCost: Number(totalCost.toFixed(2)),
+    };
+  }
+
+  const handleEdit = (q: Quotation) => {
     setFormMode("edit");
+    setForm({
+      reference: q.reference,
+      date: q.date,
+      customerId: q.customerId,
+      customerName: q.customerName,
+      items: q.items.map(recalculateItem),
+      orderTax: q.summary.orderTax.toString(),
+      discount: q.summary.discount.toString(),
+      shipping: q.summary.shipping.toString(),
+      status: q.status,
+      description: q.description || "",
+    });
   };
 
-  /* ---------- autocomplete ---------- */
-  const handleCustomerSearch = (q: string) => {
-    const f = allCustomers.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
-    setFilteredCustomers(f);
-    setForm(p => ({ ...p, customerName: q, customerId: "" }));
-    console.log("[Quotation] Customer search:", { query: q, results: f.length });
+  const handleDelete = (ref: string) => {
+    if (confirm("Delete quotation?")) {
+      setQuotations((prev) => prev.filter((q) => q.reference !== ref));
+    }
   };
 
-  const handleCustomerSelect = (c: CustomerOption) => {
-    setForm(p => ({ ...p, customerId: c.id.toString(), customerName: c.display }));
-    setFilteredCustomers(allCustomers);
-    console.log("[Quotation] Customer selected:", c);
-  };
-
-  const handleProductSearch = (q: string, rowId: number) => {
-    const f = allProducts.filter(p =>
-      p.productName.toLowerCase().includes(q.toLowerCase()) ||
-      p.sku.toLowerCase().includes(q.toLowerCase())
+  const handleCustomerSearch = (query: string) => {
+    setForm((p) => ({ ...p, customerName: query, customerId: "" }));
+    if (!query.trim()) return setFilteredCustomers([]);
+    setFilteredCustomers(
+      allCustomers.filter((c) =>
+        c.name.toLowerCase().includes(query.toLowerCase())
+      )
     );
-    setFilteredProducts(f);
-    setForm(p => ({
-      ...p,
-      productRows: p.productRows.map(r => (r.id === rowId ? { ...r, productName: q, productId: 0 } : r)),
-    }));
-    console.log("[Quotation] Product search (row", rowId, "):", { query: q, results: f.length });
   };
 
-  const handleProductSelect = (rowId: number, sel: ProductOption) => {
-    const prod = allProducts.find(p => p.id === sel.id);
+  const handleCustomerSelect = (item: CustomerOption) => {
+    setForm((p) => ({ ...p, customerId: item.id, customerName: item.display }));
+    setFilteredCustomers([]);
+  };
+
+  const handleProductSearch = (query: string, idx: number) => {
+    const items = [...form.items];
+    items[idx].productName = query;
+    items[idx].productId = "";
+    setForm((p) => ({ ...p, items }));
+    if (!query.trim()) return setFilteredProducts([]);
+    setFilteredProducts(
+      allProducts.filter(
+        (p) =>
+          p.productName.toLowerCase().includes(query.toLowerCase()) ||
+          p.sku.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+  };
+
+  const handleProductSelect = (idx: number, item: ProductOption) => {
+    const prod = allProducts.find((p) => p.id === item.id);
     if (!prod) return;
-    const price = Number(prod.price) || 0;
-    const qty = form.productRows.find(r => r.id === rowId)?.quantity || 1;
-    const total = price * qty;
-    setForm(p => ({
+
+    const quantity = form.items[idx]?.quantity || 1;
+    setForm((prev) => {
+      const items = [...prev.items];
+      items[idx] = {
+        productId: prod.id,
+        productName: prod.productName,
+        sku: prod.sku,
+        productImage: prod.productImage,
+        quantity,
+        purchasePrice: prod.price,
+        discount: 0,
+        taxPercent: 0,
+        totalCost: prod.price * quantity,
+      };
+      return { ...prev, items };
+    });
+    setFilteredProducts([]);
+  };
+
+  const addItem = () => {
+    setForm((p) => ({
       ...p,
-      productRows: p.productRows.map(r =>
-        r.id === rowId
-          ? { ...r, productId: prod.id, productName: prod.productName, sku: prod.sku, price, unit: prod.unit, total }
-          : r
-      ),
+      items: [
+        ...p.items,
+        {
+          productId: "",
+          productName: "",
+          sku: "",
+          quantity: 1,
+          purchasePrice: 0,
+          discount: 0,
+          taxPercent: 0,
+          totalCost: 0,
+        },
+      ],
     }));
-    setFilteredProducts(allProducts);
-    console.log("[Quotation] Product selected (row", rowId, "):", { product: prod.productName, price, qty, total });
   };
 
-  const addProductRow = () => {
-    const newId = form.productRows.length ? Math.max(...form.productRows.map(r => r.id)) + 1 : 1;
-    setForm(p => ({
-      ...p,
-      productRows: [...p.productRows, { id: newId, productId: 0, productName: "", sku: "", price: 0, quantity: 1, unit: "", total: 0 }],
-    }));
-    console.log("[Quotation] Added product row:", newId);
+  const removeItem = (idx: number) => {
+    setForm((p) => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
   };
 
-  const removeProductRow = (rowId: number) => {
-    setForm(p => ({ ...p, productRows: p.productRows.filter(r => r.id !== rowId) }));
-    console.log("[Quotation] Removed product row:", rowId);
+  const updateItem = (
+    idx: number,
+    field: "quantity" | "purchasePrice" | "discount" | "taxPercent",
+    value: number
+  ) => {
+    setForm((prev) => {
+      const items = [...prev.items];
+      items[idx] = { ...items[idx], [field]: value };
+      items[idx] = recalculateItem(items[idx]);
+      return { ...prev, items };
+    });
   };
 
-  const handleQuantityChange = (rowId: number, qty: number) => {
-    setForm(p => ({
-      ...p,
-      productRows: p.productRows.map(r =>
-        r.id === rowId ? { ...r, quantity: qty < 1 ? 1 : qty, total: r.price * (qty < 1 ? 1 : qty) } : r
-      ),
-    }));
-    console.log("[Quotation] Quantity changed (row", rowId, "):", qty);
-  };
+  const totals = useMemo(() => {
+    // Sum latest item totals (already discount- and tax-adjusted)
+    const subTotal = form.items.reduce((sum, item) => {
+      const recalculated = recalculateItem(item);
+      return sum + recalculated.totalCost;
+    }, 0);
 
-  /* ---------- calculations ---------- */
-  const subTotal = useMemo(() => {
-    const total = form.productRows.reduce((s, r) => s + r.price * r.quantity, 0);
-    console.log("[Quotation] subTotal:", total.toFixed(2));
-    return total;
-  }, [form.productRows]);
+    // Discount is percentage (%)
+    const discountPercent = Number(form.discount) || 0;
+    const discountAmount = subTotal * (discountPercent / 100);
 
-  const discountAmt = (subTotal * parseFloat(form.discount || "0")) / 100;
-  const taxable = subTotal - discountAmt;
-  const taxAmt = (taxable * parseFloat(form.orderTax || "0")) / 100;
-  const grandTotal = taxable + taxAmt + parseFloat(form.shipping || "0");
+    // Order tax is percentage (%)
+    const taxPercent = Number(form.orderTax) || 0;
+    const taxAmount = subTotal * (taxPercent / 100);
 
-  useMemo(() => {
-    console.log("[Quotation] Calculations:", { subTotal, discountAmt, taxable, taxAmt, grandTotal });
-  }, [subTotal, form.discount, form.orderTax, form.shipping]);
+    const shipping = Number(form.shipping) || 0;
 
-  /* ---------- form submit ---------- */
+    const grand = subTotal - discountAmount + taxAmount + shipping;
+
+    return {
+      subTotal: Number(subTotal.toFixed(2)),
+      discountAmount: Number(discountAmount.toFixed(2)),
+      taxAmount: Number(taxAmount.toFixed(2)),
+      shipping,
+      grand: Number(grand.toFixed(2)),
+    };
+  }, [form.items, form.orderTax, form.discount, form.shipping]);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[Quotation] handleFormSubmit", { formMode, form });
-
-    if (!form.customerId) {
-      alert("Please select a customer.");
-      console.warn("[Quotation] Validation failed: customer missing");
+    if (!form.customerId || form.items.some((i) => !i.productId)) {
+      alert("Please fill all required fields.");
       return;
     }
-    if (form.productRows.some(r => !r.productId)) {
-      alert("Please select a product for all rows.");
-      console.warn("[Quotation] Validation failed: product missing");
-      return;
-    }
-
-    const productName = form.productRows.map(r => r.productName).join(", ");
-    const productId = form.productRows[0]?.productId.toString() || "";
 
     const newQuotation: Quotation = {
-      id: form.id ?? (quotations.length ? Math.max(...quotations.map(q => q.id)) + 1 : 1),
-      productId,
-      productName,
-      customerName: form.customerName,
+      reference: form.reference,
+      date: form.date,
       customerId: form.customerId,
-      status: formMode === "add" ? statusSent : (form.status ?? statusSent),
-      Total: grandTotal.toFixed(2),
+      customerName: form.customerName,
+      status: form.status,
+      total: totals.grand,
+      items: form.items,
+      summary: {
+        orderTax: Number(form.orderTax),
+        discount: Number(form.discount),
+        shipping: Number(form.shipping),
+        grandTotal: totals.grand,
+      },
       description: form.description,
     };
 
     if (formMode === "add") {
-      setQuotations(p => [newQuotation, ...p]);
-      const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
-      setCurrentPage(totalPages);
-      console.log("[Quotation] Added new quotation:", newQuotation);
-    } else if (formMode === "edit" && form.id !== undefined) {
-      setQuotations(p =>
-        p.map(q =>
-          q.id === form.id
-            ? { ...q, productId, productName, customerName: form.customerName, customerId: form.customerId, Total: grandTotal.toFixed(2), description: form.description }
-            : q
-        )
+      setQuotations((p) => [newQuotation, ...p]);
+    } else {
+      setQuotations((p) =>
+        p.map((q) => (q.reference === form.reference ? newQuotation : q))
       );
-      console.log("[Quotation] Updated quotation ID:", form.id);
     }
     setFormMode(null);
   };
 
-  /* ---------- other handlers ---------- */
-  const handleDelete = (id: number) => {
-    if (window.confirm("Delete this quotation?")) {
-      setQuotations(p => p.filter(q => q.id !== id));
-      const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
-      if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
-      else if (totalPages === 0) setCurrentPage(1);
-      console.log("[Quotation] Deleted quotation ID:", id);
-    }
-  };
-
-  const handleClear = () => {
-    console.log("[Quotation] handleClear - resetting filters");
-    loadData();
-    setSearch("");
-    setSelectedCustomer("All");
-    setSelectedStatus("All");
-    setSelectedSort("Recently Added");
-    setCurrentPage(1);
-  };
-
-  const handleReport = () => {
-    console.log("[Quotation] handleReport - generating report");
-    alert("Quotation Report:\n\n" + JSON.stringify(quotations, null, 2));
-  };
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    const total = Math.ceil(filteredData.length / itemsPerPage);
-    if (page >= 1 && page <= total && page !== currentPage) {
-      setCurrentPage(page);
-      console.log("[Quotation] Page changed:", { from: currentPage, to: page, total });
-    }
-  };
-
-  /* ---------- table columns ---------- */
+  /* Table Columns */
   const columns: Column[] = [
-    { key: "index", label: "#", render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1, align: "center", className: "w-12" },
-    { key: "productName", label: "Product Name" },
-    { key: "customerName", label: "Customer Name" },
+    { key: "index", label: "#", render: (_, __, i) => (currentPage - 1) * itemsPerPage + (i ?? 0) + 1, align: "center" },
+    { key: "reference", label: "Reference" },
+    { key: "date", label: "Date", render: (v) => formatDate(v, "DD MMM YYYY") },
+    { key: "customerName", label: "Customer" },
     { key: "status", label: "Status", render: renderStatusBadge, align: "center" },
-    { key: "Total", label: "Total", render: v => `$${Number(v).toFixed(2)}`, align: "right" },
-    { key: "description", label: "Description", render: (v: string | undefined) => v || "-", className: "max-w-xs truncate" },
+    { key: "total", label: "Total", render: (v) => `₹${Number(v).toFixed(2)}`, align: "right" },
   ];
 
-  /* ---------- row actions ---------- */
   const rowActions = (row: Quotation) => (
     <>
-      <button
-        onClick={() => handleEdit(row)}
-        aria-label={`Edit quotation ${row.id || row.id}`}
-        className="text-gray-700 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 transition-colors"
-        title="Edit"
-      >
-        <i className="fa fa-edit" aria-hidden="true"></i>
-        <span className="sr-only">Edit quotation</span>
+      <button type="button" onClick={() => handleEdit(row)} className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1 transition-all">
+        <i className="fa fa-edit"></i>
       </button>
-
-      <button
-        onClick={() => handleDelete(row.id)}
-        aria-label={`Delete quotation ${row.id || row.id}`}
-        className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 transition-colors"
-        title="Delete"
-      >
-        <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
-        <span className="sr-only">Delete quotation</span>
+      <button type="button" onClick={() => handleDelete(row.reference)} className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2 transition-all">
+        <i className="fa fa-trash-can"></i>
       </button>
     </>
   );
 
-  /* ---------- custom filters ---------- */
   const customFilters = () => (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
-      {/* Left: Search Input */}
-      <div className="w-full md:w-auto md:max-w-md">
-        <SearchInput
-          value={search}
-          placeholder="Search by Product, Customer, or Description..."
-          onSearch={(query) => {
-            setSearch(query);
-            setCurrentPage(1);
-            console.log("[Quotation] Search updated:", query);
-          }}
-          className="w-full"
-        />
-      </div>
-
-      {/* Right: Filter Dropdowns */}
-      <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
-        <select
-          value={selectedCustomer}
-          onChange={(e) => {
-            setSelectedCustomer(e.target.value);
-            console.log("[Quotation] Customer filter:", e.target.value);
-          }}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
-        >
-          {customerOptions.map(c => <option key={c} value={c}>{c}</option>)}
+    <div className="flex flex-col md:flex-row gap-4 justify-between">
+      <SearchInput value={search} onSearch={setSearch} placeholder="Search reference or customer..." />
+      <div className="flex gap-2">
+        <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="border rounded px-3 py-2">
+          {customerOptions.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
         </select>
-
-        <select
-          value={selectedStatus}
-          onChange={(e) => {
-            setSelectedStatus(e.target.value as any);
-            console.log("[Quotation] Status filter:", e.target.value);
-          }}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
-        >
+        <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value as any)} className="border rounded px-3 py-2">
           <option>All</option>
-          {QUOTATION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-
-        <select
-          value={selectedSort}
-          onChange={(e) => {
-            setSelectedSort(e.target.value as any);
-            console.log("[Quotation] Sort changed:", e.target.value);
-          }}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
-        >
-          {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          {QUOTATION_STATUSES.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
       </div>
     </div>
   );
 
-  /* ---------- MODAL FORM – NO FOOTER BUTTONS ---------- */
   const modalForm = () => (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       {/* Header */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Customer Name <span className="text-red-600">*</span>
-          </label>
-          <AutoCompleteTextBox
+          <label>Customer *</label>
+          <CustomerAutoComplete
             value={form.customerName}
             onSearch={handleCustomerSearch}
             onSelect={handleCustomerSelect}
-            items={filteredCustomers.map(c => ({ id: c.id, display: c.name }))}
-            placeholder="Select"
+            items={
+              formMode === "edit" && form.customerId
+                ? [
+                  ...filteredCustomers.map((c) => ({
+                    id: c.id,
+                    display: c.name,
+                  })),
+                  ...allCustomers
+                    .filter((c) => c.id === form.customerId)
+                    .map((c) => ({
+                      id: c.id,
+                      display: c.name,
+                    })),
+                ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+                : filteredCustomers.map((c) => ({
+                  id: c.id,
+                  display: c.name,
+                }))
+            }
+            placeholder="Search customer..."
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Date <span className="text-red-600">*</span>
-          </label>
-          <input
-            type="date"
-            value={form.quotationDate}
-            onChange={e => setForm(p => ({ ...p, quotationDate: e.target.value }))}
-            required
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <label>Date *</label>
+          <input type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} required className="w-full border rounded px-3 py-2" />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Reference <span className="text-red-600">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.reference}
-            onChange={e => setForm(p => ({ ...p, reference: e.target.value }))}
-            required
-            placeholder="Reference"
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <label>Reference</label>
+          <input type="text" value={form.reference} readOnly className="w-full border rounded px-3 py-2 bg-gray-100" />
         </div>
       </div>
 
-      {/* Product Autocomplete */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-1">
-          Product <span className="text-red-600">*</span>
-        </label>
-        <AutoCompleteTextBox
-          value={form.productRows[0]?.productName ?? ""}
-          onSearch={q => handleProductSearch(q, form.productRows[0]?.id ?? 1)}
-          onSelect={sel => handleProductSelect(form.productRows[0]?.id ?? 1, sel as ProductOption)}
-          items={filteredProducts.map(p => ({
-            id: p.id,
-            display: p.productName,
-            extra: { SKU: p.sku, Price: `$${p.price}` },
-          }))}
-          placeholder="Please type product code and select"
-        />
-      </div>
-
-      {/* Product Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      {/* Products Table */}
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full border text-sm">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purchase Price($)</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount($)</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax(%)</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax Amount($)</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost($)</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cost(%)</th>
-              <th className="px-4 py-2"></th>
+              <th className="px-3 py-2 text-left w-80">Product</th>
+              <th className="px-3 py-2 text-center w-16">Qty</th>
+              <th className="px-3 py-2 text-right w-24">Price(₹)</th>
+              <th className="px-3 py-2 text-right w-24">Discount(%)</th>
+              <th className="px-3 py-2 text-right w-20">Tax(%)</th>
+              <th className="px-3 py-2 text-right w-24">Tax Amt(₹)</th>
+              <th className="px-3 py-2 text-right w-28">Total(₹)</th>
+              <th className="w-10"></th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {form.productRows.map(row => {
-              const discountAmtRow = (row.price * row.quantity * parseFloat(form.discount || "0")) / 100;
-              const taxAmtRow = ((row.price * row.quantity - discountAmtRow) * parseFloat(form.orderTax || "0")) / 100;
-              const unitCost = row.price;
-              const totalCost = row.price * row.quantity - discountAmtRow + taxAmtRow;
+
+          <tbody>
+            {form.items.map((item, idx) => {
+              const qty = item.quantity || 0;
+              const price = item.purchasePrice || 0;
+              const discount = item.discount || 0;
+              const taxPercent = item.taxPercent || 0;
+
+              const discountAmount = price * (discount / 100);
+              const priceAfterDiscount = price - discountAmount;
+
+              const taxableAmount = priceAfterDiscount * qty;
+              const taxAmount = taxableAmount * (taxPercent / 100);
+
+              const totalCost = taxableAmount + taxAmount;
+              const unitCost = priceAfterDiscount + (taxAmount / (qty || 1));
 
               return (
-                <tr key={row.id}>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">{row.productName}</td>
-                  <td className="px-4 py-2">
+                <tr key={idx} className="border-t hover:bg-gray-50">
+                  <td className="px-2 py-1">
+                    <ProductAutoComplete
+                      value={item.productName}
+                      onSearch={(q) => handleProductSearch(q, idx)}
+                      onSelect={(sel) => handleProductSelect(idx, sel)}
+                      items={
+                        formMode === "edit" && item.productId
+                          ? [
+                            ...filteredProducts.map((p) => ({
+                              id: p.id,
+                              display: p.productName,
+                              extra: {
+                                SKU: p.sku,
+                                purchasePrice: `₹${Number(p.price).toFixed(2)}`
+                              }
+                            })),
+                            ...allProducts
+                              .filter((p) => p.id === item.productId)
+                              .map((p) => ({
+                                id: p.id,
+                                display: p.productName,
+                                extra: {
+                                  SKU: p.sku,
+                                  purchasePrice: `₹${Number(p.price).toFixed(2)}`
+                                }
+                              })),
+                          ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+                          : filteredProducts.map((p) => ({
+                            id: p.id,
+                            display: p.productName,
+                            extra: {
+                              SKU: p.sku,
+                              purchasePrice: `₹${Number(p.price).toFixed(2)}`
+                            }
+                          }))
+                      }
+                      placeholder="Search product..."
+                      className="w-60"
+                    />
+                  </td>
+
+                  <td className="text-center px-2 py-1">
                     <input
                       type="number"
                       min="1"
-                      value={row.quantity}
-                      onChange={e => handleQuantityChange(row.id, Number(e.target.value))}
-                      className="w-20 border border-input rounded px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={qty}
+                      onChange={(e) => updateItem(idx, "quantity", Number(e.target.value) || 1)}
+                      className="border rounded px-1.5 py-1 w-14 text-center"
                     />
                   </td>
-                  <td className="px-4 py-2 text-sm text-right">{row.price.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-sm text-right">{discountAmtRow.toFixed(2)}</td>
-                  <td className="px-4 py-2">
+
+                  <td className="text-center px-2 py-1">
                     <input
                       type="number"
-                      min="0"
-                      max="100"
-                      value={form.orderTax}
-                      onChange={e => setForm(p => ({ ...p, orderTax: e.target.value }))}
-                      className="w-16 border border-input rounded px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => updateItem(idx, "purchasePrice", Number(e.target.value))}
+                      className="border rounded px-1.5 py-1 w-16 text-right"
                     />
                   </td>
-                  <td className="px-4 py-2 text-sm text-right">{taxAmtRow.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-sm text-right">{unitCost.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-sm text-right">{totalCost.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-center">
-                    {form.productRows.length > 1 && (
+
+                  <td className="text-center px-2 py-1">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={discount}
+                      onChange={(e) => updateItem(idx, "discount", Number(e.target.value))}
+                      className="border rounded px-1.5 py-1 w-16 text-right text-red-600"
+                    />
+                  </td>
+
+                  <td className="text-right px-2 py-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={taxPercent}
+                      onChange={(e) =>
+                        updateItem(idx, "taxPercent", Number(e.target.value))
+                      }
+                      className="border rounded px-2 py-1 w-16 text-right"
+                    />
+                  </td>
+
+                  <td className="text-right px-3 py-2 text-gray-700">
+                    ₹{taxAmount.toFixed(2)}
+                  </td>
+
+                  <td className="text-right px-3 py-2 font-semibold text-blue-600">
+                    ₹{totalCost.toFixed(2)}
+                  </td>
+
+                  <td className="text-center px-3 py-2">
+                    {form.items.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeProductRow(row.id)}
-                        className="text-red-600 hover:text-red-800"
+                        onClick={() => removeItem(idx)}
+                        className="text-gray-700 hover:text-red-600"
                       >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
+                        <i className="fa fa-trash-can text-sm"></i>
                       </button>
                     )}
                   </td>
@@ -645,106 +600,66 @@ export default function Quotation() {
             })}
           </tbody>
         </table>
-
-        <button
-          type="button"
-          onClick={addProductRow}
-          className="mt-3 flex items-center gap-1 text-primary hover:text-primary/80 text-sm font-medium"
-        >
-          <i className="fa fa-plus-circle" aria-hidden="true"></i> Add Product
+        <button type="button" onClick={addItem} className="mt-4 text-blue-600 font-medium flex items-center gap-2">
+          <i className="fa fa-plus-circle"></i> Add Another Product
         </button>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Order Tax *</label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={form.orderTax}
-            onChange={e => setForm(p => ({ ...p, orderTax: e.target.value }))}
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+      {/* Summary */}
+      <div className="flex justify-end">
+        <div className="w-96 bg-gray-50 p-6 rounded-lg space-y-3 text-sm">
+          <div className="flex justify-between"><span>Subtotal:</span> <span>₹{totals.subTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Discount:</span> <span>-₹{totals.discountAmount.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Tax:</span> <span>₹{totals.taxAmount.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Shipping:</span> <span>₹{totals.shipping.toFixed(2)}</span></div>
+          <div className="flex justify-between font-bold text-xl border-t-2 border-gray-300 pt-3">
+            <span>Grand Total:</span> <span className="text-blue-600">₹{totals.grand.toFixed(2)}</span>
+          </div>
         </div>
+      </div>
 
+      {/* Bottom Fields */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div><label>Order Tax</label><input type="number" value={form.orderTax} onChange={(e) => setForm((p) => ({ ...p, orderTax: e.target.value }))} className="w-full border rounded px-3 py-2" /></div>
+        <div><label>Discount</label><input type="number" value={form.discount} onChange={(e) => setForm((p) => ({ ...p, discount: e.target.value }))} className="w-full border rounded px-3 py-2" /></div>
+        <div><label>Shipping</label><input type="number" value={form.shipping} onChange={(e) => setForm((p) => ({ ...p, shipping: e.target.value }))} className="w-full border rounded px-3 py-2" /></div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Discount *</label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={form.discount}
-            onChange={e => setForm(p => ({ ...p, discount: e.target.value }))}
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Shipping *</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={form.shipping}
-            onChange={e => setForm(p => ({ ...p, shipping: e.target.value }))}
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Status *</label>
-          <select
-            value={form.status ?? statusSent}
-            onChange={e => setForm(p => ({ ...p, status: e.target.value as QuotationStatus }))}
-            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            {QUOTATION_STATUSES.map(s => (
-              <option key={s} value={s}>{s}</option>
+          <label>Status</label>
+          <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as any }))} className="w-full border rounded px-3 py-2">
+            {QUOTATION_STATUSES.map((s) => (
+              <option key={s}>{s}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1">Description</label>
+        <label>Description</label>
         <textarea
-          rows={4}
           value={form.description}
-          onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-          className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+          rows={4}
+          className="w-full border rounded px-3 py-2"
           placeholder="Enter description..."
         />
       </div>
     </form>
   );
 
-  /* ---------- render ---------- */
-  if (loading) {
-    console.log("[Quotation] Rendering loading state");
-    return <div className="flex items-center justify-center min-h-screen"><i className="fa fa-spinner fa-spin text-3xl text-primary" /></div>;
-  }
-  if (error) {
-    console.error("[Quotation] Rendering error state:", error);
-    return <div className="flex flex-col items-center justify-center min-h-screen text-red-600"><p>{error}</p><button onClick={loadData} className="mt-4 px-4 py-2 bg-primary text-white rounded">Retry</button></div>;
-  }
-
   return (
     <PageBase1
       title="Quotation"
-      description="Create and manage quotations"
-      icon="fa-solid fa-file-lines"
-      onAddClick={handleAddClick}
-      onRefresh={handleClear}
-      onReport={handleReport}
+      description="Manage quotations"
+      pageIcon="fa-light fa-file-invoice-dollar"
       search={search}
-      onSearchChange={handleSearchChange}
+      onSearchChange={setSearch}
+      onAddClick={handleAddClick}
+      onRefresh={() => window.location.reload()}
+      onReport={() => alert("Report generated!")}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       totalItems={filteredData.length}
-      onPageChange={handlePageChange}
+      onPageChange={setCurrentPage}
       onPageSizeChange={setItemsPerPage}
       tableColumns={columns}
       tableData={paginatedData}
@@ -754,7 +669,8 @@ export default function Quotation() {
       modalTitle={formMode === "add" ? "Add Quotation" : "Edit Quotation"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
-      customFilters={customFilters} loading={loading}
+      customFilters={customFilters}
+      loading={loading}
     />
   );
 }

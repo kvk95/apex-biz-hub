@@ -1,208 +1,548 @@
 {
   "status": {
     "code": "S",
-    "description": ""
+    "description": "Success"
   },
   "result": [
     {
-      "id": 1,
-      "productId": "1",
-      "productName": "Apple iPhone 14 Pro Max",
-      "customerName": "John Doe",
-      "customerId": "1",
+      "quotationId": "QT-2025-001",
+      "reference": "QT2025111201",
+      "date": "2025-11-12",
+      "customerId": "CUST401",
+      "customerName": "Arjun Venkatesh",
+      "customerImage": "/assets/images/avathar/m1.png",
+      "productName": "Coca Cola 330ml Can",
+      "productImage": "/assets/images/products/cocacola.png",
       "status": "Sent",
-      "Total": "550",
-      "description": "iPhone delivered to John Doe"
+      "total": 144.90,
+      "paid": 0.00,
+      "due": 144.90,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "quantity": 100,
+          "purchasePrice": 1.50,
+          "discount": 12.00,
+          "taxPercent": 5,
+          "taxAmount": 6.90,
+          "unitCost": 1.50,
+          "totalCost": 144.90
+        }
+      ],
+      "summary": {
+        "orderTax": 6.90,
+        "discount": 12.00,
+        "shipping": 0.00,
+        "grandTotal": 144.90
+      },
+      "description": "Beverage restock for store promotion"
     },
     {
-      "id": 2,
-      "productId": "3",
-      "productName": "Sony WH-1000XM4 Headphones",
-      "customerName": "Jane Smith",
-      "customerId": "2",
-      "status": "Pending",
-      "Total": "350",
-      "description": "Headphones order pending for Jane Smith"
+      "quotationId": "QT-2025-002",
+      "reference": "QT2025111002",
+      "date": "2025-11-10",
+      "customerId": "CUST402",
+      "customerName": "Priya Selvam",
+      "customerImage": "/assets/images/avathar/f1.png",
+      "productName": "A4 Printer Paper 500 Sheets",
+      "productImage": "/assets/images/products/paper.png",
+      "status": "Ordered",
+      "total": 42.91,
+      "paid": 42.91,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT013",
+          "productName": "A4 Printer Paper 500 Sheets",
+          "productImage": "/assets/images/products/paper.png",
+          "quantity": 10,
+          "purchasePrice": 4.79,
+          "discount": 7.19,
+          "taxPercent": 18,
+          "taxAmount": 7.30,
+          "unitCost": 4.79,
+          "totalCost": 42.91
+        }
+      ],
+      "summary": {
+        "orderTax": 7.30,
+        "discount": 7.19,
+        "shipping": 0.00,
+        "grandTotal": 42.91
+      },
+      "description": "Office stationery supply"
     },
     {
-      "id": 3,
-      "productId": "6",
-      "productName": "Logitech MX Master 3 Mouse",
-      "customerName": "Carlos Ruiz",
-      "customerId": "3",
+      "quotationId": "QT-2025-003",
+      "reference": "QT2025110803",
+      "date": "2025-11-08",
+      "customerId": "CUST403",
+      "customerName": "Karthik Rajan",
+      "customerImage": "/assets/images/avathar/m2.png",
+      "productName": "Amul Full Cream Milk 1L",
+      "productImage": "/assets/images/products/amul-milk.png",
+      "status": "Ordered",
+      "total": 650.00,
+      "paid": 650.00,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT004",
+          "productName": "Amul Full Cream Milk 1L",
+          "productImage": "/assets/images/products/amul-milk.png",
+          "quantity": 200,
+          "purchasePrice": 3.25,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "unitCost": 3.25,
+          "totalCost": 650.00
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 0.00,
+        "shipping": 0.00,
+        "grandTotal": 650.00
+      },
+      "description": "Daily dairy delivery"
+    },
+    {
+      "quotationId": "QT-2025-004",
+      "reference": "QT2025102804",
+      "date": "2025-10-28",
+      "customerId": "CUST404",
+      "customerName": "Meena Kumari",
+      "customerImage": "/assets/images/avathar/f2.png",
+      "productName": "Kwality Walls Vanilla Ice Cream 1L",
+      "productImage": "/assets/images/products/icecream.png",
       "status": "Sent",
-      "Total": "100",
-      "description": "Mouse shipped to Carlos Ruiz"
+      "total": 266.55,
+      "paid": 0.00,
+      "due": 266.55,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "productImage": "/assets/images/products/icecream.png",
+          "quantity": 35,
+          "purchasePrice": 7.49,
+          "discount": 35.00,
+          "taxPercent": 18,
+          "taxAmount": 39.55,
+          "unitCost": 7.49,
+          "totalCost": 266.55
+        }
+      ],
+      "summary": {
+        "orderTax": 39.55,
+        "discount": 35.00,
+        "shipping": 0.00,
+        "grandTotal": 266.55
+      },
+      "description": "Frozen stock for Diwali festival"
     },
     {
-      "id": 4,
-      "productId": "4",
-      "productName": "Apple MacBook Pro 16\"",
-      "customerName": "Anna Müller",
-      "customerId": "4",
-      "status": "Pending",
-      "Total": "2500",
-      "description": "MacBook Pro order pending for Anna Müller"
+      "quotationId": "QT-2025-005",
+      "reference": "QT2025101505",
+      "date": "2025-10-15",
+      "customerId": "CUST405",
+      "customerName": "Siva Shankar",
+      "customerImage": "/assets/images/avathar/m3.png",
+      "productName": "Pedigree Adult Dog Food 3kg",
+      "productImage": "/assets/images/products/pedigree.png",
+      "status": "Ordered",
+      "total": 1218.36,
+      "paid": 1218.36,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "productImage": "/assets/images/products/pedigree.png",
+          "quantity": 60,
+          "purchasePrice": 18.99,
+          "discount": 113.94,
+          "taxPercent": 18,
+          "taxAmount": 183.30,
+          "unitCost": 18.99,
+          "totalCost": 1218.36
+        }
+      ],
+      "summary": {
+        "orderTax": 183.30,
+        "discount": 113.94,
+        "shipping": 0.00,
+        "grandTotal": 1218.36
+      },
+      "description": "Pet store inventory replenishment"
     },
     {
-      "id": 5,
-      "productId": "7",
-      "productName": "Apple Watch Series 7",
-      "customerName": "Liu Wei",
-      "customerId": "5",
+      "quotationId": "QT-2025-006",
+      "reference": "QT2025110106",
+      "date": "2025-11-01",
+      "customerId": "CUST406",
+      "customerName": "Nithya Devi",
+      "customerImage": "/assets/images/avathar/f3.png",
+      "productName": "Tropicana Orange Juice 1L",
+      "productImage": "/assets/images/products/tropicana.png",
       "status": "Sent",
-      "Total": "400",
-      "description": "Apple Watch delivered to Liu Wei"
+      "total": 449.10,
+      "paid": 0.00,
+      "due": 449.10,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT002",
+          "productName": "Tropicana Orange Juice 1L",
+          "productImage": "/assets/images/products/tropicana.png",
+          "quantity": 90,
+          "purchasePrice": 4.99,
+          "discount": 45.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "unitCost": 4.99,
+          "totalCost": 449.10
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 45.00,
+        "shipping": 0.00,
+        "grandTotal": 449.10
+      },
+      "description": "Juice section restock"
     },
     {
-      "id": 6,
-      "productId": "8",
-      "productName": "Google Pixel 7 Pro",
-      "customerName": "Fatima Al Farsi",
-      "customerId": "6",
+      "quotationId": "QT-2025-007",
+      "reference": "QT2025111307",
+      "date": "2025-11-13",
+      "customerId": "CUST407",
+      "customerName": "Ramesh Kumar",
+      "customerImage": "/assets/images/avathar/m4.png",
+      "productName": "Dettol Antiseptic Liquid 500ml",
+      "productImage": "/assets/images/products/dettol.png",
       "status": "Pending",
-      "Total": "900",
-      "description": "Pixel 7 Pro order pending for Fatima Al Farsi"
+      "total": 500.84,
+      "paid": 0.00,
+      "due": 500.84,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT012",
+          "productName": "Dettol Antiseptic Liquid 500ml",
+          "productImage": "/assets/images/products/dettol.png",
+          "quantity": 70,
+          "purchasePrice": 6.99,
+          "discount": 70.00,
+          "taxPercent": 18,
+          "taxAmount": 75.54,
+          "unitCost": 6.99,
+          "totalCost": 500.84
+        }
+      ],
+      "summary": {
+        "orderTax": 75.54,
+        "discount": 70.00,
+        "shipping": 0.00,
+        "grandTotal": 500.84
+      },
+      "description": "Hospital hygiene supplies"
     },
     {
-      "id": 7,
-      "productId": "10",
-      "productName": "Microsoft Surface Laptop 5",
-      "customerName": "Mohamed Salah",
-      "customerId": "7",
+      "quotationId": "QT-2025-008",
+      "reference": "QT2025102008",
+      "date": "2025-10-20",
+      "customerId": "CUST408",
+      "customerName": "Divya Saravanan",
+      "customerImage": "/assets/images/avathar/f4.png",
+      "productName": "McCain Frozen French Fries 1kg",
+      "productImage": "/assets/images/products/mccain-fries.png",
+      "status": "Ordered",
+      "total": 405.40,
+      "paid": 405.40,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT009",
+          "productName": "McCain Frozen French Fries 1kg",
+          "productImage": "/assets/images/products/mccain-fries.png",
+          "quantity": 100,
+          "purchasePrice": 4.29,
+          "discount": 51.48,
+          "taxPercent": 5,
+          "taxAmount": 18.88,
+          "unitCost": 4.29,
+          "totalCost": 405.40
+        }
+      ],
+      "summary": {
+        "orderTax": 18.88,
+        "discount": 51.48,
+        "shipping": 0.00,
+        "grandTotal": 405.40
+      },
+      "description": "Restaurant kitchen supply"
+    },
+    {
+      "quotationId": "QT-2025-009",
+      "reference": "QT2025091009",
+      "date": "2025-09-10",
+      "customerId": "CUST409",
+      "customerName": "Lakshmi Narayanan",
+      "customerImage": "/assets/images/avathar/f5.png",
+      "productName": "Britannia Cheese Cubes 200g",
+      "productImage": "/assets/images/products/britannia-cheese.png",
+      "status": "Expired",
+      "total": 359.40,
+      "paid": 0.00,
+      "due": 359.40,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT005",
+          "productName": "Britannia Cheese Cubes 200g",
+          "productImage": "/assets/images/products/britannia-cheese.png",
+          "quantity": 60,
+          "purchasePrice": 5.99,
+          "discount": 35.94,
+          "taxPercent": 12,
+          "taxAmount": 39.38,
+          "unitCost": 5.99,
+          "totalCost": 359.40
+        }
+      ],
+      "summary": {
+        "orderTax": 39.38,
+        "discount": 35.94,
+        "shipping": 0.00,
+        "grandTotal": 359.40
+      },
+      "description": "Bakery cheese order – expired"
+    },
+    {
+      "quotationId": "QT-2025-010",
+      "reference": "QT2025110510",
+      "date": "2025-11-05",
+      "customerId": "CUST410",
+      "customerName": "Saravanan Muthu",
+      "customerImage": "/assets/images/avathar/m5.png",
+      "productName": "Fresh Red Apples (1kg)",
+      "productImage": "/assets/images/products/apples.png",
       "status": "Sent",
-      "Total": "1600",
-      "description": "Surface Laptop shipped to Mohamed Salah"
+      "total": 239.40,
+      "paid": 0.00,
+      "due": 239.40,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT010",
+          "productName": "Fresh Red Apples (1kg)",
+          "productImage": "/assets/images/products/apples.png",
+          "quantity": 60,
+          "purchasePrice": 3.99,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "taxAmount": 0.00,
+          "unitCost": 3.99,
+          "totalCost": 239.40
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 0.00,
+        "shipping": 0.00,
+        "grandTotal": 239.40
+      },
+      "description": "Weekly fruit delivery"
     },
     {
-      "id": 8,
-      "productId": "11",
-      "productName": "Samsung Galaxy Watch 5",
-      "customerName": "Sofia Rossi",
-      "customerId": "8",
-      "status": "Pending",
-      "Total": "350",
-      "description": "Galaxy Watch order pending for Sofia Rossi"
+      "quotationId": "QT-2025-011",
+      "reference": "QT2025100511",
+      "date": "2025-10-05",
+      "customerId": "CUST411",
+      "customerName": "Anitha Raj",
+      "customerImage": "/assets/images/avathar/f6.png",
+      "productName": "Chocolate Cake 500g",
+      "productImage": "/assets/images/products/chocolate-cake.png",
+      "status": "Ordered",
+      "total": 200.00,
+      "paid": 200.00,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "productImage": "/assets/images/products/chocolate-cake.png",
+          "quantity": 15,
+          "purchasePrice": 12.99,
+          "discount": 9.74,
+          "taxPercent": 18,
+          "taxAmount": 22.00,
+          "unitCost": 12.99,
+          "totalCost": 200.00
+        }
+      ],
+      "summary": {
+        "orderTax": 22.00,
+        "discount": 9.74,
+        "shipping": 0.00,
+        "grandTotal": 200.00
+      },
+      "description": "Birthday cake order"
     },
     {
-      "id": 9,
-      "productId": "12",
-      "productName": "Canon EOS R6 Camera",
-      "customerName": "Lucas Martin",
-      "customerId": "9",
+      "quotationId": "QT-2025-012",
+      "reference": "QT2025111112",
+      "date": "2025-11-11",
+      "customerId": "CUST412",
+      "customerName": "Vignesh Kumar",
+      "customerImage": "/assets/images/avathar/m6.png",
+      "productName": "Red Bull Energy Drink 250ml",
+      "productImage": "/assets/images/products/redbull.png",
       "status": "Sent",
-      "Total": "2500",
-      "description": "Canon camera delivered to Lucas Martin"
+      "total": 850.30,
+      "paid": 0.00,
+      "due": 850.30,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT015",
+          "productName": "Red Bull Energy Drink 250ml",
+          "productImage": "/assets/images/products/redbull.png",
+          "quantity": 400,
+          "purchasePrice": 2.99,
+          "discount": 398.68,
+          "taxPercent": 18,
+          "taxAmount": 51.30,
+          "unitCost": 2.99,
+          "totalCost": 850.30
+        }
+      ],
+      "summary": {
+        "orderTax": 51.30,
+        "discount": 398.68,
+        "shipping": 0.00,
+        "grandTotal": 850.30
+      },
+      "description": "Event energy drink sponsorship"
     },
     {
-      "id": 10,
-      "productId": "14",
-      "productName": "Sony Alpha a7 IV",
-      "customerName": "Emma Johnson",
-      "customerId": "10",
-      "status": "Pending",
-      "Total": "2800",
-      "description": "Sony Alpha order pending for Emma Johnson"
+      "quotationId": "QT-2025-013",
+      "reference": "QT2025101213",
+      "date": "2025-10-12",
+      "customerId": "CUST413",
+      "customerName": "Gayathri Senthil",
+      "customerImage": "/assets/images/avathar/f7.png",
+      "productName": "Dove Beauty Cream Bar 100g",
+      "productImage": "/assets/images/products/dove-soap.png",
+      "status": "Ordered",
+      "total": 938.30,
+      "paid": 938.30,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "productImage": "/assets/images/products/dove-soap.png",
+          "quantity": 400,
+          "purchasePrice": 2.49,
+          "discount": 199.20,
+          "taxPercent": 18,
+          "taxAmount": 143.50,
+          "unitCost": 2.49,
+          "totalCost": 938.30
+        }
+      ],
+      "summary": {
+        "orderTax": 143.50,
+        "discount": 199.20,
+        "shipping": 0.00,
+        "grandTotal": 938.30
+      },
+      "description": "Beauty section quarterly stock"
     },
     {
-      "id": 11,
-      "productId": "15",
-      "productName": "JBL Flip 6 Speaker",
-      "customerName": "Oliver Brown",
-      "customerId": "11",
-      "status": "Sent",
-      "Total": "120",
-      "description": "JBL speaker shipped to Oliver Brown"
+      "quotationId": "QT-2025-014",
+      "reference": "QT2025110214",
+      "date": "2025-11-02",
+      "customerId": "CUST414",
+      "customerName": "Balaji Ram",
+      "customerImage": "/assets/images/avathar/m7.png",
+      "productName": "Lay's Classic Potato Chips 150g",
+      "productImage": "/assets/images/products/lays.png",
+      "status": "Rejected",
+      "total": 279.40,
+      "paid": 0.00,
+      "due": 279.40,
+      "paymentStatus": "Pending",
+      "items": [
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "quantity": 100,
+          "purchasePrice": 2.79,
+          "discount": 41.85,
+          "taxPercent": 18,
+          "taxAmount": 42.25,
+          "unitCost": 2.79,
+          "totalCost": 279.40
+        }
+      ],
+      "summary": {
+        "orderTax": 42.25,
+        "discount": 41.85,
+        "shipping": 0.00,
+        "grandTotal": 279.40
+      },
+      "description": "Snack order – customer chose competitor"
     },
     {
-      "id": 12,
-      "productId": "2",
-      "productName": "Samsung Galaxy S22 Ultra",
-      "customerName": "Isabella Garcia",
-      "customerId": "12",
-      "status": "Pending",
-      "Total": "1100",
-      "description": "Galaxy S22 Ultra order pending for Isabella Garcia"
-    },
-    {
-      "id": 13,
-      "productId": "5",
-      "productName": "Dell XPS 13",
-      "customerName": "John Doe",
-      "customerId": "1",
-      "status": "Sent",
-      "Total": "1400",
-      "description": "Dell laptop delivered to John Doe"
-    },
-    {
-      "id": 14,
-      "productId": "9",
-      "productName": "Bose QuietComfort Earbuds",
-      "customerName": "Jane Smith",
-      "customerId": "2",
-      "status": "Pending",
-      "Total": "280",
-      "description": "Bose earbuds order pending for Jane Smith"
-    },
-    {
-      "id": 15,
-      "productId": "13",
-      "productName": "Nikon Z7 II Camera",
-      "customerName": "Carlos Ruiz",
-      "customerId": "3",
-      "status": "Sent",
-      "Total": "3000",
-      "description": "Nikon camera shipped to Carlos Ruiz"
-    },
-    {
-      "id": 16,
-      "productId": "1",
-      "productName": "Apple iPhone 14 Pro Max",
-      "customerName": "Anna Müller",
-      "customerId": "4",
-      "status": "Pending",
-      "Total": "1200",
-      "description": "iPhone order pending for Anna Müller"
-    },
-    {
-      "id": 17,
-      "productId": "3",
-      "productName": "Sony WH-1000XM4 Headphones",
-      "customerName": "Liu Wei",
-      "customerId": "5",
-      "status": "Sent",
-      "Total": "350",
-      "description": "Headphones delivered to Liu Wei"
-    },
-    {
-      "id": 18,
-      "productId": "6",
-      "productName": "Logitech MX Master 3 Mouse",
-      "customerName": "Fatima Al Farsi",
-      "customerId": "6",
-      "status": "Pending",
-      "Total": "100",
-      "description": "Mouse order pending for Fatima Al Farsi"
-    },
-    {
-      "id": 19,
-      "productId": "4",
-      "productName": "Apple MacBook Pro 16\"",
-      "customerName": "Mohamed Salah",
-      "customerId": "7",
-      "status": "Sent",
-      "Total": "2500",
-      "description": "MacBook Pro delivered to Mohamed Salah"
-    },
-    {
-      "id": 20,
-      "productId": "7",
-      "productName": "Apple Watch Series 7",
-      "customerName": "Sofia Rossi",
-      "customerId": "8",
-      "status": "Pending",
-      "Total": "400",
-      "description": "Apple Watch order pending for Sofia Rossi"
+      "quotationId": "QT-2025-015",
+      "reference": "QT2025081515",
+      "date": "2025-08-15",
+      "customerId": "CUST415",
+      "customerName": "Indira Krishnan",
+      "customerImage": "/assets/images/avathar/f8.png",
+      "productName": "Coca Cola 330ml Can",
+      "productImage": "/assets/images/products/cocacola.png",
+      "status": "Ordered",
+      "total": 1449.00,
+      "paid": 1449.00,
+      "due": 0.00,
+      "paymentStatus": "Paid",
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "quantity": 1000,
+          "purchasePrice": 1.50,
+          "discount": 120.00,
+          "taxPercent": 5,
+          "taxAmount": 69.00,
+          "unitCost": 1.50,
+          "totalCost": 1449.00
+        }
+      ],
+      "summary": {
+        "orderTax": 69.00,
+        "discount": 120.00,
+        "shipping": 0.00,
+        "grandTotal": 1449.00
+      },
+      "description": "Festival bulk beverage order"
     }
   ]
 }
