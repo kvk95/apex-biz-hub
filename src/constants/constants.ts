@@ -385,3 +385,46 @@ export const DURATION_TYPES = ["Year", "Month"] as const;
 export const USER_ROLE_STATUSES = ["Active", "Inactive"] as const;
 
 export const LANGUAGES = ["English", "Tamil"] as const;
+
+export const TIME_ZONES = [
+  "UTC-12:00",
+  "UTC-11:00",
+  "UTC-10:00",
+  "UTC-09:00",
+  "UTC-08:00",
+  "UTC-07:00",
+  "UTC-06:00",
+  "UTC-05:30",
+  "UTC-05:00",
+  "UTC-04:00",
+  "UTC-03:00",
+  "UTC-02:00",
+  "UTC-01:00",
+  "UTC+00:00",
+  "UTC+01:00",
+  "UTC+02:00",
+  "UTC+03:00",
+  "UTC+03:30",
+  "UTC+04:00",
+  "UTC+04:30",
+  "UTC+05:00",
+  "UTC+05:30",
+  "UTC+05:45",
+  "UTC+06:00",
+  "UTC+06:30",
+  "UTC+07:00",
+  "UTC+08:00",
+  "UTC+09:00",
+  "UTC+09:30",
+  "UTC+10:00",
+  "UTC+11:00",
+  "UTC+12:00",
+] as const;
+
+export const DATE_FORMATS = [
+  "01 Jan 2025",
+  "Jan 01, 2025",
+  "2025-01-01",
+  "01/01/2025",
+  "01-01-2025",
+] as const;
