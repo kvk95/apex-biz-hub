@@ -200,7 +200,7 @@ export const CURRENCIES = ["USD", "INR", "EUR"] as const;
 
 export const COUNTRIES = ["India"] as const;
 
-export type Country = typeof COUNTRIES[number]; // "India"
+export type Country = (typeof COUNTRIES)[number]; // "India"
 
 export const STATES = {
   AP: "Andhra Pradesh",
@@ -383,3 +383,5 @@ export const EXPENSE_HEADS_STATUSES = ["Pending", "Approved"] as const;
 export const DURATION_TYPES = ["Year", "Month"] as const;
 
 export const USER_ROLE_STATUSES = ["Active", "Inactive"] as const;
+
+export const LANGUAGES = ["English", "Tamil"] as const;
