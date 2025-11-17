@@ -1,228 +1,563 @@
 {
   "status": {
     "code": "S",
-    "description": ""
+    "description": "Success"
   },
   "result": [
     {
-      "id": 1,
-      "productName": "Apple iPhone 14 Pro Max",
-      "invoiceNo": "INV001",
-      "date": "2025-10-01",
-      "customer": "John Doe",
-      "totalAmount": 1200,
-      "paidAmount": 1000,
-      "dueAmount": 200,
-      "status": "Partial"
+      "purchaseId": "PO-001",
+      "reference": "REF2025111201",
+      "date": "2025-11-12",
+      "customerId": "CUST301",
+      "customerName": "Arjun Venkatesh",
+      "customerImage": "/assets/images/avathar/m1.png",
+      "productId": "PT001",
+      "productName": "Coca Cola 330ml Can",
+      "productImage": "/assets/images/products/cocacola.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 150.00,
+      "paid": 150.00,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "sku": "PT001",
+          "stock": 450,
+          "quantity": 100,
+          "netUnitPrice": 1.50,
+          "discount": 12.00,
+          "taxPercent": 5,
+          "subtotal": 144.90
+        }
+      ],
+      "summary": {
+        "orderTax": 6.90,
+        "discount": 12.00,
+        "shipping": 5.10,
+        "grandTotal": 144.90
+      },
+      "notes": "Urgent restock for store promotion."
     },
     {
-      "id": 2,
-      "productName": "Samsung Galaxy S22 Ultra",
-      "invoiceNo": "INV002",
-      "date": "2025-10-02",
-      "customer": "Jane Smith",
-      "totalAmount": 1100,
-      "paidAmount": 1100,
-      "dueAmount": 0,
-      "status": "Paid"
+      "purchaseId": "PO-002",
+      "reference": "REF2025111002",
+      "date": "2025-11-10",
+      "customerId": "CUST302",
+      "customerName": "Priya Selvam",
+      "customerImage": "/assets/images/avathar/f1.png",
+      "productId": "PT013",
+      "productName": "A4 Printer Paper 500 Sheets",
+      "productImage": "/assets/images/products/paper.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 48.00,
+      "paid": 48.00,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT013",
+          "productName": "A4 Printer Paper 500 Sheets",
+          "productImage": "/assets/images/products/paper.png",
+          "sku": "PT013",
+          "stock": 250,
+          "quantity": 10,
+          "netUnitPrice": 4.79,
+          "discount": 7.19,
+          "taxPercent": 18,
+          "subtotal": 42.91
+        }
+      ],
+      "summary": {
+        "orderTax": 7.30,
+        "discount": 7.19,
+        "shipping": 0.00,
+        "grandTotal": 48.00
+      },
+      "notes": "Office consumables order."
     },
     {
-      "id": 3,
-      "productName": "Sony WH-1000XM4 Headphones",
-      "invoiceNo": "INV003",
-      "date": "2025-10-03",
-      "customer": "Carlos Ruiz",
-      "totalAmount": 350,
-      "paidAmount": 0,
-      "dueAmount": 350,
-      "status": "Unpaid"
+      "purchaseId": "PO-003",
+      "reference": "REF2025110803",
+      "date": "2025-11-08",
+      "customerId": "CUST303",
+      "customerName": "Karthik Rajan",
+      "customerImage": "/assets/images/avathar/m2.png",
+      "productId": "PT004",
+      "productName": "Amul Full Cream Milk 1L",
+      "productImage": "/assets/images/products/amul-milk.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 650.00,
+      "paid": 650.00,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT004",
+          "productName": "Amul Full Cream Milk 1L",
+          "productImage": "/assets/images/products/amul-milk.png",
+          "sku": "PT004",
+          "stock": 200,
+          "quantity": 200,
+          "netUnitPrice": 3.25,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "subtotal": 650.00
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 0.00,
+        "shipping": 0.00,
+        "grandTotal": 650.00
+      },
+      "notes": "Daily dairy supply."
     },
     {
-      "id": 4,
-      "productName": "Apple MacBook Pro 16\"",
-      "invoiceNo": "INV004",
-      "date": "2025-10-04",
-      "customer": "Anna Müller",
-      "totalAmount": 2500,
-      "paidAmount": 2500,
-      "dueAmount": 0,
-      "status": "Paid"
+      "purchaseId": "PO-004",
+      "reference": "REF2025102804",
+      "date": "2025-10-28",
+      "customerId": "CUST304",
+      "customerName": "Meena Kumari",
+      "customerImage": "/assets/images/avathar/f2.png",
+      "productId": "PT008",
+      "productName": "Kwality Walls Vanilla Ice Cream 1L",
+      "productImage": "/assets/images/products/icecream.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 266.55,
+      "paid": 266.55,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT008",
+          "productName": "Kwality Walls Vanilla Ice Cream 1L",
+          "productImage": "/assets/images/products/icecream.png",
+          "sku": "PT008",
+          "stock": 85,
+          "quantity": 35,
+          "netUnitPrice": 7.49,
+          "discount": 35.00,
+          "taxPercent": 18,
+          "subtotal": 266.55
+        }
+      ],
+      "summary": {
+        "orderTax": 39.55,
+        "discount": 35.00,
+        "shipping": 0.00,
+        "grandTotal": 266.55
+      },
+      "notes": "Frozen stock for Diwali sales."
     },
     {
-      "id": 5,
-      "productName": "Logitech MX Master 3 Mouse",
-      "invoiceNo": "INV005",
-      "date": "2025-10-05",
-      "customer": "Liu Wei",
-      "totalAmount": 100,
-      "paidAmount": 50,
-      "dueAmount": 50,
-      "status": "Partial"
-    },
-    {
-      "id": 6,
-      "productName": "Apple Watch Series 7",
-      "invoiceNo": "INV006",
-      "date": "2025-10-06",
-      "customer": "Fatima Al Farsi",
-      "totalAmount": 400,
-      "paidAmount": 400,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 7,
-      "productName": "Google Pixel 7 Pro",
-      "invoiceNo": "INV007",
-      "date": "2025-10-07",
-      "customer": "Mohamed Salah",
-      "totalAmount": 900,
-      "paidAmount": 0,
-      "dueAmount": 900,
-      "status": "Unpaid"
-    },
-    {
-      "id": 8,
-      "productName": "Bose QuietComfort Earbuds",
-      "invoiceNo": "INV008",
-      "date": "2025-10-08",
-      "customer": "Sofia Rossi",
-      "totalAmount": 280,
-      "paidAmount": 280,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 9,
-      "productName": "Microsoft Surface Laptop 5",
-      "invoiceNo": "INV009",
-      "date": "2025-10-09",
-      "customer": "Lucas Martin",
-      "totalAmount": 1600,
-      "paidAmount": 800,
-      "dueAmount": 800,
-      "status": "Partial"
-    },
-    {
-      "id": 10,
-      "productName": "Samsung Galaxy Watch 5",
-      "invoiceNo": "INV010",
-      "date": "2025-10-10",
-      "customer": "Emma Johnson",
-      "totalAmount": 350,
-      "paidAmount": 350,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 11,
-      "productName": "Canon EOS R6 Camera",
-      "invoiceNo": "INV011",
-      "date": "2025-10-11",
-      "customer": "Oliver Brown",
-      "totalAmount": 2500,
-      "paidAmount": 2000,
-      "dueAmount": 500,
-      "status": "Partial"
-    },
-    {
-      "id": 12,
-      "productName": "Nikon Z7 II Camera",
-      "invoiceNo": "INV012",
-      "date": "2025-10-12",
-      "customer": "Isabella Garcia",
-      "totalAmount": 3000,
-      "paidAmount": 0,
-      "dueAmount": 3000,
-      "status": "Unpaid"
-    },
-    {
-      "id": 13,
-      "productName": "Sony Alpha a7 IV",
-      "invoiceNo": "INV013",
-      "date": "2025-10-13",
-      "customer": "John Doe",
-      "totalAmount": 2800,
-      "paidAmount": 2800,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 14,
-      "productName": "JBL Flip 6 Speaker",
-      "invoiceNo": "INV014",
-      "date": "2025-10-14",
-      "customer": "Jane Smith",
-      "totalAmount": 120,
-      "paidAmount": 120,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 15,
-      "productName": "Dell XPS 13",
-      "invoiceNo": "INV015",
+      "purchaseId": "PO-005",
+      "reference": "REF2025101505",
       "date": "2025-10-15",
-      "customer": "Carlos Ruiz",
-      "totalAmount": 1400,
-      "paidAmount": 700,
-      "dueAmount": 700,
-      "status": "Partial"
+      "customerId": "CUST305",
+      "customerName": "Siva Shankar",
+      "customerImage": "/assets/images/avathar/m3.png",
+      "productId": "PT014",
+      "productName": "Pedigree Adult Dog Food 3kg",
+      "productImage": "/assets/images/products/pedigree.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 1218.36,
+      "paid": 1218.36,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT014",
+          "productName": "Pedigree Adult Dog Food 3kg",
+          "productImage": "/assets/images/products/pedigree.png",
+          "sku": "PT014",
+          "stock": 90,
+          "quantity": 60,
+          "netUnitPrice": 18.99,
+          "discount": 113.94,
+          "taxPercent": 18,
+          "subtotal": 1218.36
+        }
+      ],
+      "summary": {
+        "orderTax": 183.30,
+        "discount": 113.94,
+        "shipping": 0.00,
+        "grandTotal": 1218.36
+      },
+      "notes": "Pet store inventory replenishment."
     },
     {
-      "id": 16,
-      "productName": "Apple iPhone 14 Pro Max",
-      "invoiceNo": "INV016",
-      "date": "2025-10-16",
-      "customer": "Anna Müller",
-      "totalAmount": 1200,
-      "paidAmount": 1200,
-      "dueAmount": 0,
-      "status": "Paid"
+      "purchaseId": "PO-006",
+      "reference": "REF2025110106",
+      "date": "2025-11-01",
+      "customerId": "CUST306",
+      "customerName": "Nithya Devi",
+      "customerImage": "/assets/images/avathar/f3.png",
+      "productId": "PT002",
+      "productName": "Tropicana Orange Juice 1L",
+      "productImage": "/assets/images/products/tropicana.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 449.10,
+      "paid": 449.10,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT002",
+          "productName": "Tropicana Orange Juice 1L",
+          "productImage": "/assets/images/products/tropicana.png",
+          "sku": "PT002",
+          "stock": 120,
+          "quantity": 90,
+          "netUnitPrice": 4.99,
+          "discount": 45.00,
+          "taxPercent": 0,
+          "subtotal": 449.10
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 45.00,
+        "shipping": 0.00,
+        "grandTotal": 449.10
+      },
+      "notes": "Juice section restock."
     },
     {
-      "id": 17,
-      "productName": "Samsung Galaxy S22 Ultra",
-      "invoiceNo": "INV017",
-      "date": "2025-10-17",
-      "customer": "Liu Wei",
-      "totalAmount": 1100,
-      "paidAmount": 0,
-      "dueAmount": 1100,
-      "status": "Unpaid"
+      "purchaseId": "PO-007",
+      "reference": "REF2025111307",
+      "date": "2025-11-13",
+      "customerId": "CUST307",
+      "customerName": "Ramesh Kumar",
+      "customerImage": "/assets/images/avathar/m4.png",
+      "productId": "PT012",
+      "productName": "Dettol Antiseptic Liquid 500ml",
+      "productImage": "/assets/images/products/dettol.png",
+      "status": "Pending",
+      "paymentStatus": "Unpaid",
+      "total": 500.84,
+      "paid": 0.00,
+      "due": 500.84,
+      "items": [
+        {
+          "productId": "PT012",
+          "productName": "Dettol Antiseptic Liquid 500ml",
+          "productImage": "/assets/images/products/dettol.png",
+          "sku": "PT012",
+          "stock": 175,
+          "quantity": 70,
+          "netUnitPrice": 6.99,
+          "discount": 70.00,
+          "taxPercent": 18,
+          "subtotal": 500.84
+        }
+      ],
+      "summary": {
+        "orderTax": 75.54,
+        "discount": 70.00,
+        "shipping": 0.00,
+        "grandTotal": 506.38
+      },
+      "notes": "Hospital supply order – payment pending."
     },
     {
-      "id": 18,
-      "productName": "Sony WH-1000XM4 Headphones",
-      "invoiceNo": "INV018",
-      "date": "2025-10-18",
-      "customer": "Fatima Al Farsi",
-      "totalAmount": 350,
-      "paidAmount": 350,
-      "dueAmount": 0,
-      "status": "Paid"
-    },
-    {
-      "id": 19,
-      "productName": "Apple MacBook Pro 16\"",
-      "invoiceNo": "INV019",
-      "date": "2025-10-19",
-      "customer": "Mohamed Salah",
-      "totalAmount": 2500,
-      "paidAmount": 0,
-      "dueAmount": 2500,
-      "status": "Unpaid"
-    },
-    {
-      "id": 20,
-      "productName": "Logitech MX Master 3 Mouse",
-      "invoiceNo": "INV020",
+      "purchaseId": "PO-008",
+      "reference": "REF2025102008",
       "date": "2025-10-20",
-      "customer": "Sofia Rossi",
-      "totalAmount": 100,
-      "paidAmount": 100,
-      "dueAmount": 0,
-      "status": "Paid"
+      "customerId": "CUST308",
+      "customerName": "Divya Saravanan",
+      "customerImage": "/assets/images/avathar/f4.png",
+      "productId": "PT009",
+      "productName": "McCain Frozen French Fries 1kg",
+      "productImage": "/assets/images/products/mccain-fries.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 405.40,
+      "paid": 405.40,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT009",
+          "productName": "McCain Frozen French Fries 1kg",
+          "productImage": "/assets/images/products/mccain-fries.png",
+          "sku": "PT009",
+          "stock": 110,
+          "quantity": 100,
+          "netUnitPrice": 4.29,
+          "discount": 51.48,
+          "taxPercent": 5,
+          "subtotal": 405.40
+        }
+      ],
+      "summary": {
+        "orderTax": 18.88,
+        "discount": 51.48,
+        "shipping": 0.00,
+        "grandTotal": 405.40
+      },
+      "notes": "Restaurant bulk order."
+    },
+    {
+      "purchaseId": "PO-009",
+      "reference": "REF2025091009",
+      "date": "2025-09-10",
+      "customerId": "CUST309",
+      "customerName": "Lakshmi Narayanan",
+      "customerImage": "/assets/images/avathar/f5.png",
+      "productId": "PT005",
+      "productName": "Britannia Cheese Cubes 200g",
+      "productImage": "/assets/images/products/britannia-cheese.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 359.40,
+      "paid": 359.40,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT005",
+          "productName": "Britannia Cheese Cubes 200g",
+          "productImage": "/assets/images/products/britannia-cheese.png",
+          "sku": "PT005",
+          "stock": 95,
+          "quantity": 60,
+          "netUnitPrice": 5.99,
+          "discount": 35.94,
+          "taxPercent": 12,
+          "subtotal": 359.40
+        }
+      ],
+      "summary": {
+        "orderTax": 39.38,
+        "discount": 35.94,
+        "shipping": 0.00,
+        "grandTotal": 359.40
+      },
+      "notes": "Cheese for bakery use."
+    },
+    {
+      "purchaseId": "PO-010",
+      "reference": "REF2025110510",
+      "date": "2025-11-05",
+      "customerId": "CUST310",
+      "customerName": "Saravanan Muthu",
+      "customerImage": "/assets/images/avathar/m5.png",
+      "productId": "PT010",
+      "productName": "Fresh Red Apples (1kg)",
+      "productImage": "/assets/images/products/apples.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 239.40,
+      "paid": 239.40,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT010",
+          "productName": "Fresh Red Apples (1kg)",
+          "productImage": "/assets/images/products/apples.png",
+          "sku": "PT010",
+          "stock": 320,
+          "quantity": 60,
+          "netUnitPrice": 3.99,
+          "discount": 0.00,
+          "taxPercent": 0,
+          "subtotal": 239.40
+        }
+      ],
+      "summary": {
+        "orderTax": 0.00,
+        "discount": 0.00,
+        "shipping": 0.00,
+        "grandTotal": 239.40
+      },
+      "notes": "Produce for weekly sale."
+    },
+    {
+      "purchaseId": "PO-011",
+      "reference": "REF2025100511",
+      "date": "2025-10-05",
+      "customerId": "CUST311",
+      "customerName": "Anitha Raj",
+      "customerImage": "/assets/images/avathar/f6.png",
+      "productId": "PT007",
+      "productName": "Chocolate Cake 500g",
+      "productImage": "/assets/images/products/chocolate-cake.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 200.00,
+      "paid": 200.00,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT007",
+          "productName": "Chocolate Cake 500g",
+          "productImage": "/assets/images/products/chocolate-cake.png",
+          "sku": "PT007",
+          "stock": 60,
+          "quantity": 15,
+          "netUnitPrice": 12.99,
+          "discount": 9.74,
+          "taxPercent": 18,
+          "subtotal": 200.00
+        }
+      ],
+      "summary": {
+        "orderTax": 22.00,
+        "discount": 9.74,
+        "shipping": 0.00,
+        "grandTotal": 200.00
+      },
+      "notes": "Bakery birthday order."
+    },
+    {
+      "purchaseId": "PO-012",
+      "reference": "REF2025111112",
+      "date": "2025-11-11",
+      "customerId": "CUST312",
+      "customerName": "Vignesh Kumar",
+      "customerImage": "/assets/images/avathar/m6.png",
+      "productId": "PT015",
+      "productName": "Red Bull Energy Drink 250ml",
+      "productImage": "/assets/images/products/redbull.png",
+      "status": "Ordered",
+      "paymentStatus": "Partial",
+      "total": 850.30,
+      "paid": 500.00,
+      "due": 350.30,
+      "items": [
+        {
+          "productId": "PT015",
+          "productName": "Red Bull Energy Drink 250ml",
+          "productImage": "/assets/images/products/redbull.png",
+          "sku": "PT015",
+          "stock": 380,
+          "quantity": 400,
+          "netUnitPrice": 2.99,
+          "discount": 398.68,
+          "taxPercent": 18,
+          "subtotal": 850.30
+        }
+      ],
+      "summary": {
+        "orderTax": 51.30,
+        "discount": 398.68,
+        "shipping": 0.00,
+        "grandTotal": 850.30
+      },
+      "notes": "Event sponsorship – partial payment received."
+    },
+    {
+      "purchaseId": "PO-013",
+      "reference": "REF2025101213",
+      "date": "2025-10-12",
+      "customerId": "CUST313",
+      "customerName": "Gayathri Senthil",
+      "customerImage": "/assets/images/avathar/f7.png",
+      "productId": "PT011",
+      "productName": "Dove Beauty Cream Bar 100g",
+      "productImage": "/assets/images/products/dove-soap.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 938.30,
+      "paid": 938.30,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT011",
+          "productName": "Dove Beauty Cream Bar 100g",
+          "productImage": "/assets/images/products/dove-soap.png",
+          "sku": "PT011",
+          "stock": 400,
+          "quantity": 400,
+          "netUnitPrice": 2.49,
+          "discount": 199.20,
+          "taxPercent": 18,
+          "subtotal": 938.30
+        }
+      ],
+      "summary": {
+        "orderTax": 143.50,
+        "discount": 199.20,
+        "shipping": 0.00,
+        "grandTotal": 938.30
+      },
+      "notes": "Beauty section quarterly stock."
+    },
+    {
+      "purchaseId": "PO-014",
+      "reference": "REF2025110214",
+      "date": "2025-11-02",
+      "customerId": "CUST314",
+      "customerName": "Balaji Ram",
+      "customerImage": "/assets/images/avathar/m7.png",
+      "productId": "PT003",
+      "productName": "Lay's Classic Potato Chips 150g",
+      "productImage": "/assets/images/products/lays.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 279.40,
+      "paid": 279.40,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT003",
+          "productName": "Lay's Classic Potato Chips 150g",
+          "productImage": "/assets/images/products/lays.png",
+          "sku": "PT003",
+          "stock": 280,
+          "quantity": 100,
+          "netUnitPrice": 2.79,
+          "discount": 41.85,
+          "taxPercent": 18,
+          "subtotal": 279.40
+        }
+      ],
+      "summary": {
+        "orderTax": 42.25,
+        "discount": 41.85,
+        "shipping": 0.00,
+        "grandTotal": 279.40
+      },
+      "notes": "Snack aisle restock."
+    },
+    {
+      "purchaseId": "PO-015",
+      "reference": "REF2025081515",
+      "date": "2025-08-15",
+      "customerId": "CUST315",
+      "customerName": "Indira Krishnan",
+      "customerImage": "/assets/images/avathar/f8.png",
+      "productId": "PT001",
+      "productName": "Coca Cola 330ml Can",
+      "productImage": "/assets/images/products/cocacola.png",
+      "status": "Received",
+      "paymentStatus": "Paid",
+      "total": 1449.00,
+      "paid": 1449.00,
+      "due": 0.00,
+      "items": [
+        {
+          "productId": "PT001",
+          "productName": "Coca Cola 330ml Can",
+          "productImage": "/assets/images/products/cocacola.png",
+          "sku": "PT001",
+          "stock": 450,
+          "quantity": 1000,
+          "netUnitPrice": 1.50,
+          "discount": 120.00,
+          "taxPercent": 5,
+          "subtotal": 1449.00
+        }
+      ],
+      "summary": {
+        "orderTax": 69.00,
+        "discount": 120.00,
+        "shipping": 0.00,
+        "grandTotal": 1449.00
+      },
+      "notes": "Festival bulk order – pre-paid."
     }
   ]
 }
