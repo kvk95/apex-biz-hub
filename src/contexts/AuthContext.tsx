@@ -82,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("Unauthorized access detected, redirecting to logout page");
     setUser(null);
     setAppsSettings(null);
+    localStorage.setItem("show_401_session_message", "true");
     window.location.href = "/logout";
   };
 
@@ -122,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // For extra safety, clear all localStorage items that contain our app's identifiers
     Object.keys(localStorage).forEach((key) => {
       if (
-        key.includes("-ha-db-") ||
+        key.includes("-nb-db-") ||
         key.includes("apps") ||
         key.includes("auth")
       ) {
@@ -235,9 +236,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Logout function
   const logout = () => {
     console.log("Logging out user - redirecting to logout page");
+
+    // Read the flag before clearing storage
+    const showMessage = localStorage.getItem("show_invalid_session_message");
+
     setUser(null);
     setAppsSettings(null);
     clearTokens(); // Clear settings data on logout
+
+    // Restore the flag if it existed
+    if (showMessage) {
+      localStorage.setItem("show_invalid_session_message", showMessage);
+    }
+
     window.location.href = "/logout";
   };
 
@@ -261,7 +272,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(user_details);
 
-    // Fetch hotel settings after successful login
+    // Fetch apps settings after successful login
     await fetchAppsSettings();
   };
 
@@ -299,7 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data.status.code === "S") {
         setAppsSettings(data.result);
         localStorage.setItem(LS_KEY_APPS_SETTINGS, JSON.stringify(data.result));
-        // Update document title with hotel name
+        // Update document title with apps name
         //document.title = `${data.result.company_name || API_CONFIG.appsName} Dashboard`;
       }
     } catch (err) {
@@ -323,10 +334,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const settings = JSON.parse(storedAppsSettings);
         setAppsSettings(settings);
         document.title = `${
-          settings.hotel_name || API_CONFIG.appsName
+          settings.apps_name || API_CONFIG.appsName
         } Dashboard`;
       } catch (err) {
-        console.error("Error parsing stored hotel settings:", err);
+        console.error("Error parsing stored apps settings:", err);
         // If parsing fails, fetch fresh settings
         if (getAccessToken()) {
           await fetchAppsSettings();
@@ -348,7 +359,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         getAccessToken,
         getRefreshToken,
         setTokens,
-        clearTokens, 
+        clearTokens,
         handleUnauthorized,
         fetchAppsSettings,
         ensureSettingsLoaded,

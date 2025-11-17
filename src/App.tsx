@@ -128,6 +128,7 @@ import DeleteAccountRequest from "./pages/user-management/DeleteAccountRequest";
 import RolesPermissions from "./pages/user-management/RolesPermissions";
 import Permissions from "./pages/user-management/Permissions";
 import Users from "./pages/user-management/Users";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -152,351 +153,373 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <RouteChangeHandler />
-          <Routes>
-            {/* Public login route */}
-            <Route
-              path="/login"
-              element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />}
-            />
-            <Route path="/logout" element={<Logout />} />
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <RouteChangeHandler />
+            <Routes>
+              {/* Public login route */}
+              <Route
+                path="/login"
+                element={
+                  <LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />
+                }
+              />
+              <Route path="/logout" element={<Logout />} />
 
-            {/* Protected Routes */}
-            {isLoggedIn ? (
-              <Route path="/" element={<MainLayout />}>
-                {/* Dashboard */}
-                <Route index element={<AdminDashboard />} />
-                <Route path="dashboard/admindb" element={<AdminDashboard />} />
-                <Route path="dashboard/sales" element={<SalesDashboard />} />
+              {/* Protected Routes */}
+              {isLoggedIn ? (
+                <Route path="/" element={<MainLayout />}>
+                  {/* Dashboard */}
+                  <Route index element={<AdminDashboard />} />
+                  <Route
+                    path="dashboard/admindb"
+                    element={<AdminDashboard />}
+                  />
+                  <Route path="dashboard/sales" element={<SalesDashboard />} />
 
-                {/* Super Admin */}
-                <Route
-                  path="super-admin/dashboard"
-                  element={<SuperadminDashboard />}
-                />
-                <Route path="super-admin/companies" element={<Companies />} />
-                <Route
-                  path="super-admin/subscriptions"
-                  element={<Subscriptions />}
-                />
-                <Route path="super-admin/packages" element={<Packages />} />
-                <Route path="super-admin/domain" element={<Domain />} />
-                <Route
-                  path="super-admin/purchase-transaction"
-                  element={<PurchaseTransaction />}
-                />
+                  {/* Super Admin */}
+                  <Route
+                    path="super-admin/dashboard"
+                    element={<SuperadminDashboard />}
+                  />
+                  <Route path="super-admin/companies" element={<Companies />} />
+                  <Route
+                    path="super-admin/subscriptions"
+                    element={<Subscriptions />}
+                  />
+                  <Route path="super-admin/packages" element={<Packages />} />
+                  <Route path="super-admin/domain" element={<Domain />} />
+                  <Route
+                    path="super-admin/purchase-transaction"
+                    element={<PurchaseTransaction />}
+                  />
 
-                {/* Inventory */}
-                <Route path="inventory/products" element={<Products />} />
-                <Route
-                  path="inventory/products/create"
-                  element={<CreateProduct />}
-                />
-                <Route
-                  path="inventory/expired-products"
-                  element={<ExpiredProducts />}
-                />
-                <Route path="inventory/low-stocks" element={<LowStocks />} />
-                <Route path="inventory/categories" element={<Category />} />
-                <Route
-                  path="inventory/sub-categories"
-                  element={<SubCategory />}
-                />
-                <Route path="inventory/brands" element={<Brands />} />
-                <Route path="inventory/units" element={<Units />} />
-                <Route
-                  path="inventory/variant-attributes"
-                  element={<VariantAttributes />}
-                />
-                <Route path="inventory/warranties" element={<Warranties />} />
-                <Route path="inventory/barcode" element={<PrintBarcode />} />
-                <Route path="inventory/qr-code" element={<PrintQrCode />} />
+                  {/* Inventory */}
+                  <Route path="inventory/products" element={<Products />} />
+                  <Route
+                    path="inventory/products/create"
+                    element={<CreateProduct />}
+                  />
+                  <Route
+                    path="inventory/expired-products"
+                    element={<ExpiredProducts />}
+                  />
+                  <Route path="inventory/low-stocks" element={<LowStocks />} />
+                  <Route path="inventory/categories" element={<Category />} />
+                  <Route
+                    path="inventory/sub-categories"
+                    element={<SubCategory />}
+                  />
+                  <Route path="inventory/brands" element={<Brands />} />
+                  <Route path="inventory/units" element={<Units />} />
+                  <Route
+                    path="inventory/variant-attributes"
+                    element={<VariantAttributes />}
+                  />
+                  <Route path="inventory/warranties" element={<Warranties />} />
+                  <Route path="inventory/barcode" element={<PrintBarcode />} />
+                  <Route path="inventory/qr-code" element={<PrintQrCode />} />
 
-                {/* Stock */}
-                <Route path="stock/manage" element={<ManageStock />} />
-                <Route path="stock/adjustment" element={<StockAdjustment />} />
-                <Route path="stock/transfer" element={<StockTransfer />} />
+                  {/* Stock */}
+                  <Route path="stock/manage" element={<ManageStock />} />
+                  <Route
+                    path="stock/adjustment"
+                    element={<StockAdjustment />}
+                  />
+                  <Route path="stock/transfer" element={<StockTransfer />} />
 
-                {/* Sales */}
-                <Route path="sales/online-orders" element={<OnlineOrders />} />
-                <Route path="sales/pos-orders" element={<PosOrders />} />
-                <Route path="sales/invoices" element={<Invoices />} />
-                <Route path="sales/return" element={<SalesReturn />} />
-                <Route path="sales/quotations" element={<Quotation />} />
-                <Route path="sales/pos1" element={<Pos />} />
+                  {/* Sales */}
+                  <Route
+                    path="sales/online-orders"
+                    element={<OnlineOrders />}
+                  />
+                  <Route path="sales/pos-orders" element={<PosOrders />} />
+                  <Route path="sales/invoices" element={<Invoices />} />
+                  <Route path="sales/return" element={<SalesReturn />} />
+                  <Route path="sales/quotations" element={<Quotation />} />
+                  <Route path="sales/pos1" element={<Pos />} />
 
-                {/* Promo */}
-                <Route path="promo/coupons" element={<Coupons />} />
-                <Route path="promo/gift-cards" element={<GiftCards />} />
-                <Route path="promo/discount/plan" element={<DiscountPlan />} />
-                <Route path="promo/discount/single" element={<Discount />} />
+                  {/* Promo */}
+                  <Route path="promo/coupons" element={<Coupons />} />
+                  <Route path="promo/gift-cards" element={<GiftCards />} />
+                  <Route
+                    path="promo/discount/plan"
+                    element={<DiscountPlan />}
+                  />
+                  <Route path="promo/discount/single" element={<Discount />} />
 
-                {/* Purchases */}
-                <Route path="purchases/list" element={<Purchases />} />
-                <Route path="purchases/order" element={<PurchaseOrder />} />
-                <Route path="purchases/return" element={<PurchaseReturn />} />
+                  {/* Purchases */}
+                  <Route path="purchases/list" element={<Purchases />} />
+                  <Route path="purchases/order" element={<PurchaseOrder />} />
+                  <Route path="purchases/return" element={<PurchaseReturn />} />
 
-                {/* Finance & Accounts */}
-                <Route path="finance/expenses/list" element={<Expenses />} />
-                <Route
-                  path="finance/expenses/categories"
-                  element={<ExpenseCategory />}
-                />
-                <Route path="finance/income/list" element={<Income />} />
-                <Route
-                  path="finance/income/categories"
-                  element={<IncomeCategory />}
-                />
-                <Route
-                  path="finance/bank-accounts"
-                  element={<BankAccounts />}
-                />
-                <Route
-                  path="finance/money-transfer"
-                  element={<MoneyTransfer />}
-                />
-                <Route
-                  path="finance/balance-sheet"
-                  element={<BalanceSheet />}
-                />
-                <Route
-                  path="finance/trial-balance"
-                  element={<TrialBalance />}
-                />
-                <Route path="finance/cash-flow" element={<CashFlow />} />
-                <Route
-                  path="finance/account-statement"
-                  element={<AccountStatement />}
-                />
+                  {/* Finance & Accounts */}
+                  <Route path="finance/expenses/list" element={<Expenses />} />
+                  <Route
+                    path="finance/expenses/categories"
+                    element={<ExpenseCategory />}
+                  />
+                  <Route path="finance/income/list" element={<Income />} />
+                  <Route
+                    path="finance/income/categories"
+                    element={<IncomeCategory />}
+                  />
+                  <Route
+                    path="finance/bank-accounts"
+                    element={<BankAccounts />}
+                  />
+                  <Route
+                    path="finance/money-transfer"
+                    element={<MoneyTransfer />}
+                  />
+                  <Route
+                    path="finance/balance-sheet"
+                    element={<BalanceSheet />}
+                  />
+                  <Route
+                    path="finance/trial-balance"
+                    element={<TrialBalance />}
+                  />
+                  <Route path="finance/cash-flow" element={<CashFlow />} />
+                  <Route
+                    path="finance/account-statement"
+                    element={<AccountStatement />}
+                  />
 
-                {/* Peoples */}
-                <Route path="peoples/customers" element={<Customers />} />
-                <Route path="peoples/billers" element={<Billers />} />
-                <Route path="peoples/suppliers" element={<Suppliers />} />
-                <Route path="peoples/stores" element={<Stores />} />
-                <Route path="peoples/warehouses" element={<Warehouses />} />
+                  {/* Peoples */}
+                  <Route path="peoples/customers" element={<Customers />} />
+                  <Route path="peoples/billers" element={<Billers />} />
+                  <Route path="peoples/suppliers" element={<Suppliers />} />
+                  <Route path="peoples/stores" element={<Stores />} />
+                  <Route path="peoples/warehouses" element={<Warehouses />} />
 
-                {/* HRM */}
-                <Route path="hrm/employees" element={<Employees />} />
-                <Route path="hrm/departments" element={<Departments />} />
-                <Route path="hrm/designations" element={<Designation />} />
-                <Route path="hrm/shifts" element={<Shifts />} />
-                <Route
-                  path="hrm/attendance/employee"
-                  element={<EmployeeAttendance />}
-                />
-                <Route
-                  path="hrm/attendance/admin"
-                  element={<AdminAttendance />}
-                />
-                <Route path="hrm/leaves/admin" element={<AdminLeaves />} />
-                <Route
-                  path="hrm/leaves/employee"
-                  element={<EmployeeLeaves />}
-                />
-                <Route path="hrm/leaves/types" element={<LeaveTypes />} />
-                <Route path="hrm/holidays" element={<Holidays />} />
-                <Route path="hrm/payroll/salary" element={<EmployeeSalary />} />
-                <Route path="hrm/payroll/payslip" element={<Payslip />} />
+                  {/* HRM */}
+                  <Route path="hrm/employees" element={<Employees />} />
+                  <Route path="hrm/departments" element={<Departments />} />
+                  <Route path="hrm/designations" element={<Designation />} />
+                  <Route path="hrm/shifts" element={<Shifts />} />
+                  <Route
+                    path="hrm/attendance/employee"
+                    element={<EmployeeAttendance />}
+                  />
+                  <Route
+                    path="hrm/attendance/admin"
+                    element={<AdminAttendance />}
+                  />
+                  <Route path="hrm/leaves/admin" element={<AdminLeaves />} />
+                  <Route
+                    path="hrm/leaves/employee"
+                    element={<EmployeeLeaves />}
+                  />
+                  <Route path="hrm/leaves/types" element={<LeaveTypes />} />
+                  <Route path="hrm/holidays" element={<Holidays />} />
+                  <Route
+                    path="hrm/payroll/salary"
+                    element={<EmployeeSalary />}
+                  />
+                  <Route path="hrm/payroll/payslip" element={<Payslip />} />
 
-                {/* Reports */}
-                <Route path="reports/sales/report" element={<SalesReport />} />
-                <Route
-                  path="reports/sales/best-seller"
-                  element={<BestSeller />}
-                />
-                <Route path="reports/purchase" element={<PurchaseReport />} />
-                <Route
-                  path="reports/inventory/report"
-                  element={<InventoryReport />}
-                />
-                <Route
-                  path="reports/inventory/stock-history"
-                  element={<StockHistory />}
-                />
-                <Route
-                  path="reports/inventory/sold-stock"
-                  element={<SoldStock />}
-                />
-                <Route path="reports/invoice" element={<InvoiceReport />} />
-                <Route
-                  path="reports/supplier/report"
-                  element={<SupplierReport />}
-                />
-                <Route
-                  path="reports/supplier/due"
-                  element={<SupplierDueReport />}
-                />
-                <Route
-                  path="reports/customer/report"
-                  element={<CustomerReport />}
-                />
-                <Route
-                  path="reports/customer/due"
-                  element={<CustomerDueReport />}
-                />
-                <Route
-                  path="reports/product/report"
-                  element={<ProductReport />}
-                />
-                <Route
-                  path="reports/product/expiry"
-                  element={<ProductExpiryReport />}
-                />
-                <Route
-                  path="reports/product/quantity-alert"
-                  element={<ProductQuantityAlert />}
-                />
-                <Route path="reports/expense" element={<ExpenseReport />} />
-                <Route path="reports/income" element={<IncomeReport />} />
-                <Route path="reports/tax" element={<TaxReport />} />
-                <Route path="reports/profit-loss" element={<ProfitLoss />} />
-                <Route path="reports/annual" element={<AnnualReport />} />
+                  {/* Reports */}
+                  <Route
+                    path="reports/sales/report"
+                    element={<SalesReport />}
+                  />
+                  <Route
+                    path="reports/sales/best-seller"
+                    element={<BestSeller />}
+                  />
+                  <Route path="reports/purchase" element={<PurchaseReport />} />
+                  <Route
+                    path="reports/inventory/report"
+                    element={<InventoryReport />}
+                  />
+                  <Route
+                    path="reports/inventory/stock-history"
+                    element={<StockHistory />}
+                  />
+                  <Route
+                    path="reports/inventory/sold-stock"
+                    element={<SoldStock />}
+                  />
+                  <Route path="reports/invoice" element={<InvoiceReport />} />
+                  <Route
+                    path="reports/supplier/report"
+                    element={<SupplierReport />}
+                  />
+                  <Route
+                    path="reports/supplier/due"
+                    element={<SupplierDueReport />}
+                  />
+                  <Route
+                    path="reports/customer/report"
+                    element={<CustomerReport />}
+                  />
+                  <Route
+                    path="reports/customer/due"
+                    element={<CustomerDueReport />}
+                  />
+                  <Route
+                    path="reports/product/report"
+                    element={<ProductReport />}
+                  />
+                  <Route
+                    path="reports/product/expiry"
+                    element={<ProductExpiryReport />}
+                  />
+                  <Route
+                    path="reports/product/quantity-alert"
+                    element={<ProductQuantityAlert />}
+                  />
+                  <Route path="reports/expense" element={<ExpenseReport />} />
+                  <Route path="reports/income" element={<IncomeReport />} />
+                  <Route path="reports/tax" element={<TaxReport />} />
+                  <Route path="reports/profit-loss" element={<ProfitLoss />} />
+                  <Route path="reports/annual" element={<AnnualReport />} />
 
-                {/* User Management */}
-                <Route path="user-management/users" element={<Users />} />
-                <Route
-                  path="user-management/roles-permissions"
-                  element={<RolesPermissions />}
-                />
-                <Route
-                  path="user-management/permissions"
-                  element={<Permissions />}
-                />
-                <Route
-                  path="user-management/delete-account-request"
-                  element={<DeleteAccountRequest />}
-                />
+                  {/* User Management */}
+                  <Route path="user-management/users" element={<Users />} />
+                  <Route
+                    path="user-management/roles-permissions"
+                    element={<RolesPermissions />}
+                  />
+                  <Route
+                    path="user-management/permissions"
+                    element={<Permissions />}
+                  />
+                  <Route
+                    path="user-management/delete-account-request"
+                    element={<DeleteAccountRequest />}
+                  />
 
-                {/* Settings */}
-                <Route
-                  path="settings/general/profile"
-                  element={<ProfileSettings />}
-                />
-                <Route
-                  path="settings/general/security"
-                  element={<SecuritySettings />}
-                />
-                <Route
-                  path="settings/general/notifications"
-                  element={<NotificationSettings />}
-                />
-                <Route
-                  path="settings/general/connected-apps"
-                  element={<ConnectedApps />}
-                />
-                <Route
-                  path="settings/website/system"
-                  element={<SystemSettings />}
-                />
-                <Route
-                  path="settings/website/company"
-                  element={<CompanySettings />}
-                />
-                <Route
-                  path="settings/website/localization"
-                  element={<LocalizationSettings />}
-                />
-                <Route
-                  path="settings/website/prefixes"
-                  element={<PrefixesSettings />}
-                />
-                <Route
-                  path="settings/website/preference"
-                  element={<Preference />}
-                />
-                <Route
-                  path="settings/website/social-auth"
-                  element={<SocialAuthentication />}
-                />
-                <Route
-                  path="settings/website/language"
-                  element={<LanguageSettings />}
-                />
-                <Route
-                  path="settings/app/invoice-settings"
-                  element={<InvoiceSettings />}
-                />
-                <Route
-                  path="settings/app/invoice-templates"
-                  element={<InvoiceTemplates />}
-                />
-                <Route
-                  path="settings/app/printer"
-                  element={<PrinterSettings />}
-                />
-                <Route path="settings/app/pos" element={<PosSettings />} />
-                <Route
-                  path="settings/app/signatures"
-                  element={<Signatures />}
-                />
-                <Route
-                  path="settings/app/custom-fields"
-                  element={<CustomFields />}
-                />
-                <Route
-                  path="settings/system/email/settings"
-                  element={<EmailSettings />}
-                />
-                <Route
-                  path="settings/system/email/templates"
-                  element={<EmailTemplates />}
-                />
-                <Route
-                  path="settings/system/sms/settings"
-                  element={<SmsSettings />}
-                />
-                <Route
-                  path="settings/system/sms/templates"
-                  element={<SmsTemplates />}
-                />
-                <Route path="settings/system/otp" element={<OtpSettings />} />
-                <Route
-                  path="settings/system/gdpr-cookies"
-                  element={<GdprSettings />}
-                />
-                <Route
-                  path="settings/financial/payment-gateway"
-                  element={<PaymentGatewaySettings />}
-                />
-                <Route
-                  path="settings/financial/bank-settings"
-                  element={<BankSettings />}
-                />
-                <Route
-                  path="settings/financial/tax-rates"
-                  element={<TaxRates />}
-                />
-                <Route
-                  path="settings/financial/currencies"
-                  element={<CurrencySettings />}
-                />
-                <Route
-                  path="settings/other/storage"
-                  element={<StorageSettings />}
-                />
-                <Route
-                  path="settings/other/ban-ip"
-                  element={<BanIpAddress />}
-                />
+                  {/* Settings */}
+                  <Route
+                    path="settings/general/profile"
+                    element={<ProfileSettings />}
+                  />
+                  <Route
+                    path="settings/general/security"
+                    element={<SecuritySettings />}
+                  />
+                  <Route
+                    path="settings/general/notifications"
+                    element={<NotificationSettings />}
+                  />
+                  <Route
+                    path="settings/general/connected-apps"
+                    element={<ConnectedApps />}
+                  />
+                  <Route
+                    path="settings/website/system"
+                    element={<SystemSettings />}
+                  />
+                  <Route
+                    path="settings/website/company"
+                    element={<CompanySettings />}
+                  />
+                  <Route
+                    path="settings/website/localization"
+                    element={<LocalizationSettings />}
+                  />
+                  <Route
+                    path="settings/website/prefixes"
+                    element={<PrefixesSettings />}
+                  />
+                  <Route
+                    path="settings/website/preference"
+                    element={<Preference />}
+                  />
+                  <Route
+                    path="settings/website/social-auth"
+                    element={<SocialAuthentication />}
+                  />
+                  <Route
+                    path="settings/website/language"
+                    element={<LanguageSettings />}
+                  />
+                  <Route
+                    path="settings/app/invoice-settings"
+                    element={<InvoiceSettings />}
+                  />
+                  <Route
+                    path="settings/app/invoice-templates"
+                    element={<InvoiceTemplates />}
+                  />
+                  <Route
+                    path="settings/app/printer"
+                    element={<PrinterSettings />}
+                  />
+                  <Route path="settings/app/pos" element={<PosSettings />} />
+                  <Route
+                    path="settings/app/signatures"
+                    element={<Signatures />}
+                  />
+                  <Route
+                    path="settings/app/custom-fields"
+                    element={<CustomFields />}
+                  />
+                  <Route
+                    path="settings/system/email/settings"
+                    element={<EmailSettings />}
+                  />
+                  <Route
+                    path="settings/system/email/templates"
+                    element={<EmailTemplates />}
+                  />
+                  <Route
+                    path="settings/system/sms/settings"
+                    element={<SmsSettings />}
+                  />
+                  <Route
+                    path="settings/system/sms/templates"
+                    element={<SmsTemplates />}
+                  />
+                  <Route path="settings/system/otp" element={<OtpSettings />} />
+                  <Route
+                    path="settings/system/gdpr-cookies"
+                    element={<GdprSettings />}
+                  />
+                  <Route
+                    path="settings/financial/payment-gateway"
+                    element={<PaymentGatewaySettings />}
+                  />
+                  <Route
+                    path="settings/financial/bank-settings"
+                    element={<BankSettings />}
+                  />
+                  <Route
+                    path="settings/financial/tax-rates"
+                    element={<TaxRates />}
+                  />
+                  <Route
+                    path="settings/financial/currencies"
+                    element={<CurrencySettings />}
+                  />
+                  <Route
+                    path="settings/other/storage"
+                    element={<StorageSettings />}
+                  />
+                  <Route
+                    path="settings/other/ban-ip"
+                    element={<BanIpAddress />}
+                  />
 
-                {/* Logout */}
-                <Route
-                  path="logout"
-                  element={<Navigate to="/logout" replace />}
-                />
-              </Route>
-            ) : (
-              // Redirect any other route to login if not logged in
-              <Route path="*" element={<Navigate to="/logout" replace />} />
-            )}
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+                  {/* Logout */}
+                  <Route
+                    path="logout"
+                    element={<Navigate to="/logout" replace />}
+                  />
+                </Route>
+              ) : (
+                // Redirect any other route to login if not logged in
+                <Route path="*" element={<Navigate to="/logout" replace />} />
+              )}
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

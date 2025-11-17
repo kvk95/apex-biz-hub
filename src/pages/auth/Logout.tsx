@@ -4,11 +4,23 @@ import { useNavigate } from "react-router-dom";
 export default function Logout() {
   const navigate = useNavigate();
 
-  useEffect(() => {
+  useEffect(() => { 
+    // Read the flag before clearing storage
+    const showMessage = localStorage.getItem("show_invalid_session_message");
+    const show401Message = localStorage.getItem("show_401_session_message");
+
     // Clear all session and local storage
     sessionStorage.clear();
     localStorage.clear();
-    
+
+    // Restore the flag if it existed
+    if (showMessage) {
+      localStorage.setItem("show_invalid_session_message", showMessage);
+    }
+    if (show401Message) {
+      localStorage.setItem("show_401_session_message", show401Message);
+    }
+
     // Redirect to login
     navigate("/login", { replace: true });
   }, [navigate]);
