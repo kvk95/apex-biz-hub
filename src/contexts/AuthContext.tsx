@@ -3,7 +3,7 @@ import {
   ReactNode,
   useContext,
   useEffect,
-  useState,
+  useState,useCallback,
 } from "react";
 import { API_CONFIG } from "@/config/api.config";
 
@@ -43,24 +43,11 @@ type AuthContextType = {
   fetchAppsSettings: () => Promise<void>;
   ensureSettingsLoaded: () => Promise<void>;
   validateToken: () => boolean;
+  apiCall: <T = any>(endpoint: string, options?: RequestInit) => Promise<T>;
 };
 
 // Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  appsSettings: null,
-  loading: true,
-  login: async () => {},
-  logout: () => {},
-  getAccessToken: () => null,
-  getRefreshToken: () => null,
-  setTokens: () => {},
-  clearTokens: () => {},
-  handleUnauthorized: () => {},
-  fetchAppsSettings: async () => {},
-  ensureSettingsLoaded: async () => {},
-  validateToken: () => false,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Hook to use auth context
 export const useAuth = () => useContext(AuthContext);
@@ -210,28 +197,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = "/login";
   };
 
-  // Generic API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    // Check if this endpoint requires authentication
-    if (requiresAuth(endpoint)) {
-      if (!validateToken()) {
-        throw new Error("Unauthorized access - no valid token");
+  // Generic, typed, reusable API call
+  const apiCall = useCallback(
+    async <T = any,>(
+      endpoint: string,
+      options: RequestInit = {}
+    ): Promise<T> => {
+      if (requiresAuth(endpoint) && !validateToken()) {
+        throw new Error("No valid token");
       }
-    }
 
-    const response = await fetch(`${API_CONFIG.remoteApi.baseUrl}${endpoint}`, {
-      headers: requiresAuth(endpoint)
-        ? getAuthHeaders()
-        : { "Content-Type": "application/json" },
-      ...options,
-    });
+      const response = await fetch(
+        `${API_CONFIG.remoteApi.baseUrl}${endpoint}`,
+        {
+          headers: requiresAuth(endpoint)
+            ? getAuthHeaders()
+            : { "Content-Type": "application/json" },
+          ...options,
+        }
+      );
 
-    if (!response.ok) {
-      await handleApiError(response);
-    }
+      if (!response.ok) {
+        await handleApiError(response); 
+      }
 
-    return await response.json();
-  };
+      // Handle empty responses (204 No Content)
+      if (response.status === 204) return {} as T;
+
+      return response.json();
+    },
+    [] // dependencies
+  );
 
   // Logout function
   const logout = () => {
@@ -364,6 +360,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchAppsSettings,
         ensureSettingsLoaded,
         validateToken,
+        apiCall,
       }}
     >
       {children}

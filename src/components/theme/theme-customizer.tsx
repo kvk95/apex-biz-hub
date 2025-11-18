@@ -153,16 +153,21 @@ function ColorSwatch({ color, isActive, primaryColor, onClick }) {
   );
 }
 
-export function ThemeCustomizer() {
+export function ThemeCustomizer({
+  initialTheme,
+  onClose, // <-- callback prop
+}) {
   const { theme, setTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
 
   const initializeTheme = () => {
     const defaults = {
       headerColor: theme.headerColor || colors.header[0].value,
       sidebarColor: theme.sidebarColor || colors.sidebar[0].value,
       primaryColor: theme.primaryColor || colors.primary[0].value,
+      fontFamily: theme.fontFamily || fontOptions[0].value,
     };
-    if (!theme.headerColor || !theme.sidebarColor || !theme.primaryColor) {
+    if (!theme.headerColor || !theme.sidebarColor || !theme.primaryColor|| !theme.fontFamily) {
       setTheme(defaults);
     }
   };
@@ -171,11 +176,18 @@ export function ThemeCustomizer() {
     initializeTheme();
   }, [theme, setTheme]);
 
+  // When sheet closes, trigger callback with latest theme
+  useEffect(() => { 
+    if (open && typeof onClose === "function") { 
+      onClose(theme);
+    }
+  }, [open,  onClose]);
+
   const isLight = parseFloat(theme.primaryColor?.split(" ")[1]) > 50;
   const headerTextColor = isLight ? "hsl(240 10% 3.9%)" : "hsl(0 0% 100%)";
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"

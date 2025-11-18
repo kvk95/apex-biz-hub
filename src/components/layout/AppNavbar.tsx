@@ -17,7 +17,7 @@ import { useTheme } from "../theme/theme-provider";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { Calculator } from "./Calculator";
 import { useAuth } from "@/contexts/AuthContext";
-import { LANGUAGES,PATH_AVATHAR_DEFAULT } from "@/constants/constants";
+import { LANGUAGES } from "@/constants/constants";
 
 const addnewItems = [
   { name: "Category", icon: "fa-tags", key: "/inventory/categories" },
@@ -100,7 +100,7 @@ export function AppNavbar({ isPosPage }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
 
-  const { user , appsSettings} = useAuth();
+  const { user, appsSettings, apiCall } = useAuth();
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -115,7 +115,7 @@ export function AppNavbar({ isPosPage }) {
         ? "hsl(0 0% 98%)"
         : "hsl(240 10% 3.9%)",
   };
- 
+
   const selectionStyle = `
     header::selection {
       background-color: hsl(${theme.headerColor});
@@ -151,6 +151,16 @@ export function AppNavbar({ isPosPage }) {
         // Not in fullscreen, ensure state is synced
         setIsFullscreen(false);
       }
+    }
+  };
+
+  const handleThemeSave = async (chosenTheme) => {
+    if (chosenTheme) {
+      // Save to your backend
+      const data = await apiCall("/settings/appearance/edit", {
+        method: "POST",
+        body: JSON.stringify(theme),
+      });
     }
   };
 
@@ -263,7 +273,7 @@ export function AppNavbar({ isPosPage }) {
 
           {!isPosPage && (
             <>
-              <ThemeCustomizer />
+              <ThemeCustomizer initialTheme={theme} onClose={handleThemeSave} />
 
               {appsSettings?.showLanguageSwitcher && (
                 <DropdownMenu>
@@ -346,7 +356,7 @@ export function AppNavbar({ isPosPage }) {
                 className="gap-2 hover:bg-primary hover:text-primary-foreground"
               >
                 <img
-                  src={user?.user?.image || PATH_AVATHAR_DEFAULT}
+                  src={user?.user?.image || "/assets/images/avathar1.png"}
                   alt="Img"
                   className="rounded-pill"
                   style={{ width: "2rem", height: "2rem" }}
@@ -357,7 +367,7 @@ export function AppNavbar({ isPosPage }) {
               <DropdownMenuLabel>
                 <div className="hidden text-left lg:block">
                   <img
-                    src={user?.user?.image || PATH_AVATHAR_DEFAULT}
+                    src={user?.user?.image || "/assets/images/avathar1.png"}
                     alt="Img"
                     className="rounded-pill"
                     style={{ width: "3rem", height: "3rem" }}

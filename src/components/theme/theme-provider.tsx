@@ -12,8 +12,7 @@ import {
 type ThemeConfig = {
   headerColor: string;
   sidebarColor: string;
-  primaryColor: string;
-  mode: string;
+  primaryColor: string; 
   fontFamily: string;
 };
 
@@ -25,8 +24,7 @@ type ThemeContextType = {
 const defaultTheme: ThemeConfig = {
   headerColor: "0 0% 100%", // white
   sidebarColor: "0 0% 100%", // white
-  primaryColor: "32.4 99% 63%", // Orange
-  mode: "light",
+  primaryColor: "32.4 99% 63%", // Orange 
   fontFamily: "Nunito",
 };
 
