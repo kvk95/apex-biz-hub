@@ -1,26 +1,22 @@
 /* -------------------------------------------------
-   Quotation – Final Production Version (₹ India Ready)
-   Merged file with READ-ONLY Printable "view" mode (Header type B)
+   Quotation
    ------------------------------------------------- */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import ProductsTable, { TableItem } from "@/components/Screen/ProductsTable";
 import {
   AutoCompleteTextBox,
   AutoCompleteItem,
 } from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { QUOTATION_STATUSES } from "@/constants/constants";
+import { useLocalization } from "@/utils/formatters";
 
 /* ---------- Type-Safe AutoComplete ---------- */
 type CustomerOption = AutoCompleteItem<string>;
-type ProductOption = AutoCompleteItem<string> & {
-  extra: { SKU: string; purchasePrice: string; ProductImage?: string };
-};
-
 const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
-const ProductAutoComplete = AutoCompleteTextBox<ProductOption>;
 
 /* ---------- Types ---------- */
 type Customer = { id: string; name: string };
@@ -39,8 +35,9 @@ type QuotationItem = {
   productImage?: string;
   quantity: number;
   purchasePrice: number;
-  discount: number;
+  discount: number; // percent
   taxPercent: number;
+  taxAmount?: number;
   totalCost: number;
 };
 
@@ -61,13 +58,38 @@ type Quotation = {
   description?: string;
 };
 
-/* ---------- Main Component ---------- */
+/* ---------- Helper: item recalculation (Model B) ---------- */
+/**
+ * Model B (AddSalesModal style):
+ * subtotal = price * qty
+ * discountAmt = subtotal * discount%/100
+ * taxable = subtotal - discountAmt
+ * taxAmt = taxable * tax%/100
+ * total = taxable + taxAmt
+ */
+const recalcTableItem = (it: TableItem): TableItem => {
+  const price = Number(it.price) || 0;
+  const qty = Number(it.quantity) || 0;
+  const discount = Number(it.discount) || 0; // percent
+  const taxPercent = Number((it as any).taxPercent ?? it.taxPercent) || 0; // some TableItem names may differ
+
+  const subtotal = price * qty;
+  const discountAmt = (subtotal * discount) / 100;
+  const taxable = subtotal - discountAmt;
+  const taxAmount = (taxable * taxPercent) / 100;
+  const total = taxable + taxAmount;
+
+  return {
+    ...it,
+    taxAmount: Number(taxAmount.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
+};
+
 export default function Quotation() {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
@@ -75,20 +97,20 @@ export default function Quotation() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [formMode, setFormMode] = useState<"add" | "edit" | "view" | null>(
-    null
-  );
+  const [formMode, setFormMode] = useState<"add" | "edit" | "view" | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatDate, formatCurrency } = useLocalization();
 
+  /* Form */
   const [form, setForm] = useState<{
     reference: string;
     date: string;
     customerId: string;
     customerName: string;
-    items: QuotationItem[];
-    orderTax: string;
-    discount: string;
-    shipping: string;
+    items: QuotationItem[]; // kept for final mapping, but the UI uses `itemsTable`
+    orderTax: string; // percent
+    discount: string; // percent
+    shipping: string; // absolute
     status: typeof QUOTATION_STATUSES[number];
     description: string;
   }>({
@@ -104,19 +126,32 @@ export default function Quotation() {
     description: "",
   });
 
+  /* UI table items (ProductsTable) - shape confirmed by you */
+  const [itemsTable, setItemsTable] = useState<TableItem[]>([
+    {
+      productId: "",
+      productName: "",
+      sku: "",
+      quantity: 1,
+      price: 0,
+      discount: 0,
+      taxPercent: 0,
+      taxAmount: 0,
+      total: 0,
+    },
+  ]);
+
   /* Load Data */
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [custRes, prodRes, quotRes] = await Promise.all([
+        const [custRes, quotRes] = await Promise.all([
           apiService.get<Customer[]>("Customers"),
-          apiService.get<Product[]>("Products"),
           apiService.get<Quotation[]>("Quotation"),
         ]);
-        if (custRes.status.code === "S") setAllCustomers(custRes.result);
-        if (prodRes.status.code === "S") setAllProducts(prodRes.result);
-        if (quotRes.status.code === "S") setQuotations(quotRes.result);
+        if (custRes?.status?.code === "S") setAllCustomers(custRes.result);
+        if (quotRes?.status?.code === "S") setQuotations(quotRes.result);
       } catch (e) {
         console.error(e);
       } finally {
@@ -135,10 +170,8 @@ export default function Quotation() {
           q.reference.includes(search) ||
           q.customerName.toLowerCase().includes(search.toLowerCase())
       );
-    if (selectedCustomer !== "All")
-      list = list.filter((q) => q.customerName === selectedCustomer);
-    if (selectedStatus !== "All")
-      list = list.filter((q) => q.status === selectedStatus);
+    if (selectedCustomer !== "All") list = list.filter((q) => q.customerName === selectedCustomer);
+    if (selectedStatus !== "All") list = list.filter((q) => q.status === selectedStatus);
     return list.sort((a, b) => b.reference.localeCompare(a.reference));
   }, [quotations, search, selectedCustomer, selectedStatus]);
 
@@ -152,63 +185,43 @@ export default function Quotation() {
     [quotations]
   );
 
-  /* Handlers */
+  /* Helpers */
   const generateRef = () => `QTN-${Date.now().toString().slice(-6)}`;
 
+  /* Open add modal */
   const handleAddClick = () => {
-    setFormMode("add");
+    const newRef = generateRef();
     setForm({
-      reference: generateRef(),
+      reference: newRef,
       date: new Date().toISOString().split("T")[0],
       customerId: "",
       customerName: "",
-      items: [
-        {
-          productId: "",
-          productName: "",
-          sku: "",
-          quantity: 1,
-          purchasePrice: 0,
-          discount: 0,
-          taxPercent: 0,
-          totalCost: 0,
-        },
-      ],
+      items: [],
       orderTax: "0",
       discount: "0",
       shipping: "0",
       status: "Pending",
       description: "",
     });
+    // reset table to one blank row
+    setItemsTable([
+      {
+        productId: "",
+        productName: "",
+        sku: "",
+        quantity: 1,
+        price: 0,
+        discount: 0,
+        taxPercent: 0,
+        taxAmount: 0,
+        total: 0,
+      },
+    ]);
+
+    setFormMode("add");
   };
 
-  const recalculateItem = (item: QuotationItem): QuotationItem => {
-    const price = Number(item.purchasePrice) || 0;
-    const qty = Number(item.quantity) || 0;
-    const discountPercent = Number(item.discount) || 0;
-    const taxPercent = Number(item.taxPercent) || 0;
-
-    // 1. Discount amount (percentage)
-    const discountAmount = price * (discountPercent / 100);
-
-    // 2. Price after discount per unit
-    const priceAfterDiscount = price - discountAmount;
-
-    // 3. Taxable amount
-    const taxable = priceAfterDiscount * qty;
-
-    // 4. Tax amount
-    const tax = taxable * (taxPercent / 100);
-
-    // 5. Final total
-    const totalCost = taxable + tax;
-
-    return {
-      ...item,
-      totalCost: Number(totalCost.toFixed(2)),
-    };
-  };
-
+  /* Edit existing */
   const handleEdit = (q: Quotation) => {
     setFormMode("edit");
     setForm({
@@ -216,30 +229,91 @@ export default function Quotation() {
       date: q.date,
       customerId: q.customerId,
       customerName: q.customerName,
-      items: q.items.map(recalculateItem),
+      items: q.items.map((it) => ({ ...it })), // keep original for reference
       orderTax: q.summary.orderTax.toString(),
       discount: q.summary.discount.toString(),
       shipping: q.summary.shipping.toString(),
       status: q.status,
       description: q.description || "",
     });
+
+    // map QuotationItem -> TableItem
+    const mapped: TableItem[] = q.items.map((it) => {
+      const price = Number(it.purchasePrice || 0);
+      const qty = Number(it.quantity || 0);
+      const discount = Number(it.discount || 0);
+      const taxPercent = Number(it.taxPercent || 0);
+      const subtotal = price * qty;
+      const discountAmt = (subtotal * discount) / 100;
+      const taxable = subtotal - discountAmt;
+      const taxAmount = (taxable * taxPercent) / 100;
+      const total = taxable + taxAmount;
+      return recalcTableItem({
+        productId: it.productId,
+        productName: it.productName,
+        sku: it.sku,
+        quantity: qty,
+        price,
+        discount,
+        taxPercent,
+        taxAmount,
+        total,
+      });
+    });
+    setItemsTable(mapped.length ? mapped : [
+      {
+        productId: "",
+        productName: "",
+        sku: "",
+        quantity: 1,
+        price: 0,
+        discount: 0,
+        taxPercent: 0,
+        taxAmount: 0,
+        total: 0,
+      },
+    ]);
   };
 
+  /* View/Print */
   const handleView = (q: Quotation) => {
-    // View mode: show printable read-only layout (Header type B)
     setFormMode("view");
     setForm({
       reference: q.reference,
       date: q.date,
       customerId: q.customerId,
       customerName: q.customerName,
-      items: q.items.map(recalculateItem),
+      items: q.items.map((it) => ({ ...it })),
       orderTax: q.summary.orderTax.toString(),
       discount: q.summary.discount.toString(),
       shipping: q.summary.shipping.toString(),
       status: q.status,
       description: q.description || "",
     });
+
+    const mapped: TableItem[] = q.items.map((it) => {
+      const price = Number(it.purchasePrice || 0);
+      const qty = Number(it.quantity || 0);
+      const discount = Number(it.discount || 0);
+      const taxPercent = Number(it.taxPercent || 0);
+      const subtotal = price * qty;
+      const discountAmt = (subtotal * discount) / 100;
+      const taxable = subtotal - discountAmt;
+      const taxAmount = (taxable * taxPercent) / 100;
+      const total = taxable + taxAmount;
+      return recalcTableItem({
+        productId: it.productId,
+        productName: it.productName,
+        sku: it.sku,
+        quantity: qty,
+        price,
+        discount,
+        taxPercent,
+        taxAmount,
+        total,
+      });
+    });
+    setItemsTable(mapped);
   };
 
   const handleDelete = (ref: string) => {
@@ -248,6 +322,7 @@ export default function Quotation() {
     }
   };
 
+  /* Customer search/select for header */
   const handleCustomerSearch = (query: string) => {
     setForm((p) => ({ ...p, customerName: query, customerId: "" }));
     if (!query.trim()) return setFilteredCustomers([]);
@@ -263,130 +338,85 @@ export default function Quotation() {
     setFilteredCustomers([]);
   };
 
-  const handleProductSearch = (query: string, idx: number) => {
-    const items = [...form.items];
-    items[idx].productName = query;
-    items[idx].productId = "";
-    setForm((p) => ({ ...p, items }));
-    if (!query.trim()) return setFilteredProducts([]);
-    setFilteredProducts(
-      allProducts.filter(
-        (p) =>
-          p.productName.toLowerCase().includes(query.toLowerCase()) ||
-          p.sku.toLowerCase().includes(query.toLowerCase())
-      )
-    );
-  };
-
-  const handleProductSelect = (idx: number, item: ProductOption) => {
-    const prod = allProducts.find((p) => p.id === item.id);
-    if (!prod) return;
-
-    const quantity = form.items[idx]?.quantity || 1;
-    setForm((prev) => {
-      const items = [...prev.items];
-      items[idx] = {
-        productId: prod.id,
-        productName: prod.productName,
-        sku: prod.sku,
-        productImage: prod.productImage,
-        quantity,
-        purchasePrice: prod.price,
-        discount: 0,
-        taxPercent: 0,
-        totalCost: Number((prod.price * quantity).toFixed(2)),
-      };
-      return { ...prev, items };
-    });
-    setFilteredProducts([]);
-  };
-
-  const addItem = () => {
-    setForm((p) => ({
-      ...p,
-      items: [
-        ...p.items,
-        {
-          productId: "",
-          productName: "",
-          sku: "",
-          quantity: 1,
-          purchasePrice: 0,
-          discount: 0,
-          taxPercent: 0,
-          totalCost: 0,
-        },
-      ],
-    }));
-  };
-
-  const removeItem = (idx: number) => {
-    setForm((p) => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
-  };
-
-  const updateItem = (
-    idx: number,
-    field: "quantity" | "purchasePrice" | "discount" | "taxPercent",
-    value: number
-  ) => {
-    setForm((prev) => {
-      const items = [...prev.items];
-      items[idx] = { ...items[idx], [field]: value };
-      items[idx] = recalculateItem(items[idx]);
-      return { ...prev, items };
-    });
-  };
-
+  /* Totals (follows AddSalesModal totals style) */
   const totals = useMemo(() => {
-    // Sum latest item totals (already discount- and tax-adjusted)
-    const subTotal = form.items.reduce((sum, item) => {
-      const recalculated = recalculateItem(item);
-      return sum + recalculated.totalCost;
-    }, 0);
+    // subTotal is sum(price * qty) — before per-line discounts and taxes
+    const subTotal = itemsTable.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
 
-    // Discount is percentage (%)
-    const discountPercent = Number(form.discount) || 0;
-    const discountAmount = subTotal * (discountPercent / 100);
+    const orderDiscountPercent = Number(form.discount) || 0;
+    const orderDiscountAmount = (subTotal * orderDiscountPercent) / 100;
 
-    // Order tax is percentage (%)
-    const taxPercent = Number(form.orderTax) || 0;
-    const taxAmount = subTotal * (taxPercent / 100);
+    const orderTaxPercent = Number(form.orderTax) || 0;
+    const orderTaxAmount = (subTotal * orderTaxPercent) / 100;
 
     const shipping = Number(form.shipping) || 0;
 
-    const grand = subTotal - discountAmount + taxAmount + shipping;
+    const grandTotal = subTotal - orderDiscountAmount + orderTaxAmount + shipping;
 
     return {
       subTotal: Number(subTotal.toFixed(2)),
-      discountAmount: Number(discountAmount.toFixed(2)),
-      taxAmount: Number(taxAmount.toFixed(2)),
-      shipping,
-      grand: Number(grand.toFixed(2)),
+      discountAmount: Number(orderDiscountAmount.toFixed(2)),
+      taxAmount: Number(orderTaxAmount.toFixed(2)),
+      shipping: Number(shipping.toFixed(2)),
+      grand: Number(grandTotal.toFixed(2)),
     };
-  }, [form.items, form.orderTax, form.discount, form.shipping]);
+  }, [itemsTable, form.orderTax, form.discount, form.shipping]);
 
+  /* Submit */
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // If in view mode, just close modal (PageBase1 will keep footer)
+    // If view mode — close modal (PageBase1 handles footer)
     if (formMode === "view") {
       setFormMode(null);
       return;
     }
 
-    if (!form.customerId || form.items.some((i) => !i.productId)) {
+    if (!form.customerId || itemsTable.some((it) => !it.productId)) {
       alert("Please fill all required fields.");
       return;
     }
 
+    // Map TableItem -> QuotationItem
+    const mappedItems: QuotationItem[] = itemsTable.map((it) => {
+      const price = Number(it.price) || 0;
+      const qty = Number(it.quantity) || 0;
+      const discount = Number(it.discount) || 0;
+      const taxPercent = Number(it.taxPercent || 0);
+      const subtotal = price * qty;
+      const discountAmt = (subtotal * discount) / 100;
+      const taxable = subtotal - discountAmt;
+      const taxAmount = (taxable * taxPercent) / 100;
+      const total = taxable + taxAmount;
+      return {
+        productId: String(it.productId || ""),
+        productName: it.productName,
+        sku: it.sku,
+        productImage: undefined,
+        quantity: qty,
+        purchasePrice: price,
+        discount,
+        taxPercent,
+        taxAmount: Number(taxAmount.toFixed(2)),
+        totalCost: Number(total.toFixed(2)),
+      };
+    });
+
+    // update form.items for storage
+    const newForm = {
+      ...form,
+      items: mappedItems,
+    };
+    setForm(newForm);
+
     const newQuotation: Quotation = {
-      reference: form.reference,
+      reference: form.reference || generateRef(),
       date: form.date,
       customerId: form.customerId,
       customerName: form.customerName,
       status: form.status,
       total: totals.grand,
-      items: form.items,
+      items: mappedItems,
       summary: {
         orderTax: Number(form.orderTax),
         discount: Number(form.discount),
@@ -399,37 +429,20 @@ export default function Quotation() {
     if (formMode === "add") {
       setQuotations((p) => [newQuotation, ...p]);
     } else {
-      setQuotations((p) =>
-        p.map((q) => (q.reference === form.reference ? newQuotation : q))
-      );
+      setQuotations((p) => p.map((q) => (q.reference === newQuotation.reference ? newQuotation : q)));
     }
+
     setFormMode(null);
   };
 
-  /* Table Columns */
+  /* Table columns for PageBase1 list */
   const columns: Column[] = [
-    {
-      key: "index",
-      label: "#",
-      render: (_, __, i) =>
-        (currentPage - 1) * itemsPerPage + (i ?? 0) + 1,
-      align: "center",
-    },
+    { key: "index", label: "#", render: (_, __, i) => (currentPage - 1) * itemsPerPage + (i ?? 0) + 1, align: "center" },
     { key: "reference", label: "Reference" },
-    { key: "date", label: "Date", render: (v) => formatDate(v, "DD MMM YYYY") },
+    { key: "date", label: "Date", render: (v) => formatDate(v) },
     { key: "customerName", label: "Customer" },
-    {
-      key: "status",
-      label: "Status",
-      render: renderStatusBadge,
-      align: "center",
-    },
-    {
-      key: "total",
-      label: "Total",
-      render: (v) => `₹${Number(v).toFixed(2)}`,
-      align: "right",
-    },
+    { key: "status", label: "Status", render: renderStatusBadge, align: "center" },
+    { key: "total", label: "Total", render: formatCurrency, align: "right" },
   ];
 
   const rowActions = (row: Quotation) => (
@@ -441,7 +454,7 @@ export default function Quotation() {
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1 transition-all"
         title="View / Print"
       >
-        <i className="fa fa-eye"></i>
+        <i className="fa fa-eye" />
       </button>
 
       <button
@@ -451,7 +464,7 @@ export default function Quotation() {
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white rounded-lg text-xs p-2 me-1 transition-all"
         title="Edit"
       >
-        <i className="fa fa-edit"></i>
+        <i className="fa fa-edit" />
       </button>
 
       <button
@@ -461,7 +474,7 @@ export default function Quotation() {
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white rounded-lg text-xs p-2 transition-all"
         title="Delete"
       >
-        <i className="fa fa-trash-can"></i>
+        <i className="fa fa-trash-can" />
       </button>
     </>
   );
@@ -485,9 +498,9 @@ export default function Quotation() {
     </div>
   );
 
-  /* ---------- Modal Form (Add/Edit/View) ---------- */
+  /* Modal form: view mode uses read-only printable layout; add/edit uses editable form */
   const modalForm = () => {
-    // If view mode — return a read-only printable layout (Header Type B)
+    // view mode: read-only printable
     if (formMode === "view") {
       return (
         <div className="space-y-4 overflow-y-auto max-h-[65vh] p-2">
@@ -497,7 +510,7 @@ export default function Quotation() {
               <h2 className="text-2xl font-semibold">Quotation</h2>
               <div className="mt-2 text-sm text-gray-700">
                 <div><strong>Ref No:</strong> {form.reference}</div>
-                <div><strong>Date:</strong> {formatDate(form.date, "DD MMM YYYY")}</div>
+                <div><strong>Date:</strong> {formatDate(form.date)}</div>
               </div>
             </div>
 
@@ -506,7 +519,6 @@ export default function Quotation() {
               <div className="mt-3">
                 <strong>Customer Details:</strong>
                 <div className="mt-1">{form.customerName || "-"}</div>
-                {/* contact info omitted if not available */}
               </div>
             </div>
           </div>
@@ -526,25 +538,22 @@ export default function Quotation() {
                 </tr>
               </thead>
               <tbody>
-                {form.items.map((it, i) => {
-                  const recalced = recalculateItem(it);
-                  const price = Number(it.purchasePrice) || 0;
-                  const qty = Number(it.quantity) || 0;
-                  const discountPercent = Number(it.discount) || 0;
-                  const discountAmount = price * (discountPercent / 100);
-                  const priceAfterDiscount = price - discountAmount;
-                  const taxableAmount = priceAfterDiscount * qty;
-                  const taxAmount = taxableAmount * (Number(it.taxPercent || 0) / 100);
-
+                {itemsTable.map((it, i) => {
+                  // Ensure recalc used for display
+                  const rec = recalcTableItem(it);
+                  const price = Number(it.price || 0);
+                  const qty = Number(it.quantity || 0);
+                  const discountPercent = Number(it.discount || 0);
+                  const taxPercent = Number(it.taxPercent || 0);
                   return (
                     <tr key={i} className="border-t">
                       <td className="px-3 py-2">{it.productName}</td>
                       <td className="px-3 py-2 text-center">{qty}</td>
                       <td className="px-3 py-2 text-right">₹{price.toFixed(2)}</td>
                       <td className="px-3 py-2 text-right">{discountPercent}%</td>
-                      <td className="px-3 py-2 text-right">{it.taxPercent}%</td>
-                      <td className="px-3 py-2 text-right">₹{taxAmount.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-semibold">₹{recalced.totalCost.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right">{taxPercent}%</td>
+                      <td className="px-3 py-2 text-right">₹{rec.taxAmount.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right font-semibold">₹{rec.total.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -570,21 +579,21 @@ export default function Quotation() {
             <p className="text-sm text-gray-700 mt-2">{form.description || "-"}</p>
           </div>
 
-          {/* Print button (optional) */}
+          {/* Print button */}
           <div className="flex justify-end">
             <button
               type="button"
               onClick={() => window.print()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded"
             >
-              <i className="fa fa-print"></i> Print
+              <i className="fa fa-print" /> Print
             </button>
           </div>
         </div>
       );
     }
 
-    // Else (add / edit) — existing editable form
+    /* editable add/edit form */
     return (
       <form onSubmit={handleFormSubmit} className="space-y-6">
         {/* Header */}
@@ -596,15 +605,10 @@ export default function Quotation() {
               onSearch={handleCustomerSearch}
               onSelect={handleCustomerSelect}
               items={
-                formMode === "edit" && form.customerId
+                form.customerId
                   ? [
-                    ...filteredCustomers.map((c) => ({
-                      id: c.id,
-                      display: c.name,
-                    })),
-                    ...allCustomers
-                      .filter((c) => c.id === form.customerId)
-                      .map((c) => ({ id: c.id, display: c.name })),
+                    ...filteredCustomers.map((c) => ({ id: c.id, display: c.name })),
+                    ...allCustomers.filter((c) => c.id === form.customerId).map((c) => ({ id: c.id, display: c.name })),
                   ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
                   : filteredCustomers.map((c) => ({ id: c.id, display: c.name }))
               }
@@ -613,209 +617,32 @@ export default function Quotation() {
           </div>
           <div>
             <label>Date *</label>
-            <input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
-              required
-              className="w-full border rounded px-3 py-2"
-            />
+            <input type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} required className="w-full border rounded px-3 py-2" />
           </div>
           <div>
             <label>Reference</label>
-            <input
-              type="text"
-              value={form.reference}
-              readOnly
-              className="w-full border rounded px-3 py-2 bg-gray-100"
-            />
+            <input type="text" value={form.reference} readOnly className="w-full border rounded px-3 py-2 bg-gray-100" />
           </div>
         </div>
 
-        {/* Products Table */}
+        {/* ProductsTable (editable) */}
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-3 py-2 text-left w-80">Product</th>
-                <th className="px-3 py-2 text-center w-16">Qty</th>
-                <th className="px-3 py-2 text-right w-24">Price(₹)</th>
-                <th className="px-3 py-2 text-right w-24">Discount(%)</th>
-                <th className="px-3 py-2 text-right w-20">Tax(%)</th>
-                <th className="px-3 py-2 text-right w-24">Tax Amt(₹)</th>
-                <th className="px-3 py-2 text-right w-28">Total(₹)</th>
-                <th className="w-10"></th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {form.items.map((item, idx) => {
-                const qty = item.quantity || 0;
-                const price = item.purchasePrice || 0;
-                const discount = item.discount || 0;
-                const taxPercent = item.taxPercent || 0;
-
-                const discountAmount = price * (discount / 100);
-                const priceAfterDiscount = price - discountAmount;
-
-                const taxableAmount = priceAfterDiscount * qty;
-                const taxAmount = taxableAmount * (taxPercent / 100);
-
-                const totalCost = taxableAmount + taxAmount;
-
-                return (
-                  <tr key={idx} className="border-t hover:bg-gray-50">
-                    <td className="px-2 py-1">
-                      <ProductAutoComplete
-                        value={item.productName}
-                        onSearch={(q) => handleProductSearch(q, idx)}
-                        onSelect={(sel) => handleProductSelect(idx, sel)}
-                        items={
-                          formMode === "edit" && item.productId
-                            ? [
-                              ...filteredProducts.map((p) => ({
-                                id: p.id,
-                                display: p.productName,
-                                extra: {
-                                  SKU: p.sku,
-                                  purchasePrice: `₹${Number(p.price).toFixed(
-                                    2
-                                  )}`,
-                                },
-                              })),
-                              ...allProducts
-                                .filter((p) => p.id === item.productId)
-                                .map((p) => ({
-                                  id: p.id,
-                                  display: p.productName,
-                                  extra: {
-                                    SKU: p.sku,
-                                    purchasePrice: `₹${Number(
-                                      p.price
-                                    ).toFixed(2)}`,
-                                  },
-                                })),
-                            ].filter(
-                              (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-                            )
-                            : filteredProducts.map((p) => ({
-                              id: p.id,
-                              display: p.productName,
-                              extra: {
-                                SKU: p.sku,
-                                purchasePrice: `₹${Number(p.price).toFixed(
-                                  2
-                                )}`,
-                              },
-                            }))
-                        }
-                        placeholder="Search product..."
-                        className="w-60"
-                      />
-                    </td>
-
-                    <td className="text-center px-2 py-1">
-                      <input
-                        type="number"
-                        min="1"
-                        value={qty}
-                        onChange={(e) =>
-                          updateItem(idx, "quantity", Number(e.target.value) || 1)
-                        }
-                        className="border rounded px-1.5 py-1 w-14 text-center"
-                      />
-                    </td>
-
-                    <td className="text-center px-2 py-1">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={price}
-                        onChange={(e) =>
-                          updateItem(idx, "purchasePrice", Number(e.target.value))
-                        }
-                        className="border rounded px-1.5 py-1 w-16 text-right"
-                      />
-                    </td>
-
-                    <td className="text-center px-2 py-1">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={discount}
-                        onChange={(e) =>
-                          updateItem(idx, "discount", Number(e.target.value))
-                        }
-                        className="border rounded px-1.5 py-1 w-16 text-right text-red-600"
-                      />
-                    </td>
-
-                    <td className="text-right px-2 py-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={taxPercent}
-                        onChange={(e) =>
-                          updateItem(idx, "taxPercent", Number(e.target.value))
-                        }
-                        className="border rounded px-2 py-1 w-16 text-right"
-                      />
-                    </td>
-
-                    <td className="text-right px-3 py-2 text-gray-700">
-                      ₹{taxAmount.toFixed(2)}
-                    </td>
-
-                    <td className="text-right px-3 py-2 font-semibold text-blue-600">
-                      ₹{totalCost.toFixed(2)}
-                    </td>
-
-                    <td className="text-center px-3 py-2">
-                      {form.items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(idx)}
-                          className="text-gray-700 hover:text-red-600"
-                        >
-                          <i className="fa fa-trash-can text-sm"></i>
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={addItem}
-            className="mt-4 text-blue-600 font-medium flex items-center gap-2"
-          >
-            <i className="fa fa-plus-circle"></i> Add Another Product
-          </button>
+          <ProductsTable
+            value={Array.isArray(itemsTable) ? itemsTable : []}
+            onChange={(v) => setItemsTable(v.map(recalcTableItem))}
+            minRows={1}
+          />
         </div>
 
         {/* Summary */}
         <div className="flex justify-end">
           <div className="w-96 bg-gray-50 p-6 rounded-lg space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>{" "}
-              <span>₹{totals.subTotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Discount:</span>{" "}
-              <span>-₹{totals.discountAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax:</span> <span>₹{totals.taxAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping:</span>{" "}
-              <span>₹{totals.shipping.toFixed(2)}</span>
-            </div>
+            <div className="flex justify-between"><span>Subtotal:</span> <span>₹{totals.subTotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Discount:</span> <span>-₹{totals.discountAmount.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Tax:</span> <span>₹{totals.taxAmount.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Shipping:</span> <span>₹{totals.shipping.toFixed(2)}</span></div>
             <div className="flex justify-between font-bold text-xl border-t-2 border-gray-300 pt-3">
-              <span>Grand Total:</span>{" "}
-              <span className="text-blue-600">₹{totals.grand.toFixed(2)}</span>
+              <span>Grand Total:</span> <span className="text-blue-600">₹{totals.grand.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -823,55 +650,28 @@ export default function Quotation() {
         {/* Bottom Fields */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label>Order Tax</label>
-            <input
-              type="number"
-              value={form.orderTax}
-              onChange={(e) => setForm((p) => ({ ...p, orderTax: e.target.value }))}
-              className="w-full border rounded px-3 py-2"
-            />
+            <label>Order Tax (%)</label>
+            <input type="number" value={form.orderTax} onChange={(e) => setForm((p) => ({ ...p, orderTax: e.target.value }))} className="w-full border rounded px-3 py-2" />
           </div>
           <div>
-            <label>Discount</label>
-            <input
-              type="number"
-              value={form.discount}
-              onChange={(e) => setForm((p) => ({ ...p, discount: e.target.value }))}
-              className="w-full border rounded px-3 py-2"
-            />
+            <label>Discount (%)</label>
+            <input type="number" value={form.discount} onChange={(e) => setForm((p) => ({ ...p, discount: e.target.value }))} className="w-full border rounded px-3 py-2" />
           </div>
           <div>
-            <label>Shipping</label>
-            <input
-              type="number"
-              value={form.shipping}
-              onChange={(e) => setForm((p) => ({ ...p, shipping: e.target.value }))}
-              className="w-full border rounded px-3 py-2"
-            />
+            <label>Shipping (₹)</label>
+            <input type="number" value={form.shipping} onChange={(e) => setForm((p) => ({ ...p, shipping: e.target.value }))} className="w-full border rounded px-3 py-2" />
           </div>
           <div>
             <label>Status</label>
-            <select
-              value={form.status}
-              onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as any }))}
-              className="w-full border rounded px-3 py-2"
-            >
-              {QUOTATION_STATUSES.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
+            <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as any }))} className="w-full border rounded px-3 py-2">
+              {QUOTATION_STATUSES.map((s) => (<option key={s}>{s}</option>))}
             </select>
           </div>
         </div>
 
         <div>
           <label>Description</label>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-            rows={4}
-            className="w-full border rounded px-3 py-2"
-            placeholder="Enter description..."
-          />
+          <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={4} className="w-full border rounded px-3 py-2" placeholder="Enter description..." />
         </div>
       </form>
     );
@@ -897,9 +697,7 @@ export default function Quotation() {
       rowActions={rowActions}
       formMode={formMode}
       setFormMode={setFormMode}
-      modalTitle={
-        formMode === "add" ? "Add Quotation" : formMode === "edit" ? "Edit Quotation" : "View Quotation"
-      }
+      modalTitle={formMode === "add" ? "Add Quotation" : formMode === "edit" ? "Edit Quotation" : "View Quotation"}
       modalForm={modalForm}
       onFormSubmit={handleFormSubmit}
       customFilters={customFilters}

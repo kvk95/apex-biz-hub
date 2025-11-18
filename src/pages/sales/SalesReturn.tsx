@@ -1,41 +1,37 @@
 /* -------------------------------------------------
-   SalesReturn – fully working edit modal, string IDs
+   SalesReturn
    ------------------------------------------------- */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
+import { renderStatusBadge } from "@/utils/tableUtils";
 import {
   AutoCompleteTextBox,
   AutoCompleteItem,
 } from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { PAYMENT_STATUSES, SORT_OPTIONS } from "@/constants/constants";
+import { useLocalization } from "@/utils/formatters";
+
+import ProductsTable, { TableItem } from "@/components/Screen/ProductsTable";
 
 /* ---------- Types ---------- */
 
-type ProductOption = {
-  id: string;
-  display: string;
-  extra: { SKU: string; Price: string };
+type ProductOption = AutoCompleteItem<string> & {
+  extra?: { SKU?: string; Price?: string };
 };
 
-type CustomerOption = {
-  id: string;
-  display: string;
-};
-
+type CustomerOption = AutoCompleteItem<string>;
 
 const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
-const ProductAutoComplete = AutoCompleteTextBox<ProductOption>;
 
 type Customer = { id: string; name: string };
 
 type Product = {
   id: string;
-  sku: string;
+  sku?: string;
   productName: string;
-  price: number;
+  price?: number;
   productImage?: string;
   stock?: number;
 };
@@ -48,9 +44,9 @@ type ReturnItem = {
   stock: number;
   quantity: number;
   netUnitPrice: number;
-  discount: number;
+  discount: number; // percent
   taxPercent: number;
-  subtotal: number;
+  subtotal: number; // total after item discount & tax
 };
 
 type Return = {
@@ -60,9 +56,6 @@ type Return = {
   customerId: string;
   customerName: string;
   customerImage?: string;
-  productId?: string;
-  productName?: string;
-  productImage?: string;
   status: string;
   paymentStatus: string;
   total: number;
@@ -70,15 +63,16 @@ type Return = {
   due: number;
   items: ReturnItem[];
   summary: {
-    orderTax: number;
-    discount: number;
-    shipping: number;
+    orderTax: number; // percent
+    discount: number; // percent
+    shipping: number; // absolute
     grandTotal: number;
   };
   notes?: string;
 };
 
 /* ---------- Component ---------- */
+
 export default function SalesReturn() {
   const [returns, setReturns] = useState<Return[]>([]);
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
@@ -96,18 +90,19 @@ export default function SalesReturn() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatDate, formatCurrency } = useLocalization();
 
+  // Form header & global fields
   const [form, setForm] = useState<{
     customerId: string;
     customerName: string;
     date: string;
     reference: string;
-    orderTax: string;
-    discount: string;
-    shipping: string;
+    orderTax: string; // percent
+    discount: string; // percent
+    shipping: string; // absolute
     status: string;
     paymentStatus: string;
-    items: ReturnItem[];
     notes: string;
   }>({
     customerId: "",
@@ -119,9 +114,24 @@ export default function SalesReturn() {
     shipping: "0",
     status: "Pending",
     paymentStatus: "UnPaid",
-    items: [],
     notes: "",
   });
+
+  // UI table items (controlled by ProductsTable)
+  const [itemsTable, setItemsTable] = useState<TableItem[]>([
+    {
+      productId: "",
+      productName: "",
+      sku: "",
+      productImage: undefined,
+      quantity: 1,
+      price: 0,
+      discount: 0,
+      taxPercent: 0,
+      taxAmount: 0,
+      total: 0,
+    },
+  ]);
 
   /* ---------- Load Master Data ---------- */
   useEffect(() => {
@@ -133,9 +143,12 @@ export default function SalesReturn() {
           apiService.get<Product[]>("Products"),
           apiService.get<Return[]>("SalesReturn"),
         ]);
-        if (custRes.status.code === "S") setAllCustomers(custRes.result);
-        if (prodRes.status.code === "S") setAllProducts(prodRes.result);
-        if (retRes.status.code === "S") setReturns(retRes.result);
+        if (custRes?.status?.code === "S") setAllCustomers(custRes.result);
+        if (prodRes?.status?.code === "S") {
+          setAllProducts(prodRes.result);
+          setFilteredProducts(prodRes.result);
+        }
+        if (retRes?.status?.code === "S") setReturns(retRes.result);
       } catch (e) {
         console.error(e);
       } finally {
@@ -156,107 +169,122 @@ export default function SalesReturn() {
           r.customerName.toLowerCase().includes(search.toLowerCase())
       );
     }
-    if (selectedCustomer !== "All")
-      list = list.filter((r) => r.customerName === selectedCustomer);
-    if (selectedStatus !== "All")
-      list = list.filter((r) => r.status === selectedStatus);
-    if (selectedPaymentStatus !== "All")
-      list = list.filter((r) => r.paymentStatus === selectedPaymentStatus);
+    if (selectedCustomer !== "All") list = list.filter((r) => r.customerName === selectedCustomer);
+    if (selectedStatus !== "All") list = list.filter((r) => r.status === selectedStatus);
+    if (selectedPaymentStatus !== "All") list = list.filter((r) => r.paymentStatus === selectedPaymentStatus);
 
     // sorting
-    if (selectedSort === "Recently Added")
-      list.sort((a, b) => +new Date(b.date) - +new Date(a.date));
-    else if (selectedSort === "Ascending")
-      list.sort((a, b) => a.total - b.total);
-    else if (selectedSort === "Descending")
-      list.sort((a, b) => b.total - a.total);
+    if (selectedSort === "Recently Added") list.sort((a, b) => +new Date(b.date) - +new Date(a.date));
+    else if (selectedSort === "Ascending") list.sort((a, b) => a.total - b.total);
+    else if (selectedSort === "Descending") list.sort((a, b) => b.total - a.total);
     else if (selectedSort === "Last 7 Days") {
       const cut = new Date();
       cut.setDate(cut.getDate() - 7);
       list = list.filter((r) => new Date(r.date) >= cut);
     }
-    // … other sort cases (omitted for brevity – keep yours)
 
     return list;
-  }, [
-    returns,
-    search,
-    selectedCustomer,
-    selectedStatus,
-    selectedPaymentStatus,
-    selectedSort,
-  ]);
+  }, [returns, search, selectedCustomer, selectedStatus, selectedPaymentStatus, selectedSort]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const customerOptions = useMemo(
-    () => ["All", ...Array.from(new Set(returns.map((r) => r.customerName)))],
-    [returns]
-  );
+  const customerOptions = useMemo(() => ["All", ...Array.from(new Set(returns.map((r) => r.customerName)))], [returns]);
 
-  /* ---------- Handlers ---------- */
+  /* ---------- Handlers (preserve your existing ones) ---------- */
+  const generateRef = () => `SR-${Date.now().toString().slice(-6)}`;
+
   const handleAddClick = () => {
     setFilteredCustomers([]);
-    setFilteredProducts([]);
+    setFilteredProducts(allProducts);
     setFormMode("add");
     setForm({
       customerId: "",
       customerName: "",
       date: new Date().toISOString().split("T")[0],
-      reference: `SR-${Date.now()}`,
+      reference: generateRef(),
       orderTax: "0",
       discount: "0",
       shipping: "0",
       status: "Pending",
       paymentStatus: "UnPaid",
-      items: [
-        {
-          productId: "",
-          productName: "",
-          sku: "",
-          stock: 0,
-          quantity: 1,
-          netUnitPrice: 0,
-          discount: 0,
-          taxPercent: 0,
-          subtotal: 0,
-        },
-      ],
       notes: "",
     });
+    setItemsTable([
+      {
+        productId: "",
+        productName: "",
+        sku: "",
+        productImage: undefined,
+        quantity: 1,
+        price: 0,
+        discount: 0,
+        taxPercent: 0,
+        taxAmount: 0,
+        total: 0,
+      },
+    ]);
   };
 
   const handleEdit = (ret: Return) => {
     setFilteredCustomers([]);
-    setFilteredProducts([]);
+    setFilteredProducts(allProducts);
     setFormMode("edit");
     setForm({
       customerId: ret.customerId,
       customerName: ret.customerName,
       date: ret.date,
       reference: ret.reference,
-      orderTax: ret.summary.orderTax.toString(),
-      discount: ret.summary.discount.toString(),
-      shipping: ret.summary.shipping.toString(),
+      orderTax: String(ret.summary.orderTax ?? 0),
+      discount: String(ret.summary.discount ?? 0),
+      shipping: String(ret.summary.shipping ?? 0),
       status: ret.status,
       paymentStatus: ret.paymentStatus,
-      items: ret.items.map((i) => ({
-        productId: i.productId,
-        productName: i.productName,
-        sku: i.sku,
-        productImage: i.productImage,
-        stock: i.stock,
-        quantity: i.quantity,
-        netUnitPrice: i.netUnitPrice,
-        discount: i.discount,
-        taxPercent: i.taxPercent,
-        subtotal: i.subtotal,
-      })),
       notes: ret.notes || "",
     });
+
+    // Map ReturnItem -> TableItem
+    const mapped: TableItem[] = (ret.items || []).map((it) => {
+      // item-level mapping follows Model B (discount percent)
+      const price = Number(it.netUnitPrice || 0);
+      const qty = Number(it.quantity || 0);
+      const discount = Number(it.discount || 0);
+      const taxPercent = Number(it.taxPercent || 0);
+      const subtotal = price * qty;
+      const discountAmt = (subtotal * discount) / 100;
+      const taxable = subtotal - discountAmt;
+      const taxAmount = (taxable * taxPercent) / 100;
+      const total = taxable + taxAmount;
+      return {
+        productId: it.productId,
+        productName: it.productName,
+        sku: it.sku,
+        productImage: it.productImage,
+        quantity: qty,
+        price,
+        discount,
+        taxPercent,
+        taxAmount: Number(taxAmount.toFixed(2)),
+        total: Number(total.toFixed(2)),
+      } as TableItem;
+    });
+
+    setItemsTable(mapped.length ? mapped : [
+      {
+        productId: "",
+        productName: "",
+        sku: "",
+        productImage: undefined,
+        quantity: 1,
+        price: 0,
+        discount: 0,
+        taxPercent: 0,
+        taxAmount: 0,
+        total: 0,
+      },
+    ]);
   };
 
   const handleDelete = (ref: string) => {
@@ -281,151 +309,92 @@ export default function SalesReturn() {
     setCurrentPage(1);
   };
 
-  /* ---------- Customer Search ---------- */
+  /* ---------- Customer search/select ---------- */
   const handleCustomerSearch = (query: string) => {
     setForm((p) => ({ ...p, customerName: query, customerId: "" }));
     if (!query.trim()) {
       setFilteredCustomers([]);
       return;
     }
-    const filtered = allCustomers.filter((c) =>
-      c.name.toLowerCase().includes(query.toLowerCase())
-    );
+    const filtered = allCustomers.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
     setFilteredCustomers(filtered);
   };
 
   const handleCustomerSelect = (item: CustomerOption) => {
-    setForm((p) => ({
-      ...p,
-      customerId: item.id,
-      customerName: item.display,
-    }));
+    setForm((p) => ({ ...p, customerId: item.id, customerName: item.display }));
     setFilteredCustomers([]);
   };
 
-  /* ---------- Product Search ---------- */
-  const handleProductSearch = (query: string, idx: number) => {
-    const items = [...form.items];
-    items[idx].productName = query;
-    items[idx].productId = "";
-    setForm((p) => ({ ...p, items }));
-
-    if (!query.trim()) {
-      setFilteredProducts([]);
-      return;
-    }
-    const filtered = allProducts.filter(
-      (p) =>
-        p.productName.toLowerCase().includes(query.toLowerCase()) ||
-        p.sku.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  };
-
-  const handleProductSelect = (idx: number, item: ProductOption) => {
-    const prod = allProducts.find((p) => p.id === item.id);
-    if (!prod) return;
-
-    const items = [...form.items];
-    const price = Number(prod.price ?? 0);
-    const qty = items[idx].quantity || 1;
-    const subtotal = price * qty;
-    const discountAmt = items[idx].discount || 0;
-    const taxable = subtotal - discountAmt;
-    const taxAmt = (taxable * (items[idx].taxPercent || 0)) / 100;
-
-    items[idx] = {
-      productId: prod.id,
-      productName: prod.productName,
-      sku: prod.sku,
-      productImage: prod.productImage,
-      stock: prod.stock ?? 0,
-      quantity: qty,
-      netUnitPrice: price,
-      discount: discountAmt,
-      taxPercent: items[idx].taxPercent || 0,
-      subtotal: parseFloat((taxable + taxAmt).toFixed(2)),
-    };
-    setForm((p) => ({ ...p, items }));
-    setFilteredProducts([]);
-  };
-
-  const addItem = () => {
-    setForm((p) => ({
-      ...p,
-      items: [
-        ...p.items,
-        {
-          productId: "",
-          productName: "",
-          sku: "",
-          stock: 0,
-          quantity: 1,
-          netUnitPrice: 0,
-          discount: 0,
-          taxPercent: 0,
-          subtotal: 0,
-        },
-      ],
-    }));
-  };
-
-  const removeItem = (idx: number) => {
-    setForm((p) => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
-  };
-
-  const handleItemChange = (
-    idx: number,
-    field: keyof ReturnItem,
-    value: string
-  ) => {
-    const items = [...form.items];
-    const num = Number(value) || 0;
-    (items[idx] as any)[field] = num;
-
-    const p = items[idx];
-    const subtotal = p.netUnitPrice * p.quantity;
-    const taxable = subtotal - p.discount;
-    const taxAmt = (taxable * p.taxPercent) / 100;
-    items[idx].subtotal = parseFloat((taxable + taxAmt).toFixed(2));
-
-    setForm((prev) => ({ ...prev, items }));
-  };
-
-  /* ---------- Totals ---------- */
+  /* ---------- Totals (Model B; same as Quotation) ---------- */
   const totals = useMemo(() => {
-    // Item subtotal already includes per-item tax & item discount
-    const subTotal = form.items.reduce((sum, i) => sum + i.subtotal, 0);
+    // subtotal is sum(price * qty) — BEFORE per-line discounts and per-line taxes
+    const subTotal = itemsTable.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
 
-    // Global discount only
-    const globalDiscount = Number(form.discount) || 0;
+    // global discount percent applied on subTotal
+    const orderDiscountPercent = Number(form.discount) || 0;
+    const orderDiscountAmount = (subTotal * orderDiscountPercent) / 100;
 
-    // Global order tax only (do not add per-item tax here)
-    const globalOrderTax = Number(form.orderTax) || 0;
+    // global order tax percent applied on subTotal
+    const orderTaxPercent = Number(form.orderTax) || 0;
+    const orderTaxAmount = (subTotal * orderTaxPercent) / 100;
 
     const shipping = Number(form.shipping) || 0;
 
-    const grand = subTotal - globalDiscount + globalOrderTax + shipping;
+    const grandTotal = subTotal - orderDiscountAmount + orderTaxAmount + shipping;
 
     return {
-      subTotal,
-      discountTotal: globalDiscount,
-      taxTotal: globalOrderTax,
-      grand: parseFloat(grand.toFixed(2)),
+      subTotal: Number(subTotal.toFixed(2)),
+      discountAmount: Number(orderDiscountAmount.toFixed(2)),
+      taxAmount: Number(orderTaxAmount.toFixed(2)),
+      shipping: Number(shipping.toFixed(2)),
+      grand: Number(grandTotal.toFixed(2)),
     };
-  }, [form.items, form.orderTax, form.discount, form.shipping]);
+  }, [itemsTable, form.orderTax, form.discount, form.shipping]);
 
-  /* ---------- Submit ---------- */
+  /* ---------- Submit (map TableItem -> ReturnItem) ---------- */
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.customerId ||
-      !form.reference.trim() ||
-      form.items.some((i) => !i.productId)
-    ) {
-      alert("Please fill all required fields.");
+
+    // Validate header + table rows
+    if (!form.customerId) {
+      alert("Please select a customer.");
       return;
     }
+    if (!form.reference.trim()) {
+      alert("Reference required.");
+      return;
+    }
+    if (itemsTable.some((it) => !it.productId)) {
+      alert("Please select products for all rows.");
+      return;
+    }
+
+    // Map TableItem -> ReturnItem (Model B mapping)
+    const mappedItems: ReturnItem[] = itemsTable.map((it) => {
+      const price = Number(it.price || 0);
+      const qty = Number(it.quantity || 0);
+      const discount = Number(it.discount || 0); // percent
+      const taxPercent = Number(it.taxPercent || 0);
+
+      const subtotalRaw = price * qty;
+      const discountAmt = (subtotalRaw * discount) / 100;
+      const taxable = subtotalRaw - discountAmt;
+      const taxAmt = (taxable * taxPercent) / 100;
+      const total = taxable + taxAmt;
+
+      return {
+        productId: String(it.productId || ""),
+        productName: it.productName || "",
+        sku: it.sku || "",
+        productImage: it.productImage,
+        stock: 0,
+        quantity: qty,
+        netUnitPrice: price,
+        discount, // percent
+        taxPercent,
+        subtotal: Number(total.toFixed(2)),
+      };
+    });
 
     const newReturn: Return = {
       reference: form.reference.trim(),
@@ -437,11 +406,11 @@ export default function SalesReturn() {
       total: totals.grand,
       paid: 0,
       due: totals.grand,
-      items: form.items,
+      items: mappedItems,
       summary: {
-        orderTax: Number(form.orderTax),
-        discount: Number(form.discount),
-        shipping: Number(form.shipping),
+        orderTax: Number(form.orderTax) || 0,
+        discount: Number(form.discount) || 0,
+        shipping: Number(form.shipping) || 0,
         grandTotal: totals.grand,
       },
       notes: form.notes,
@@ -450,60 +419,29 @@ export default function SalesReturn() {
     if (formMode === "add") {
       setReturns((prev) => [newReturn, ...prev]);
     } else {
-      setReturns((prev) =>
-        prev.map((r) => (r.reference === form.reference ? { ...r, ...newReturn } : r))
-      );
+      setReturns((prev) => prev.map((r) => (r.reference === form.reference ? { ...r, ...newReturn } : r)));
     }
+
     setFormMode(null);
   };
 
-  /* ---------- Table Columns ---------- */
+  /* ---------- Table columns & actions ---------- */
   const columns: Column[] = [
     {
       key: "index",
       label: "#",
-      render: (_, __, idx) =>
-        (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
+      render: (_, __, idx) => (currentPage - 1) * itemsPerPage + (idx ?? 0) + 1,
       align: "center",
       className: "w-12",
     },
     { key: "reference", label: "Reference" },
-    {
-      key: "date",
-      label: "Date",
-      render: (v) => <>{formatDate(v, "DD MMM YYYY")}</>,
-    },
+    { key: "date", label: "Date", render: (v) => <>{formatDate(v)}</> },
     { key: "customerName", label: "Customer" },
-    {
-      key: "status",
-      label: "Status",
-      render: renderStatusBadge,
-      align: "center",
-    },
-    {
-      key: "total",
-      label: "Total",
-      render: (v) => `₹${Number(v).toFixed(2)}`,
-      align: "right",
-    },
-    {
-      key: "paid",
-      label: "Paid",
-      render: (v) => `₹${Number(v).toFixed(2)}`,
-      align: "right",
-    },
-    {
-      key: "due",
-      label: "Due",
-      render: (v) => `₹${Number(v).toFixed(2)}`,
-      align: "right",
-    },
-    {
-      key: "paymentStatus",
-      label: "Payment Status",
-      render: renderStatusBadge,
-      align: "center",
-    },
+    { key: "status", label: "Status", render: renderStatusBadge, align: "center" },
+    { key: "total", label: "Total", render: formatCurrency, align: "right" },
+    { key: "paid", label: "Paid", render: formatCurrency, align: "right" },
+    { key: "due", label: "Due", render: formatCurrency, align: "right" },
+    { key: "paymentStatus", label: "Payment Status", render: renderStatusBadge, align: "center" },
   ];
 
   const rowActions = (row: Return) => (
@@ -513,7 +451,7 @@ export default function SalesReturn() {
         aria-label={`Edit ${row.reference}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 me-1"
       >
-        <i className="fa fa-edit"></i>
+        <i className="fa fa-edit" />
         <span className="sr-only">Edit</span>
       </button>
       <button
@@ -521,382 +459,120 @@ export default function SalesReturn() {
         aria-label={`Delete ${row.reference}`}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 me-1"
       >
-        <i className="fa fa-trash-can"></i>
+        <i className="fa fa-trash-can" />
         <span className="sr-only">Delete</span>
       </button>
     </>
   );
 
-  /* ---------- Filters ---------- */
   const customFilters = () => (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-3 w-full">
       <div className="w-full md:w-auto md:max-w-md">
-        <SearchInput
-          value={search}
-          placeholder="Search by Reference or Customer..."
-          onSearch={handleSearchChange}
-          className="w-full"
-        />
+        <SearchInput value={search} placeholder="Search by Reference or Customer..." onSearch={handleSearchChange} className="w-full" />
       </div>
       <div className="flex gap-2 flex-wrap justify-end w-full md:w-auto">
-        <select
-          value={selectedCustomer}
-          onChange={(e) => setSelectedCustomer(e.target.value)}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
-        >
-          {customerOptions.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
+        <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]">
+          {customerOptions.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
-        >
+        <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value as any)} className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]">
           <option>All</option>
-          {["Pending", "Approved", "Rejected", "Completed"].map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
+          {["Pending", "Approved", "Rejected", "Completed"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
 
-        <select
-          value={selectedPaymentStatus}
-          onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]"
-        >
+        <select value={selectedPaymentStatus} onChange={(e) => setSelectedPaymentStatus(e.target.value as any)} className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px]">
           <option>All</option>
-          {PAYMENT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
+          {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
 
-        <select
-          value={selectedSort}
-          onChange={(e) => setSelectedSort(e.target.value as any)}
-          className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
-        >
-          {SORT_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
+        <select value={selectedSort} onChange={(e) => setSelectedSort(e.target.value as any)} className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]">
+          {SORT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
     </div>
   );
 
-  /* ---------- Modal Form ---------- */
+  /* ---------- Modal Form (only modal area adjusted to use ProductsTable) ---------- */
   const modalForm = () => (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       {/* Top Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label htmlFor="customerName" className="block text-sm font-medium mb-1">
-            Customer Name *
-          </label>
+          <label htmlFor="customerName" className="block text-sm font-medium mb-1">Customer Name *</label>
           <CustomerAutoComplete
             value={form.customerName}
             onSearch={handleCustomerSearch}
             onSelect={handleCustomerSelect}
             items={
-              formMode === "edit" && form.customerId
+              form.customerId
                 ? [
-                  ...filteredCustomers.map((c) => ({
-                    id: c.id,
-                    display: c.name,
-                  })),
-                  ...allCustomers
-                    .filter((c) => c.id === form.customerId)
-                    .map((c) => ({
-                      id: c.id,
-                      display: c.name,
-                    })),
+                  ...filteredCustomers.map((c) => ({ id: c.id, display: c.name })),
+                  ...allCustomers.filter((c) => c.id === form.customerId).map((c) => ({ id: c.id, display: c.name })),
                 ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
-                : filteredCustomers.map((c) => ({
-                  id: c.id,
-                  display: c.name,
-                }))
+                : filteredCustomers.map((c) => ({ id: c.id, display: c.name }))
             }
             placeholder="Search customer..."
           />
         </div>
 
         <div>
-          <label htmlFor="date" className="block text-sm font-medium mb-1">
-            Date *
-          </label>
-          <input
-            id="date"
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-            required
-          />
+          <label htmlFor="date" className="block text-sm font-medium mb-1">Date *</label>
+          <input id="date" type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" required />
         </div>
 
         <div>
-          <label htmlFor="reference" className="block text-sm font-medium mb-1">
-            Reference *
-          </label>
-          <input
-            id="reference"
-            type="text"
-            value={form.reference}
-            onChange={(e) => setForm((p) => ({ ...p, reference: e.target.value }))}
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-            required
-          />
+          <label htmlFor="reference" className="block text-sm font-medium mb-1">Reference *</label>
+          <input id="reference" type="text" value={form.reference} onChange={(e) => setForm((p) => ({ ...p, reference: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" required />
         </div>
       </div>
 
-      {/* Product Table */}
-      <div>
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-3 py-2 text-left">Product</th>
-              <th className="px-3 py-2 text-center">Stock</th>
-              <th className="px-3 py-2 text-center">QTY</th>
-              <th className="px-3 py-2 text-right">Net Unit Price(₹)</th>
-              <th className="px-3 py-2 text-right">Discount(₹)</th>
-              <th className="px-3 py-2 text-right">Tax %</th>
-              <th className="px-3 py-2 text-right">Subtotal(₹)</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {form.items.map((item, idx) => (
-              <tr key={idx} className="border-t">
-                <td className="px-3 py-2">
-                  <ProductAutoComplete
-                    value={item.productName}
-                    onSearch={(q) => handleProductSearch(q, idx)}
-                    onSelect={(sel) => handleProductSelect(idx, sel)}
-                    items={
-                      formMode === "edit" && item.productId
-                        ? [
-                          ...filteredProducts.map((p) => ({
-                            id: p.id,
-                            display: p.productName,
-                            extra: {
-                              SKU: p.sku,
-                              Price: `₹${Number(p.price).toFixed(2)}`
-                            }
-                          })),
-                          ...allProducts
-                            .filter((p) => p.id === item.productId)
-                            .map((p) => ({
-                              id: p.id,
-                              display: p.productName,
-                              extra: {
-                                SKU: p.sku,
-                                Price: `₹${Number(p.price).toFixed(2)}`
-                              }
-                            })),
-                        ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
-                        : filteredProducts.map((p) => ({
-                          id: p.id,
-                          display: p.productName,
-                          extra: {
-                            SKU: p.sku,
-                            Price: `₹${Number(p.price).toFixed(2)}`
-                          }
-                        }))
-                    }
-                    placeholder="Search product..."
-                    renderItem={(it, highlighted) => (
-                      <div className={`px-3 py-2 cursor-pointer ${highlighted ? "bg-blue-100" : "hover:bg-gray-100"}`}>
-                        <div className="text-sm truncate font-bold" title={it.display}>{it.display}</div>
-                        <div className="text-xs text-gray-500 flex justify-between mt-1">
-                          <span>{it.extra?.SKU ?? ""}</span>
-                          <span>{it.extra?.Price ?? ""}</span>
-                        </div>
-                      </div>
-                    )}
-                  />
-                </td>
-                <td className="text-center">{item.stock}</td>
-                <td>
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleItemChange(idx, "quantity", e.target.value)
-                    }
-                    min="1"
-                    className="border rounded px-2 py-1 w-16 text-right"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={item.netUnitPrice}
-                    onChange={(e) =>
-                      handleItemChange(idx, "netUnitPrice", e.target.value)
-                    }
-                    step="0.01"
-                    className="border rounded px-2 py-1 w-20 text-right"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={item.discount}
-                    onChange={(e) =>
-                      handleItemChange(idx, "discount", e.target.value)
-                    }
-                    step="0.01"
-                    className="border rounded px-2 py-1 w-20 text-right"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={item.taxPercent}
-                    onChange={(e) =>
-                      handleItemChange(idx, "taxPercent", e.target.value)
-                    }
-                    step="0.01"
-                    className="border rounded px-2 py-1 w-20 text-right"
-                  />
-                </td>
-                <td className="text-right pr-3">{item.subtotal.toFixed(2)}</td>
-                <td>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(idx)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <i className="fa fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <button
-          type="button"
-          onClick={addItem}
-          className="mt-2 flex items-center text-blue-600 hover:text-blue-800 text-sm"
-        >
-          <i className="fa fa-plus-circle mr-1"></i> Add Product
-        </button>
+      {/* ProductsTable - reusable component */}
+      <div className="mt-6 overflow-x-auto">
+        <ProductsTable
+          value={itemsTable}
+          onChange={(v) => setItemsTable(v)} // receive updated rows from ProductsTable
+          minRows={1}
+        />
       </div>
 
       {/* Summary */}
       <div className="flex justify-end">
         <div className="w-80 bg-gray-50 p-4 rounded space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Order Tax:</span>
-            <span>₹{Number(form.orderTax).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Discount:</span>
-            <span>₹{Number(form.discount).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Shipping:</span>
-            <span>₹{Number(form.shipping).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-lg font-bold pt-2 border-t">
-            <span>Grand Total:</span>
-            <span>₹{totals.grand.toFixed(2)}</span>
-          </div>
+          <div className="flex justify-between"><span>Subtotal:</span><span>₹{totals.subTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Discount:</span><span>-₹{totals.discountAmount.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Tax:</span><span>₹{totals.taxAmount.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Shipping:</span><span>₹{totals.shipping.toFixed(2)}</span></div>
+          <div className="flex justify-between text-lg font-bold pt-2 border-t"><span>Grand Total:</span><span>₹{totals.grand.toFixed(2)}</span></div>
         </div>
       </div>
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label htmlFor="orderTax" className="block text-sm font-medium mb-1">
-            Order Tax *
-          </label>
-          <input
-            id="orderTax"
-            type="number"
-            value={form.orderTax}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, orderTax: e.target.value }))
-            }
-            step="0.01"
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          <label htmlFor="orderTax" className="block text-sm font-medium mb-1">Order Tax (%)</label>
+          <input id="orderTax" type="number" value={form.orderTax} onChange={(e) => setForm((p) => ({ ...p, orderTax: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <div>
-          <label htmlFor="discount" className="block text-sm font-medium mb-1">
-            Discount *
-          </label>
-          <input
-            id="discount"
-            type="number"
-            value={form.discount}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, discount: e.target.value }))
-            }
-            step="0.01"
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          <label htmlFor="discount" className="block text-sm font-medium mb-1">Discount (%)</label>
+          <input id="discount" type="number" value={form.discount} onChange={(e) => setForm((p) => ({ ...p, discount: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <div>
-          <label htmlFor="shipping" className="block text-sm font-medium mb-1">
-            Shipping *
-          </label>
-          <input
-            id="shipping"
-            type="number"
-            value={form.shipping}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, shipping: e.target.value }))
-            }
-            step="0.01"
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          <label htmlFor="shipping" className="block text-sm font-medium mb-1">Shipping (₹)</label>
+          <input id="shipping" type="number" value={form.shipping} onChange={(e) => setForm((p) => ({ ...p, shipping: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <div>
-          <label htmlFor="status" className="block text-sm font-medium mb-1">
-            Status *
-          </label>
-          <select
-            id="status"
-            value={form.status}
-            onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-            className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {["Pending", "Approved", "Rejected", "Completed"].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
+          <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+          <select id="status" value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring">
+            {["Pending", "Approved", "Rejected", "Completed"].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium mb-1">
-          Notes
-        </label>
-        <textarea
-          id="notes"
-          value={form.notes}
-          onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-          rows={3}
-          maxLength={360}
-          className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Maximum 60 words"
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          {form.notes.split(" ").filter(Boolean).length}/60 words
-        </p>
+        <label htmlFor="notes" className="block text-sm font-medium mb-1">Notes</label>
+        <textarea id="notes" value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} rows={3} maxLength={360} className="w-full border border-input rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Maximum 60 words" />
+        <p className="text-xs text-muted-foreground mt-1">{form.notes.split(" ").filter(Boolean).length}/60 words</p>
       </div>
     </form>
   );
