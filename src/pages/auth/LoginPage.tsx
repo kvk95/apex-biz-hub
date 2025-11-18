@@ -10,6 +10,14 @@ async function fakeLogin({ email, password }) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (email === "admin@example.com" && password === "password") {
+
+        //TEMP FIX LOGIN
+        const tempAccessToken = crypto.randomUUID();
+        const LS_KEY_ACCESS_TOKEN = "-nb-db-at-";
+        localStorage.setItem(LS_KEY_ACCESS_TOKEN, tempAccessToken);
+        //TEMP FIX LOGIN
+
+
         resolve(true);
       } else {
         reject("Invalid email or password");
@@ -20,9 +28,8 @@ async function fakeLogin({ email, password }) {
 
 // Array of login images
 const loginImages = ["ph1.png"];
-const loginImageUrl1 = `/assets/images/login/${
-  loginImages[Math.floor(Math.random() * loginImages.length)]
-}`;
+const loginImageUrl1 = `/assets/images/login/${loginImages[Math.floor(Math.random() * loginImages.length)]
+  }`;
 
 function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -70,7 +77,7 @@ function LoginPage({ onLoginSuccess }) {
         background: `url(${backgroundImage}) center/cover no-repeat`,
       }}
     >
-      <div className="hidden bg-muted lg:block relative"></div> 
+      <div className="hidden bg-muted lg:block relative"></div>
       <div
         className="flex items-center justify-center py-12 "
         style={{ paddingTop: "3px" }}
