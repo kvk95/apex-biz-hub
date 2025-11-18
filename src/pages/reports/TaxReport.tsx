@@ -3,6 +3,7 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { useLocalization } from "@/utils/formatters";
 
 const TAX_RATES = ["All", "5%", "6%", "7%", "8%", "9%", "10%", "11%", "12%"]; // Replace with TAX_RATES from constants.ts if available
 
@@ -24,6 +25,7 @@ export default function TaxReport() {
   const [selectedTaxRate, setSelectedTaxRate] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { formatDate, formatCurrency } = useLocalization();
 
   useEffect(() => {
     loadData();
@@ -90,7 +92,12 @@ export default function TaxReport() {
   };
 
   const columns: Column[] = [
-    { key: "date", label: "Date", align: "left" },
+    {
+      key: "date",
+      label: "Date",
+      align: "left",
+      render: (value) => (value ? formatDate(value) : "—"),
+    },
     {
       key: "invoiceNo",
       label: "Invoice No",
@@ -107,21 +114,13 @@ export default function TaxReport() {
       key: "taxAmount",
       label: "Tax Amount",
       align: "right",
-      render: (value) =>
-        `₹${value.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+      render: (value) => (value ? formatCurrency(value) : "—"),
     },
     {
       key: "totalAmount",
       label: "Total Amount",
       align: "right",
-      render: (value) =>
-        `₹${value.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+      render: (value) => (value ? formatCurrency(value) : "—"),
     },
   ];
 
@@ -131,18 +130,16 @@ export default function TaxReport() {
         <td className="px-4 py-3 text-right" colSpan={4}>
           Totals
         </td>
-        <td className="px-4 py-3 text-right">{`₹${filteredData
-          .reduce((sum, item) => sum + item.taxAmount, 0)
-          .toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}</td>
-        <td className="px-4 py-3 text-right">{`₹${filteredData
-          .reduce((sum, item) => sum + item.totalAmount, 0)
-          .toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}</td>
+        <td className="px-4 py-3 text-right">
+          {formatCurrency(
+            filteredData.reduce((sum, item) => sum + item.taxAmount, 0)
+          )}{" "}
+        </td>
+        <td className="px-4 py-3 text-right">
+          {formatCurrency(
+            filteredData.reduce((sum, item) => sum + item.totalAmount, 0)
+          )}{" "}
+        </td>
       </tr>
     </tfoot>
   );
@@ -176,7 +173,7 @@ export default function TaxReport() {
           value={selectedTaxRate}
           onChange={(e) => {
             setSelectedTaxRate(e.target.value);
-            setCurrentPage(1); 
+            setCurrentPage(1);
           }}
           className="px-3 py-1.5 text-sm border border-input rounded focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Filter by tax rate"
@@ -195,7 +192,6 @@ export default function TaxReport() {
     <PageBase1
       title="Tax Report"
       description="View and filter tax records."
-      
       onRefresh={handleClear}
       onReport={handleReport}
       search=""
@@ -208,7 +204,8 @@ export default function TaxReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters} loading={loading}
+      customFilters={customFilters}
+      loading={loading}
     />
   );
 }

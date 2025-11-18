@@ -1,27 +1,43 @@
+// Logout.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Logout() {
   const navigate = useNavigate();
 
-  useEffect(() => { 
-    // Read the flag before clearing storage
-    const showMessage = localStorage.getItem("show_invalid_session_message");
-    const show401Message = localStorage.getItem("show_401_session_message");
+  useEffect(() => {
+    // 1. Read flags BEFORE clearing anything
+    const invalidSessionFlag = localStorage.getItem(
+      "show_invalid_session_message"
+    );
+    const unauthorizedFlag = localStorage.getItem("show_401_session_message");
 
-    // Clear all session and local storage
+    // 2. Clear ONLY auth-related data (never clear entire localStorage!)
+    const keysToRemove = [
+      "-nb-db-at-",
+      "-nb-db-rt-",
+      "-nb-db-usr-",
+      "-nb-db-apps-",
+      "access_token",
+      "refresh_token",
+      "user",
+      "apps_settings",
+    ];
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    // Optional: clear sessionStorage if you use it
     sessionStorage.clear();
-    localStorage.clear();
 
-    // Restore the flag if it existed
-    if (showMessage) {
-      localStorage.setItem("show_invalid_session_message", showMessage);
+    // 3. Restore the message flags so LoginPage can show them
+    if (invalidSessionFlag === "true") {
+      localStorage.setItem("show_invalid_session_message", "true");
     }
-    if (show401Message) {
-      localStorage.setItem("show_401_session_message", show401Message);
+    if (unauthorizedFlag === "true") {
+      localStorage.setItem("show_401_session_message", "true");
     }
 
-    // Redirect to login
+    // 4. Redirect
     navigate("/login", { replace: true });
   }, [navigate]);
 

@@ -4,6 +4,7 @@ import { PageBase1, Column } from "@/pages/PageBase1";
 import { PAYMENT_STATUSES, PAYMENT_TYPES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { useLocalization } from "@/utils/formatters";
 
 interface Income {
   date: string;
@@ -25,6 +26,7 @@ const IncomeReport: React.FC = () => {
   const [searchInvoice, setSearchInvoice] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { formatDate, formatCurrency } = useLocalization();
 
   useEffect(() => {
     loadData();
@@ -103,7 +105,12 @@ const IncomeReport: React.FC = () => {
   };
 
   const columns: Column[] = [
-    { key: "date", label: "Date", align: "left" },
+    {
+      key: "date",
+      label: "Date",
+      align: "left",
+      render: (value) => (value ? formatDate(value) : "—"),
+    },
     {
       key: "invoiceNo",
       label: "Invoice No",
@@ -126,11 +133,7 @@ const IncomeReport: React.FC = () => {
       key: "totalAmount",
       label: "Total Amount",
       align: "right",
-      render: (value) =>
-        `₹${value.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+      render: (value) => (value ? formatCurrency(value) : "—"),
     },
   ];
 
@@ -140,12 +143,11 @@ const IncomeReport: React.FC = () => {
         <td className="px-4 py-3 text-right" colSpan={5}>
           Total
         </td>
-        <td className="px-4 py-3 text-right">{`₹${filteredData
-          .reduce((acc, cur) => acc + cur.totalAmount, 0)
-          .toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}</td>
+        <td className="px-4 py-3 text-right">
+          {formatCurrency(
+            filteredData.reduce((acc, cur) => acc + cur.totalAmount, 0)
+          )}
+        </td>
       </tr>
     </tfoot>
   );
@@ -228,7 +230,6 @@ const IncomeReport: React.FC = () => {
     <PageBase1
       title="Income Report"
       description="View and filter income records."
-      
       onRefresh={handleClear}
       onReport={handleReport}
       search={searchInvoice}

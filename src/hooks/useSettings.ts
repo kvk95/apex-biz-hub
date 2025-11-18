@@ -7,5 +7,5 @@ export const useSettings = () => {
 
   useEffect(() => {
     ensureSettingsLoaded();
-  }, [ensureSettingsLoaded]);
+  }, [ ]);
 };

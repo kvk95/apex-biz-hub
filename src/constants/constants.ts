@@ -420,11 +420,18 @@ export const TIME_ZONES = [
   "UTC+11:00",
   "UTC+12:00",
 ] as const;
-
+ 
 export const DATE_FORMATS = [
-  "01 Jan 2025",
-  "Jan 01, 2025",
-  "2025-01-01",
-  "01/01/2025",
-  "01-01-2025",
-] as const;
+  { label: "01 Jan 2025", value: "dd MMM yyyy" },
+  { label: "01/01/2025", value: "dd/MM/yyyy" },
+  { label: "01-01-2025", value: "dd-MM-yyyy" },
+  { label: "Jan 01, 2025", value: "MMM dd, yyyy" },
+  { label: "January 01, 2025", value: "MMMM dd, yyyy" },
+  { label: "2025-01-01", value: "yyyy-MM-dd" },
+  { label: "01 January 2025", value: "dd MMMM yyyy" },
+];
+
+export const TIME_FORMATS = [
+  { label: "12 Hours", value: "hh:mm a" },
+  { label: "24 Hours", value: "HH:mm" }, 
+]; 

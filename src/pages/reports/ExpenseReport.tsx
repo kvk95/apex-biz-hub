@@ -4,6 +4,7 @@ import { PageBase1, Column } from "@/pages/PageBase1";
 import { PAYMENT_TYPES, EXPENSE_HEADS } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
+import { useLocalization } from "@/utils/formatters";
 
 interface Expense {
   id: number;
@@ -26,6 +27,7 @@ export default function ExpenseReport() {
   const [description, setDescription] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { formatDate, formatCurrency } = useLocalization();
 
   useEffect(() => {
     loadData();
@@ -112,7 +114,12 @@ export default function ExpenseReport() {
   };
 
   const columns: Column[] = [
-    { key: "date", label: "Date", align: "left" },
+    {
+      key: "date",
+      label: "Date",
+      align: "left",
+      render: (value) => (value ? formatDate(value) : "—"),
+    },
     {
       key: "expenseHead",
       label: "Expense Head",
@@ -124,11 +131,7 @@ export default function ExpenseReport() {
       key: "amount",
       label: "Amount",
       align: "right",
-      render: (value) =>
-        `₹${value.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+      render: (value) => (value ? formatCurrency(value) : "—"),
     },
     { key: "description", label: "Description", align: "left" },
   ];
@@ -139,12 +142,11 @@ export default function ExpenseReport() {
         <td className="px-4 py-3 text-right" colSpan={3}>
           Total
         </td>
-        <td className="px-4 py-3 text-right">{`₹${filteredData
-          .reduce((acc, cur) => acc + cur.amount, 0)
-          .toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}</td>
+        <td className="px-4 py-3 text-right">
+          {formatCurrency(
+            filteredData.reduce((acc, cur) => acc + cur.amount, 0)
+          )} 
+        </td>
         <td className="px-4 py-3"></td>
       </tr>
     </tfoot>
@@ -242,7 +244,6 @@ export default function ExpenseReport() {
     <PageBase1
       title="Expense Report"
       description="View and filter expense records."
-      
       onRefresh={handleClear}
       onReport={handleReport}
       search={description}
@@ -261,7 +262,8 @@ export default function ExpenseReport() {
       tableColumns={columns}
       tableData={paginatedData}
       tableFooter={tableFooter}
-      customFilters={customFilters} loading={loading}
+      customFilters={customFilters}
+      loading={loading}
     />
   );
 }
