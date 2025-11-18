@@ -7,11 +7,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
+import { renderStatusBadge } from "@/utils/tableUtils";
 import { SearchInput } from "@/components/Search/SearchInput";
 import AddSalesModal from "./salesdialog/AddSalesModal";
 import SaleDetailModal from "./salesdialog/SaleDetailModal";
 import { PaymentModal, Payment } from "./salesdialog/PaymentModal";
+import { useLocalization } from "@/utils/formatters";
 
 import {
   ORDER_STATUSES,
@@ -64,6 +65,7 @@ export default function PosOrders() {
   const [formMode, setFormMode] = useState<"add" | "edit" | "detail" | "show-payments" | "create-payment" | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const { formatDate, formatCurrency } = useLocalization();
 
   useEffect(() => {
     loadData();
@@ -235,16 +237,16 @@ export default function PosOrders() {
       ),
     },
     { key: "reference", label: "Reference" },
-    { key: "date", label: "Date", render: v => <>{formatDate(v, "DD MMM YYYY")}</> },
+    { key: "date", label: "Date", render: v => <>{formatDate(v)}</> },
     {
       key: "status",
       label: "Status",
       render: renderStatusBadge,
       align: "center",
     },
-    { key: "grandTotal", label: "Grand Total", render: (_, r) => `$${r.grandTotal.toFixed(2)}`, align: "right" },
-    { key: "paid", label: "Paid", render: (_, r) => `$${r.paid.toFixed(2)}`, align: "right" },
-    { key: "due", label: "Due", render: (_, r) => `$${r.due.toFixed(2)}`, align: "right" },
+    { key: "grandTotal", label: "Grand Total", render: formatCurrency, align: "right" },
+    { key: "paid", label: "Paid", render: formatCurrency, align: "right" },
+    { key: "due", label: "Due", render: formatCurrency, align: "right" },
     {
       key: "paymentStatus",
       label: "Payment Status",
