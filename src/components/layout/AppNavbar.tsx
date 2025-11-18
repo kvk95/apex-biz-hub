@@ -16,6 +16,8 @@ import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { useTheme } from "../theme/theme-provider";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { Calculator } from "./Calculator";
+import { useAuth } from "@/contexts/AuthContext";
+import { LANGUAGES,PATH_AVATHAR_DEFAULT } from "@/constants/constants";
 
 const addnewItems = [
   { name: "Category", icon: "fa-tags", key: "/inventory/categories" },
@@ -91,12 +93,14 @@ export function DropdownTable({ dropdownOpen, setDropdownOpen }) {
 }
 
 export function AppNavbar({ isPosPage }) {
-  const [language, setLanguage] = useState("EN");
+  const [language, setLanguage] = useState("enUS");
   const { theme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+
+  const { user , appsSettings} = useAuth();
 
   const notifications = [
     { id: 1, title: "New order received", time: "2 min ago", unread: true },
@@ -111,14 +115,7 @@ export function AppNavbar({ isPosPage }) {
         ? "hsl(0 0% 98%)"
         : "hsl(240 10% 3.9%)",
   };
-
-  const inputBgStyle = {
-    backgroundColor:
-      parseFloat(theme.headerColor.split(" ")[2]) < 50
-        ? "hsl(240 3.7% 15.9%)"
-        : "hsl(240 4.8% 95.9%)",
-  };
-
+ 
   const selectionStyle = `
     header::selection {
       background-color: hsl(${theme.headerColor});
@@ -268,27 +265,31 @@ export function AppNavbar({ isPosPage }) {
             <>
               <ThemeCustomizer />
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="pt-2 hover:bg-primary hover:text-primary-foreground"
-                  >
-                    <i className="fa fa-globe fa-light h-5 w-5"></i>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-popover">
-                  <DropdownMenuLabel>Language</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLanguage("EN")}>
-                    English {language === "EN" && "✓"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage("TA")}>
-                    தமிழ் {language === "TA" && "✓"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {appsSettings?.showLanguageSwitcher && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="pt-2 hover:bg-primary hover:text-primary-foreground"
+                    >
+                      <i className="fa fa-globe fa-light h-5 w-5"></i>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-popover">
+                    <DropdownMenuLabel>Language</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {LANGUAGES.map((fmt) => (
+                      <DropdownMenuItem
+                        key={fmt.value}
+                        onClick={() => setLanguage(fmt.value)}
+                      >
+                        {fmt.label} {language === fmt.value && "✓"}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -345,7 +346,7 @@ export function AppNavbar({ isPosPage }) {
                 className="gap-2 hover:bg-primary hover:text-primary-foreground"
               >
                 <img
-                  src="/assets/images/avathar1.png"
+                  src={user?.user?.image || PATH_AVATHAR_DEFAULT}
                   alt="Img"
                   className="rounded-pill"
                   style={{ width: "2rem", height: "2rem" }}
@@ -356,15 +357,20 @@ export function AppNavbar({ isPosPage }) {
               <DropdownMenuLabel>
                 <div className="hidden text-left lg:block">
                   <img
-                    src="/assets/images/avathar1.png"
+                    src={user?.user?.image || PATH_AVATHAR_DEFAULT}
                     alt="Img"
                     className="rounded-pill"
                     style={{ width: "3rem", height: "3rem" }}
                   />
-                  <span className="text-sm font-medium">Admin User</span>
+                  <span className="text-sm font-medium">
+                    {user?.user?.firstName && user?.user?.lastName
+                      ? `${user?.user?.firstName} ${user?.user?.lastName}`
+                      : user?.user?.firstName || user?.user?.lastName || "User"}
+                  </span>
+
                   <br />
                   <span className="text-xs text-muted-foreground">
-                    admin@pos.com
+                    {user?.user?.email || "email@example.com"}
                   </span>
                 </div>
               </DropdownMenuLabel>

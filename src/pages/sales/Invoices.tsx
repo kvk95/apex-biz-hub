@@ -1,21 +1,22 @@
-/* -------------------------------------------------
-   Invoices - 
-   ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
-import { renderStatusBadge, formatDate } from "@/utils/tableUtils";
-import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { renderStatusBadge } from "@/utils/tableUtils";
+import {
+  AutoCompleteTextBox,
+  AutoCompleteItem,
+} from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 import {
-  CURRENCY_SYMBOL,
   PAYMENT_STATUSES,
   SORT_OPTIONS,
+  CURRENCY_SYMBOL,
 } from "@/constants/constants";
+import { useLocalization } from "@/utils/formatters";
 
 // === Constants ===
-type PaymentStatus = typeof PAYMENT_STATUSES[number];
-type SortOption = typeof SORT_OPTIONS[number];
+type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+type SortOption = (typeof SORT_OPTIONS)[number];
 
 // === Types ===
 type Customer = {
@@ -104,12 +105,16 @@ export default function Invoices() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState<PaymentStatus | "All">("All");
-  const [selectedSort, setSelectedSort] = useState<SortOption>("Recently Added");
+  const [selectedStatus, setSelectedStatus] = useState<PaymentStatus | "All">(
+    "All"
+  );
+  const [selectedSort, setSelectedSort] =
+    useState<SortOption>("Recently Added");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formMode, setFormMode] = useState<"view" | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatDate, formatCurrency } = useLocalization();
 
   let customerSearchTimeout: NodeJS.Timeout;
   let productSearchTimeout: NodeJS.Timeout;
@@ -123,7 +128,8 @@ export default function Invoices() {
     dueDate: "",
     invoiceFor: "",
     items: [] as InvoiceItem[],
-    terms: "Please pay within 15 days from the date of invoice, overdue interest @ 14% will be charged on delayed payments.",
+    terms:
+      "Please pay within 15 days from the date of invoice, overdue interest @ 14% will be charged on delayed payments.",
     notes: "Please quote invoice number when remitting funds.",
   });
 
@@ -262,7 +268,10 @@ export default function Invoices() {
 
   /* ---------- totals ---------- */
   const totals = useMemo(() => {
-    const subTotal = form.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const subTotal = form.items.reduce(
+      (s, i) => s + i.unitPrice * i.quantity,
+      0
+    );
     const discountTotal = form.items.reduce((s, i) => s + i.discount, 0);
     const taxTotal = form.items.reduce((s, i) => s + i.taxAmount, 0);
     const grand = subTotal - discountTotal + taxTotal;
@@ -314,24 +323,24 @@ export default function Invoices() {
     {
       key: "dueDate",
       label: "Due Date",
-      render: (v) => formatDate(v, "dd MMM yyyy"),
+      render: (v) => formatDate(v),
     },
     {
       key: "amount",
       label: "Amount",
-      render: (v) => `${CURRENCY_SYMBOL}${Number(v).toFixed(2)}`,
+      render:  formatCurrency,
       align: "right",
     },
     {
       key: "paid",
       label: "Paid",
-      render: (v) => `${CURRENCY_SYMBOL}${Number(v ?? 0).toFixed(2)}`,
+      render:  formatCurrency,
       align: "right",
     },
     {
       key: "due",
       label: "Amount Due",
-      render: (v) => `${CURRENCY_SYMBOL}${Number(v ?? 0).toFixed(2)}`,
+      render:  formatCurrency,
       align: "right",
     },
     {
@@ -387,7 +396,9 @@ export default function Invoices() {
           className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[130px]"
         >
           {customerOptions.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
         <select
@@ -397,7 +408,9 @@ export default function Invoices() {
         >
           <option>All</option>
           {PAYMENT_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
         <select
@@ -406,7 +419,9 @@ export default function Invoices() {
           className="border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
         >
           {SORT_OPTIONS.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -441,11 +456,13 @@ export default function Invoices() {
             </div>
             <div>
               <div className="font-semibold text-gray-700">Date</div>
-              <div className="mt-1 text-gray-900">{formatDate(form.date, "dd MMM yyyy")}</div>
+              <div className="mt-1 text-gray-900">{formatDate(form.date)}</div>
             </div>
             <div>
               <div className="font-semibold text-gray-700">Due Date</div>
-              <div className="mt-1 text-gray-900">{formatDate(form.dueDate, "dd MMM yyyy")}</div>
+              <div className="mt-1 text-gray-900">
+                {formatDate(form.dueDate)}
+              </div>
             </div>
             <div>
               <div className="font-semibold text-gray-700">Invoice For</div>
@@ -460,11 +477,19 @@ export default function Invoices() {
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Product</th>
                   <th className="px-4 py-3 text-center font-medium">Qty</th>
-                  <th className="px-4 py-3 text-right font-medium">Cost({CURRENCY_SYMBOL})</th>
-                  <th className="px-4 py-3 text-right font-medium">Discount({CURRENCY_SYMBOL})</th>
+                  <th className="px-4 py-3 text-right font-medium">
+                    Cost({CURRENCY_SYMBOL})
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium">
+                    Discount({CURRENCY_SYMBOL})
+                  </th>
                   <th className="px-4 py-3 text-right font-medium">Tax(%)</th>
-                  <th className="px-4 py-3 text-right font-medium">Tax Amt({CURRENCY_SYMBOL})</th>
-                  <th className="px-4 py-3 text-right font-medium">Total({CURRENCY_SYMBOL})</th>
+                  <th className="px-4 py-3 text-right font-medium">
+                    Tax Amt({CURRENCY_SYMBOL})
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium">
+                    Total({CURRENCY_SYMBOL})
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -472,11 +497,19 @@ export default function Invoices() {
                   <tr key={idx} className="hover:bg-gray-50">
                     <td className="px-4 py-3">{item.productName}</td>
                     <td className="px-4 py-3 text-center">{item.quantity}</td>
-                    <td className="px-4 py-3 text-right">{item.unitPrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right">{item.discount.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right">
+                      {item.unitPrice.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {item.discount.toFixed(2)}
+                    </td>
                     <td className="px-4 py-3 text-right">{item.taxPercent}</td>
-                    <td className="px-4 py-3 text-right">{item.taxAmount.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-semibold">{item.total.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right">
+                      {item.taxAmount.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold">
+                      {item.total.toFixed(2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -488,19 +521,19 @@ export default function Invoices() {
             <div className="w-80 bg-gray-50 p-5 rounded-lg space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Sub Total:</span>
-                <span>{CURRENCY_SYMBOL}{totals.subTotal.toFixed(2)}</span>
+                <span>{formatCurrency(totals.subTotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Discount:</span>
-                <span>{CURRENCY_SYMBOL}{totals.discountTotal.toFixed(2)}</span>
+                <span>{formatCurrency(totals.discountTotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax:</span>
-                <span>{CURRENCY_SYMBOL}{totals.taxTotal.toFixed(2)}</span>
+                <span>{formatCurrency(totals.taxTotal)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-300">
                 <span>Grand Total:</span>
-                <span>{CURRENCY_SYMBOL}{totals.grand.toFixed(2)}</span>
+                <span>{formatCurrency(totals.grand)}</span>
               </div>
             </div>
           </div>
@@ -522,7 +555,6 @@ export default function Invoices() {
         {isView && (
           <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 pt-4 -mx-6 px-6 pb-6 mt-8">
             <div className="flex justify-end gap-4 items-center">
-
               {/* Print */}
               <button
                 type="button"

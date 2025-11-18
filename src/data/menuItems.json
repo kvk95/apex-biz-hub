@@ -8,18 +8,6 @@
     ]
   },
   {
-    "title": "Super Admin",
-    "icon": "fa fa-user-shield",
-    "items": [
-      { "title": "Dashboard", "url": "/super-admin/dashboard", "icon": "fa fa-tachometer-alt" },
-      { "title": "Companies", "url": "/super-admin/companies", "icon": "fa fa-building" },
-      { "title": "Subscriptions", "url": "/super-admin/subscriptions", "icon": "fa fa-file-contract" },
-      { "title": "Packages", "url": "/super-admin/packages", "icon": "fa fa-box-open" },
-      { "title": "Domain", "url": "/super-admin/domain", "icon": "fa fa-globe" },
-      { "title": "Purchase Transaction", "url": "/super-admin/purchase-transaction", "icon": "fa fa-file-invoice-dollar" }
-    ]
-  },
-  {
     "title": "Inventory",
     "icon": "fa fa-box",
     "items": [
@@ -64,22 +52,6 @@
       { "title": "POS", "url": "/sales/pos1", "icon": "fa fa-cash-register" }
     ]
   }, 
-  {
-    "title": "Promo",
-    "icon": "fa fa-gift",
-    "items": [
-      { "title": "Coupons", "url": "/promo/coupons", "icon": "fa fa-ticket-alt" },
-      { "title": "Gift Cards", "url": "/promo/gift-cards", "icon": "fa fa-credit-card" },
-      {
-        "title": "Discount",
-        "icon": "fa fa-percent",
-        "items": [
-          { "title": "Discount Plan", "url": "/promo/discount/plan", "icon": "fa fa-project-diagram" },
-          { "title": "Discount", "url": "/promo/discount/single", "icon": "fa fa-percent" }
-        ]
-      }
-    ]
-  },
   {
     "title": "Purchases",
     "icon": "fa fa-shopping-basket",
@@ -129,41 +101,21 @@
     ]
   },
   {
-    "title": "HRM",
-    "icon": "fa fa-user-cog",
+    "title": "Promotions",
+    "icon": "fa fa-gift",
     "items": [
-      { "title": "Employees", "url": "/hrm/employees", "icon": "fa fa-user-friends" },
-      { "title": "Departments", "url": "/hrm/departments", "icon": "fa fa-building" },
-      { "title": "Designation", "url": "/hrm/designations", "icon": "fa fa-id-badge" },
-      { "title": "Shifts", "url": "/hrm/shifts", "icon": "fa fa-clock" },
+      { "title": "Coupons", "url": "/promo/coupons", "icon": "fa fa-ticket-alt" },
+      { "title": "Gift Cards", "url": "/promo/gift-cards", "icon": "fa fa-credit-card" },
       {
-        "title": "Attendance",
-        "icon": "fa fa-calendar-check",
+        "title": "Discount",
+        "icon": "fa fa-percent",
         "items": [
-          { "title": "Employee", "url": "/hrm/attendance/employee", "icon": "fa fa-user-check" },
-          { "title": "Admin", "url": "/hrm/attendance/admin", "icon": "fa fa-user-cog" }
-        ]
-      },
-      {
-        "title": "Leaves",
-        "icon": "fa fa-calendar-times",
-        "items": [
-          { "title": "Admin Leaves", "url": "/hrm/leaves/admin", "icon": "fa fa-user-times" },
-          { "title": "Employee Leaves", "url": "/hrm/leaves/employee", "icon": "fa fa-user-clock" },
-          { "title": "Leave Types", "url": "/hrm/leaves/types", "icon": "fa fa-list-ul" }
-        ]
-      },
-      { "title": "Holidays", "url": "/hrm/holidays", "icon": "fa fa-calendar-day" },
-      {
-        "title": "Payroll",
-        "icon": "fa fa-money-check-alt",
-        "items": [
-          { "title": "Employee Salary", "url": "/hrm/payroll/salary", "icon": "fa fa-rupee-sign" },
-          { "title": "Payslip", "url": "/hrm/payroll/payslip", "icon": "fa fa-file-invoice" }
+          { "title": "Discount Plan", "url": "/promo/discount/plan", "icon": "fa fa-project-diagram" },
+          { "title": "Discount", "url": "/promo/discount/single", "icon": "fa fa-percent" }
         ]
       }
     ]
-  },
+  },  
   {
   "title": "Reports",
   "icon": "fa fa-chart-pie",
@@ -219,6 +171,42 @@
     { "title": "Annual Report", "url": "/reports/annual", "icon": "fa fa-calendar-alt" }
   ]
 },
+  {
+    "title": "HRM",
+    "icon": "fa fa-user-cog",
+    "items": [
+      { "title": "Employees", "url": "/hrm/employees", "icon": "fa fa-user-friends" },
+      { "title": "Departments", "url": "/hrm/departments", "icon": "fa fa-building" },
+      { "title": "Designation", "url": "/hrm/designations", "icon": "fa fa-id-badge" },
+      { "title": "Shifts", "url": "/hrm/shifts", "icon": "fa fa-clock" },
+      {
+        "title": "Attendance",
+        "icon": "fa fa-calendar-check",
+        "items": [
+          { "title": "Employee", "url": "/hrm/attendance/employee", "icon": "fa fa-user-check" },
+          { "title": "Admin", "url": "/hrm/attendance/admin", "icon": "fa fa-user-cog" }
+        ]
+      },
+      {
+        "title": "Leaves",
+        "icon": "fa fa-calendar-times",
+        "items": [
+          { "title": "Admin Leaves", "url": "/hrm/leaves/admin", "icon": "fa fa-user-times" },
+          { "title": "Employee Leaves", "url": "/hrm/leaves/employee", "icon": "fa fa-user-clock" },
+          { "title": "Leave Types", "url": "/hrm/leaves/types", "icon": "fa fa-list-ul" }
+        ]
+      },
+      { "title": "Holidays", "url": "/hrm/holidays", "icon": "fa fa-calendar-day" },
+      {
+        "title": "Payroll",
+        "icon": "fa fa-money-check-alt",
+        "items": [
+          { "title": "Employee Salary", "url": "/hrm/payroll/salary", "icon": "fa fa-rupee-sign" },
+          { "title": "Payslip", "url": "/hrm/payroll/payslip", "icon": "fa fa-file-invoice" }
+        ]
+      }
+    ]
+  },
   {
     "title": "User Management",
     "icon": "fa fa-users-cog",
@@ -317,6 +305,18 @@
       }
     ]
   },
+  {
+    "title": "Super Admin",
+    "icon": "fa fa-user-shield",
+    "items": [
+      { "title": "Dashboard", "url": "/super-admin/dashboard", "icon": "fa fa-tachometer-alt" },
+      { "title": "Companies", "url": "/super-admin/companies", "icon": "fa fa-building" },
+      { "title": "Subscriptions", "url": "/super-admin/subscriptions", "icon": "fa fa-file-contract" },
+      { "title": "Packages", "url": "/super-admin/packages", "icon": "fa fa-box-open" },
+      { "title": "Domain", "url": "/super-admin/domain", "icon": "fa fa-globe" },
+      { "title": "Purchase Transaction", "url": "/super-admin/purchase-transaction", "icon": "fa fa-file-invoice-dollar" }
+    ]
+  },  
   {
     "title": "Logout",
     "url": "/logout",

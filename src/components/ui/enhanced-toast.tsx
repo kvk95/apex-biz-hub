@@ -4,7 +4,7 @@ import { API_CONFIG } from "@/config/api.config";
 export const useEnhancedToast = () => {
   const { toast } = useToast();
 
-  const showSuccess = (description: string, title: string = "Success") => {
+  const showSuccess = (description: React.ReactNode, title: string = "Success") => {
     toast({
       title: title,
       description: (
@@ -18,7 +18,7 @@ export const useEnhancedToast = () => {
     });
   };
 
-  const showError = (description: string, title: string = "Error") => {
+  const showError = (description: React.ReactNode, title: string = "Error") => {
     toast({
       title,
       description: (
@@ -32,7 +32,7 @@ export const useEnhancedToast = () => {
     });
   };
 
-  const showInfo = (description: string, title: string = "Info") => {
+  const showInfo = (description: React.ReactNode, title: string = "Info") => {
     toast({
       title,
       description: (

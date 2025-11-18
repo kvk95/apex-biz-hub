@@ -29,7 +29,7 @@ const localeMap: Record<string, Locale> = {
 // Global cache for non-React usage (services, utils, etc.)
 // ──────────────────────────────────────────────────────────────
 let globalSettings: any = {
-  language: "English",
+  language: "enUS",
   showLanguageSwitcher: true,
   timezone: "UTC+05:30",
   dateFormat: "dd MMM yyyy",

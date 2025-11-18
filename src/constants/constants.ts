@@ -1,6 +1,7 @@
 export const PATH_HOMESCREEN: string = "/dashboard/admindb";
 export const DEFAULT_PAGE_SIZE: number = 10;
-export const CURRENCY_SYMBOL = "₹";
+export const PATH_AVATHAR_DEFAULT: string = "/assets/images/avathar/none.png";
+ export const CURRENCY_SYMBOL = "₹";
 
 export const STATUSES = [
   "Active",
@@ -384,8 +385,6 @@ export const DURATION_TYPES = ["Year", "Month"] as const;
 
 export const USER_ROLE_STATUSES = ["Active", "Inactive"] as const;
 
-export const LANGUAGES = ["English", "Tamil"] as const;
-
 export const TIME_ZONES = [
   "UTC-12:00",
   "UTC-11:00",
@@ -434,4 +433,9 @@ export const DATE_FORMATS = [
 export const TIME_FORMATS = [
   { label: "12 Hours", value: "hh:mm a" },
   { label: "24 Hours", value: "HH:mm" }, 
+]; 
+
+export const LANGUAGES = [ 
+  { label: "English", value: "enUS" },
+  { label: "தமிழ் Tamil", value: "ta" }, 
 ]; 

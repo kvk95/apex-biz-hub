@@ -1,4 +1,6 @@
 {
+  "due": 0,
+  "paid": 0,
   "status": {
     "code": "S",
     "description": "Success"
@@ -15,7 +17,9 @@
       "customerPhone": "+91 98412 56789",
       "date": "2025-11-12",
       "dueDate": "2025-11-27",
-      "amount": 5775.00,
+      "amount": 5775.0,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -32,11 +36,11 @@
           "sku": "PT001",
           "category": "Beverages",
           "quantity": 100,
-          "unitPrice": 1.50,
-          "discount": 12.00,
+          "unitPrice": 1.5,
+          "discount": 12.0,
           "taxPercent": 5,
-          "taxAmount": 6.90,
-          "total": 144.90
+          "taxAmount": 6.9,
+          "total": 144.9
         },
         {
           "productId": "PT003",
@@ -86,7 +90,9 @@
       "customerPhone": "+91 99401 23456",
       "date": "2025-11-10",
       "dueDate": "2025-11-25",
-      "amount": 1260.00,
+      "amount": 1260.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -106,16 +112,16 @@
           "unitPrice": 4.79,
           "discount": 7.19,
           "taxPercent": 18,
-          "taxAmount": 7.30,
+          "taxAmount": 7.3,
           "total": 42.91
         }
       ],
       "summary": {
-        "subTotal": 47.90,
+        "subTotal": 47.9,
         "discountPercent": 15,
         "discountAmount": 7.19,
         "vatPercent": 18,
-        "vatAmount": 7.30,
+        "vatAmount": 7.3,
         "totalAmount": 48.01,
         "amountInWords": "Rupees Forty Eight Only"
       },
@@ -145,7 +151,9 @@
       "customerPhone": "+91 98765 43210",
       "date": "2025-11-08",
       "dueDate": "2025-11-23",
-      "amount": 840.00,
+      "amount": 840.0,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -163,10 +171,10 @@
           "category": "Dairy Products",
           "quantity": 200,
           "unitPrice": 3.25,
-          "discount": 0.00,
+          "discount": 0.0,
           "taxPercent": 0,
-          "taxAmount": 0.00,
-          "total": 650.00
+          "taxAmount": 0.0,
+          "total": 650.0
         },
         {
           "productId": "PT006",
@@ -175,19 +183,19 @@
           "category": "Bakery",
           "quantity": 100,
           "unitPrice": 1.89,
-          "discount": 0.00,
+          "discount": 0.0,
           "taxPercent": 0,
-          "taxAmount": 0.00,
-          "total": 189.00
+          "taxAmount": 0.0,
+          "total": 189.0
         }
       ],
       "summary": {
-        "subTotal": 839.00,
+        "subTotal": 839.0,
         "discountPercent": 0,
-        "discountAmount": 0.00,
+        "discountAmount": 0.0,
         "vatPercent": 0,
-        "vatAmount": 0.00,
-        "totalAmount": 839.00,
+        "vatAmount": 0.0,
+        "totalAmount": 839.0,
         "amountInWords": "Rupees Eight Hundred Thirty Nine Only"
       },
       "terms": "15 days payment terms.",
@@ -216,7 +224,9 @@
       "customerPhone": "+91 90876 54321",
       "date": "2025-10-28",
       "dueDate": "2025-11-12",
-      "amount": 315.00,
+      "amount": 315.0,
+      "due": 0,
+      "paid": 0,
       "status": "Overdue",
       "paymentStatus": "Overdue",
       "fromInfo": {
@@ -234,19 +244,19 @@
           "category": "Frozen Foods",
           "quantity": 35,
           "unitPrice": 7.49,
-          "discount": 35.00,
+          "discount": 35.0,
           "taxPercent": 18,
           "taxAmount": 39.55,
           "total": 266.55
         }
       ],
       "summary": {
-        "subTotal": 300.00,
+        "subTotal": 300.0,
         "discountPercent": 10,
-        "discountAmount": 30.00,
+        "discountAmount": 30.0,
         "vatPercent": 18,
-        "vatAmount": 45.00,
-        "totalAmount": 315.00,
+        "vatAmount": 45.0,
+        "totalAmount": 315.0,
         "amountInWords": "Rupees Three Hundred Fifteen Only"
       },
       "terms": "Overdue: Interest @ 14% applicable.",
@@ -275,7 +285,9 @@
       "customerPhone": "+91 97654 32109",
       "date": "2025-10-15",
       "dueDate": "2025-10-30",
-      "amount": 1710.00,
+      "amount": 1710.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -295,7 +307,7 @@
           "unitPrice": 18.99,
           "discount": 113.94,
           "taxPercent": 18,
-          "taxAmount": 183.30,
+          "taxAmount": 183.3,
           "total": 1218.36
         },
         {
@@ -305,16 +317,16 @@
           "category": "Health & Beauty",
           "quantity": 200,
           "unitPrice": 2.49,
-          "discount": 99.60,
+          "discount": 99.6,
           "taxPercent": 18,
           "taxAmount": 71.88,
           "total": 420.28
         }
       ],
       "summary": {
-        "subTotal": 1806.00,
+        "subTotal": 1806.0,
         "discountPercent": 10,
-        "discountAmount": 180.60,
+        "discountAmount": 180.6,
         "vatPercent": 18,
         "vatAmount": 255.19,
         "totalAmount": 1880.59,
@@ -346,7 +358,9 @@
       "customerPhone": "+91 95432 10987",
       "date": "2025-11-01",
       "dueDate": "2025-11-16",
-      "amount": 472.50,
+      "amount": 472.5,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -364,18 +378,18 @@
           "category": "Beverages",
           "quantity": 90,
           "unitPrice": 4.99,
-          "discount": 45.00,
+          "discount": 45.0,
           "taxPercent": 0,
-          "taxAmount": 0.00,
-          "total": 449.10
+          "taxAmount": 0.0,
+          "total": 449.1
         }
       ],
       "summary": {
-        "subTotal": 449.10,
+        "subTotal": 449.1,
         "discountPercent": 9,
         "discountAmount": 40.42,
         "vatPercent": 0,
-        "vatAmount": 0.00,
+        "vatAmount": 0.0,
         "totalAmount": 408.68,
         "amountInWords": "Rupees Four Hundred Nine Only"
       },
@@ -405,7 +419,9 @@
       "customerPhone": "+91 93210 98765",
       "date": "2025-11-13",
       "dueDate": "2025-11-28",
-      "amount": 500.00,
+      "amount": 500.0,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -423,19 +439,19 @@
           "category": "Cleaning Supplies",
           "quantity": 70,
           "unitPrice": 6.99,
-          "discount": 70.00,
+          "discount": 70.0,
           "taxPercent": 18,
           "taxAmount": 75.54,
           "total": 500.84
         }
       ],
       "summary": {
-        "subTotal": 489.30,
+        "subTotal": 489.3,
         "discountPercent": 14,
-        "discountAmount": 68.50,
+        "discountAmount": 68.5,
         "vatPercent": 18,
         "vatAmount": 73.39,
-        "totalAmount": 500.00,
+        "totalAmount": 500.0,
         "amountInWords": "Rupees Five Hundred Only"
       },
       "terms": "Cash on delivery accepted.",
@@ -464,7 +480,9 @@
       "customerPhone": "+91 91234 56789",
       "date": "2025-10-20",
       "dueDate": "2025-11-04",
-      "amount": 630.00,
+      "amount": 630.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -485,16 +503,16 @@
           "discount": 51.48,
           "taxPercent": 5,
           "taxAmount": 18.88,
-          "total": 405.40
+          "total": 405.4
         }
       ],
       "summary": {
-        "subTotal": 429.00,
+        "subTotal": 429.0,
         "discountPercent": 12,
         "discountAmount": 51.48,
         "vatPercent": 5,
         "vatAmount": 18.88,
-        "totalAmount": 405.40,
+        "totalAmount": 405.4,
         "amountInWords": "Rupees Four Hundred Five Only"
       },
       "terms": "Installation completed on 2025-10-22.",
@@ -523,7 +541,9 @@
       "customerPhone": "+91 98765 12345",
       "date": "2025-09-10",
       "dueDate": "2025-09-25",
-      "amount": 359.40,
+      "amount": 359.4,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -543,12 +563,12 @@
           "unitPrice": 5.99,
           "discount": 35.94,
           "taxPercent": 12,
-          "taxAmount": 60.00,
-          "total": 359.40
+          "taxAmount": 60.0,
+          "total": 359.4
         }
       ],
       "summary": {
-        "subTotal": 359.40,
+        "subTotal": 359.4,
         "discountPercent": 10,
         "discountAmount": 35.94,
         "vatPercent": 12,
@@ -582,7 +602,9 @@
       "customerPhone": "+91 90123 45678",
       "date": "2025-11-05",
       "dueDate": "2025-11-20",
-      "amount": 262.50,
+      "amount": 262.5,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -600,19 +622,19 @@
           "category": "Produce",
           "quantity": 60,
           "unitPrice": 3.99,
-          "discount": 0.00,
+          "discount": 0.0,
           "taxPercent": 0,
-          "taxAmount": 0.00,
-          "total": 239.40
+          "taxAmount": 0.0,
+          "total": 239.4
         }
       ],
       "summary": {
-        "subTotal": 239.40,
+        "subTotal": 239.4,
         "discountPercent": 0,
-        "discountAmount": 0.00,
+        "discountAmount": 0.0,
         "vatPercent": 0,
-        "vatAmount": 0.00,
-        "totalAmount": 239.40,
+        "vatAmount": 0.0,
+        "totalAmount": 239.4,
         "amountInWords": "Rupees Two Hundred Thirty Nine Only"
       },
       "terms": "Service active from 2025-11-01.",
@@ -641,7 +663,9 @@
       "customerPhone": "+91 98456 78901",
       "date": "2025-10-05",
       "dueDate": "2025-10-20",
-      "amount": 200.00,
+      "amount": 200.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -661,8 +685,8 @@
           "unitPrice": 12.99,
           "discount": 9.74,
           "taxPercent": 18,
-          "taxAmount": 22.00,
-          "total": 200.00
+          "taxAmount": 22.0,
+          "total": 200.0
         }
       ],
       "summary": {
@@ -700,7 +724,9 @@
       "customerPhone": "+91 97654 32101",
       "date": "2025-11-11",
       "dueDate": "2025-11-26",
-      "amount": 1200.00,
+      "amount": 1200.0,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -720,12 +746,12 @@
           "unitPrice": 2.99,
           "discount": 398.68,
           "taxPercent": 18,
-          "taxAmount": 51.30,
-          "total": 850.30
+          "taxAmount": 51.3,
+          "total": 850.3
         }
       ],
       "summary": {
-        "subTotal": 1196.00,
+        "subTotal": 1196.0,
         "discountPercent": 33,
         "discountAmount": 394.68,
         "vatPercent": 18,
@@ -759,7 +785,9 @@
       "customerPhone": "+91 96543 21098",
       "date": "2025-10-12",
       "dueDate": "2025-10-27",
-      "amount": 1050.00,
+      "amount": 1050.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -777,19 +805,19 @@
           "category": "Health & Beauty",
           "quantity": 400,
           "unitPrice": 2.49,
-          "discount": 199.20,
+          "discount": 199.2,
           "taxPercent": 18,
-          "taxAmount": 143.50,
-          "total": 938.30
+          "taxAmount": 143.5,
+          "total": 938.3
         }
       ],
       "summary": {
-        "subTotal": 996.00,
+        "subTotal": 996.0,
         "discountPercent": 20,
-        "discountAmount": 199.20,
+        "discountAmount": 199.2,
         "vatPercent": 18,
-        "vatAmount": 143.50,
-        "totalAmount": 940.30,
+        "vatAmount": 143.5,
+        "totalAmount": 940.3,
         "amountInWords": "Rupees Nine Hundred Forty Only"
       },
       "terms": "Paid on 2025-10-25.",
@@ -818,7 +846,9 @@
       "customerPhone": "+91 95432 10987",
       "date": "2025-11-02",
       "dueDate": "2025-11-17",
-      "amount": 367.50,
+      "amount": 367.5,
+      "due": 0,
+      "paid": 0,
       "status": "Pending",
       "paymentStatus": "Pending",
       "fromInfo": {
@@ -839,16 +869,16 @@
           "discount": 41.85,
           "taxPercent": 18,
           "taxAmount": 42.25,
-          "total": 279.40
+          "total": 279.4
         }
       ],
       "summary": {
-        "subTotal": 279.00,
+        "subTotal": 279.0,
         "discountPercent": 15,
         "discountAmount": 41.85,
         "vatPercent": 18,
         "vatAmount": 42.25,
-        "totalAmount": 279.40,
+        "totalAmount": 279.4,
         "amountInWords": "Rupees Two Hundred Seventy Nine Only"
       },
       "terms": "Work completed on 2025-11-01.",
@@ -877,7 +907,9 @@
       "customerPhone": "+91 94321 09876",
       "date": "2025-08-15",
       "dueDate": "2025-08-30",
-      "amount": 1890.00,
+      "amount": 1890.0,
+      "due": 0,
+      "paid": 0,
       "status": "Paid",
       "paymentStatus": "Paid",
       "fromInfo": {
@@ -894,20 +926,20 @@
           "sku": "PT001",
           "category": "Beverages",
           "quantity": 1000,
-          "unitPrice": 1.50,
-          "discount": 120.00,
+          "unitPrice": 1.5,
+          "discount": 120.0,
           "taxPercent": 5,
-          "taxAmount": 69.00,
-          "total": 1449.00
+          "taxAmount": 69.0,
+          "total": 1449.0
         }
       ],
       "summary": {
-        "subTotal": 1500.00,
+        "subTotal": 1500.0,
         "discountPercent": 8,
-        "discountAmount": 120.00,
+        "discountAmount": 120.0,
         "vatPercent": 5,
-        "vatAmount": 69.00,
-        "totalAmount": 1449.00,
+        "vatAmount": 69.0,
+        "totalAmount": 1449.0,
         "amountInWords": "Rupees One Thousand Four Hundred Forty Nine Only"
       },
       "terms": "Service active from 2025-08-01 to 2026-07-31.",
