@@ -2,10 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
-import {
-  AutoCompleteTextBox,
-  AutoCompleteItem,
-} from "@/components/Search/AutoCompleteTextBox";
 import { SearchInput } from "@/components/Search/SearchInput";
 import {
   PAYMENT_STATUSES,
@@ -18,22 +14,6 @@ import { useLocalization } from "@/utils/formatters";
 type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 type SortOption = (typeof SORT_OPTIONS)[number];
 
-// === Types ===
-type Customer = {
-  id: number;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-};
-
-type Product = {
-  id: number;
-  productName: string;
-  sku: string;
-  price?: number;
-  tax?: number;
-};
 
 type InvoiceItem = {
   productId: number;
@@ -99,10 +79,6 @@ type Invoice = {
 export default function Invoices() {
   /* ---------- state ---------- */
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState<PaymentStatus | "All">(
@@ -115,9 +91,6 @@ export default function Invoices() {
   const [formMode, setFormMode] = useState<"view" | null>(null);
   const [loading, setLoading] = useState(true);
   const { formatDate, formatCurrency } = useLocalization();
-
-  let customerSearchTimeout: NodeJS.Timeout;
-  let productSearchTimeout: NodeJS.Timeout;
 
   const [form, setForm] = useState({
     id: null as number | null,
@@ -141,18 +114,11 @@ export default function Invoices() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [invRes, custRes, prodRes] = await Promise.all([
+      const [invRes] = await Promise.all([
         apiService.get<Invoice[]>("Invoices"),
-        apiService.get<Customer[]>("Customers"),
-        apiService.get<Product[]>("Products"),
       ]);
 
       if (invRes.status.code === "S") setInvoices(invRes.result);
-      if (custRes.status.code === "S") {
-        setCustomers(custRes.result);
-        setFilteredCustomers(custRes.result);
-      }
-      if (prodRes.status.code === "S") setProducts(prodRes.result);
     } catch (err) {
       console.error("Invoices load error:", err);
     } finally {
@@ -241,31 +207,6 @@ export default function Invoices() {
     alert("PDF Report Generated!");
   };
 
-  /* ---------- autocomplete: customer ---------- */
-  const handleCustomerSearch = (query: string) => {
-    if (customerSearchTimeout) clearTimeout(customerSearchTimeout);
-    setForm((prev) => ({ ...prev, customerName: query, customerId: "" }));
-    if (!query.trim()) {
-      setFilteredCustomers([]);
-      return;
-    }
-    customerSearchTimeout = setTimeout(() => {
-      const filtered = customers.filter((c) =>
-        c.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredCustomers(filtered);
-    }, 300);
-  };
-
-  const handleCustomerSelect = (item: AutoCompleteItem) => {
-    setForm((prev) => ({
-      ...prev,
-      customerId: item.id.toString(),
-      customerName: item.display,
-    }));
-    setFilteredCustomers([]);
-  };
-
   /* ---------- totals ---------- */
   const totals = useMemo(() => {
     const subTotal = form.items.reduce(
@@ -328,19 +269,19 @@ export default function Invoices() {
     {
       key: "amount",
       label: "Amount",
-      render:  formatCurrency,
+      render: formatCurrency,
       align: "right",
     },
     {
       key: "paid",
       label: "Paid",
-      render:  formatCurrency,
+      render: formatCurrency,
       align: "right",
     },
     {
       key: "due",
       label: "Amount Due",
-      render:  formatCurrency,
+      render: formatCurrency,
       align: "right",
     },
     {
