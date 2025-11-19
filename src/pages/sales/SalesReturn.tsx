@@ -5,27 +5,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
-import {
-  AutoCompleteTextBox,
-  AutoCompleteItem,
-} from "@/components/Search/AutoCompleteTextBox";
+import { CustomerSelect } from "@/components/AutoComplete";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { PAYMENT_STATUSES, SORT_OPTIONS } from "@/constants/constants";
 import { useLocalization } from "@/utils/formatters";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 
 import ProductsTable, { TableItem } from "@/components/Screen/ProductsTable";
-
-/* ---------- Types ---------- */
-
-type ProductOption = AutoCompleteItem<string> & {
-  extra?: { SKU?: string; Price?: string };
-};
-
-type CustomerOption = AutoCompleteItem<string>;
-
-const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
-
-type Customer = { id: string; name: string };
 
 type Product = {
   id: string;
@@ -75,10 +61,7 @@ type Return = {
 
 export default function SalesReturn() {
   const [returns, setReturns] = useState<Return[]>([]);
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
@@ -91,6 +74,7 @@ export default function SalesReturn() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [loading, setLoading] = useState(true);
   const { formatDate, formatCurrency } = useLocalization();
+  const { showSuccess, showError } = useEnhancedToast();
 
   // Form header & global fields
   const [form, setForm] = useState<{
@@ -138,15 +122,12 @@ export default function SalesReturn() {
     const load = async () => {
       setLoading(true);
       try {
-        const [custRes, prodRes, retRes] = await Promise.all([
-          apiService.get<Customer[]>("Customers"),
+        const [prodRes, retRes] = await Promise.all([
           apiService.get<Product[]>("Products"),
           apiService.get<Return[]>("SalesReturn"),
         ]);
-        if (custRes?.status?.code === "S") setAllCustomers(custRes.result);
         if (prodRes?.status?.code === "S") {
           setAllProducts(prodRes.result);
-          setFilteredProducts(prodRes.result);
         }
         if (retRes?.status?.code === "S") setReturns(retRes.result);
       } catch (e) {
@@ -197,8 +178,6 @@ export default function SalesReturn() {
   const generateRef = () => `SR-${Date.now().toString().slice(-6)}`;
 
   const handleAddClick = () => {
-    setFilteredCustomers([]);
-    setFilteredProducts(allProducts);
     setFormMode("add");
     setForm({
       customerId: "",
@@ -229,8 +208,6 @@ export default function SalesReturn() {
   };
 
   const handleEdit = (ret: Return) => {
-    setFilteredCustomers([]);
-    setFilteredProducts(allProducts);
     setFormMode("edit");
     setForm({
       customerId: ret.customerId,
@@ -309,22 +286,6 @@ export default function SalesReturn() {
     setCurrentPage(1);
   };
 
-  /* ---------- Customer search/select ---------- */
-  const handleCustomerSearch = (query: string) => {
-    setForm((p) => ({ ...p, customerName: query, customerId: "" }));
-    if (!query.trim()) {
-      setFilteredCustomers([]);
-      return;
-    }
-    const filtered = allCustomers.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
-    setFilteredCustomers(filtered);
-  };
-
-  const handleCustomerSelect = (item: CustomerOption) => {
-    setForm((p) => ({ ...p, customerId: item.id, customerName: item.display }));
-    setFilteredCustomers([]);
-  };
-
   /* ---------- Totals (Model B; same as Quotation) ---------- */
   const totals = useMemo(() => {
     // subtotal is sum(price * qty) — BEFORE per-line discounts and per-line taxes
@@ -353,76 +314,81 @@ export default function SalesReturn() {
 
   /* ---------- Submit (map TableItem -> ReturnItem) ---------- */
   const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    // Validate header + table rows
-    if (!form.customerId) {
-      alert("Please select a customer.");
-      return;
-    }
-    if (!form.reference.trim()) {
-      alert("Reference required.");
-      return;
-    }
-    if (itemsTable.some((it) => !it.productId)) {
-      alert("Please select products for all rows.");
-      return;
-    }
+      // Validate header + table rows
+      if (!form.customerId) {
+        alert("Please select a customer.");
+        return;
+      }
+      if (!form.reference.trim()) {
+        alert("Reference required.");
+        return;
+      }
+      if (itemsTable.some((it) => !it.productId)) {
+        alert("Please select products for all rows.");
+        return;
+      }
 
-    // Map TableItem -> ReturnItem (Model B mapping)
-    const mappedItems: ReturnItem[] = itemsTable.map((it) => {
-      const price = Number(it.price || 0);
-      const qty = Number(it.quantity || 0);
-      const discount = Number(it.discount || 0); // percent
-      const taxPercent = Number(it.taxPercent || 0);
+      // Map TableItem -> ReturnItem (Model B mapping)
+      const mappedItems: ReturnItem[] = itemsTable.map((it) => {
+        const price = Number(it.price || 0);
+        const qty = Number(it.quantity || 0);
+        const discount = Number(it.discount || 0); // percent
+        const taxPercent = Number(it.taxPercent || 0);
 
-      const subtotalRaw = price * qty;
-      const discountAmt = (subtotalRaw * discount) / 100;
-      const taxable = subtotalRaw - discountAmt;
-      const taxAmt = (taxable * taxPercent) / 100;
-      const total = taxable + taxAmt;
+        const subtotalRaw = price * qty;
+        const discountAmt = (subtotalRaw * discount) / 100;
+        const taxable = subtotalRaw - discountAmt;
+        const taxAmt = (taxable * taxPercent) / 100;
+        const total = taxable + taxAmt;
 
-      return {
-        productId: String(it.productId || ""),
-        productName: it.productName || "",
-        sku: it.sku || "",
-        productImage: it.productImage,
-        stock: 0,
-        quantity: qty,
-        netUnitPrice: price,
-        discount, // percent
-        taxPercent,
-        subtotal: Number(total.toFixed(2)),
+        return {
+          productId: String(it.productId || ""),
+          productName: it.productName || "",
+          sku: it.sku || "",
+          productImage: it.productImage,
+          stock: 0,
+          quantity: qty,
+          netUnitPrice: price,
+          discount, // percent
+          taxPercent,
+          subtotal: Number(total.toFixed(2)),
+        };
+      });
+
+      const newReturn: Return = {
+        reference: form.reference.trim(),
+        date: form.date,
+        customerId: form.customerId,
+        customerName: form.customerName,
+        status: form.status,
+        paymentStatus: formMode === "add" ? "UnPaid" : form.paymentStatus || "UnPaid",
+        total: totals.grand,
+        paid: 0,
+        due: totals.grand,
+        items: mappedItems,
+        summary: {
+          orderTax: Number(form.orderTax) || 0,
+          discount: Number(form.discount) || 0,
+          shipping: Number(form.shipping) || 0,
+          grandTotal: totals.grand,
+        },
+        notes: form.notes,
       };
-    });
 
-    const newReturn: Return = {
-      reference: form.reference.trim(),
-      date: form.date,
-      customerId: form.customerId,
-      customerName: form.customerName,
-      status: form.status,
-      paymentStatus: formMode === "add" ? "UnPaid" : form.paymentStatus || "UnPaid",
-      total: totals.grand,
-      paid: 0,
-      due: totals.grand,
-      items: mappedItems,
-      summary: {
-        orderTax: Number(form.orderTax) || 0,
-        discount: Number(form.discount) || 0,
-        shipping: Number(form.shipping) || 0,
-        grandTotal: totals.grand,
-      },
-      notes: form.notes,
-    };
+      if (formMode === "add") {
+        setReturns((prev) => [newReturn, ...prev]);
+      } else {
+        setReturns((prev) => prev.map((r) => (r.reference === form.reference ? { ...r, ...newReturn } : r)));
+      }
+      showSuccess("Localization settings saved!");
 
-    if (formMode === "add") {
-      setReturns((prev) => [newReturn, ...prev]);
-    } else {
-      setReturns((prev) => prev.map((r) => (r.reference === form.reference ? { ...r, ...newReturn } : r)));
+      setFormMode(null);
+    } catch (err: any) {
+      showError(err.message || "Failed to save");
     }
-
-    setFormMode(null);
   };
 
   /* ---------- Table columns & actions ---------- */
@@ -499,18 +465,12 @@ export default function SalesReturn() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="customerName" className="block text-sm font-medium mb-1">Customer Name *</label>
-          <CustomerAutoComplete
+          <CustomerSelect
             value={form.customerName}
-            onSearch={handleCustomerSearch}
-            onSelect={handleCustomerSelect}
-            items={
-              form.customerId
-                ? [
-                  ...filteredCustomers.map((c) => ({ id: c.id, display: c.name })),
-                  ...allCustomers.filter((c) => c.id === form.customerId).map((c) => ({ id: c.id, display: c.name })),
-                ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
-                : filteredCustomers.map((c) => ({ id: c.id, display: c.name }))
-            }
+            onSelect={(out) => {
+              // out.id is string, out.selected is the full Customer object
+              setForm((p) => ({ ...p, customerId: out.id, customerName: out.selected.customerName }));
+            }}
             placeholder="Search customer..."
           />
         </div>

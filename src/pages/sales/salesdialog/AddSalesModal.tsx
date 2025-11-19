@@ -4,13 +4,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { apiService } from "@/services/ApiService";
-import { AutoCompleteTextBox } from "@/components/Search/AutoCompleteTextBox";
+import { CustomerSelect, SupplierSelect } from "@/components/AutoComplete";
 import ProductsTable, { TableItem } from "@/components/Screen/ProductsTable";
 import { ORDER_STATUSES, ORDER_TYPES } from "@/constants/constants";
-import type { Product as ApiProduct } from "@/types/Product";
-
-type Customer = { id: number; name: string };
-type Supplier = { id: number; supplierName: string };
 
 type SaleItem = {
   productId: string | number;
@@ -31,9 +27,6 @@ interface AddSalesModalProps {
   initialData?: any;
   orderType: (typeof ORDER_TYPES)[number];
 }
-
-type CustomerOption = { id: number; display: string };
-const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
 
 const EMPTY_TABLE_ROW = (): TableItem => ({
   productId: "",
@@ -74,16 +67,12 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   initialData,
   orderType,
 }) => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [products, setProducts] = useState<ApiProduct[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ApiProduct[]>([]);
 
   // Header form fields
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     customerId: "",
     customerName: "",
+    customerImage: "",
     date: "",
     supplierId: "",
     supplierName: "",
@@ -104,9 +93,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
     // initialize header + items from initialData (edit) or defaults (add)
     if (initialData) {
-      setFormData({
+      setForm({
         customerId: initialData.customerId ?? "",
         customerName: initialData.customerName ?? "",
+        customerImage: initialData.customerName ?? "",
         date: initialData.date ?? today,
         supplierId: initialData.supplierId ?? "",
         supplierName: initialData.supplierName ?? "",
@@ -133,36 +123,15 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
       setItemsTable(mapped.length ? mapped : [EMPTY_TABLE_ROW()]);
     } else {
-      setFormData((p) => ({ ...p, date: today }));
+      setForm((p) => ({ ...p, date: today }));
       setItemsTable([EMPTY_TABLE_ROW()]);
     }
 
     // fetch customers / suppliers / products
     const fetchAll = async () => {
       try {
-        const [custRes, suppRes, prodRes] = await Promise.all([
-          apiService.get<any>("Customers"),
-          apiService.get<any>("Suppliers"),
-          apiService.get<any>("Products"),
-        ]);
-        if (custRes?.status?.code === "S") {
-          setCustomers(custRes.result || []);
-          setFilteredCustomers(custRes.result || []);
-        }
-        if (suppRes?.status?.code === "S") {
-          setSuppliers(suppRes.result || []);
-        }
-        if (prodRes?.status?.code === "S") {
-          setProducts(prodRes.result || []);
-          setFilteredProducts(prodRes.result || []);
-        }
       } catch (err) {
         console.error("AddSalesModal: failed to load master data", err);
-        setCustomers([]);
-        setSuppliers([]);
-        setProducts([]);
-        setFilteredCustomers([]);
-        setFilteredProducts([]);
       }
     };
 
@@ -174,9 +143,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     const subTotal = itemsTable.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
 
     // order-level percentage values (formData fields are strings to keep input binding simple)
-    const orderTaxPercent = Number(formData.orderTax) || 0;
-    const orderDiscountPercent = Number(formData.discount) || 0;
-    const shipping = Number(formData.shipping) || 0;
+    const orderTaxPercent = Number(form.orderTax) || 0;
+    const orderDiscountPercent = Number(form.discount) || 0;
+    const shipping = Number(form.shipping) || 0;
 
     const orderTaxAmt = (subTotal * orderTaxPercent) / 100;
     const orderDiscountAmt = (subTotal * orderDiscountPercent) / 100;
@@ -190,25 +159,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       shipping: Number(shipping.toFixed(2)),
       grandTotal: Number(grand.toFixed(2)),
     };
-  }, [itemsTable, formData.orderTax, formData.discount, formData.shipping]);
-
-  // handlers for header fields (customer search/select)
-  const handleCustomerSearch = (q: string) => {
-    setFormData((p) => ({ ...p, customerName: q, customerId: "" }));
-    if (!q.trim()) return setFilteredCustomers(customers);
-    setFilteredCustomers(customers.filter((c) => c.name.toLowerCase().includes(q.toLowerCase())));
-  };
-
-  const handleCustomerSelect = (sel: CustomerOption) => {
-    setFormData((p) => ({ ...p, customerId: String(sel.id), customerName: sel.display }));
-    setFilteredCustomers([]);
-  };
-
-  const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    const sel = suppliers.find((s) => String(s.id) === id);
-    setFormData((p) => ({ ...p, supplierId: id, supplierName: sel?.supplierName ?? "" }));
-  };
+  }, [itemsTable, form.orderTax, form.discount, form.shipping]);
 
   // wrapper: update itemsTable (called by ProductsTable via onChange)
   const handleItemsTableChange = (next: TableItem[]) => {
@@ -220,7 +171,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   // Save: map TableItem -> SaleItem and call onSave
   const handleSave = () => {
     // basic validation
-    if (!formData.customerId) {
+    if (!form.customerId) {
       alert("Please select a customer.");
       return;
     }
@@ -243,16 +194,17 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
     const payload = {
       reference: initialData?.reference ?? `S-${Date.now().toString().slice(-6)}`,
-      date: formData.date,
-      customerId: formData.customerId,
-      customerName: formData.customerName,
-      supplierId: formData.supplierId,
-      supplierName: formData.supplierName,
+      date: form.date,
+      customerId: form.customerId,
+      customerName: form.customerName,
+      customerImage: form.customerImage,
+      supplierId: form.supplierId,
+      supplierName: form.supplierName,
       orderType,
-      orderTax: Number(formData.orderTax),
-      discount: Number(formData.discount),
-      shipping: Number(formData.shipping),
-      status: formData.status,
+      orderTax: Number(form.orderTax),
+      discount: Number(form.discount),
+      shipping: Number(form.shipping),
+      status: form.status,
       items: mappedSaleItems,
       totals: {
         subTotal: totals.subTotal,
@@ -299,11 +251,12 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-                  <CustomerAutoComplete
-                    value={formData.customerName}
-                    onSearch={handleCustomerSearch}
-                    onSelect={handleCustomerSelect}
-                    items={filteredCustomers.map((c) => ({ id: c.id, display: c.name }))}
+                  <CustomerSelect
+                    value={form.customerName}
+                    onSelect={(out) => {
+                      // out.id is string, out.selected is the full Customer object
+                      setForm((p) => ({ ...p, customerId: out.id, customerName: out.selected.customerName, customerImage: out.selected.customerImage }));
+                    }}
                     placeholder="Search customer..."
                   />
                 </div>
@@ -312,26 +265,25 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                   <input
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))}
+                    value={form.date}
+                    onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
-                  <select
-                    value={formData.supplierId}
-                    onChange={handleSupplierChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="">Select</option>
-                    {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.supplierName}
-                      </option>
-                    ))}
-                  </select>
+                  <SupplierSelect
+                    value={form.supplierName}
+                    onSelect={(out) => {
+                      setForm((p) => ({
+                        ...p,
+                        supplierId: out.id,
+                        supplierName: out.selected.supplierName,
+                      }));
+                    }}
+                  />
+
                 </div>
               </div>
 
@@ -360,8 +312,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Order Tax (%)</label>
                   <input
                     type="number"
-                    value={formData.orderTax}
-                    onChange={(e) => setFormData((p) => ({ ...p, orderTax: e.target.value }))}
+                    value={form.orderTax}
+                    onChange={(e) => setForm((p) => ({ ...p, orderTax: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     step="0.01"
                   />
@@ -371,8 +323,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
                   <input
                     type="number"
-                    value={formData.discount}
-                    onChange={(e) => setFormData((p) => ({ ...p, discount: e.target.value }))}
+                    value={form.discount}
+                    onChange={(e) => setForm((p) => ({ ...p, discount: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     step="0.01"
                   />
@@ -382,8 +334,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Shipping (₹)</label>
                   <input
                     type="number"
-                    value={formData.shipping}
-                    onChange={(e) => setFormData((p) => ({ ...p, shipping: e.target.value }))}
+                    value={form.shipping}
+                    onChange={(e) => setForm((p) => ({ ...p, shipping: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     step="0.01"
                   />
@@ -392,8 +344,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value as any }))}
+                    value={form.status}
+                    onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as any }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                   >
                     {ORDER_STATUSES.map((s) => (

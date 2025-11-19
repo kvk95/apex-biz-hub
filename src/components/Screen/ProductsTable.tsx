@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { apiService } from "@/services/ApiService";
-import { AutoCompleteTextBox, AutoCompleteItem } from "@/components/Search/AutoCompleteTextBox";
+import { ProductSelect } from "@/components/AutoComplete";
 
 /**
  * Reusable ProductsTable
@@ -31,18 +31,12 @@ type Product = {
   // any other properties returned by your API
 };
 
-type ProductOption = AutoCompleteItem<string> & {
-  extra?: { SKU?: string; Price?: string; ProductImage?: string };
-};
-
 type Props = {
   value: TableItem[]; // controlled list
   onChange: (items: TableItem[]) => void;
   // optional: minRows etc in future
   minRows?: number;
 };
-
-const ProductAutoComplete = AutoCompleteTextBox<ProductOption>;
 
 const EMPTY_ROW = (): TableItem => ({
   productId: "",
@@ -158,62 +152,6 @@ export default function ProductsTable({ value, onChange, minRows = 1 }: Props) {
     });
   };
 
-  // search handler for autocomplete (filters local products)
-  const handleProductSearch = (query: string, idx: number) => {
-    // update productName text in that row while typing
-    setLocalItems(prev => {
-      const next = [...prev];
-      next[idx] = { ...next[idx], productName: query, productId: "" };
-      emit(next);
-      return next;
-    });
-
-    if (!query.trim()) {
-      setFilteredProducts(products);
-      return;
-    }
-    const q = query.toLowerCase();
-    setFilteredProducts(products.filter(p =>
-      (p.productName || "").toLowerCase().includes(q) ||
-      (p.sku || "").toLowerCase().includes(q)
-    ));
-  };
-
-  // when a product is selected from dropdown
-  const handleProductSelect = (idx: number, option: ProductOption) => {
-    const prod = products.find(p => p.id === option.id);
-    if (!prod) {
-      // defensive: if not found, still set name/id from option
-      updateRow(idx, {
-        productId: option.id,
-        productName: option.display,
-      });
-      return;
-    }
-
-    setLocalItems(prev => {
-      const next = [...prev];
-      next[idx] = recalcItem({
-        ...next[idx],
-        productId: prod.id,
-        productName: prod.productName,
-        sku: prod.sku || "",
-        productImage: prod.productImage,
-        price: Number(prod.price) || 0,
-        // keep qty or default 1
-        quantity: next[idx]?.quantity || 1,
-        // reset discount/tax to 0 if previously empty (preserve if user set)
-        discount: next[idx]?.discount ?? 0,
-        taxPercent: next[idx]?.taxPercent ?? 0,
-      });
-      emit(next);
-      return next;
-    });
-
-    // reset filtered list to full
-    setFilteredProducts(products);
-  };
-
   // small memoized validation map per row
   const validations = useMemo(() => {
     return localItems.map((it) => {
@@ -226,17 +164,6 @@ export default function ProductsTable({ value, onChange, minRows = 1 }: Props) {
       return errs;
     });
   }, [localItems]);
-
-  // render product autocomplete items
-  const acItems: ProductOption[] = filteredProducts.map(p => ({
-    id: p.id,
-    display: p.productName,
-    extra: {
-      SKU: p.sku,
-      Price: p.price !== undefined ? `₹${Number(p.price).toFixed(2)}` : "",
-      ProductImage: p.productImage,
-    },
-  }));
 
   return (
     <div className="w-full">
@@ -259,44 +186,11 @@ export default function ProductsTable({ value, onChange, minRows = 1 }: Props) {
             {localItems.map((row, idx) => (
               <tr key={idx} className="border-t hover:bg-gray-50">
                 <td className="px-2 py-2 align-top">
-                  <ProductAutoComplete
+                  <ProductSelect
                     value={row.productName}
-                    onSearch={(q) => handleProductSearch(q, idx)}
-                    onSelect={(opt) => handleProductSelect(idx, opt)}
-                    items={
-                      // for edit-mode, include the currently selected product in list too
-                      (row.productId && row.productId.length)
-                        ? [
-                          ...acItems.filter(i => i.id !== row.productId),
-                          {
-                            id: row.productId,
-                            display: row.productName || "",
-                            extra: { SKU: row.sku, Price: row.price ? `₹${Number(row.price).toFixed(2)}` : "", ProductImage: row.productImage },
-                          },
-                        ]
-                        : acItems
-                    }
-                    placeholder="Search product..."
-                    renderItem={(it, highlighted) => (
-                      <div className={`p-2 flex items-center gap-3 ${highlighted ? "bg-blue-50" : "hover:bg-gray-100"}`}>
-                        <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                          {it.extra?.ProductImage ? (
-                            // image may be external path
-                            <img src={it.extra.ProductImage} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <i className="fa fa-box text-gray-400" />
-                          )}
-                        </div>
-                        <div className="truncate">
-                          <div className="font-medium text-sm truncate" title={it.display}>{it.display}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {it.extra?.SKU ? `SKU: ${it.extra.SKU} • ` : ""}
-                            {it.extra?.Price}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    className="w-full"
+                    onSelect={(out) => {
+                      updateRow(idx, out.selected);
+                    }}
                   />
 
                   {/* small meta line */}

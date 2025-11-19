@@ -6,27 +6,11 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
 import ProductsTable, { TableItem } from "@/components/Screen/ProductsTable";
-import {
-  AutoCompleteTextBox,
-  AutoCompleteItem,
-} from "@/components/Search/AutoCompleteTextBox";
+import { CustomerSelect } from "@/components/AutoComplete";
 import { SearchInput } from "@/components/Search/SearchInput";
 import { QUOTATION_STATUSES } from "@/constants/constants";
 import { useLocalization } from "@/utils/formatters";
-
-/* ---------- Type-Safe AutoComplete ---------- */
-type CustomerOption = AutoCompleteItem<string>;
-const CustomerAutoComplete = AutoCompleteTextBox<CustomerOption>;
-
-/* ---------- Types ---------- */
-type Customer = { id: string; name: string };
-type Product = {
-  id: string;
-  productName: string;
-  sku: string;
-  price: number;
-  productImage?: string;
-};
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 
 type QuotationItem = {
   productId: string;
@@ -88,8 +72,6 @@ const recalcTableItem = (it: TableItem): TableItem => {
 
 export default function Quotation() {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
 
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("All");
@@ -100,6 +82,7 @@ export default function Quotation() {
   const [formMode, setFormMode] = useState<"add" | "edit" | "view" | null>(null);
   const [loading, setLoading] = useState(true);
   const { formatDate, formatCurrency } = useLocalization();
+  const { showSuccess, showError } = useEnhancedToast();
 
   /* Form */
   const [form, setForm] = useState<{
@@ -146,11 +129,9 @@ export default function Quotation() {
     const load = async () => {
       setLoading(true);
       try {
-        const [custRes, quotRes] = await Promise.all([
-          apiService.get<Customer[]>("Customers"),
+        const [quotRes] = await Promise.all([
           apiService.get<Quotation[]>("Quotation"),
         ]);
-        if (custRes?.status?.code === "S") setAllCustomers(custRes.result);
         if (quotRes?.status?.code === "S") setQuotations(quotRes.result);
       } catch (e) {
         console.error(e);
@@ -322,22 +303,6 @@ export default function Quotation() {
     }
   };
 
-  /* Customer search/select for header */
-  const handleCustomerSearch = (query: string) => {
-    setForm((p) => ({ ...p, customerName: query, customerId: "" }));
-    if (!query.trim()) return setFilteredCustomers([]);
-    setFilteredCustomers(
-      allCustomers.filter((c) =>
-        c.name.toLowerCase().includes(query.toLowerCase())
-      )
-    );
-  };
-
-  const handleCustomerSelect = (item: CustomerOption) => {
-    setForm((p) => ({ ...p, customerId: item.id, customerName: item.display }));
-    setFilteredCustomers([]);
-  };
-
   /* Totals (follows AddSalesModal totals style) */
   const totals = useMemo(() => {
     // subTotal is sum(price * qty) — before per-line discounts and taxes
@@ -364,75 +329,80 @@ export default function Quotation() {
 
   /* Submit */
   const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    // If view mode — close modal (PageBase1 handles footer)
-    if (formMode === "view") {
-      setFormMode(null);
-      return;
-    }
+      // If view mode — close modal (PageBase1 handles footer)
+      if (formMode === "view") {
+        setFormMode(null);
+        return;
+      }
 
-    if (!form.customerId || itemsTable.some((it) => !it.productId)) {
-      alert("Please fill all required fields.");
-      return;
-    }
+      if (!form.customerId || itemsTable.some((it) => !it.productId)) {
+        alert("Please fill all required fields.");
+        return;
+      }
 
-    // Map TableItem -> QuotationItem
-    const mappedItems: QuotationItem[] = itemsTable.map((it) => {
-      const price = Number(it.price) || 0;
-      const qty = Number(it.quantity) || 0;
-      const discount = Number(it.discount) || 0;
-      const taxPercent = Number(it.taxPercent || 0);
-      const subtotal = price * qty;
-      const discountAmt = (subtotal * discount) / 100;
-      const taxable = subtotal - discountAmt;
-      const taxAmount = (taxable * taxPercent) / 100;
-      const total = taxable + taxAmount;
-      return {
-        productId: String(it.productId || ""),
-        productName: it.productName,
-        sku: it.sku,
-        productImage: undefined,
-        quantity: qty,
-        purchasePrice: price,
-        discount,
-        taxPercent,
-        taxAmount: Number(taxAmount.toFixed(2)),
-        totalCost: Number(total.toFixed(2)),
+      // Map TableItem -> QuotationItem
+      const mappedItems: QuotationItem[] = itemsTable.map((it) => {
+        const price = Number(it.price) || 0;
+        const qty = Number(it.quantity) || 0;
+        const discount = Number(it.discount) || 0;
+        const taxPercent = Number(it.taxPercent || 0);
+        const subtotal = price * qty;
+        const discountAmt = (subtotal * discount) / 100;
+        const taxable = subtotal - discountAmt;
+        const taxAmount = (taxable * taxPercent) / 100;
+        const total = taxable + taxAmount;
+        return {
+          productId: String(it.productId || ""),
+          productName: it.productName,
+          sku: it.sku,
+          productImage: undefined,
+          quantity: qty,
+          purchasePrice: price,
+          discount,
+          taxPercent,
+          taxAmount: Number(taxAmount.toFixed(2)),
+          totalCost: Number(total.toFixed(2)),
+        };
+      });
+
+      // update form.items for storage
+      const newForm = {
+        ...form,
+        items: mappedItems,
       };
-    });
+      setForm(newForm);
 
-    // update form.items for storage
-    const newForm = {
-      ...form,
-      items: mappedItems,
-    };
-    setForm(newForm);
+      const newQuotation: Quotation = {
+        reference: form.reference || generateRef(),
+        date: form.date,
+        customerId: form.customerId,
+        customerName: form.customerName,
+        status: form.status,
+        total: totals.grand,
+        items: mappedItems,
+        summary: {
+          orderTax: Number(form.orderTax),
+          discount: Number(form.discount),
+          shipping: Number(form.shipping),
+          grandTotal: totals.grand,
+        },
+        description: form.description,
+      };
 
-    const newQuotation: Quotation = {
-      reference: form.reference || generateRef(),
-      date: form.date,
-      customerId: form.customerId,
-      customerName: form.customerName,
-      status: form.status,
-      total: totals.grand,
-      items: mappedItems,
-      summary: {
-        orderTax: Number(form.orderTax),
-        discount: Number(form.discount),
-        shipping: Number(form.shipping),
-        grandTotal: totals.grand,
-      },
-      description: form.description,
-    };
+      if (formMode === "add") {
+        setQuotations((p) => [newQuotation, ...p]);
+      } else {
+        setQuotations((p) => p.map((q) => (q.reference === newQuotation.reference ? newQuotation : q)));
+      }
+      showSuccess("Localization settings saved!");
 
-    if (formMode === "add") {
-      setQuotations((p) => [newQuotation, ...p]);
-    } else {
-      setQuotations((p) => p.map((q) => (q.reference === newQuotation.reference ? newQuotation : q)));
+      setFormMode(null);
+    } catch (err: any) {
+      showError(err.message || "Failed to save");
     }
-
-    setFormMode(null);
   };
 
   /* Table columns for PageBase1 list */
@@ -600,18 +570,12 @@ export default function Quotation() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label>Customer *</label>
-            <CustomerAutoComplete
+            <CustomerSelect
               value={form.customerName}
-              onSearch={handleCustomerSearch}
-              onSelect={handleCustomerSelect}
-              items={
-                form.customerId
-                  ? [
-                    ...filteredCustomers.map((c) => ({ id: c.id, display: c.name })),
-                    ...allCustomers.filter((c) => c.id === form.customerId).map((c) => ({ id: c.id, display: c.name })),
-                  ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
-                  : filteredCustomers.map((c) => ({ id: c.id, display: c.name }))
-              }
+              onSelect={(out) => {
+                // out.id is string, out.selected is the full Customer object
+                setForm((p) => ({ ...p, customerId: out.id, customerName: out.selected.customerName }));
+              }}
               placeholder="Search customer..."
             />
           </div>

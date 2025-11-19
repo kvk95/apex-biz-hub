@@ -203,3 +203,20 @@ export const formatCurrencyGlobal = (amount: number | string): string => {
   const { formatCurrency } = useLocalization();
   return formatCurrency(amount);
 };
+
+export const generateUniqueId = (
+  prefix: string = "XXXX",
+  length: number = 10
+): string => {
+  // Generate a cryptographically secure UUID
+  const uuid = crypto.randomUUID();
+
+  // Remove non-alphanumeric characters
+  const alphanumeric = uuid.replace(/[^a-zA-Z0-9]/g, "");
+
+  // Ensure we have enough characters by repeating if needed
+  const requiredLength = length - prefix.length;
+  const padded = (alphanumeric + alphanumeric).slice(0, requiredLength);
+
+  return `${prefix}${padded}`;
+};

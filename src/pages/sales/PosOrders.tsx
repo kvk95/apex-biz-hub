@@ -4,7 +4,6 @@
    100% MATCHES YOUR LATEST JSON
    ------------------------------------------------- */
 import React, { useState, useEffect, useMemo } from "react";
-import { format } from "date-fns";
 import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { renderStatusBadge } from "@/utils/tableUtils";
@@ -13,6 +12,7 @@ import AddSalesModal from "./salesdialog/AddSalesModal";
 import SaleDetailModal from "./salesdialog/SaleDetailModal";
 import { PaymentModal, Payment } from "./salesdialog/PaymentModal";
 import { useLocalization } from "@/utils/formatters";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 
 import {
   ORDER_STATUSES,
@@ -66,6 +66,7 @@ export default function PosOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const { formatDate, formatCurrency } = useLocalization();
+  const { showSuccess, showError } = useEnhancedToast();
 
   useEffect(() => {
     loadData();
@@ -168,48 +169,53 @@ export default function PosOrders() {
   };
 
   const handleFormSubmit = (data: any) => {
-    const now = new Date().toISOString();
+    try {
+      const now = new Date().toISOString();
 
-    const completeOrder: Order = {
-      orderId: data.orderId || `SL${String(orders.length + 1).padStart(3, "0")}`,
-      orderType: currentOrderType,
-      reference: data.reference || `#SL${String(orders.length + 1).padStart(3, "0")}`,
-      date: data.date || now,
-      customerId: data.customerId || "1",
-      customerName: data.customerName || "Walk-in Customer",
-      customerImage: data.customerImage || undefined,
-      customerAddress: data.customerAddress || "N/A",
-      customerEmail: data.customerEmail || "N/A",
-      customerPhone: data.customerPhone || "N/A",
-      biller: data.biller || "Admin",
-      supplierId: data.supplierId || "1",
-      supplierName: data.supplierName || "Admin",
-      status: data.status || "Completed",
-      paymentStatus: data.paymentStatus || "Paid",
-      grandTotal: data.grandTotal || 0,
-      paid: data.paid || data.grandTotal || 0,
-      due: data.due || 0,
-      orderTax: data.orderTax || 0,
-      discount: data.discount || 0,
-      shipping: data.shipping || 0,
-      companyInfo: data.companyInfo || {
-        name: "DGT",
-        address: "2077 Chicago Avenue Orosi, CA 93647",
-        email: "admin@example.com",
-        phone: "+1 893 174 0385",
-      },
-      items: data.items || [],
-      payments: data.payments || [],
-    };
+      const completeOrder: Order = {
+        orderId: data.orderId || `SL${String(orders.length + 1).padStart(3, "0")}`,
+        orderType: currentOrderType,
+        reference: data.reference || `#SL${String(orders.length + 1).padStart(3, "0")}`,
+        date: data.date || now,
+        customerId: data.customerId || "1",
+        customerName: data.customerName || "Walk-in Customer",
+        customerImage: data.customerImage || undefined,
+        customerAddress: data.customerAddress || "N/A",
+        customerEmail: data.customerEmail || "N/A",
+        customerPhone: data.customerPhone || "N/A",
+        biller: data.biller || "Admin",
+        supplierId: data.supplierId || "1",
+        supplierName: data.supplierName || "Admin",
+        status: data.status || "Completed",
+        paymentStatus: data.paymentStatus || "Paid",
+        grandTotal: data.grandTotal || 0,
+        paid: data.paid || data.grandTotal || 0,
+        due: data.due || 0,
+        orderTax: data.orderTax || 0,
+        discount: data.discount || 0,
+        shipping: data.shipping || 0,
+        companyInfo: data.companyInfo || {
+          name: "DGT",
+          address: "2077 Chicago Avenue Orosi, CA 93647",
+          email: "admin@example.com",
+          phone: "+1 893 174 0385",
+        },
+        items: data.items || [],
+        payments: data.payments || [],
+      };
 
-    if (formMode === "add") {
-      setOrders(prev => [completeOrder, ...prev]);
-    } else if (formMode === "edit" && selectedOrder) {
-      setOrders(prev => prev.map(o => o.orderId === selectedOrder.orderId ? completeOrder : o));
+      if (formMode === "add") {
+        setOrders(prev => [completeOrder, ...prev]);
+      } else if (formMode === "edit" && selectedOrder) {
+        setOrders(prev => prev.map(o => o.orderId === selectedOrder.orderId ? completeOrder : o));
+      }
+      showSuccess("Localization settings saved!");
+
+      setFormMode(null);
+      setSelectedOrder(null);
+    } catch (err: any) {
+      showError(err.message || "Failed to save");
     }
-
-    setFormMode(null);
-    setSelectedOrder(null);
   };
 
   const handleDelete = (orderId: string) => {
