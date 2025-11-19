@@ -21,15 +21,16 @@ interface ProductRecord {
 }
 
 type Customer = {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  country: string;
-  zip: string;
-  status: (typeof STATUSES)[number];
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerCity: string;
+  customerCountry: string;
+  customerZip: string;
+  customerStatus: (typeof STATUSES)[number];
+  customerImage: string;
 };
 
 interface CategoryRecord {
@@ -371,11 +372,10 @@ const OrderPopupModal = ({
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 mx-2 text-sm font-medium ${
-                activeTab === tab
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
-              }`}
+              className={`px-4 py-2 mx-2 text-sm font-medium ${activeTab === tab
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-black"
+                }`}
             >
               {tab}
             </button>
@@ -482,11 +482,10 @@ const TransactionsModal = ({
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 mx-2 text-sm font-medium ${
-                activeTab === tab
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
-              }`}
+              className={`px-4 py-2 mx-2 text-sm font-medium ${activeTab === tab
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-black"
+                }`}
             >
               {tab}
             </button>
@@ -750,7 +749,7 @@ export default function Pos1() {
 
   // Filters
   const filteredCustomers = customers.filter((c) =>
-    c.name.toLowerCase().includes(customerSearch.toLowerCase())
+    c.customerName.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
   const filteredProducts = products.filter(
@@ -928,10 +927,9 @@ export default function Pos1() {
                       setProductPage(1);
                     }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-sm border transition-all whitespace-nowrap
-                      ${
-                        selectedCategory === name
-                          ? "bg-primary text-white border-primary shadow-sm"
-                          : "bg-white text-muted-foreground border-gray-300 hover:bg-gray-50"
+                      ${selectedCategory === name
+                        ? "bg-primary text-white border-primary shadow-sm"
+                        : "bg-white text-muted-foreground border-gray-300 hover:bg-gray-50"
                       }`}
                   >
                     {!isAll && cat?.image ? (
@@ -948,9 +946,8 @@ export default function Pos1() {
                       />
                     ) : null}
                     <i
-                      className={`fa fa-tags text-xs ${
-                        !isAll && cat?.image ? "hidden" : ""
-                      }`}
+                      className={`fa fa-tags text-xs ${!isAll && cat?.image ? "hidden" : ""
+                        }`}
                     />
                     <span>{name}</span>
                   </button>
@@ -1074,37 +1071,37 @@ export default function Pos1() {
           {/* Customer */}
           <div className="p-3 border-b space-y-2">
             <div className="flex gap-2">
-            <select
-              value={selectedCustomer?.id || ""}
-              onChange={(e) => {
-                const cust = customers.find(
-                  (c) => c.id === Number(e.target.value)
-                );
-                if (cust) setSelectedCustomer(cust);
-              }}
-              className="w-full text-sm border rounded px-2 py-1.5"
-            >
-              <option value="" disabled>
-                Select Customer
-              </option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.phone})
+              <select
+                value={selectedCustomer?.customerId || ""}
+                onChange={(e) => {
+                  const cust = customers.find(
+                    (c) => c.customerId === e.target.value
+                  );
+                  if (cust) setSelectedCustomer(cust);
+                }}
+                className="w-full text-sm border rounded px-2 py-1.5"
+              >
+                <option value="" disabled>
+                  Select Customer
                 </option>
-              ))}
-            </select>
-            <button
-              onClick={handleAddCustomer}
-              className="bg-teal-500 hover:bg-teal-600 text-white text-sm px-3 py-2 rounded"
-            >
-              <i className="fa fa-user-plus" aria-hidden="true"></i>
-            </button>
+                {customers.map((c) => (
+                  <option key={c.customerId} value={c.customerId}>
+                    {c.customerName} ({c.customerPhone})
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddCustomer}
+                className="bg-teal-500 hover:bg-teal-600 text-white text-sm px-3 py-2 rounded"
+              >
+                <i className="fa fa-user-plus" aria-hidden="true"></i>
+              </button>
             </div>
             {selectedCustomer && (
               <div className="text-xs p-2 bg-muted/50 rounded border border-dashed">
-                <p className="font-medium">{selectedCustomer.name}</p>
+                <p className="font-medium">{selectedCustomer.customerName}</p>
                 <p className="text-muted-foreground">
-                  {selectedCustomer.phone} | {selectedCustomer.address}
+                  {selectedCustomer.customerPhone} | {selectedCustomer.customerAddress}
                 </p>
               </div>
             )}
@@ -1310,11 +1307,10 @@ export default function Pos1() {
               <div>
                 <label className="text-xs block mb-1">Due</label>
                 <div
-                  className={`w-full text-right py-1.5 rounded font-bold text-lg ${
-                    dueAmount > 0
-                      ? "text-red-600 bg-red-50"
-                      : "text-green-600 bg-green-50"
-                  }`}
+                  className={`w-full text-right py-1.5 rounded font-bold text-lg ${dueAmount > 0
+                    ? "text-red-600 bg-red-50"
+                    : "text-green-600 bg-green-50"
+                    }`}
                 >
                   ₹ {dueAmount.toFixed(2)}
                 </div>
@@ -1331,7 +1327,7 @@ export default function Pos1() {
                 onClick={() => alert("Sale finalized!")}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded font-medium text-sm"
               >
-               <i className="fa fa-cart-shopping fa-light " /> Finalize Sale
+                <i className="fa fa-cart-shopping fa-light " /> Finalize Sale
               </button>
             </div>
           </div>

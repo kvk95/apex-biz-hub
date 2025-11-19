@@ -3,31 +3,34 @@ import { apiService } from "@/services/ApiService";
 import { PageBase1, Column } from "@/pages/PageBase1";
 import { ROLES, STATUSES } from "@/constants/constants";
 import { renderStatusBadge } from "@/utils/tableUtils";
+import { generateUniqueId } from "@/utils/formatters";
 
 type Customer = {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  country: string;
-  zip: string;
-  status: (typeof STATUSES)[number];
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerCity: string;
+  customerCountry: string;
+  customerZip: string;
+  customerStatus: (typeof STATUSES)[number];
+  customerImage: string;
 };
 
 export default function Customers() {
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [form, setForm] = useState<Customer>({
-    id: 0,
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    country: "",
-    zip: "",
-    status: "Active",
+    customerId: "",
+    customerName: "",
+    customerEmail: "",
+    customerPhone: "",
+    customerAddress: "",
+    customerCity: "",
+    customerCountry: "",
+    customerZip: "",
+    customerStatus: "Active",
+    customerImage: "",
   });
   const [data, setData] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,10 +60,10 @@ export default function Customers() {
     const result = !search.trim()
       ? data
       : data.filter(
-          (customer) =>
-            customer.name.toLowerCase().includes(search.toLowerCase()) ||
-            customer.email.toLowerCase().includes(search.toLowerCase())
-        );
+        (customer) =>
+          customer.customerName.toLowerCase().includes(search.toLowerCase()) ||
+          customer.customerEmail.toLowerCase().includes(search.toLowerCase())
+      );
     console.log("Customers filteredData:", result, { search });
     return result;
   }, [data, search]);
@@ -89,15 +92,16 @@ export default function Customers() {
   const handleAddClick = () => {
     setFormMode("add");
     setForm({
-      id: 0,
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      country: "",
-      zip: "",
-      status: "Active",
+      customerId: "",
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      customerAddress: "",
+      customerCity: "",
+      customerCountry: "",
+      customerZip: "",
+      customerStatus: "Active",
+      customerImage: "",
     });
     console.log("Customers handleAddClick: Modal opened for add");
   };
@@ -111,48 +115,49 @@ export default function Customers() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      !form.name.trim() ||
-      !form.email.trim() ||
-      !form.phone.trim() ||
-      !form.address.trim() ||
-      !form.city.trim() ||
-      !form.country.trim() ||
-      !form.zip.trim()
+      !form.customerName.trim() ||
+      !form.customerEmail.trim() ||
+      !form.customerPhone.trim() ||
+      !form.customerAddress.trim() ||
+      !form.customerCity.trim() ||
+      !form.customerCountry.trim() ||
+      !form.customerZip.trim()
     ) {
       alert("Please fill all required fields.");
       return;
     }
-    if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.email)) {
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.customerEmail)) {
       alert("Please enter a valid email address.");
       return;
     }
     if (
       data.some(
         (customer) =>
-          customer.email.toLowerCase() === form.email.toLowerCase() &&
-          (formMode === "edit" ? customer.id !== form.id : true)
+          customer.customerEmail.toLowerCase() === form.customerEmail.toLowerCase() &&
+          (formMode === "edit" ? customer.customerId !== form.customerId : true)
       )
     ) {
       alert("Email must be unique.");
       return;
     }
     if (formMode === "add") {
-      const newId = data.length ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-      setData((prev) => [...prev, { id: newId, ...form }]);
+
+      const newId = generateUniqueId("CUST", 10);
+      setData((prev) => [...prev, { customerId: newId, ...form }]);
       const totalPages = Math.ceil((filteredData.length + 1) / itemsPerPage);
       setCurrentPage(totalPages);
-    } else if (formMode === "edit" && form.id !== 0) {
+    } else if (formMode === "edit" && form.customerId !== "") {
       setData((prev) =>
-        prev.map((item) => (item.id === form.id ? { ...item, ...form } : item))
+        prev.map((item) => (item.customerId === form.customerId ? { ...item, ...form } : item))
       );
     }
     setFormMode(null);
     console.log("Customers handleFormSubmit:", { form, formMode });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
-      setData((prev) => prev.filter((d) => d.id !== id));
+      setData((prev) => prev.filter((d) => d.customerId !== id));
       const totalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
@@ -236,15 +241,15 @@ export default function Customers() {
     <>
       <button
         onClick={() => handleEdit(row)}
-        aria-label={`Edit customer ${row.name}`}
+        aria-label={`Edit customer ${row.customerName}`}
         className="text-gray-700 border border-gray-700 hover:bg-primary hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-edit" aria-hidden="true"></i>
         <span className="sr-only">Edit customer</span>
       </button>
       <button
-        onClick={() => handleDelete(row.id)}
-        aria-label={`Delete customer ${row.name}`}
+        onClick={() => handleDelete(row.customerId)}
+        aria-label={`Delete customer ${row.customerName}`}
         className="text-gray-700 border border-gray-700 hover:bg-red-500 hover:text-white focus:ring-4 rounded-lg text-xs p-2 text-center inline-flex items-center me-1"
       >
         <i className="fa fa-trash-can-xmark" aria-hidden="true"></i>
@@ -263,7 +268,7 @@ export default function Customers() {
           type="text"
           id="name"
           name="name"
-          value={form.name}
+          value={form.customerName}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter customer name"
@@ -278,7 +283,7 @@ export default function Customers() {
           type="email"
           id="email"
           name="email"
-          value={form.email}
+          value={form.customerEmail}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter email"
@@ -293,7 +298,7 @@ export default function Customers() {
           type="tel"
           id="phone"
           name="phone"
-          value={form.phone}
+          value={form.customerPhone}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter phone number"
@@ -308,7 +313,7 @@ export default function Customers() {
           type="text"
           id="address"
           name="address"
-          value={form.address}
+          value={form.customerAddress}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter address"
@@ -323,7 +328,7 @@ export default function Customers() {
           type="text"
           id="city"
           name="city"
-          value={form.city}
+          value={form.customerCity}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter city"
@@ -338,7 +343,7 @@ export default function Customers() {
           type="text"
           id="country"
           name="country"
-          value={form.country}
+          value={form.customerCountry}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter country"
@@ -353,7 +358,7 @@ export default function Customers() {
           type="text"
           id="zip"
           name="zip"
-          value={form.zip}
+          value={form.customerZip}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Enter zip code"
@@ -367,7 +372,7 @@ export default function Customers() {
         <select
           id="status"
           name="status"
-          value={form.status}
+          value={form.customerStatus}
           onChange={handleInputChange}
           className="w-full border border-input rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
@@ -385,7 +390,7 @@ export default function Customers() {
     <PageBase1
       title="Customers"
       description="Manage customers for your application."
-      
+
       onAddClick={handleAddClick}
       onRefresh={handleClear}
       onReport={handleReport}
