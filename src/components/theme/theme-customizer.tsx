@@ -160,28 +160,33 @@ export function ThemeCustomizer({
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  const initializeTheme = () => {
-    const defaults = {
-      headerColor: theme.headerColor || colors.header[0].value,
-      sidebarColor: theme.sidebarColor || colors.sidebar[0].value,
-      primaryColor: theme.primaryColor || colors.primary[0].value,
-      fontFamily: theme.fontFamily || fontOptions[0].value,
-    };
-    if (!theme.headerColor || !theme.sidebarColor || !theme.primaryColor|| !theme.fontFamily) {
-      setTheme(defaults);
-    }
+  // Merge initialTheme → context theme → defaults
+  const resolvedTheme = {
+    headerColor: initialTheme?.headerColor ?? theme.headerColor ?? "0 0% 100%",
+    sidebarColor:
+      initialTheme?.sidebarColor ?? theme.sidebarColor ?? "0 0% 100%",
+    primaryColor:
+      initialTheme?.primaryColor ?? theme.primaryColor ?? "32.4 99% 63%",
+    fontFamily:
+      initialTheme?.fontFamily ?? theme.fontFamily ?? "Nunito, sans-serif",
   };
 
+  // Apply resolved theme on mount or when initialTheme changes
   useEffect(() => {
-    initializeTheme();
-  }, [theme, setTheme]);
+    setTheme(resolvedTheme);
+  }, [
+    initialTheme?.headerColor,
+    initialTheme?.sidebarColor,
+    initialTheme?.primaryColor,
+    initialTheme?.fontFamily,
+  ]);
 
   // When sheet closes, trigger callback with latest theme
-  useEffect(() => { 
-    if (open && typeof onClose === "function") { 
+  useEffect(() => {
+    if (open && typeof onClose === "function") {
       onClose(theme);
     }
-  }, [open,  onClose]);
+  }, [open, onClose]);
 
   const isLight = parseFloat(theme.primaryColor?.split(" ")[1]) > 50;
   const headerTextColor = isLight ? "hsl(240 10% 3.9%)" : "hsl(0 0% 100%)";

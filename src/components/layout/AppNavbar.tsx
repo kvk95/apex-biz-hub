@@ -108,6 +108,18 @@ export function AppNavbar({ isPosPage }) {
     { id: 3, title: "Payment received", time: "3 hours ago", unread: false },
   ];
 
+  //theme.headerColor = user.profile.theme.headerColor;
+
+  // Extract theme from user.profile.theme safely
+  const userTheme = user?.profile?.theme
+    ? {
+        headerColor: user.profile.theme.headerColor || undefined,
+        sidebarColor: user.profile.theme.sidebarColor || undefined,
+        primaryColor: user.profile.theme.primaryColor || undefined,
+        fontFamily: user.profile.theme.fontFamily || undefined,
+      }
+    : theme;
+
   const headerStyle = {
     backgroundColor: `hsl(${theme.headerColor})`,
     color:
@@ -273,7 +285,7 @@ export function AppNavbar({ isPosPage }) {
 
           {!isPosPage && (
             <>
-              <ThemeCustomizer initialTheme={theme} onClose={handleThemeSave} />
+              <ThemeCustomizer initialTheme={userTheme} onClose={handleThemeSave} />
 
               {appsSettings?.showLanguageSwitcher && (
                 <DropdownMenu>
